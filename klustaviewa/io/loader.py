@@ -12,11 +12,11 @@ import numpy as np
 import pandas as pd
 
 from tools import (find_filename, find_index, load_text, load_xml, normalize,
-    load_binary, load_pickle, save_text, get_array)
+    load_binary, load_pickle, save_text, get_array, find_any_filename)
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_indices)
 from klustaviewa.utils.userpref import USERPREF
-from klustaviewa.utils.logger import debug, info, warn
+from klustaviewa.utils.logger import debug, info, warn, exception
 from klustaviewa.utils.colors import COLORS_COUNT
 
 
@@ -375,7 +375,8 @@ class KlustersLoader(Loader):
         if not self.filename_mask:
             self.filename_mask = find_filename(self.filename, 'mask')
         self.filename_spk = find_filename(self.filename, 'spk')
-        self.filename_probe = find_filename(self.filename, 'probe')
+        self.filename_probe = (find_filename(self.filename, 'probe') or 
+            find_any_filename(self.filename, 'probe'))
         
     def save_original_clufile(self):
         filename_clu_original = find_filename(self.filename, 'clu_original')
@@ -404,10 +405,17 @@ class KlustersLoader(Loader):
         self.freq = self.metadata.get('freq')
         
     def read_probe(self):
-        try:
-            self.probe = read_probe(self.filename_probe)
-        except IOError:
+        if self.filename_probe is None:
+            info("No probe file has been found.")
             self.probe = None
+        else:
+            try:
+                self.probe = read_probe(self.filename_probe)
+            except IOError as e:
+                info(("There was an error while loading the probe file "
+                          "'{0:s}' : {1:s}").format(self.filename_probe,
+                            e.message))
+                self.probe = None
     
     def read_features(self):
         try:

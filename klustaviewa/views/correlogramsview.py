@@ -307,14 +307,14 @@ class CorrelogramsInteractionManager(PlotInteractionManager):
         
         
 class CorrelogramsBindings(KlustaViewaBindings):
-    def set_zoombox_keyboard(self):
-        """Set zoombox bindings with the keyboard."""
-        self.set('LeftClickMove', 'ZoomBox',
-                    key_modifier='Shift',
-                    param_getter=lambda p: (p["mouse_press_position"][0],
-                                            p["mouse_press_position"][1],
-                                            p["mouse_position"][0],
-                                            p["mouse_position"][1]))
+    # def set_zoombox_keyboard(self):
+        # """Set zoombox bindings with the keyboard."""
+        # self.set('LeftClickMove', 'ZoomBox',
+                    # key_modifier='Shift',
+                    # param_getter=lambda p: (p["mouse_press_position"][0],
+                                            # p["mouse_press_position"][1],
+                                            # p["mouse_position"][0],
+                                            # p["mouse_position"][1]))
 
     def set_clusterinfo(self):
         self.set('Move', 'ShowClosestCluster', #key_modifier='Shift',

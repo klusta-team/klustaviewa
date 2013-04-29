@@ -90,6 +90,23 @@ def find_filename(filename, extension_requested, dir='', files=[]):
     
     return None
 
+def find_any_filename(filename, extension_requested, dir='', files=[]):
+    # get the full path
+    if not dir:
+        dir = os.path.dirname(filename)
+    filename = os.path.basename(filename)
+    
+    # try obtaining the list of all files in the directory
+    if not files:
+        try:
+            files = os.listdir(dir)
+        except (WindowsError, OSError, IOError):
+            raise IOError("Error when accessing '{0:s}'.".format(dir))
+    
+    filtered = filter(lambda f: f.endswith('.' + extension_requested), files)
+    if filtered:
+        return os.path.join(dir, filtered[0])
+    
     
 # -----------------------------------------------------------------------------
 # Utility data functions
@@ -103,7 +120,7 @@ def check_dtype(data, dtype):
 def check_shape(data, shape):
     return tuple(data.shape) == shape
 
-def get_array(data):
+def get_array(data, copy=False):
     """Get a NumPy array from a NumPy array or a Pandas data object (Series,
     DataFrame or Panel)."""
     if type(data) == np.ndarray:
@@ -112,13 +129,16 @@ def get_array(data):
         elif data.dtype == np.float64:
             return data.astype(np.float32)
         else:
-            return data
+            if copy:
+                return data.copy()
+            else:
+                return data
     elif isinstance(data, (pd.DataFrame, pd.Panel)):
-        return data.sort_index().values
+        return np.array(data.sort_index().values)
     elif isinstance(data, (pd.Int64Index, pd.Index)):
         return np.sort(data.values)
     else:
-        return data.sort_index().values
+        return np.array(data.sort_index().values)
     
 
 # -----------------------------------------------------------------------------

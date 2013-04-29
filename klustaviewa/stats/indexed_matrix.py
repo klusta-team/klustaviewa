@@ -96,8 +96,11 @@ class IndexedMatrix(object):
         self.n = len(self.indices)
         self.shape = (self.n, self.n) + tuple(self.shape[2:])
     
-    def to_array(self):
-        return self._array
+    def to_array(self, copy=False):
+        if copy:
+            return self._array.copy()
+        else:
+            return self._array
         
     def to_absolute(self, indices_relative, conserve_single_indices=True):
         if isinstance(indices_relative, (int, long)):

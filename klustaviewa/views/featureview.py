@@ -291,7 +291,7 @@ class FeaturePaintManager(PlotPaintManager):
             background_transparent=False,
             # posoffset=(20., -50.),
             coordinates=(1., -1.),
-            posoffset=(-120., 30.),
+            posoffset=(-60., 30.),
             is_static=True,
             color=(1., 1., 1., 1.),
             letter_spacing=350.,

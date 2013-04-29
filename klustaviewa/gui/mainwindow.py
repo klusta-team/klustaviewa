@@ -19,8 +19,10 @@ from klustaviewa.control.controller import Controller
 from klustaviewa.io.tools import get_array
 from klustaviewa.io.loader import KlustersLoader
 from klustaviewa.stats.cache import StatsCache
+from klustaviewa.stats.correlations import normalize
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.persistence import encode_bytearray, decode_bytearray
+from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.utils.settings import SETTINGS
 from klustaviewa.utils.globalpaths import APPNAME
 from klustaviewa.gui.threads import ThreadedTasks, LOCK
@@ -64,6 +66,7 @@ class MainWindow(QtGui.QMainWindow):
         self.spikes_highlighted = []
         self.spikes_selected = []
         self.robot_active = False
+        self.need_save = False
         
         # Create the main window.
         self.create_views()
@@ -139,8 +142,8 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('undo', '&Undo', shortcut='Ctrl+Z')
         self.add_action('redo', '&Redo', shortcut='Ctrl+Y')
         
-        self.add_action('merge', '&Merge', shortcut='Ctrl+G')
-        self.add_action('split', '&Split', shortcut='Ctrl+K')
+        self.add_action('merge', '&Merge', shortcut='G')
+        self.add_action('split', '&Split', shortcut='K')
 
     def create_robot_actions(self):
         self.add_action('previous_clusters', '&Previous clusters', 
@@ -227,6 +230,7 @@ class MainWindow(QtGui.QMainWindow):
     def save_callback(self, checked):
         folder = SETTINGS.get('main_window.last_data_file')
         self.loader.save()
+        self.need_save = False
         
         # # ask a new file name
         # filename = QtGui.QFileDialog.getSaveFileName(self, "Save a CLU file",
@@ -288,6 +292,7 @@ class MainWindow(QtGui.QMainWindow):
         # Compute the correlation matrix for the requested clusters.
         if to_compute is not None:
             self.start_compute_correlation_matrix(to_compute)
+        self.need_save = True
         
     def merge_callback(self, checked):
         cluster_view = self.get_view('ClusterView')
@@ -495,8 +500,10 @@ class MainWindow(QtGui.QMainWindow):
     def update_robot(self):
         self.tasks.robot_task.set_data(
             clusters=self.loader.get_clusters('all'),
+            clusters_unique=self.loader.get_clusters_unique(),
             correlograms=self.statscache.correlograms,
-            correlation_matrix=self.statscache.correlation_matrix,
+            correlation_matrix=normalize(
+                self.statscache.correlation_matrix.to_array(copy=True)),
             )
             
     def previous_clusters_callback(self, checked):
@@ -667,8 +674,8 @@ class MainWindow(QtGui.QMainWindow):
                     del self.views[key][i]
     
     
-    # Update methods.
-    # ---------------
+    # Update view methods.
+    # --------------------
     def update_cluster_view(self):
         """Update the cluster view using the data stored in the loader
         object."""
@@ -730,7 +737,9 @@ class MainWindow(QtGui.QMainWindow):
         cluster_groups = self.loader.get_cluster_groups('all')
         clusters_hidden = np.nonzero(np.in1d(cluster_groups, [0, 1]))[0]
         data = dict(
-            correlation_matrix=matrix.to_array(),
+            # WARNING: copy the matrix here so that we don't modify the
+            # original matrix while normalizing it.
+            correlation_matrix=normalize(matrix.to_array(copy=True)),
             cluster_colors_full=self.loader.get_cluster_colors('all'),
             clusters_hidden=clusters_hidden,
         )
@@ -779,14 +788,39 @@ class MainWindow(QtGui.QMainWindow):
             [view.keyReleaseEvent(e) for view in views]
             
     def closeEvent(self, e):
+        prompt_save_on_exit = USERPREF['prompt_save_on_exit']
+        if prompt_save_on_exit is None:
+            prompt_save_on_exit = True
+        if self.need_save and prompt_save_on_exit:
+            reply = QtGui.QMessageBox.question(self, 'Save',
+            "Do you want to save?",
+            (
+            QtGui.QMessageBox.Save | 
+             QtGui.QMessageBox.Close |
+             QtGui.QMessageBox.Cancel 
+             ),
+            QtGui.QMessageBox.Save)
+            if reply == QtGui.QMessageBox.Save:
+                folder = SETTINGS.get('main_window.last_data_file')
+                self.loader.save()
+            elif reply == QtGui.QMessageBox.Cancel:
+                e.ignore()
+                return
+            elif reply == QtGui.QMessageBox.Close:
+                pass
+        
         # Save the window geometry when closing the software.
         self.save_geometry()
         
+        # End the threads.
         self.join_threads()
         
+        # Close all views.
         for view in self.views.values():
             if hasattr(view, 'closeEvent'):
                 view.closeEvent(e)
+        
+        # Close the main window.
         return super(MainWindow, self).closeEvent(e)
             
             

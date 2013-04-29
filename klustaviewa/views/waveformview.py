@@ -139,16 +139,9 @@ class WaveformPositionManager(Manager):
         else:
             w, _ = size
         
-        # # effective box width
-        # if self.superposition == 'Separated' and self.nclusters >= 1:
-            # w = w / self.nclusters
-    
-        # print w
-    
         # HACK: if the normalization depends on the number of clusters,
         # the positions will change whenever the cluster selection changes
         k = self.nclusters
-        # k = 3
         
         if xmin == xmax:
             ax = 0.
@@ -492,12 +485,12 @@ class WaveformDataManager(Manager):
         waveforms_avg = np.zeros((self.nclusters, self.nsamples, self.nchannels))
         waveforms_std = np.zeros((self.nclusters, self.nsamples, self.nchannels))
         self.masks_avg = np.zeros((self.nclusters, self.nchannels))
-        for i, cluster in enumerate(self.clusters_selected):
+        for i, cluster in enumerate(self.clusters_unique):
             spike_indices = get_spikes_in_clusters(cluster, self.clusters)
             w = select(self.waveforms, spike_indices)
             m = select(self.masks, spike_indices)
             waveforms_avg[i,...] = w.mean(axis=0)
-            waveforms_std[i,...] = w.std(axis=0)
+            waveforms_std[i,...] = w.std(axis=0).mean()
             self.masks_avg[i,...] = m.mean(axis=0)
         
         # create X coordinates
@@ -1012,7 +1005,6 @@ class WaveformInteractionManager(PlotInteractionManager):
         # data coordinates
         xd, yd = nav.get_data_coordinates(x, y)
         
-        # print self.data_manager.data
         if self.data_manager.nspikes == 0:
             return
             
@@ -1044,7 +1036,7 @@ class WaveformBindings(KlustaViewaBindings):
         # toggle spatial arrangement
         self.set('KeyPress',
                  'ToggleSpatialArrangement',
-                 key='G')
+                 key='P')
                                
     def set_average_toggling(self):
         # toggle average

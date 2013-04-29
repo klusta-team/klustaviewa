@@ -16,7 +16,7 @@ class Robot(object):
     clusters to select."""
     def __init__(self, features=None, spiketimes=None, clusters=None, 
         masks=None, cluster_groups=None, 
-        correlograms=None, correlation_matrix=None):
+        correlograms=None, correlation_matrix=None, clusters_unique=None):
         self.features = features
         self.spiketimes = spiketimes
         self.clusters = clusters
@@ -24,6 +24,7 @@ class Robot(object):
         self.cluster_groups = cluster_groups
         self.correlograms = correlograms
         self.correlation_matrix = correlation_matrix
+        self.clusters_unique = clusters_unique
         self.best_pairs = []
         self.current = -1
     
@@ -32,15 +33,15 @@ class Robot(object):
     # -----------------
     def _compute_best_pairs(self):
         if self.correlation_matrix is not None:
-            matrix = self.correlation_matrix.to_array().copy()
+            matrix = self.correlation_matrix
             n = matrix.shape[0]
             if n > 0:
                 self.current = -1
                 matrix[np.arange(n), np.arange(n)] = 0
                 indices = np.argsort(matrix.ravel())[::-1]
                 # print indices[:10], matrix.ravel()[indices[:10]]
-                clusters0 = self.correlation_matrix.to_absolute(indices // n)
-                clusters1 = self.correlation_matrix.to_absolute(indices % n)
+                clusters0 = self.clusters_unique[indices // n]
+                clusters1 = self.clusters_unique[indices % n]
                 self.best_pairs = zip(clusters0, clusters1)
         
     

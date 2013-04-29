@@ -19,8 +19,8 @@ def compute_statistics(Fet1, Fet2, spikes_in_clusters, masks):
     
     nPoints = Fet1.shape[0] #size(Fet1, 1)
     nDims = Fet1.shape[1] #size(Fet1, 2)
-    # nClusters = Clu2.max() #max(Clu2)
-    nClusters = len(spikes_in_clusters)
+    # nclusters = Clu2.max() #max(Clu2)
+    nclusters = len(spikes_in_clusters)
 
     # precompute the mean and variances of the masked points for each feature
     # contains 1 when the corresponding point is masked
@@ -38,7 +38,7 @@ def compute_statistics(Fet1, Fet2, spikes_in_clusters, masks):
     z = masks * Fet1**2 + (1 - masks) * (nu ** 2 + sigma2)
     eta = z - y ** 2
 
-    LogP = np.zeros((nPoints, nClusters))
+    LogP = np.zeros((nPoints, nclusters))
 
     stats = {}
 
@@ -91,39 +91,84 @@ def compute_correlations(features, clusters, masks,
     nDims = features.shape[1] #size(Fet1, 2)
     c = Counter(clusters)
     spikes_in_clusters = dict([(clu, np.nonzero(clusters == clu)[0]) for clu in sorted(c)])
-    nClusters = len(spikes_in_clusters)
-    clumax = max(spikes_in_clusters.keys()) + 1
+    nclusters = len(spikes_in_clusters)
+    # clumax = max(spikes_in_clusters.keys()) + 1
     
     stats = compute_statistics(features, features, spikes_in_clusters, masks)
     
     clusterslist = sorted(stats.keys())
-    matrix_product = np.zeros((clumax, clumax))
+    
+    # New matrix (clu0, clu1) => new value
+    matrix_new = {}
+    # Fill the new matrix with the old values.
+    # matrix_new.update(matrix)
 
     if clusters_to_update is None:
         clusters_to_update = clusterslist
     
+    # cluster absolute => cluster relative
+    # clusters_rel = np.zeros(clumax, dtype=np.int32)
+    # clusters_rel[clusters_list] = np.arange(nclusters)
+    
+    # Update the new matrix on the rows and diagonals of the clusters to
+    # update.
     for ci in clusters_to_update:
         mui, Ci, Ciinv, logdeti, npointsi = stats[ci]
         for cj in clusterslist:
             muj, Cj, Cjinv, logdetj, npointsj = stats[cj]
+            
             dmu = (muj - mui).reshape((-1, 1))
             
             p = np.log(2*np.pi)*(-nDims/2.)+(-.5*np.log(np.linalg.det(Ci+Cj)))+(-.5)*np.dot(np.dot(dmu.T, np.linalg.inv(Ci+Cj)), dmu)
             alpha = float(npointsi) / nPoints
-            matrix_product[ci, cj] = np.exp(p + np.log(alpha))
-            # matrix_product[cj, ci] = matrix_product[ci, cj]
+            # matrix_new[ci, cj] = np.exp(p)# + np.log(alpha))
+            matrix_new[ci, cj] = np.exp(p + np.log(alpha))[0,0]
+            matrix_new[cj, ci] = matrix_new[ci, cj]
+    
+    # Convert the matrix into an array.
+    
     
     # Normalize the correlation matrix.
-    s = matrix_product.sum(axis=1)
-    matrix_product[s == 0, 0] = 1e-9
-    s = matrix_product.sum(axis=1)
-    matrix_product *= (1. / s.reshape((-1, 1)))
+    # s = matrix_new.sum(axis=1)
+    # matrix_new[s == 0, 0] = 1e-9
+    # s = matrix_new.sum(axis=1)
+    # matrix_new *= (1. / s.reshape((-1, 1)))
             
-    d = {(ci, cj): matrix_product[ci, cj]
-        for ci in clusters_to_update for cj in clusterslist}
-    d.update({(ci, cj): matrix_product[ci, cj]
-        for ci in clusterslist for cj in clusters_to_update})
-    return d
+    # d = {(ci, cj): matrix_new[ci, cj]
+        # for ci in clusters_to_update for cj in clusterslist}
+    # d.update({(ci, cj): matrix_new[ci, cj]
+        # for ci in clusterslist for cj in clusters_to_update})
+    # return d
     
+    return matrix_new
     
+def get_correlation_matrix(dic):
+    """Return a correlation matrix from a dictionary. Normalization happens
+    here."""
+    clu0, clu1 = zip(*matrix.keys())
+    clusters = sorted(set(clu0).union(set(clu1)))
+    nclusters = len(clusters)
+    clumax = max(clusters) + 1
+    matrix = np.zeros((nclusters, nclusters))
+    
+    # Relative clusters: cluster absolute => cluster relative
+    clusters_rel = np.zeros(clumax, dtype=np.int32)
+    clusters_rel[clusters] = np.arange(nclusters)
+    
+    for (clu0, clu1), value in dic.iteritems():
+        matrix[clusters_rel[clu0], clusters_rel[clu1]] = value
+        
+    return matrix
+    
+def normalize(matrix):
+        
+    s = matrix.sum(axis=1)
+    
+    # Non-null rows.
+    indices = (s != 0)
+    
+    # Divide each value by the sum of all values in the row.
+    matrix[indices, :] *= (1. / s[indices].reshape((-1, 1)))
+    
+    return matrix
     
