@@ -7,6 +7,14 @@ import logging
 # Logging level, can be DEBUG, INFO or WARNING.
 loglevel = logging.DEBUG
 
+
+# -----------------------------------------------------------------------------
+# Main window
+# -----------------------------------------------------------------------------
+# Should the software ask the user to save upon closing?
+prompt_save_on_exit = True
+
+
 # -----------------------------------------------------------------------------
 # Waveform view
 # -----------------------------------------------------------------------------

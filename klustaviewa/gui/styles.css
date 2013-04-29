@@ -120,9 +120,9 @@ QPushButton
     border-color: #1e1e1e;
     border-style: solid;
     /*border-radius: 6;*/
-    font-size: 12px;
-/*    padding: 3px;
-    padding-left: 5px;
+    /*font-size: 12px;*/
+    padding: 5px;
+    /*padding-left: 5px;
     padding-right: 5px;*/
 }
 
