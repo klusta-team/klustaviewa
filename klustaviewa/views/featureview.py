@@ -289,7 +289,11 @@ class FeaturePaintManager(PlotPaintManager):
         
         self.add_visual(TextVisual, text='0', name='clusterinfo', fontsize=16,
             background_transparent=False,
-            posoffset=(20., -50.),
+            # posoffset=(20., -50.),
+            coordinates=(1., -1.),
+            posoffset=(-120., 30.),
+            is_static=True,
+            color=(1., 1., 1., 1.),
             letter_spacing=350.,
             depth=-1,
             visible=False)
@@ -481,6 +485,16 @@ class FeatureSelectionManager(Manager):
                     visible=True,
                     position=self.points,
                     visual='selection_polygon')
+        # Cancel selection if one point is equal to the previous one
+        # (allows to cancel selection when double clicking for reset)
+        # print self.npoints
+        # print point
+        # print self.points[0,:]
+        
+        # if (self.npoints == 1 and 
+            # np.array_equal(point, self.points[0,:])):
+            # self.cancel_selection()
+        # else:
         self.is_selection_pending = True
         self.npoints += 1
         self.points[self.npoints,:] = point
@@ -504,26 +518,33 @@ class FeatureSelectionManager(Manager):
         
     def end_point(self, point):
         """Terminate selection polygon."""
-        point = self.interaction_manager.get_processor('navigation').get_data_coordinates(*point)
-        # record the last point in the selection polygon
-        self.points[self.npoints + 1,:] = point
-        self.points[self.npoints + 2,:] = self.points[0,:]
-        self.paint_manager.set_data(
-                position=self.points,
-                visual='selection_polygon')
-        self.select_spikes()
-        # record the projection axes corresponding to the current selection
-        self.projection = list(self.projection_manager.projection)
-        self.is_selection_pending = False
+        # Right click = end selection, next right click = cancel selection.
+        if self.is_selection_pending:
+            point = self.interaction_manager.get_processor('navigation').get_data_coordinates(*point)
+            # record the last point in the selection polygon
+            self.points[self.npoints + 1,:] = point
+            self.points[self.npoints + 2,:] = self.points[0,:]
+            self.paint_manager.set_data(
+                    position=self.points,
+                    visual='selection_polygon')
+            self.select_spikes()
+            # record the projection axes corresponding to the current selection
+            self.projection = list(self.projection_manager.projection)
+            self.is_selection_pending = False
+        else:
+            self.cancel_selection()
         
     def cancel_selection(self):
         """Remove the selection polygon."""
         # hide the selection polygon
         # if self.paint_manager.get_visual('selection_polygon').get('visible', None):
-        self.paint_manager.set_data(visible=False,
-            visual='selection_polygon')
         self.set_selected_spikes(np.array([]))
         self.is_selection_pending = False
+        self.npoints = 0
+        self.points[:] = 0
+        self.paint_manager.set_data(visible=False,
+            position=self.points,
+            visual='selection_polygon')
         self.emit([])
 
 
@@ -616,9 +637,10 @@ class FeatureInfoManager(Manager):
         # r, g, b = COLORMAP[color,:]
         # color = (r, g, b, .75)
         
-        text = "cluster {0:d}".format(self.data_manager.clusters_unique[cluster])
+        # text = "cluster {0:d}".format(self.data_manager.clusters_unique[cluster])
+        text = "{0:d}".format(self.data_manager.clusters_unique[cluster])
         
-        self.paint_manager.set_data(coordinates=(xd, yd), #color=color,
+        self.paint_manager.set_data(#coordinates=(xd, yd), #color=color,
             text=text,
             visible=True,
             visual='clusterinfo')
@@ -634,7 +656,8 @@ class FeatureInteractionManager(PlotInteractionManager):
         
         self.register('AddSelectionPoint', self.selection_add_point)
         self.register('EndSelectionPoint', self.selection_end_point)
-        self.register('CancelSelectionPoint', self.selection_cancel)
+        # self.register('CancelSelectionPoint', self.selection_cancel)
+        # self.register('Reset', self.process_reset_event)
         
         self.register('SelectProjection', self.select_projection)
 
@@ -643,7 +666,13 @@ class FeatureInteractionManager(PlotInteractionManager):
         self.register('SelectNeighborChannel', self.select_neighbor_channel)
         self.register('SelectFeature', self.select_feature)
         
-        self.register('ShowClosestCluster', self.show_closest_cluster)
+        # self.register('ShowClosestCluster', self.show_closest_cluster)
+    
+    
+    # def process_reset_event(self, parameter):
+        # # HACK: cancel selection when double click so that there is no
+        # # conflict between selection actions and reset action
+        # self.selection_manager.cancel_selection()
     
     
     # Highlighting
@@ -661,6 +690,7 @@ class FeatureInteractionManager(PlotInteractionManager):
     # Selection
     # ---------
     def selection_point_pending(self, parameter):
+        self.show_closest_cluster(parameter)
         self.selection_manager.point_pending(parameter)
         
     def selection_add_point(self, parameter):
@@ -669,8 +699,8 @@ class FeatureInteractionManager(PlotInteractionManager):
     def selection_end_point(self, parameter):
         self.selection_manager.end_point(parameter)
         
-    def selection_cancel(self, parameter):
-        self.selection_manager.cancel_selection()
+    # def selection_cancel(self, parameter):
+        # self.selection_manager.cancel_selection()
 
         
     # Projection
@@ -790,10 +820,10 @@ class FeatureBindings(KlustaViewaBindings):
                      key_modifier='Shift',
                      param_getter=(1, feature))
         
-    def set_clusterinfo(self):
-        self.set('Move', 'ShowClosestCluster', key_modifier='Shift',
-            param_getter=lambda p:
-            (p['mouse_position'][0], p['mouse_position'][1]))
+    # def set_clusterinfo(self):
+        # self.set('Move', 'ShowClosestCluster', #key_modifier='Shift',
+            # param_getter=lambda p:
+            # (p['mouse_position'][0], p['mouse_position'][1]))
         
     def set_selection(self):
         # selection
@@ -802,21 +832,21 @@ class FeatureBindings(KlustaViewaBindings):
                  # key_modifier='Control',
                  param_getter=lambda p: (p["mouse_position"][0],
                                          p["mouse_position"][1],))
-        self.set('LeftClick',
+        self.set('RightClick',
                  'AddSelectionPoint',
                  # key_modifier='Control',
                  param_getter=lambda p: (p["mouse_press_position"][0],
                                          p["mouse_press_position"][1],))
-        self.set('RightClick',
+        self.set('LeftClick',
                  'EndSelectionPoint',
                  # key_modifier='Control',
                  param_getter=lambda p: (p["mouse_press_position"][0],
                                          p["mouse_press_position"][1],))
-        self.set('DoubleClick',
-                 'CancelSelectionPoint',
-                 # key_modifier='Control',
-                 param_getter=lambda p: (p["mouse_press_position"][0],
-                                         p["mouse_press_position"][1],))
+        # self.set('DoubleClick',
+                 # 'CancelSelectionPoint',
+                 # # key_modifier='Control',
+                 # param_getter=lambda p: (p["mouse_press_position"][0],
+                                         # p["mouse_press_position"][1],))
     
     def initialize(self):
         self.set_highlight()
@@ -824,7 +854,7 @@ class FeatureBindings(KlustaViewaBindings):
         self.set_neighbor_channel()
         self.set_feature()
         # self.set_switch_mode()
-        self.set_clusterinfo()
+        # self.set_clusterinfo()
         self.set_selection()
 
 

@@ -560,11 +560,11 @@ QTreeView::item {
     color: #b1b1b1;
 }
 QTreeView::item:hover {
-    background-color: #909090;
+    background-color: #7a7a7a;
     color: #000000;
 }
 QTreeView::item:selected {
-    /*background-color: #3399ff;*/
+    background-color: #b1b1b1;
     color: #000000;
 }
 

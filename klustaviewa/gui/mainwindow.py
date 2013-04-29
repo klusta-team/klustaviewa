@@ -47,7 +47,7 @@ class MainWindow(QtGui.QMainWindow):
         
         # Main window options.
         self.move(50, 50)
-        self.setWindowTitle(APPNAME.title())
+        self.setWindowTitle('KlustaViewa')
         
         # Focus options.
         self.setFocusPolicy(QtCore.Qt.WheelFocus)

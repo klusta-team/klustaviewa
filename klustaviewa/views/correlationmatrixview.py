@@ -124,9 +124,13 @@ class CorrelationMatrixPaintManager(PlotPaintManager):
         self.add_visual(TextVisual, text='0', name='clusterinfo', fontsize=16,
             background_transparent=False,
             posoffset=(50., -60.),
+            color=(1., 1., 1., 1.),
             letter_spacing=350.,
             depth=-1,
             visible=False)
+            
+        self.add_visual(RectanglesVisual, coordinates=(0., 0., 0., 0.),
+            color=(1., 1., 1., .75), autonormalizable=False, name='square')
         
     def update(self):
         self.set_data(
@@ -164,7 +168,7 @@ class CorrelationMatrixInfoManager(Manager):
             
         val = self.data_manager.correlation_matrix[cx_rel, cy_rel]
         
-        text = "%d / %d : %.3f" % (cx, cy, val)
+        text = "%d/%d:%.3f" % (cx, cy, val)
         
         self.paint_manager.set_data(coordinates=(xd, yd), 
             text=text,
@@ -174,18 +178,16 @@ class CorrelationMatrixInfoManager(Manager):
     
 class CorrelationMatrixInteractionManager(PlotInteractionManager):
     def initialize(self):
-        self.register('ShowClosestCluster', self.show_closest_cluster)
+        # self.register('ShowClosestCluster', self.show_closest_cluster)
         self.register('SelectPair', self.select_pair)
+        self.register('MoveSquare', self.move_square)
         self.register(None, self.hide_closest_cluster)
             
     def hide_closest_cluster(self, parameter):
         self.paint_manager.set_data(visible=False, visual='clusterinfo')
-        self.cursor = None
+        self.paint_manager.set_data(visible=False, visual='square')
         
     def select_pair(self, parameter):
-        
-        self.cursor = 'ArrowCursor'
-        
         nav = self.get_processor('navigation')
         
         # window coordinates
@@ -209,7 +211,6 @@ class CorrelationMatrixInteractionManager(PlotInteractionManager):
         if nclu == 0:
             return
             
-        self.cursor = 'ArrowCursor'
         nav = self.get_processor('navigation')
         
         # window coordinates
@@ -219,22 +220,50 @@ class CorrelationMatrixInteractionManager(PlotInteractionManager):
         
         self.info_manager.show_closest_cluster(xd, yd)
         
+    def move_square(self, parameter):
+        self.show_closest_cluster(parameter)
+        
+        # data coordinates
+        x, y = parameter
+        nav = self.get_processor('navigation')
+        x, y = nav.get_data_coordinates(x, y)
+        
+        n = self.data_manager.texture.shape[0]
+        dx = 1 / float(n)
+        i = np.clip(int((x + 1) / 2. * n), 0, n - 1)
+        j = np.clip(int((y + 1) / 2. * n), 0, n - 1)
+        coordinates = (
+            i * dx * 2 - 1, 
+            j * dx * 2 - 1, 
+            (i + 1) * dx * 2 - 1, 
+            (j + 1) * dx * 2 - 1)
+        self.paint_manager.set_data(coordinates=coordinates, visible=True,
+            visual='square')
+        
         
 class CorrelationMatrixBindings(KlustaViewaBindings):
-    def set_clusterinfo(self):
-        self.set('Move', 'ShowClosestCluster', key_modifier='Shift',
+    def get_base_cursor(self):
+        return 'ArrowCursor'
+    
+    # def set_clusterinfo(self):
+        # self.set('Move', 'ShowClosestCluster', #key_modifier='Shift',
+            # param_getter=lambda p:
+            # (p['mouse_position'][0], p['mouse_position'][1]))
+    
+    def set_selectcluster(self):
+        self.set('RightClick', 'SelectPair', #key_modifier='Shift',
             param_getter=lambda p:
             (p['mouse_position'][0], p['mouse_position'][1]))
     
-    def set_selectcluster(self):
-        self.set('LeftClick', 'SelectPair', key_modifier='Shift',
-            param_getter=lambda p:
-            (p['mouse_position'][0], p['mouse_position'][1]))
+    def set_move(self):
+        self.set('Move', 'MoveSquare',
+            param_getter=lambda p: p['mouse_position'])
     
     def initialize(self):
         # super(CorrelationMatrixBindings, self).initialize()
-        self.set_clusterinfo()
+        # self.set_clusterinfo()
         self.set_selectcluster()
+        self.set_move()
     
 
 # -----------------------------------------------------------------------------

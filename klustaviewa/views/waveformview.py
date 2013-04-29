@@ -710,7 +710,11 @@ class WaveformPaintManager(PlotPaintManager):
             "superimposed", "channel_positions",)
         
         self.add_visual(TextVisual, text='0', name='clusterinfo', fontsize=16,
-            posoffset=(30., -30.),
+            # posoffset=(30., -30.),
+            coordinates=(1., -1.),
+            posoffset=(-100., 30.),
+            is_static=True,
+            color=(1., 1., 1., 1.),
             background_transparent=False,
             letter_spacing=350.,
             depth=-1,
@@ -930,12 +934,16 @@ class WaveformInfoManager(Manager):
         # r, g, b = COLORMAP[color,:]
         # color = (r, g, b, .75)
         
-        text = "cluster {0:d}, channel {1:d}".format(
+        # text = "cluster {0:d}, channel {1:d}".format(
+            # self.data_manager.clusters_unique[cluster_rel],
+            # channel,
+            # )
+        text = "{0:d} on {1:d}".format(
             self.data_manager.clusters_unique[cluster_rel],
             channel,
             )
         
-        self.paint_manager.set_data(coordinates=(xd, yd), #color=color,
+        self.paint_manager.set_data(#coordinates=(xd, yd), #color=color,
             text=text,
             visible=True,
             visual='clusterinfo')
@@ -1122,7 +1130,7 @@ class WaveformBindings(KlustaViewaBindings):
                  param_getter=lambda p: (1, p["mouse_position"][0], p["mouse_position"][1]))
         
     def set_clusterinfo(self):
-        self.set('Move', 'ShowClosestCluster', key_modifier='Shift',
+        self.set('Move', 'ShowClosestCluster', #key_modifier='Shift',
             param_getter=lambda p:
             (p['mouse_position'][0], p['mouse_position'][1]))
         

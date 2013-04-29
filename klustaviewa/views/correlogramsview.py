@@ -226,7 +226,11 @@ class CorrelogramsPaintManager(PlotPaintManager):
             name='correlograms')
             
         self.add_visual(TextVisual, text='0', name='clusterinfo', fontsize=16,
-            posoffset=(50., -50.),
+            # posoffset=(50., -50.),
+            coordinates=(1., -1.),
+            posoffset=(-80., 30.),
+            is_static=True,
+            color=(1., 1., 1., 1.),
             background_transparent=False,
             letter_spacing=350.,
             depth=-1,
@@ -271,7 +275,7 @@ class CorrelogramsInfoManager(Manager):
         
         text = "%d / %d" % (cx, cy)
         
-        self.paint_manager.set_data(coordinates=(xd, yd), #color=color1,
+        self.paint_manager.set_data(#coordinates=(xd, yd), #color=color1,
             text=text,
             visible=True,
             visual='clusterinfo')
@@ -313,7 +317,7 @@ class CorrelogramsBindings(KlustaViewaBindings):
                                             p["mouse_position"][1]))
 
     def set_clusterinfo(self):
-        self.set('Move', 'ShowClosestCluster', key_modifier='Shift',
+        self.set('Move', 'ShowClosestCluster', #key_modifier='Shift',
             param_getter=lambda p:
             (p['mouse_position'][0], p['mouse_position'][1]))
     
