@@ -1,17 +1,13 @@
 KlustaViewa
 ===========
 
-*KlustaViewa* is the code name for the next-generation spike-sorting software 
-adapted to high-channel count silicon probes. Written in Python, it aims at 
-being flexible and extendable by the user.
-
-The first step is to create a new semi-automatic graphical interface
-(code name: *KlustaViewa*) for
-the manual stage that comes after the automatic clustering algorithms.
-This interface automatically guides the user through similar clusters,
-showing the most relevant feature projections, and asks him or her to make merge or
-split decisions. The goal is to make the manual stage more reliable, less
-error-prone and quicker than what it currently is.
+*KlustaViewa* (previously *Spiky*) is a software for semi-automatic spike 
+sorting with high-channel count silicon probes.
+It is meant to be used after the automatic clustering stage.
+This interface automatically guides the user through the clustered data and 
+lets him or her refine the data. 
+The goal is to make the manual stage more reliable, quicker, and less
+error-prone.
 
 This software was developed by Cyrille Rossant in the [Cortical Processing Laboratory](http://www.ucl.ac.uk/cortexlab) at UCL.
 
