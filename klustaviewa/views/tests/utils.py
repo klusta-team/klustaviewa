@@ -16,6 +16,9 @@ from klustaviewa.utils.userpref import USERPREF
 # -----------------------------------------------------------------------------
 # Utility functions
 # -----------------------------------------------------------------------------
+def assert_fun(statement):
+    assert statement
+    
 def get_data():
     """Return a dictionary with data variables, after the fixture setup
     has been called."""

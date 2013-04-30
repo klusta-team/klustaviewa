@@ -17,7 +17,6 @@ from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
 from klustaviewa.io.selection import get_indices
 from klustaviewa.io.tools import get_array
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
-from klustaviewa.views.widgets import VisualizationWidget
 from klustaviewa.utils.colors import COLORMAP, HIGHLIGHT_COLORMAP
 import klustaviewa.utils.logger as log
 import klustaviewa

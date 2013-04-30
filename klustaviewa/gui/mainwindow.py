@@ -726,8 +726,7 @@ class MainWindow(QtGui.QMainWindow):
             return
         correlograms = self.statscache.correlograms.submatrix(
             clusters_selected)
-        # # Compute the baselines: average number of spikes per bin in 
-        # # each cluster.
+        # Compute the baselines.
         sizes = get_array(self.loader.get_cluster_sizes())
         duration = self.loader.get_duration()
         bin = self.loader.corrbin

@@ -13,7 +13,6 @@ from klustaviewa.stats.cache import IndexedMatrix
 from klustaviewa.io.tools import get_array
 from klustaviewa.utils.colors import COLORMAP
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
-from klustaviewa.views.widgets import VisualizationWidget
 
 
 # -----------------------------------------------------------------------------

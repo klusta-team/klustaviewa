@@ -16,7 +16,6 @@ from klustaviewa.io.tools import get_array
 from klustaviewa.utils.colors import COLORMAP
 import klustaviewa.utils.logger as log
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
-from klustaviewa.views.widgets import VisualizationWidget
 
 
 # -----------------------------------------------------------------------------

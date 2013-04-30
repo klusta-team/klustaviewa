@@ -17,15 +17,12 @@ from klustaviewa.io.selection import select
 from klustaviewa.io.tools import check_dtype, check_shape
 from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.views import ClusterView
-from klustaviewa.views.tests.utils import show_view, get_data
+from klustaviewa.views.tests.utils import show_view, get_data, assert_fun
 
 
 # -----------------------------------------------------------------------------
 # Tests
 # -----------------------------------------------------------------------------
-def assert_fun(statement):
-    assert statement
-
 def test_clusterview():
     keys = ('cluster_groups,group_colors,group_names,'
             'cluster_sizes').split(',')
