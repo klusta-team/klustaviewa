@@ -112,3 +112,13 @@ def compute_correlograms(spiketimes, clusters, clusters_to_update=None,
         
     return correlograms
     
+
+# -----------------------------------------------------------------------------
+# Baselines
+# -----------------------------------------------------------------------------
+def get_baselines(sizes, duration, bin):
+    baselines = (sizes.reshape((-1, 1)) * sizes.reshape((1, -1)) 
+                    * bin / (duration))
+    return baselines
+    
+    

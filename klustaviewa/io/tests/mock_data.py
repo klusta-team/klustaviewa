@@ -64,6 +64,10 @@ def create_correlograms(clusters, ncorrbins):
     return IndexedMatrix(clusters, shape=shape,
         data=np.random.rand(*shape))
     
+def create_baselines(clusters):
+    baselines = np.random.rand(len(clusters), len(clusters))
+    return baselines
+    
 def create_xml(nchannels, nsamples, fetdim):
     channels = '\n'.join(["<channel>{0:d}</channel>".format(i) 
         for i in xrange(nchannels)])

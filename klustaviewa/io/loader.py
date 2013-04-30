@@ -229,6 +229,10 @@ class Loader(object):
             clusters = self.clusters_selected
         return get_indices(self.get_clusters(clusters=clusters))
     
+    def get_duration(self):
+        return get_array(self.spiketimes)[-1]
+    
+    
     
     # Access to the data: clusters
     # ----------------------------

@@ -20,8 +20,6 @@ from klustaviewa.views.widgets import VisualizationWidget
 # Shaders
 # -----------------------------------------------------------------------------
 VERTEX_SHADER = """
-    //vec3 color = vec3(1, 1, 1);
-
     float margin = 0.05;
     float a = 1.0 / (nclusters * (1 + 2 * margin));
     
@@ -106,6 +104,10 @@ class CorrelogramsDataManager(Manager):
         # cluster i and j for each histogram in the view
         clusters = [(i,j) for i in xrange(self.nclusters) for j in xrange(self.nclusters)]
         self.clusters = np.array(clusters, dtype=np.int32)
+        self.clusters0 = self.clusters
+        
+        # baselines of the correlograms
+        self.baselines = baselines
         
         # normalization
         for i in xrange(self.nclusters):
@@ -119,11 +121,13 @@ class CorrelogramsDataManager(Manager):
             m = correlogram_diagonal.max()
             if m > 0:
                 self.correlograms_array[i,:,:] /= m
+                self.baselines[i,:] /= m
             # normalize all correlograms in the row so that they all fit in the 
             # window
             m = self.correlograms_array[i,:,:].max()
             if m > 0:
                 self.correlograms_array[i,:,:] /= m
+                self.baselines[i,:] /= m
         
         self.nprimitives = self.ncorrelograms
         # index 0 = heterogeneous clusters, index>0 ==> cluster index + 1
@@ -140,8 +144,6 @@ class CorrelogramsDataManager(Manager):
         self.position[:,0] = X.ravel()
         self.position[:,1] = Y.ravel()
     
-        # baselines of the correlograms
-        self.baselines = baselines
         
         # indices of correlograms on the diagonal
         if self.nclusters:
@@ -191,23 +193,28 @@ class CorrelogramsBaselineVisual(PlotVisual):
         
         self.position_attribute_name = "transformed_position"
         
-        # texture = np.ones((10, 10, 3))
+        if baselines is None:
+            baselines = np.zeros((nclusters, nclusters))
+        
+        baselines = baselines.ravel()
         
         n = len(baselines)
         position = np.zeros((2 * n, 2))
         position[:,0] = np.tile(np.array([-1., 1.]), n)
         position[:,1] = np.repeat(baselines, 2)
-        # position[n:,1] = baselines
+        position = np.array(position, dtype=np.float32)
         
         clusters = np.repeat(clusters, 2, axis=0)
         
-        self.primitive_type = 'LINES'
-        
         super(CorrelogramsBaselineVisual, self).initialize(
             position=position,
-            # texture=texture
+            nprimitives=n,
+            color=(.25, .25, .25, 1.),
+            autonormalizable=False,
             )
             
+        self.primitive_type = 'LINES'
+        
         self.add_attribute("cluster", vartype="int", ndim=2, data=clusters)
         self.add_uniform("nclusters", vartype="int", ndim=1, data=nclusters)
         
@@ -224,6 +231,13 @@ class CorrelogramsPaintManager(PlotPaintManager):
             color_array_index=self.data_manager.color_array_index,
             clusters=self.data_manager.clusters,
             name='correlograms')
+            
+        self.add_visual(CorrelogramsBaselineVisual,
+            baselines=self.data_manager.baselines,
+            nclusters=self.data_manager.nclusters,
+            clusters=self.data_manager.clusters0,
+            name='baselines',
+            )
             
         self.add_visual(TextVisual, text='0', name='clusterinfo', fontsize=16,
             # posoffset=(50., -50.),
@@ -246,6 +260,13 @@ class CorrelogramsPaintManager(PlotPaintManager):
             color_array_index=self.data_manager.color_array_index,
             clusters=self.data_manager.clusters,
             visual='correlograms')
+            
+        self.reinitialize_visual(
+            size=2 * self.data_manager.baselines.size,
+            baselines=self.data_manager.baselines,
+            nclusters=self.data_manager.nclusters,
+            clusters=self.data_manager.clusters0,
+            visual='baselines')
             
 
 # -----------------------------------------------------------------------------

@@ -20,6 +20,7 @@ from klustaviewa.io.tools import get_array
 from klustaviewa.io.loader import KlustersLoader
 from klustaviewa.stats.cache import StatsCache
 from klustaviewa.stats.correlations import normalize
+from klustaviewa.stats.correlograms import get_baselines
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.persistence import encode_bytearray, decode_bytearray
 from klustaviewa.utils.userpref import USERPREF
@@ -725,8 +726,15 @@ class MainWindow(QtGui.QMainWindow):
             return
         correlograms = self.statscache.correlograms.submatrix(
             clusters_selected)
+        # # Compute the baselines: average number of spikes per bin in 
+        # # each cluster.
+        sizes = get_array(self.loader.get_cluster_sizes())
+        duration = self.loader.get_duration()
+        bin = self.loader.corrbin
+        baselines = get_baselines(sizes, duration, bin)
         data = dict(
             correlograms=correlograms,
+            baselines=baselines,
             clusters_selected=clusters_selected,
             cluster_colors=self.loader.get_cluster_colors(),
         )
