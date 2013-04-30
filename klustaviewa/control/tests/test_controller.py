@@ -153,7 +153,7 @@ def test_controller_misc():
     action, output = c.move_clusters(clusters, 0)
     
     assert action == 'move_clusters'
-    assert np.array_equal(output['to_select'], clusters)
+    assert np.array_equal(output['to_select'], [7])
     
     assert np.all(l.get_cluster_groups(clusters) == 0)
     
@@ -217,7 +217,7 @@ def test_controller_move_clusters():
     action, output = c.move_clusters(clusters, group)
     
     assert action == 'move_clusters'
-    assert np.array_equal(output['to_select'], clusters)
+    assert np.array_equal(output['to_select'], [8])
     
     assert np.all(l.get_cluster_groups(clusters) == 1)
     
@@ -235,7 +235,7 @@ def test_controller_move_clusters():
     action, output = c.redo()
     
     assert action == 'move_clusters'
-    assert np.array_equal(output['to_select'], clusters)
+    assert np.array_equal(output['to_select'], [8])
     
     assert np.all(l.get_cluster_groups(clusters) == 1)
     

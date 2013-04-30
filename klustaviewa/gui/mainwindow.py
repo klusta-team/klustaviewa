@@ -175,6 +175,9 @@ class MainWindow(QtGui.QMainWindow):
         actions_menu.addAction(self.undo_action)
         actions_menu.addAction(self.redo_action)
         actions_menu.addSeparator()
+        actions_menu.addAction(self.get_view('ClusterView').move_to_mua_action)
+        actions_menu.addAction(self.get_view('ClusterView').move_to_noise_action)
+        actions_menu.addSeparator()
         actions_menu.addAction(self.merge_action)
         actions_menu.addAction(self.split_action)
         

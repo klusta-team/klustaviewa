@@ -805,24 +805,24 @@ class ClusterView(QtGui.QTreeView):
         
     def create_actions(self):
         
-        self.change_color_action = QtGui.QAction("Change color", self)
+        self.change_color_action = QtGui.QAction("Change &color", self)
         self.change_color_action.triggered.connect(self.change_color_callback)
         
-        self.add_group_action = QtGui.QAction("Add group", self)
+        self.add_group_action = QtGui.QAction("&Add group", self)
         self.add_group_action.triggered.connect(self.add_group_callback)
         
-        self.rename_group_action = QtGui.QAction("Rename group", self)
+        self.rename_group_action = QtGui.QAction("Re&name group", self)
         self.rename_group_action.setShortcut(QtCore.Qt.Key_F2)
         self.rename_group_action.triggered.connect(self.rename_group_callback)
         
-        self.remove_group_action = QtGui.QAction("Remove group", self)
+        self.remove_group_action = QtGui.QAction("&Remove group", self)
         self.remove_group_action.triggered.connect(self.remove_group_callback)
         
-        self.move_to_noise_action = QtGui.QAction("Move to noise", self)
+        self.move_to_noise_action = QtGui.QAction("Move to &noise", self)
         self.move_to_noise_action.setShortcut('Shift+Delete')
         self.move_to_noise_action.triggered.connect(self.move_to_noise_callback)
         
-        self.move_to_mua_action = QtGui.QAction("Move to MUA", self)
+        self.move_to_mua_action = QtGui.QAction("Move to &MUA", self)
         self.move_to_mua_action.setShortcut("Delete")
         self.move_to_mua_action.triggered.connect(self.move_to_mua_callback)
         
