@@ -55,7 +55,10 @@ def test_compute_correlations():
     assert matrix[0,1] > 100 * matrix[0, 2]
     assert matrix[0,1] > 100 * matrix[1, 2]
     
-def test_recomputation_correlation():
+def normalize(x):
+    return x
+    
+def test_recompute_correlation():
     l, c = load()
     
     clusters_unique = l.get_clusters_unique()
@@ -92,13 +95,6 @@ def test_recomputation_correlation():
     correlation_matrix.update([cluster_new], correlations1)
     matrix1 = normalize(correlation_matrix.to_array().copy())
     
-    # print correlations0.keys()
-    # print correlations1.keys()
-    
-    # for key in correlations0.keys():
-        # if key[0] not in [2, 4, 6, 7] and key[1] not in [2, 4, 6, 7]:
-            # # print key, correlations0[key], correlations1[key]
-            # assert np.allclose(correlations0[key], correlations1[key]), key
     
     # Undo.
     assert c.can_undo()
@@ -108,11 +104,17 @@ def test_recomputation_correlation():
     # Compute the new matrix
     correlation_matrix.invalidate([2, 4, 6, cluster_new])
     clusters2 = get_array(l.get_clusters('all'))
-    correlations2 = compute_correlations(features, clusters2, masks,#)
+    correlations2 = compute_correlations(features, clusters2, masks,)
+    correlations2b = compute_correlations(features, clusters2, masks,#)
         clusters_selected)
-    correlation_matrix.update(clusters_selected, correlations2)
+        
+    for (clu0, clu1) in correlations2b.keys():
+        assert np.allclose(correlations2[clu0, clu1], correlations2b[clu0, clu1]), (clu0, clu1, correlations2[clu0, clu1], correlations2b[clu0, clu1])
+    
+    correlation_matrix.update(clusters_selected, correlations2b)
     matrix2 = normalize(correlation_matrix.to_array().copy())
     
     assert np.array_equal(clusters0, clusters2)
-    assert np.array_equal(matrix0, matrix2)
+    assert np.allclose(matrix0, matrix2)
+    
     

@@ -71,7 +71,7 @@ def compute_statistics(Fet1, Fet2, spikes_in_clusters, masks):
         LogDet = np.log(np.linalg.det(CovMat))
         
         stats[c] = (Mean, CovMat, CovMatinv, LogDet, len(MyPoints))
-
+        
     return stats
 
 def compute_correlations(features, clusters, masks,
@@ -120,25 +120,11 @@ def compute_correlations(features, clusters, masks,
             dmu = (muj - mui).reshape((-1, 1))
             
             p = np.log(2*np.pi)*(-nDims/2.)+(-.5*np.log(np.linalg.det(Ci+Cj)))+(-.5)*np.dot(np.dot(dmu.T, np.linalg.inv(Ci+Cj)), dmu)
-            alpha = float(npointsi) / nPoints
-            # matrix_new[ci, cj] = np.exp(p)# + np.log(alpha))
-            matrix_new[ci, cj] = np.exp(p + np.log(alpha))[0,0]
-            matrix_new[cj, ci] = matrix_new[ci, cj]
-    
-    # Convert the matrix into an array.
-    
-    
-    # Normalize the correlation matrix.
-    # s = matrix_new.sum(axis=1)
-    # matrix_new[s == 0, 0] = 1e-9
-    # s = matrix_new.sum(axis=1)
-    # matrix_new *= (1. / s.reshape((-1, 1)))
             
-    # d = {(ci, cj): matrix_new[ci, cj]
-        # for ci in clusters_to_update for cj in clusterslist}
-    # d.update({(ci, cj): matrix_new[ci, cj]
-        # for ci in clusterslist for cj in clusters_to_update})
-    # return d
+            alphai = float(npointsi) / nPoints
+            alphaj = float(npointsj) / nPoints
+            matrix_new[ci, cj] = np.exp(p + np.log(alphai))[0,0]
+            matrix_new[cj, ci] = np.exp(p + np.log(alphaj))[0,0]
     
     return matrix_new
     
