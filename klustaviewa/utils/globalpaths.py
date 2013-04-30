@@ -33,6 +33,10 @@ def delete_folder(folderpath):
 # -----------------------------------------------------------------------------
 APPNAME = 'klustaviewa'
 
+ABOUT = """KlustaViewa is a software for semi-automatic spike sorting with high-channel count silicon probes. It is meant to be used after the automatic clustering stage. This interface automatically guides the user through the clustered data and lets him or her refine the data. The goal is to make the manual stage more reliable, quicker, and less error-prone.
+
+This software was developed by Cyrille Rossant in the Cortical Processing Laboratory at UCL (http://www.ucl.ac.uk/cortexlab)."""
+
 def get_app_folder(appname=None):
     if appname is None:
         appname = APPNAME

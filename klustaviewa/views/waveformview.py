@@ -943,6 +943,10 @@ class WaveformInfoManager(Manager):
 
 class WaveformInteractionManager(PlotInteractionManager):
     def select_channel(self, coord, xp, yp):
+        
+        if self.data_manager.nclusters == 0:
+            return
+        
         # normalized coordinates
         xp, yp = self.get_processor('navigation').get_data_coordinates(xp, yp)
         # find closest channel

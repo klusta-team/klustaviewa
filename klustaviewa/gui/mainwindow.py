@@ -25,7 +25,7 @@ import klustaviewa.utils.logger as log
 from klustaviewa.utils.persistence import encode_bytearray, decode_bytearray
 from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.utils.settings import SETTINGS
-from klustaviewa.utils.globalpaths import APPNAME
+from klustaviewa.utils.globalpaths import APPNAME, ABOUT
 from klustaviewa.gui.threads import ThreadedTasks, LOCK
 import rcicons
 
@@ -76,6 +76,7 @@ class MainWindow(QtGui.QMainWindow):
         self.create_view_actions()
         self.create_control_actions()
         self.create_robot_actions()
+        self.create_help_actions()
         self.create_menu()
         self.create_threads()
         
@@ -153,6 +154,10 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('next_clusters', '&Next clusters', 
             shortcut='Space')
         
+    def create_help_actions(self):
+        self.add_action('about', '&About')
+        self.add_action('shortcuts', 'Show &shortcuts')
+        
     def create_menu(self):
         # File menu.
         file_menu = self.menuBar().addMenu("&File")
@@ -185,6 +190,10 @@ class MainWindow(QtGui.QMainWindow):
         robot_menu = self.menuBar().addMenu("&Robot")
         robot_menu.addAction(self.previous_clusters_action)
         robot_menu.addAction(self.next_clusters_action)
+        
+        help_menu = self.menuBar().addMenu("&Help")
+        help_menu.addAction(self.shortcuts_action)
+        help_menu.addAction(self.about_action)
         
     def update_action_enabled(self):
         self.undo_action.setEnabled(self.can_undo())
@@ -358,6 +367,18 @@ class MainWindow(QtGui.QMainWindow):
         self.action_processed(action, **output)
     
     
+    # Help callbacks.
+    # ---------------
+    def about_callback(self, checked):
+        QtGui.QMessageBox.about(self, "KlustaViewa", ABOUT)
+    
+    def shortcuts_callback(self, checked):
+        e = QtGui.QKeyEvent(QtCore.QEvent.KeyPress, 
+                             QtCore.Qt.Key_H,
+                             QtCore.Qt.NoModifier,)
+        self.keyPressEvent(e)
+    
+    
     # Selection callbacks.
     # --------------------
     def clusters_selected_callback(self, clusters):
@@ -402,6 +423,10 @@ class MainWindow(QtGui.QMainWindow):
     # Task methods.
     # -------------
     def open_done(self, loader):
+        clusters = self.get_view('ClusterView').selected_clusters()
+        if clusters:
+            self.get_view('ClusterView').unselect()
+        
         # Save the loader object.
         self.loader = loader
         # Create the Controller.

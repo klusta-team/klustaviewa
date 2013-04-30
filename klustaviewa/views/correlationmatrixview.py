@@ -188,6 +188,9 @@ class CorrelationMatrixInteractionManager(PlotInteractionManager):
         self.paint_manager.set_data(visible=False, visual='square')
         
     def select_pair(self, parameter):
+        if self.data_manager.nclusters == 0:
+            return
+            
         nav = self.get_processor('navigation')
         
         # window coordinates
@@ -221,6 +224,9 @@ class CorrelationMatrixInteractionManager(PlotInteractionManager):
         self.info_manager.show_closest_cluster(xd, yd)
         
     def move_square(self, parameter):
+        if self.data_manager.nclusters == 0:
+            return
+        
         self.show_closest_cluster(parameter)
         
         # data coordinates
