@@ -32,7 +32,8 @@ class Robot(object):
     # Internal methods.
     # -----------------
     def _compute_best_pairs(self):
-        if self.correlation_matrix is not None:
+        if (self.correlation_matrix is not None and 
+            self.clusters_unique is not None):
             matrix = self.correlation_matrix
             n = matrix.shape[0]
             if n > 0:
@@ -53,9 +54,9 @@ class Robot(object):
         for key, value in kwargs.iteritems():
             setattr(self, key, value)
         # Update the unique clusters.
-        if self.clusters is not None:
-            self.clusters_unique = np.array(sorted(Counter(
-                self.clusters).keys()))
+        # if self.clusters is not None:
+            # self.clusters_unique = np.array(sorted(Counter(
+                # self.clusters).keys()))
         # Update the best pairs only if the clustering has changed.
         if 'clusters' in kwargs:
             self._compute_best_pairs()

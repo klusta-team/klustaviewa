@@ -491,6 +491,7 @@ class MainWindow(QtGui.QMainWindow):
             spiketimes=self.loader.get_spiketimes('all'),
             masks=self.loader.get_masks('all'),
             clusters=self.loader.get_clusters('all'),
+            clusters_unique=self.loader.get_clusters_unique(),
             cluster_groups=self.loader.get_cluster_groups('all'),
             # Statistics.
             correlograms=self.statscache.correlograms,

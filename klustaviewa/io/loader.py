@@ -446,7 +446,7 @@ class KlustersLoader(Loader):
         # Counter clusters.
         counter = Counter(self.clusters)
         self.nclusters = len(counter)
-        self.clusters_unique = sorted(counter.keys())
+        self.clusters_unique = np.array(sorted(counter.keys()))
     
     def read_cluster_info(self):
         try:
