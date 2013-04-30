@@ -4,6 +4,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 import pprint
+import time
 import os
 import inspect
 from collections import OrderedDict, Counter
@@ -69,6 +70,7 @@ class MainWindow(QtGui.QMainWindow):
         self.spikes_selected = []
         self.robot_active = False
         self.need_save = False
+        self.last_selection_time = time.clock()
         
         # Create the main window.
         self.create_views()
@@ -382,8 +384,12 @@ class MainWindow(QtGui.QMainWindow):
     # Selection callbacks.
     # --------------------
     def clusters_selected_callback(self, clusters):
+        # HACK: prevent too many selection at the same time.
+        if time.clock() - self.last_selection_time < .5:
+            return
         # Launch cluster selection on the Loader in an external thread.
         self.tasks.select_task.select(self.loader, clusters)
+        self.last_selection_time = time.clock()
         
     def cluster_pair_selected_callback(self, clusters):
         """Callback when the user clicks on a pair in the
@@ -494,10 +500,18 @@ class MainWindow(QtGui.QMainWindow):
     def selection_done(self, clusters_selected):
         """Called on the main thread once the clusters have been loaded 
         in the main thread."""
+        if not np.array_equal(clusters_selected, 
+            self.loader.get_clusters_selected()):
+            log.debug(("Skip updating views with clusters_selected={0:s} and "
+                "actual selected clusters={1:s}").format(
+                    (str(clusters_selected),
+                     str(self.loader.get_clusters_selected()))))
+            return
         # Update the different views, with autozoom on if the selection has
         # been made by the robot.
-        self.update_feature_view(autozoom=self.robot_active)
-        self.update_waveform_view(autozoom=self.robot_active)
+        with LOCK:
+            self.update_feature_view(autozoom=self.robot_active)
+            self.update_waveform_view(autozoom=self.robot_active)
         # if self.robot_active:
             # self.autozoom()
         # Launch the computation of the correlograms.
