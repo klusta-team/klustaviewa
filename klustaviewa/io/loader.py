@@ -268,6 +268,18 @@ class Loader(object):
     def get_new_clusters(self, n=1):
         return self.clusters.max() + np.arange(1, n + 1, dtype=np.int32)
     
+    def get_next_cluster(self, cluster):
+        cluster_groups = self.get_cluster_groups('all')
+        group = self.get_cluster_groups(cluster)
+        clusters = get_indices(cluster_groups)
+        cluster_groups = get_array(cluster_groups)
+        samegroup = (cluster_groups == group) & (clusters > cluster)
+        i = np.nonzero(samegroup)[0]
+        if len(i) > 0:
+            return clusters[i[0]]
+        else:
+            return cluster
+    
     def get_new_group(self):
         groups = get_indices(self.group_names).values
         if len(groups) > 0:

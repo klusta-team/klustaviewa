@@ -141,9 +141,11 @@ class Processor(object):
         
     # Move clusters.
     def move_clusters(self, clusters, groups_old, group_new):
+        # Get next cluster to select.
+        next_cluster = self.loader.get_next_cluster(clusters[-1])
         self.loader.set_cluster_groups(clusters, group_new)
         # to_compute=[] to force refreshing the correlation matrix
-        return dict(to_select=clusters, to_compute=[])
+        return dict(to_select=[next_cluster], to_compute=[])
         
     def move_clusters_undo(self, clusters, groups_old, group_new):
         self.loader.set_cluster_groups(clusters, groups_old)
