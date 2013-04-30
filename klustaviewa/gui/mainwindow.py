@@ -71,6 +71,7 @@ class MainWindow(QtGui.QMainWindow):
         self.robot_active = False
         self.need_save = False
         self.last_selection_time = time.clock()
+        # self.do_renumber = False
         
         # Create the main window.
         self.create_views()
@@ -105,14 +106,16 @@ class MainWindow(QtGui.QMainWindow):
     
     # Actions.
     # --------
-    def add_action(self, name, text, callback=None, shortcut=None):
+    def add_action(self, name, text, callback=None, shortcut=None,
+            checkable=False):
         action = QtGui.QAction(text, self)
         if callback is None:
-            callback = getattr(self, name + '_callback')
-        # if callback:
-        action.triggered.connect(callback)
+            callback = getattr(self, name + '_callback', None)
+        if callback:
+            action.triggered.connect(callback)
         if shortcut:
             action.setShortcut(shortcut)
+        action.setCheckable(checkable)
         setattr(self, name + '_action', action)
         
     def create_file_actions(self):
@@ -132,6 +135,8 @@ class MainWindow(QtGui.QMainWindow):
             self.open_last_action.setEnabled(False)
             
         self.add_action('save', '&Save', shortcut='Ctrl+S')
+        
+        self.add_action('renumber', '&Renumber when closing', checkable=True)
         
         # Quit action.
         self.add_action('quit', '&Quit', shortcut='Ctrl+Q')
@@ -165,6 +170,8 @@ class MainWindow(QtGui.QMainWindow):
         file_menu = self.menuBar().addMenu("&File")
         file_menu.addAction(self.open_action)
         file_menu.addAction(self.open_last_action)
+        file_menu.addSeparator()
+        file_menu.addAction(self.renumber_action)
         file_menu.addSeparator()
         file_menu.addAction(self.save_action)
         file_menu.addSeparator()
@@ -245,7 +252,7 @@ class MainWindow(QtGui.QMainWindow):
             
     def save_callback(self, checked):
         folder = SETTINGS.get('main_window.last_data_file')
-        self.loader.save()
+        self.loader.save(renumber=self.renumber_action.isChecked())
         self.need_save = False
         
         # # ask a new file name
@@ -384,8 +391,8 @@ class MainWindow(QtGui.QMainWindow):
     # Selection callbacks.
     # --------------------
     def clusters_selected_callback(self, clusters):
-        # HACK: prevent too many selection at the same time.
-        if time.clock() - self.last_selection_time < .5:
+        # HACK: teach patience.
+        if time.clock() - self.last_selection_time < .25:
             return
         # Launch cluster selection on the Loader in an external thread.
         self.tasks.select_task.select(self.loader, clusters)
@@ -504,8 +511,8 @@ class MainWindow(QtGui.QMainWindow):
             self.loader.get_clusters_selected()):
             log.debug(("Skip updating views with clusters_selected={0:s} and "
                 "actual selected clusters={1:s}").format(
-                    (str(clusters_selected),
-                     str(self.loader.get_clusters_selected()))))
+                    str(clusters_selected),
+                    str(self.loader.get_clusters_selected())))
             return
         # Update the different views, with autozoom on if the selection has
         # been made by the robot.

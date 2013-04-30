@@ -133,6 +133,36 @@ def save_group_info(filename_groupinfo, group_info):
 def save_clusters(filename_clu, clusters):
     save_text(filename_clu, clusters, header=len(Counter(clusters)))
 
+    
+# -----------------------------------------------------------------------------
+# Cluster renumbering
+# -----------------------------------------------------------------------------
+def reorder(x, order):
+    x_reordered = np.zeros_like(x)
+    for i, o in enumerate(order):
+        x_reordered[x == o] = i
+    return x_reordered
+
+def renumber_clusters(clusters, cluster_info):
+    clusters_unique = get_array(get_indices(cluster_info))
+    assert np.array_equal(clusters_unique, np.unique(clusters))
+    clusters_array = get_array(clusters)
+    groups = get_array(cluster_info['group'])
+    colors = get_array(cluster_info['color'])
+    groups_unique = np.unique(groups)
+    # Reorder clusters according to the group.
+    clusters_unique_reordered = np.hstack(
+        [sorted(clusters_unique[groups == group]) for group in groups_unique])
+    clusters_renumbered = reorder(clusters_array, clusters_unique_reordered)
+    cluster_permutation = reorder(clusters_unique_reordered, clusters_unique)
+    # Reorder cluster info.
+    groups_reordered = groups[cluster_permutation]
+    colors_reordered = colors[cluster_permutation]
+    # Recreate new cluster info.
+    cluster_info_reordered = pd.DataFrame({'color': colors_reordered, 
+        'group': groups_reordered}, dtype=np.int32)
+    return clusters_renumbered, cluster_info_reordered
+    
 
 # -----------------------------------------------------------------------------
 # Generic Loader class
@@ -170,8 +200,14 @@ class Loader(object):
     # Access to the data: spikes
     # --------------------------
     def select(self, spikes=None, clusters=None):
-        pass
-    
+        if clusters is not None:
+            spikes = get_spikes_in_clusters(clusters, self.clusters)    
+        self.spikes_selected = spikes
+        self.clusters_selected = clusters
+
+    def unselect(self):
+        self.select(spikes=None, clusters=None)
+        
     def get_clusters_selected(self):
         return self.clusters_selected
         
@@ -233,7 +269,6 @@ class Loader(object):
         return get_array(self.spiketimes)[-1]
     
     
-    
     # Access to the data: clusters
     # ----------------------------
     def get_cluster_colors(self, clusters=None):
@@ -291,8 +326,8 @@ class Loader(object):
     # Control methods
     # ---------------
     def update_clusters_unique(self):
-        counter = Counter(self.clusters)
-        self.clusters_unique = np.array(sorted(counter.keys()))
+        self.clusters_unique = np.unique(self.clusters)
+        self.nclusters = len(self.clusters_unique)
         
     # Set.
     def set_cluster(self, spikes, cluster):
@@ -357,7 +392,27 @@ class Loader(object):
             for cluster in clusters_empty:
                 self.remove_cluster(cluster)
         return clusters_empty
-        
+    
+    # Cluster and group info.
+    def update_cluster_info(self):
+        cluster_info = {
+            'color': self.cluster_colors,
+            'group': self.cluster_groups,
+        }
+        self.cluster_info = pd.DataFrame(cluster_info, dtype=np.int32)
+    
+    def update_group_info(self):
+        group_info = {
+            'color': self.group_colors,
+            'name': self.group_names,
+        }
+        self.group_info = pd.DataFrame(group_info)
+    
+    # Renumber.
+    def renumber(self):
+        self.clusters_renumbered, self.cluster_info_renumbered = \
+            renumber_clusters(self.clusters, self.cluster_info)
+    
     
 # -----------------------------------------------------------------------------
 # Klusters Loader
@@ -459,10 +514,8 @@ class KlustersLoader(Loader):
         # Convert to Pandas.
         self.clusters = pd.Series(self.clusters, dtype=np.int32)
         
-        # Counter clusters.
-        counter = Counter(self.clusters)
-        self.nclusters = len(counter)
-        self.clusters_unique = np.array(sorted(counter.keys()))
+        # Count clusters.
+        self.update_clusters_unique()
     
     def read_cluster_info(self):
         try:
@@ -538,34 +591,6 @@ class KlustersLoader(Loader):
         self.corrbin = .001
     
     
-    # Internal save methods.
-    # ----------------------
-    def update_cluster_info(self):
-        cluster_info = {
-            'color': self.cluster_colors,
-            'group': self.cluster_groups,
-        }
-        self.cluster_info = pd.DataFrame(cluster_info, dtype=np.int32)
-    
-    def update_group_info(self):
-        group_info = {
-            'color': self.group_colors,
-            'name': self.group_names,
-        }
-        self.group_info = pd.DataFrame(group_info)
-    
-    def save_clusters(self):
-        save_clusters(self.filename_clu_klustaviewa, get_array(self.clusters))
-        
-    def save_cluster_info(self):
-        self.update_cluster_info()
-        save_cluster_info(self.filename_clusterinfo, self.cluster_info)
-    
-    def save_group_info(self):
-        self.update_group_info()
-        save_group_info(self.filename_groups, self.group_info)
-    
-    
     # Public methods.
     # ---------------
     def read(self):
@@ -580,17 +605,21 @@ class KlustersLoader(Loader):
         self.read_waveforms()
         self.read_stats()
     
-    def save(self):
-        self.save_clusters()
-        self.save_cluster_info()
-        self.save_group_info()
-    
-    def select(self, spikes=None, clusters=None):
-        if clusters is not None:
-            spikes = get_spikes_in_clusters(clusters, self.clusters)    
-        self.spikes_selected = spikes
-        self.clusters_selected = clusters
-
-    def unselect(self):
-        self.select(spikes=None, clusters=None)
+    def save(self, renumber=False):
+        self.update_cluster_info()
+        self.update_group_info()
         
+        if renumber:
+            self.renumber()
+            clusters = get_array(self.clusters_renumbered)
+            cluster_info = self.cluster_info_renumbered
+        else:
+            clusters = get_array(self.clusters)
+            cluster_info = self.cluster_info
+        
+        save_clusters(self.filename_clu_klustaviewa, clusters)
+        save_cluster_info(self.filename_clusterinfo, cluster_info)
+        save_group_info(self.filename_groups, self.group_info)
+    
+    
+    

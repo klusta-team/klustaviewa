@@ -15,7 +15,8 @@ from nose.tools import with_setup
 from klustaviewa.io.tests.mock_data import (setup, teardown,
                             nspikes, nclusters, nsamples, nchannels, fetdim)
 from klustaviewa.io.loader import (KlustersLoader, read_clusters, save_clusters,
-    read_cluster_info, save_cluster_info, read_group_info, save_group_info)
+    read_cluster_info, save_cluster_info, read_group_info, save_group_info,
+    renumber_clusters, reorder)
 from klustaviewa.io.selection import select, get_indices
 from klustaviewa.io.tools import check_dtype, check_shape, get_array, load_text
 
@@ -45,7 +46,95 @@ def test_clusters():
     clusters2_with_header = load_text(clufile2, np.int32, skiprows=0)
     
     assert np.array_equal(clusters_with_header, clusters2_with_header)
-
+    
+def test_reorder():
+    # Generate clusters and permutations.
+    clusters = np.random.randint(size=1000, low=10, high=100)
+    clusters_unique = np.unique(clusters)
+    permutation = clusters_unique[np.random.permutation(len(clusters_unique))]
+    
+    # Reorder.
+    clusters_reordered = reorder(clusters, permutation)
+    
+    # Check.
+    i = len(clusters_unique) // 2
+    c = clusters_unique[i]
+    i_new = np.nonzero(permutation == c)[0][0]
+    
+    my_clusters = clusters == c
+    
+    assert np.all(clusters_reordered[my_clusters] == i_new)
+    
+def test_renumber_clusters():
+    # Create clusters.
+    clusters = np.random.randint(size=20, low=10, high=100)
+    clusters_unique = np.unique(clusters)
+    n = len(clusters_unique)
+    
+    # Create cluster info.
+    cluster_info = np.zeros((n, 3), dtype=np.int32)
+    cluster_info[:, 0] = clusters_unique
+    cluster_info[:, 1] = np.mod(np.arange(n, dtype=np.int32), 35) + 1
+    
+    # Set groups.
+    k = n // 3
+    cluster_info[:k, 2] = 1
+    cluster_info[k:2 * n // 3, 2] = 0
+    cluster_info[2 * k:, 2] = 2
+    cluster_info[n // 2, 2] = 1
+    
+    
+    cluster_info = pd.DataFrame({
+        'color': cluster_info[:, 1],
+        'group': cluster_info[:, 2]},
+        dtype=np.int32, index=cluster_info[:, 0])
+    
+    # Renumber
+    clusters_renumbered, cluster_info_renumbered = renumber_clusters(clusters,
+        cluster_info)
+        
+    # Test.
+    c0 = clusters_unique[k]  # group 0
+    c1 = clusters_unique[0]  # group 1
+    c2 = clusters_unique[2 * k]  # group 2
+    cm = clusters_unique[n // 2]  # group 1
+    
+    c0next = clusters_unique[k + 1]
+    c1next = clusters_unique[0 + 1]
+    c2next = clusters_unique[2 * k + 1]
+    
+    # New order:
+    # c0 ... cm-1, cm+1, ..., c2-1, c1, ..., c0-1, cm, c2, ...
+    
+    assert np.array_equal(clusters == c0, clusters_renumbered == 0)
+    assert np.array_equal(clusters == c0next, 
+        clusters_renumbered == 1)
+    assert np.array_equal(clusters == c1, clusters_renumbered == k - 1)
+    assert np.array_equal(clusters == c1next, 
+        clusters_renumbered == k)
+    assert np.array_equal(clusters == c2, clusters_renumbered == 2 * k)
+    assert np.array_equal(clusters == c2next, 
+        clusters_renumbered == 2 * k + 1)
+    
+    assert np.array_equal(get_indices(cluster_info_renumbered),
+        np.arange(n))
+    
+    # Increasing groups with the new numbering.
+    assert np.all(np.diff(get_array(cluster_info_renumbered)[:,1]) >= 0)
+    
+    assert np.all(select(cluster_info_renumbered, 0) == 
+        select(cluster_info, c0))
+    assert np.all(select(cluster_info_renumbered, 1) == 
+        select(cluster_info, c0next))
+    assert np.all(select(cluster_info_renumbered, k - 1) == 
+        select(cluster_info, c1))
+    assert np.all(select(cluster_info_renumbered, k) == 
+        select(cluster_info, c1next))
+    assert np.all(select(cluster_info_renumbered, 2 * k) == 
+        select(cluster_info, c2))
+    assert np.all(select(cluster_info_renumbered, 2 * k + 1) == 
+        select(cluster_info, c2next))
+    
 def test_cluster_info():
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
     clufile = os.path.join(dir, 'test.clu.1')
@@ -53,7 +142,7 @@ def test_cluster_info():
 
     clusters = read_clusters(clufile)
     
-    indices = np.array(sorted(Counter(clusters).keys()))
+    indices = np.unique(clusters)
     colors = np.random.randint(low=0, high=10, size=len(indices))
     groups = np.random.randint(low=0, high=2, size=len(indices))
     cluster_info = pd.DataFrame({'color': pd.Series(colors, index=indices),
