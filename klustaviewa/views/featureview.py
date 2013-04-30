@@ -800,12 +800,12 @@ class FeatureBindings(KlustaViewaBindings):
         # select previous/next channel for coordinate 0
         self.set('Wheel', 'SelectNeighborChannel',
                  key_modifier='Control',
-                 param_getter=lambda p: (0, int(np.sign(p['wheel']))))
+                 param_getter=lambda p: (0, -int(np.sign(p['wheel']))))
                  
         # select previous/next channel for coordinate 1
         self.set('Wheel', 'SelectNeighborChannel',
                  key_modifier='Shift',
-                 param_getter=lambda p: (1, int(np.sign(p['wheel']))))
+                 param_getter=lambda p: (1, -int(np.sign(p['wheel']))))
         
     def set_feature(self):
         # select projection feature for coordinate 0

@@ -38,8 +38,9 @@ class ProjectionView(QtGui.QWidget):
         else:
             self.setFocusPolicy(QtCore.Qt.NoFocus)
             
-        self.setGeometry(300, 300, 300, 300)
         self.setWindowTitle('ProjectionView')
+        # self.setMaximumWidth(500)
+        self.setMaximumHeight(80)
             
         self.show()
         
@@ -47,12 +48,23 @@ class ProjectionView(QtGui.QWidget):
     # Public methods.
     # ---------------
     def set_data(self, fetdim=None, nchannels=None, nextrafet=None):
+        if fetdim is None:
+            fetdim = 3
+        if nchannels is None:
+            nchannels = 1
+        if nextrafet is None:
+            nextrafet = 0
+        
         self.fetdim = fetdim
         self.nchannels = nchannels
         self.nextrafet = nextrafet
         
-        box = self.create_widget()
-        self.setLayout(box)    
+        # Remove the existing layout.
+        if self.layout():
+            QtGui.QWidget().setLayout(self.layout())
+        
+        self.box = self.create_widget()
+        self.setLayout(self.box)    
     
     def select_feature(self, coord, feature):
         channel = self.projection[coord][0]
@@ -86,6 +98,11 @@ class ProjectionView(QtGui.QWidget):
     def get_projection(self, coord):
         return self.projection[coord]
     
+    def set_projection(self, coord, channel, feature, do_emit=True):
+        channel = np.clip(channel, 0, self.nchannels + self.nextrafet - 1)
+        feature = np.clip(feature, 0, self.fetdim - 1)
+        self._change_projection(coord, channel, feature, do_emit=do_emit)
+        
     
     # Widgets.
     # --------
@@ -165,11 +182,16 @@ class ProjectionView(QtGui.QWidget):
         
     # Internal methods.
     # -----------------
-    def _change_projection(self, coord, channel, feature):
+    def _change_projection(self, coord, channel, feature, do_emit=True):
         assert coord in (0, 1)
-        assert (isinstance(channel, (int, long)) and 
-            0 <= channel < self.nchannels + self.nextrafet)
-        assert (isinstance(feature, (int, long)) and 0 <= feature < self.fetdim)
+        assert isinstance(channel, (int, long))# and 
+            # 0 <= channel < self.nchannels + self.nextrafet)
+        assert isinstance(feature, (int, long))# and 0 <= feature < self.fetdim)
+        
+        # coord = np.clip(coord, 0, 1)
+        feature = np.clip(feature, 0, self.fetdim - 1)
+        channel = np.clip(channel, 0, self.nchannels + self.nextrafet - 1)
+        
         
         # Update the widgets.
         self.channel_box[coord].blockSignals(True)
@@ -181,9 +203,14 @@ class ProjectionView(QtGui.QWidget):
         self.channel_box[coord].blockSignals(False)
         
         self.projection[coord] = (channel, feature)
-        log.debug("Projection changed on coordinate {0:s} to {1:d}:{2:s}".
-            format('xy'[coord], channel, 'ABCDEF'[feature]))
-        self.projectionChanged.emit(coord, channel, feature)
+        # log.debug("Projection changed on coordinate {0:s} to {1:d}:{2:s}".
+            # format('xy'[coord], channel, 'ABCDEF'[feature]))
+        if do_emit:
+            self.projectionChanged.emit(coord, channel, feature)
+        
+        
+    def sizeHint(self):
+        return QtCore.QSize(400, 80)
         
     
     # Slots.

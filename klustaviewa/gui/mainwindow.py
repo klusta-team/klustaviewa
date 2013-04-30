@@ -27,6 +27,7 @@ from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.utils.settings import SETTINGS
 from klustaviewa.utils.globalpaths import APPNAME
 from klustaviewa.gui.threads import ThreadedTasks, LOCK
+import rcicons
 
 
 # -----------------------------------------------------------------------------
@@ -382,7 +383,17 @@ class MainWindow(QtGui.QMainWindow):
         self.get_view('WaveformView').highlight_spikes(get_array(spikes))
         
     def waveform_box_clicked_callback(self, coord, cluster, channel):
+        """Changed in waveform ==> change in feature"""
         self.get_view('FeatureView').set_projection(coord, channel, coord)
+        
+    def projection_changed_callback(self, coord, channel, feature):
+        """Changed in projection ==> change in feature"""
+        self.get_view('FeatureView').set_projection(coord, channel, feature)
+        
+    def features_projection_changed_callback(self, coord, channel, feature):
+        """Changed in feature ==> change in projection"""
+        self.get_view('ProjectionView').set_projection(coord, channel, feature,
+            do_emit=False)
         
     
     # Task methods.
@@ -401,6 +412,7 @@ class MainWindow(QtGui.QMainWindow):
         self.initialize_robot()
         # Update the views.
         self.update_cluster_view()
+        self.update_projection_view()
         
     def start_compute_correlograms(self, clusters_selected):
         # Get the correlograms parameters.
@@ -592,6 +604,15 @@ class MainWindow(QtGui.QMainWindow):
         
         self.views['ClusterView'].append(view)
         
+    def add_projection_view(self):
+        view = self.create_view(vw.ProjectionView,
+            position=QtCore.Qt.LeftDockWidgetArea, closable=False)
+            
+        # Connect callback functions.
+        view.projectionChanged.connect(self.projection_changed_callback)
+        
+        self.views['ProjectionView'].append(view)
+        
     def add_correlation_matrix_view(self):
         view = self.create_view(vw.CorrelationMatrixView,
             position=QtCore.Qt.LeftDockWidgetArea,)
@@ -613,6 +634,8 @@ class MainWindow(QtGui.QMainWindow):
             self.features_spikes_highlighted_callback)
         view.spikesSelected.connect(
             self.features_spikes_selected_callback)
+        view.projectionChanged.connect(
+            self.features_projection_changed_callback)
         self.views['FeatureView'].append(view)
             
     def add_correlograms_view(self):
@@ -635,14 +658,22 @@ class MainWindow(QtGui.QMainWindow):
         # Create the default layout.
         self.views = dict(
             ClusterView=[],
+            ProjectionView=[],
             CorrelationMatrixView=[],
             WaveformView=[],
             FeatureView=[],
             CorrelogramsView=[],
             )
         
+        self.add_projection_view()
         self.add_cluster_view()
         self.add_correlation_matrix_view()
+            
+        self.splitDockWidget(
+            self.get_view('ProjectionView').parentWidget(), 
+            self.get_view('ClusterView').parentWidget(), 
+            QtCore.Qt.Vertical
+            )
             
         self.splitDockWidget(
             self.get_view('ClusterView').parentWidget(), 
@@ -666,6 +697,12 @@ class MainWindow(QtGui.QMainWindow):
             self.get_view('CorrelogramsView').parentWidget(), 
             QtCore.Qt.Vertical
             )
+            
+        # self.splitDockWidget(
+            # self.get_view('ProjectionView').parentWidget(), 
+            # self.get_view('FeatureView').parentWidget(), 
+            # QtCore.Qt.Vertical
+            # )
     
     def dock_widget_closed(self, dock):
         for key in self.views.keys():
@@ -689,6 +726,16 @@ class MainWindow(QtGui.QMainWindow):
             cluster_sizes=self.loader.get_cluster_sizes('all'),
         )
         self.get_view('ClusterView').set_data(**data)
+    
+    def update_projection_view(self):
+        """Update the cluster view using the data stored in the loader
+        object."""
+        data = dict(
+            nchannels=self.loader.nchannels,
+            fetdim=self.loader.fetdim,
+            nextrafet=self.loader.nextrafet,
+        )
+        self.get_view('ProjectionView').set_data(**data)
     
     def update_waveform_view(self, autozoom=None):
         data = dict(
