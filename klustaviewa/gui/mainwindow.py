@@ -16,6 +16,7 @@ from galry import QtGui, QtCore
 from qtools import inprocess, inthread
 
 import klustaviewa.views as vw
+from klustaviewa.gui.icons import get_icon
 from klustaviewa.control.controller import Controller
 from klustaviewa.io.tools import get_array
 from klustaviewa.io.loader import KlustersLoader
@@ -82,6 +83,7 @@ class MainWindow(QtGui.QMainWindow):
         self.create_robot_actions()
         self.create_help_actions()
         self.create_menu()
+        self.create_toolbar()
         self.create_threads()
         
         # Update action enabled/disabled property.
@@ -108,7 +110,7 @@ class MainWindow(QtGui.QMainWindow):
     # Actions.
     # --------
     def add_action(self, name, text, callback=None, shortcut=None,
-            checkable=False):
+            checkable=False, icon=None):
         action = QtGui.QAction(text, self)
         if callback is None:
             callback = getattr(self, name + '_callback', None)
@@ -116,12 +118,14 @@ class MainWindow(QtGui.QMainWindow):
             action.triggered.connect(callback)
         if shortcut:
             action.setShortcut(shortcut)
+        if icon:
+            action.setIcon(get_icon(icon))
         action.setCheckable(checkable)
         setattr(self, name + '_action', action)
         
     def create_file_actions(self):
         # Open actions.
-        self.add_action('open', '&Open', shortcut='Ctrl+O')
+        self.add_action('open', '&Open', shortcut='Ctrl+O', icon='open')
         
         # Open last file action
         path = SETTINGS['main_window.last_data_file']
@@ -135,7 +139,7 @@ class MainWindow(QtGui.QMainWindow):
             self.add_action('open_last', 'Open &last', shortcut='Ctrl+Alt+O')
             self.open_last_action.setEnabled(False)
             
-        self.add_action('save', '&Save', shortcut='Ctrl+S')
+        self.add_action('save', '&Save', shortcut='Ctrl+S', icon='save')
         
         self.add_action('renumber', '&Renumber when closing', checkable=True)
         
@@ -150,11 +154,11 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('add_correlograms_view', 'Add CorrelogramsView')
     
     def create_control_actions(self):
-        self.add_action('undo', '&Undo', shortcut='Ctrl+Z')
-        self.add_action('redo', '&Redo', shortcut='Ctrl+Y')
+        self.add_action('undo', '&Undo', shortcut='Ctrl+Z', icon='undo')
+        self.add_action('redo', '&Redo', shortcut='Ctrl+Y', icon='redo')
         
-        self.add_action('merge', '&Merge', shortcut='G')
-        self.add_action('split', '&Split', shortcut='K')
+        self.add_action('merge', '&Merge', shortcut='G', icon='merge')
+        self.add_action('split', '&Split', shortcut='K', icon='split')
 
     def create_correlograms_actions(self):
         self.add_action('change_ncorrbins', 'Change time &window')
@@ -213,6 +217,26 @@ class MainWindow(QtGui.QMainWindow):
         help_menu = self.menuBar().addMenu("&Help")
         help_menu.addAction(self.shortcuts_action)
         help_menu.addAction(self.about_action)
+        
+    def create_toolbar(self):
+        self.toolbar = self.addToolBar("KlustaViewaToolbar")
+        self.toolbar.setObjectName("KlustaViewaToolbar")
+        self.toolbar.addAction(self.open_action)
+        self.toolbar.addAction(self.save_action)
+        # self.toolbar.addAction(self.saveas_action)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.merge_action)
+        self.toolbar.addAction(self.split_action)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.get_view('ClusterView').move_to_mua_action)
+        self.toolbar.addAction(self.get_view('ClusterView').move_to_noise_action)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.undo_action)
+        self.toolbar.addAction(self.redo_action)
+        self.toolbar.addSeparator()
+        # self.toolbar.addAction(self.override_color_action)
+        
+        self.addToolBar(QtCore.Qt.LeftToolBarArea, self.toolbar)
         
     def update_action_enabled(self):
         self.undo_action.setEnabled(self.can_undo())

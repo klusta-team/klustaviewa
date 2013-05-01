@@ -13,6 +13,7 @@ import numpy.random as rnd
 from galry import QtGui, QtCore
 
 from klustaviewa.io.selection import get_indices, select
+from klustaviewa.gui.icons import get_icon
 from klustaviewa.utils.colors import COLORMAP, next_color
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.settings import SETTINGS
@@ -818,13 +819,15 @@ class ClusterView(QtGui.QTreeView):
         self.remove_group_action = QtGui.QAction("&Remove group", self)
         self.remove_group_action.triggered.connect(self.remove_group_callback)
         
-        self.move_to_noise_action = QtGui.QAction("Move to &noise", self)
-        self.move_to_noise_action.setShortcut('Shift+Delete')
-        self.move_to_noise_action.triggered.connect(self.move_to_noise_callback)
-        
         self.move_to_mua_action = QtGui.QAction("Move to &MUA", self)
         self.move_to_mua_action.setShortcut("Delete")
+        self.move_to_mua_action.setIcon(get_icon('multiunit'))
         self.move_to_mua_action.triggered.connect(self.move_to_mua_callback)
+        
+        self.move_to_noise_action = QtGui.QAction("Move to &noise", self)
+        self.move_to_noise_action.setShortcut('Shift+Delete')
+        self.move_to_noise_action.setIcon(get_icon('noise'))
+        self.move_to_noise_action.triggered.connect(self.move_to_noise_callback)
         
         # Add actions to the widget.
         self.addAction(self.change_color_action)
