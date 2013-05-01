@@ -908,7 +908,7 @@ class MainWindow(QtGui.QMainWindow):
     
     def update_feature_view(self, autozoom=None):
         data = dict(
-            features=self.loader.get_features(),
+            features=self.loader.get_features('all'),
             masks=self.loader.get_masks(),
             clusters=self.loader.get_clusters(),
             clusters_selected=self.loader.get_clusters_selected(),

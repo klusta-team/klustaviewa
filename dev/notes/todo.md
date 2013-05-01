@@ -16,10 +16,7 @@ Minor features
 --------------
 
   * in feature view, add non-selected spikes in gray in the background
-  * CTRL + click in correlation matrix = add pair to the selection
   
-  * option to toggle normalization in correlograms view
-    
   * store visualization-related information in the XML file (cluster colors,
     probe scaling, etc) (klustaviewa table)
     

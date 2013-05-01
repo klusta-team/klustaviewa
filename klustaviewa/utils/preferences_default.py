@@ -27,6 +27,13 @@ waveforms_nspikes_per_cluster_min = 3
 
 
 # -----------------------------------------------------------------------------
+# Feature view
+# -----------------------------------------------------------------------------
+# Opacity value of the background spikes.
+feature_background_alpha = .15
+
+
+# -----------------------------------------------------------------------------
 # Unit tests
 # -----------------------------------------------------------------------------
 # Delay between two successive automatic operations in unit tests for views.

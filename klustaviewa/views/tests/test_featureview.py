@@ -30,6 +30,8 @@ def test_featureview():
     data = get_data()
     kwargs = {k: data[k] for k in keys}
     
+    kwargs['features'] = data['features_full']
+    
     kwargs['operators'] = [
         lambda self: (self.close() 
             if USERPREF['test_auto_close'] != False else None),

@@ -14,10 +14,11 @@ from matplotlib.path import Path
 from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
     GalryWidget, QtGui, QtCore, show_window, enforce_dtype, RectanglesVisual,
     TextVisual, PlotVisual, AxesVisual)
-from klustaviewa.io.selection import get_indices
+from klustaviewa.io.selection import get_indices, select
 from klustaviewa.io.tools import get_array
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
 from klustaviewa.utils.colors import COLORMAP, HIGHLIGHT_COLORMAP
+from klustaviewa.utils.userpref import USERPREF
 import klustaviewa.utils.logger as log
 import klustaviewa
 
@@ -77,6 +78,22 @@ FRAGMENT_SHADER = """
     }
 """
 
+# Background spikes.
+VERTEX_SHADER_BACKGROUND = """
+    // move the vertex to its position
+    vec3 position = vec3(0, 0, 0);
+    position.xy = position0;
+    
+    position.z = 0.;
+    
+    gl_PointSize = 3.;
+"""
+     
+FRAGMENT_SHADER_BACKGROUND = """
+    out_color.xyz = vec3(.75, .75, .75);
+    out_color.w = {0:.3f};
+""".format(USERPREF['feature_background_alpha'] or .1)
+
 
 # -----------------------------------------------------------------------------
 # Utility functions
@@ -131,20 +148,32 @@ class FeatureDataManager(Manager):
         
         assert fetdim is not None
         
-        self.nspikes, self.ndim = features.shape
+        # Extract the relevant spikes, but keep the other ones in features_full
+        self.clusters = clusters
+        self.clusters_array = get_array(self.clusters)
+        self.spikes_in_selected_clusters = get_indices(self.clusters)
+        self.spikes_in_background = np.array(sorted(set(get_indices(features)) - 
+            set(self.spikes_in_selected_clusters)), dtype=np.int32)
+        self.features_background = select(features, self.spikes_in_background)
+        self.features_background_array = get_array(self.features_background)
+        self.features = select(features, self.spikes_in_selected_clusters)
+        
+        # Background spikes are those which do not belong to the selected clusters
+        self.npoints_background = self.features_background_array.shape[0]
+        self.nspikes_background = self.npoints_background
+        
+        
+        self.nspikes, self.ndim = self.features.shape
         self.fetdim = fetdim
         self.nchannels = nchannels
         self.nextrafet = nextrafet
-        self.npoints = features.shape[0]
-        self.features = features
+        self.npoints = self.features.shape[0]
         self.masks = masks
-        self.clusters = clusters
         self.feature_indices = get_indices(self.features)
         self.feature_indices_array = get_array(self.feature_indices)
         
         self.features_array = get_array(self.features)
         self.masks_array = get_array(self.masks)
-        self.clusters_array = get_array(self.clusters)
         self.cluster_colors = get_array(cluster_colors)
         
         # Relative indexing.
@@ -163,6 +192,8 @@ class FeatureDataManager(Manager):
         
         # prepare GPU data
         self.data = np.empty((self.nspikes, 2), dtype=np.float32)
+        self.data_background = np.empty((self.nspikes_background, 2), 
+            dtype=np.float32)
         
         # set initial projection
         self.projection_manager.set_data()
@@ -241,12 +272,32 @@ class FeatureVisual(Visual):
         
         self.add_vertex_main(VERTEX_SHADER)
         self.add_fragment_main(FRAGMENT_SHADER)
+        
+        
+class FeatureBackgroundVisual(Visual):
+    def initialize(self, npoints=None,
+                    position0=None,
+                    ):
+        
+        self.primitive_type = 'POINTS'
+        self.size = npoints
+        
+        self.add_attribute("position0", vartype="float", ndim=2, data=position0)
+        
+        # necessary so that the navigation shader code is updated
+        self.is_position_3D = True
+        
+        self.add_vertex_main(VERTEX_SHADER_BACKGROUND)
+        self.add_fragment_main(FRAGMENT_SHADER_BACKGROUND)
 
 
 class FeaturePaintManager(PlotPaintManager):
     def update_points(self):
         self.set_data(position0=self.data_manager.data,
             mask=self.data_manager.masks_full, visual='features')
+            
+        self.set_data(position0=self.data_manager.data_background,
+            visual='features_background')
         
     def initialize(self):
         self.toggle_mask_value = False
@@ -261,6 +312,11 @@ class FeaturePaintManager(PlotPaintManager):
             cluster_colors=self.data_manager.cluster_colors,
             nclusters=self.data_manager.nclusters,
             cluster_depth=self.data_manager.clusters_full_depth,
+            )
+        
+        self.add_visual(FeatureBackgroundVisual, name='features_background',
+            npoints=self.data_manager.npoints_background,
+            position0=self.data_manager.data_background,
             )
         
         self.add_visual(AxesVisual, name='grid')
@@ -312,6 +368,11 @@ class FeaturePaintManager(PlotPaintManager):
             nclusters=self.data_manager.nclusters,
             cluster_depth=self.data_manager.clusters_full_depth,
             cmap_index=cmap_index
+            )
+            
+        self.set_data(visual='features_background',
+            size=self.data_manager.npoints_background,
+            position0=self.data_manager.data_background,
             )
             
     def toggle_mask(self):
@@ -571,6 +632,8 @@ class FeatureProjectionManager(Manager):
                     channel - self.nchannels + self.nchannels * self.fetdim)
             text = 'E{0:d}'.format(channel - self.nchannels)
         self.data_manager.data[:, coord] = self.data_manager.features_array[:, i].ravel()
+        self.data_manager.data_background[:, coord] = \
+            self.data_manager.features_background_array[:, i].ravel()
         
         if do_update:
             self.projection[coord] = (channel, feature)
@@ -596,7 +659,6 @@ class FeatureProjectionManager(Manager):
         self.set_projection(0, channel_best, 0)
         self.set_projection(1, channel_best, 1)
         
-            
     def select_neighbor_channel(self, coord, channel_dir):
         # current channel and feature in the given coordinate
         proj = self.projection[coord]
@@ -909,11 +971,6 @@ class FeatureView(GalryWidget):
         self.projection_manager.set_projection(coord, channel, feature)
         self.paint_manager.update_points()
         self.paint_manager.updateGL()
-        
-    # def auto_projection(self):
-        # channel_best = np.argmax(self.data_manager.masks_array.sum(axis=0))
-        # self.set_projection(0, channel_best, 0)
-        # self.set_projection(1, channel_best, 1)
         
         
     def sizeHint(self):

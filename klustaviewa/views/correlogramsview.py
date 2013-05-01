@@ -467,6 +467,8 @@ class CorrelogramsView(GalryWidget):
     def set_data(self, *args, **kwargs):
         # if kwargs.get('clusters_selected', None) is None:
             # return
+        kwargs['normalization'] = self.interaction_manager.normalization_list[
+            self.interaction_manager.normalization_index]
         self.data_manager.set_data(*args, **kwargs)
         
         # update?
