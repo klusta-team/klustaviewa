@@ -168,7 +168,7 @@ class CorrelationMatrixInfoManager(Manager):
             
         val = self.data_manager.correlation_matrix[cx_rel, cy_rel]
         
-        text = "%d/%d:%.3f" % (cx, cy, val)
+        text = "%d/%d:%.3f" % (cy, cx, val)
         
         self.paint_manager.set_data(coordinates=(xd, yd), 
             text=text,
@@ -180,14 +180,17 @@ class CorrelationMatrixInteractionManager(PlotInteractionManager):
     def initialize(self):
         # self.register('ShowClosestCluster', self.show_closest_cluster)
         self.register('SelectPair', self.select_pair)
+        self.register('AddPair', self.add_pair)
         self.register('MoveSquare', self.move_square)
         self.register(None, self.hide_closest_cluster)
+        
+        self.clusters_selected = np.array([])
             
     def hide_closest_cluster(self, parameter):
         self.paint_manager.set_data(visible=False, visual='clusterinfo')
         self.paint_manager.set_data(visible=False, visual='square')
         
-    def select_pair(self, parameter):
+    def select_pair(self, parameter, add=False):
         if self.data_manager.nclusters == 0:
             return
             
@@ -204,9 +207,18 @@ class CorrelationMatrixInteractionManager(PlotInteractionManager):
         cy = self.data_manager.clusters_unique[cy_rel]
         clusters = np.unique([cx, cy])
         
+        if add:
+            clusters = np.array(sorted(set(self.clusters_selected).union(
+                clusters)))
+        
+        self.clusters_selected = clusters
+        
         # Emit signal.
-        # log.debug("Selected clusters {0:d} and {1:d}.".format(cx, cy))
-        self.parent.pairSelected.emit(clusters)
+        log.debug("Selected clusters {0:s}.".format(str(clusters)))
+        self.parent.clustersSelected.emit(clusters)
+        
+    def add_pair(self, parameter):
+        self.select_pair(parameter, True)
         
     def show_closest_cluster(self, parameter):
         nclu = self.data_manager.nclusters
@@ -251,18 +263,18 @@ class CorrelationMatrixBindings(KlustaViewaBindings):
     def get_base_cursor(self):
         return 'ArrowCursor'
     
-    # def set_clusterinfo(self):
-        # self.set('Move', 'ShowClosestCluster', #key_modifier='Shift',
-            # param_getter=lambda p:
-            # (p['mouse_position'][0], p['mouse_position'][1]))
-    
     def set_selectcluster(self):
         self.set('RightClick', 'SelectPair', #key_modifier='Shift',
+            param_getter=lambda p:
+            (p['mouse_position'][0], p['mouse_position'][1]))
+        self.set('RightClick', 'AddPair', key_modifier='Control',
             param_getter=lambda p:
             (p['mouse_position'][0], p['mouse_position'][1]))
     
     def set_move(self):
         self.set('Move', 'MoveSquare',
+            param_getter=lambda p: p['mouse_position'])
+        self.set('Move', 'MoveSquare', key_modifier='Control',
             param_getter=lambda p: p['mouse_position'])
     
     def initialize(self):
@@ -278,7 +290,7 @@ class CorrelationMatrixBindings(KlustaViewaBindings):
 class CorrelationMatrixView(GalryWidget):
     
     # Raise the list of highlighted spike absolute indices.
-    pairSelected = QtCore.pyqtSignal(np.ndarray)
+    clustersSelected = QtCore.pyqtSignal(np.ndarray)
     
     def initialize(self):
         self.set_bindings(CorrelationMatrixBindings)

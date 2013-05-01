@@ -726,7 +726,7 @@ class MainWindow(QtGui.QMainWindow):
     def add_correlation_matrix_view(self):
         view = self.create_view(vw.CorrelationMatrixView,
             position=QtCore.Qt.LeftDockWidgetArea,)
-        view.pairSelected.connect(self.cluster_pair_selected_callback)
+        view.clustersSelected.connect(self.cluster_pair_selected_callback)
         self.views['CorrelationMatrixView'].append(view)
     
     def add_waveform_view(self):
