@@ -612,7 +612,19 @@ class MainWindow(QtGui.QMainWindow):
         self.update_action_enabled()
         self.robot_active = False
     
-    def correlograms_computed(self, clusters, correlograms):
+    def correlograms_computed(self, clusters, correlograms, ncorrbins, corrbin):
+        clusters_selected = self.loader.get_clusters_selected()
+        # Abort if the selection has changed during the computation of the
+        # correlograms.
+        if not np.array_equal(clusters, clusters_selected):
+            log.debug("Skip update correlograms with clusters selected={0:s}"
+            " and clusters updated={1:s}.".format(clusters_selected, clusters))
+            return
+        if self.statscache.ncorrbins != ncorrbins:
+            log.debug(("Skip updating correlograms because ncorrbins has "
+                "changed (from {0:d} to {1:d})".format(
+                ncorrbins, self.statscache.ncorrbins)))
+            return
         # Put the computed correlograms in the cache.
         self.statscache.correlograms.update(clusters, correlograms)
         # Update the robot.
@@ -658,12 +670,16 @@ class MainWindow(QtGui.QMainWindow):
         clusters =  self.tasks.robot_task.previous(
             _sync=True)[2]['_result']
         # log.info("The robot proposes clusters {0:s}.".format(str(clusters)))
+        if clusters is None or len(clusters) == 0:
+            return
         self.robot_active = True
         self.get_view('ClusterView').select(clusters)
             
     def next_clusters_callback(self, checked):
         clusters =  self.tasks.robot_task.next(
             _sync=True)[2]['_result']
+        if clusters is None or len(clusters) == 0:
+            return
         log.info("The robot proposes clusters {0:s}.".format(str(clusters)))
         self.robot_active = True
         self.get_view('ClusterView').select(clusters)
@@ -899,12 +915,12 @@ class MainWindow(QtGui.QMainWindow):
         
     def update_correlograms_view(self, clusters):
         clusters_selected = self.loader.get_clusters_selected()
-        # Abort if the selection has changed during the computation of the
-        # correlograms.
-        if not np.array_equal(clusters, clusters_selected):
-            log.debug("Skip update correlograms with clusters selected={0:s}"
-            " and clusters updated={1:s}.".format(clusters_selected, clusters))
-            return
+        # # Abort if the selection has changed during the computation of the
+        # # correlograms.
+        # if not np.array_equal(clusters, clusters_selected):
+            # log.debug("Skip update correlograms with clusters selected={0:s}"
+            # " and clusters updated={1:s}.".format(clusters_selected, clusters))
+            # return
         correlograms = self.statscache.correlograms.submatrix(
             clusters_selected)
         # Compute the baselines.
@@ -927,10 +943,13 @@ class MainWindow(QtGui.QMainWindow):
         # Clusters in groups 0 or 1 to hide.
         cluster_groups = self.loader.get_cluster_groups('all')
         clusters_hidden = np.nonzero(np.in1d(cluster_groups, [0, 1]))[0]
+        # Cluster quality.
+        correlation_matrix = normalize(matrix.to_array(copy=True))
+        cluster_quality = np.diag(correlation_matrix)
         data = dict(
             # WARNING: copy the matrix here so that we don't modify the
             # original matrix while normalizing it.
-            correlation_matrix=normalize(matrix.to_array(copy=True)),
+            correlation_matrix=correlation_matrix,
             cluster_colors_full=self.loader.get_cluster_colors('all'),
             clusters_hidden=clusters_hidden,
         )

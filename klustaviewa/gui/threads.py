@@ -48,7 +48,7 @@ class SelectTask(QtCore.QObject):
         
         
 class CorrelogramsTask(QtCore.QObject):
-    correlogramsComputed = QtCore.pyqtSignal(np.ndarray, object)
+    correlogramsComputed = QtCore.pyqtSignal(np.ndarray, object, int, float)
     
     def compute(self, spiketimes, clusters, clusters_to_update=None,
             clusters_selected=None, ncorrbins=None, corrbin=None):
@@ -65,7 +65,7 @@ class CorrelogramsTask(QtCore.QObject):
             clusters_selected=None, ncorrbins=None, corrbin=None, _result=None):
         correlograms = _result
         self.correlogramsComputed.emit(np.array(clusters_selected),
-            correlograms)
+            correlograms, ncorrbins, corrbin)
 
             
 class CorrelationMatrixTask(QtCore.QObject):

@@ -40,7 +40,6 @@ class Robot(object):
                 self.current = -1
                 matrix[np.arange(n), np.arange(n)] = 0
                 indices = np.argsort(matrix.ravel())[::-1]
-                # print indices[:10], matrix.ravel()[indices[:10]]
                 clusters0 = self.clusters_unique[indices // n]
                 clusters1 = self.clusters_unique[indices % n]
                 self.best_pairs = zip(clusters0, clusters1)

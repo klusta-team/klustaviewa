@@ -108,7 +108,7 @@ def read_masks(filename_mask, fetdim):
     
 def read_waveforms(filename_spk, nsamples, nchannels):
     waveforms = np.array(load_binary(filename_spk), dtype=np.float32)
-    waveforms = normalize(waveforms)
+    waveforms = normalize(waveforms, symmetric=True)
     waveforms = waveforms.reshape((-1, nsamples, nchannels))
     return waveforms
 
@@ -333,7 +333,7 @@ class Loader(object):
     # Control methods
     # ---------------
     def update_clusters_unique(self):
-        self.clusters_unique = np.unique(self.clusters)
+        self.clusters_unique = np.unique(get_array(self.clusters))
         self.nclusters = len(self.clusters_unique)
         
     # Set.

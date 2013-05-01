@@ -333,6 +333,8 @@ class WaveformPositionManager(Manager):
         """
         w, h = self.load_box_size(effective=False)
         channels = np.array(channels)
+        if channels.size == 0:
+            return (-1., -1., 1., 1.)
         Tx, Ty = self.box_positions
         # find the box enclosing all channels center positions
         xmin, xmax = Tx[channels,:].min(), Tx[channels,:].max()
@@ -763,7 +765,7 @@ class WaveformPaintManager(PlotPaintManager):
             channel_positions=channel_positions,
             )
         
-        if self.data_manager.autozoom:
+        if self.data_manager.autozoom and size > 0:
             self.interaction_manager.autozoom()
         
 

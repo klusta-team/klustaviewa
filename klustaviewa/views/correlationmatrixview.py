@@ -104,8 +104,8 @@ class CorrelationMatrixDataManager(Manager):
         tex0 = self.texture.copy()
         for clu in clusters_hidden:
             # Inversion of axes in the y axis
-            self.texture[- clu - 1, :, :] = tex0[- clu - 1, :, :] * .25
-            self.texture[:, clu, :] = tex0[:, clu, :] * .25
+            self.texture[- clu - 1, :, :] = tex0[- clu - 1, :, :] * .5
+            self.texture[:, clu, :] = tex0[:, clu, :] * .5
         
         self.clusters_unique = get_indices(cluster_colors_full)
         self.cluster_colors = cluster_colors_full
