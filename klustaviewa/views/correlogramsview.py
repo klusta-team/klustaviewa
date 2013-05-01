@@ -75,10 +75,12 @@ def get_histogram_points(hist):
 # -----------------------------------------------------------------------------
 class CorrelogramsDataManager(Manager):
     def set_data(self, correlograms=None, cluster_colors=None, baselines=None,
-        clusters_selected=None, ncorrbins=None, corrbin=None):
+        clusters_selected=None, ncorrbins=None, corrbin=None,
+        normalization='row'):
         
         if correlograms is None:
             correlograms = IndexedMatrix(shape=(0, 0, 0))
+            baselines = np.zeros(0)
             cluster_colors = np.zeros(0)
             clusters_selected = []
             ncorrbins = 0            
@@ -88,8 +90,14 @@ class CorrelogramsDataManager(Manager):
         # self.correlograms_array = get_correlograms_array(correlograms,
             # clusters_selected=clusters_selected, ncorrbins=ncorrbins)
         self.correlograms = correlograms
-        # self.indices = self.correlograms.indices
+        
+        # Copy the original arrays for normalization.
+        self.baselines = baselines
+        self.baselines0 = baselines.copy()
+        
         self.correlograms_array = correlograms.to_array()
+        self.correlograms_array0 = self.correlograms_array.copy()
+        
         nclusters, nclusters, self.nbins = self.correlograms_array.shape
         self.ncorrelograms = nclusters * nclusters
         self.nticks = (ncorrbins + 1) * self.ncorrelograms
@@ -99,6 +107,7 @@ class CorrelogramsDataManager(Manager):
         self.clusters_unique = sorted(clusters_selected)
         self.nclusters = len(clusters_selected)
         assert nclusters == self.nclusters
+        self.cluster_colors = cluster_colors
         self.cluster_colors_array = get_array(cluster_colors)
         
         # HACK: if correlograms is empty, ncorrelograms == 1 here!
@@ -106,49 +115,20 @@ class CorrelogramsDataManager(Manager):
             self.ncorrelograms = 0
         
         # cluster i and j for each histogram in the view
-        clusters = [(i,j) for i in xrange(self.nclusters) for j in xrange(self.nclusters)]
+        clusters = [(i,j) for j in xrange(self.nclusters) 
+            for i in xrange(self.nclusters)]
         self.clusters = np.array(clusters, dtype=np.int32)
         self.clusters0 = self.clusters
         
         # baselines of the correlograms
-        self.baselines = baselines
-        
-        # normalization
-        for i in xrange(self.nclusters):
-            # # correlograms in a given row
-            # ind = self.clusters[:,1] == j
-            # # index of the (i,j) histogram
-            # i0 = np.nonzero((self.clusters[:,0] == self.clusters[:,1]) & 
-                # (self.clusters[:,0] == j))[0][0]
-            correlogram_diagonal = self.correlograms_array[i, i, ...]
-            # divide all correlograms in the row by the max of this histogram
-            m = correlogram_diagonal.max()
-            if m > 0:
-                self.correlograms_array[i,:,:] /= m
-                self.baselines[i,:] /= m
-            # normalize all correlograms in the row so that they all fit in the 
-            # window
-            m = self.correlograms_array[i,:,:].max()
-            if m > 0:
-                self.correlograms_array[i,:,:] /= m
-                self.baselines[i,:] /= m
         
         self.nprimitives = self.ncorrelograms
         # index 0 = heterogeneous clusters, index>0 ==> cluster index + 1
         self.cluster_colors = get_array(cluster_colors)
         
-        # get the vertex positions
-        X, Y = get_histogram_points(self.correlograms_array.reshape(
-            (self.ncorrelograms, self.nbins)))
-        n = X.size
-        self.nsamples = X.shape[1]
-        
-        # fill the data array
-        self.position = np.empty((n, 2), dtype=np.float32)
-        self.position[:,0] = X.ravel()
-        self.position[:,1] = Y.ravel()
+        # normalize and update the data position
+        self.normalize(normalization)
     
-        
         # indices of correlograms on the diagonal
         if self.nclusters:
             identity = self.clusters[:,0] == self.clusters[:,1]
@@ -164,7 +144,43 @@ class CorrelogramsDataManager(Manager):
         self.color_array_index = color_array_index
         
         self.clusters = np.repeat(self.clusters, self.nsamples, axis=0)
-        self.color_array_index = np.repeat(self.color_array_index, self.nsamples, axis=0)
+        self.color_array_index = np.repeat(self.color_array_index,
+            self.nsamples, axis=0)
+        
+    def normalize(self, normalization='row'):
+        self.correlograms_array = self.correlograms_array0.copy()
+        self.baselines = self.baselines0.copy()
+        if normalization == 'row':
+            # normalization
+            for i in xrange(self.nclusters):
+                # divide all correlograms in the row by the max of this histogram
+                correlogram_diagonal = self.correlograms_array[i, i, ...]
+                m = correlogram_diagonal.max()
+                if m > 0:
+                    self.correlograms_array[i,:,:] /= m
+                    self.baselines[i,:] /= m
+                # normalize all correlograms in the row so that they all fit in the 
+                # window
+                m = self.correlograms_array[i,:,:].max()
+                if m > 0:
+                    self.correlograms_array[i,:,:] /= m
+                    self.baselines[i,:] /= m
+        elif normalization == 'uniform':
+            M = self.correlograms_array.max(axis=2)
+            self.correlograms_array /= M.reshape(
+                (self.nclusters, self.nclusters, 1))
+            self.baselines /= M
+    
+        # get the vertex positions
+        X, Y = get_histogram_points(self.correlograms_array.reshape(
+            (self.ncorrelograms, self.nbins)))
+        n = X.size
+        self.nsamples = X.shape[1]
+        
+        # fill the data array
+        self.position = np.empty((n, 2), dtype=np.float32)
+        self.position[:,0] = X.ravel()
+        self.position[:,1] = Y.ravel()
         
      
 # -----------------------------------------------------------------------------
@@ -379,7 +395,11 @@ class CorrelogramsInfoManager(Manager):
     
 class CorrelogramsInteractionManager(PlotInteractionManager):
     def initialize(self):
+        self.normalization_index = 0
+        self.normalization_list = ['row', 'uniform']
+        
         self.register('ShowClosestCluster', self.show_closest_cluster)
+        self.register('ChangeNormalization', self.change_normalization)
         self.register(None, self.hide_closest_cluster)
             
     def hide_closest_cluster(self, parameter):
@@ -401,16 +421,19 @@ class CorrelogramsInteractionManager(PlotInteractionManager):
         
         self.info_manager.show_closest_cluster(xd, yd)
         
+    def change_normalization(self, normalization=None):
+        if normalization is None:
+            self.normalization_index = np.mod(self.normalization_index + 1,
+                len(self.normalization_list))
+            normalization = self.normalization_list[self.normalization_index]
+        self.data_manager.normalize(normalization)
+        self.paint_manager.update()
+        self.parent.updateGL()
+    
         
 class CorrelogramsBindings(KlustaViewaBindings):
-    # def set_zoombox_keyboard(self):
-        # """Set zoombox bindings with the keyboard."""
-        # self.set('LeftClickMove', 'ZoomBox',
-                    # key_modifier='Shift',
-                    # param_getter=lambda p: (p["mouse_press_position"][0],
-                                            # p["mouse_press_position"][1],
-                                            # p["mouse_position"][0],
-                                            # p["mouse_position"][1]))
+    def set_normalization(self):
+        self.set('KeyPress', 'ChangeNormalization', key='N')
 
     def set_clusterinfo(self):
         self.set('Move', 'ShowClosestCluster', #key_modifier='Shift',
@@ -420,6 +443,7 @@ class CorrelogramsBindings(KlustaViewaBindings):
     def initialize(self):
         super(CorrelogramsBindings, self).initialize()
         self.set_clusterinfo()
+        self.set_normalization()
     
     
 # -----------------------------------------------------------------------------
@@ -450,7 +474,8 @@ class CorrelogramsView(GalryWidget):
             self.paint_manager.update()
             self.updateGL()
 
-            
+    def change_normalization(self, normalization=None):
+        self.interaction_manager.change_normalization(normalization)
             
     def sizeHint(self):
         return QtCore.QSize(400, 400)

@@ -36,6 +36,8 @@ def test_correlogramsview():
     kwargs['corrbin'] = corrbin
     
     kwargs['operators'] = [
+        lambda self: self.view.change_normalization('uniform'),
+        lambda self: self.view.change_normalization('row'),
         lambda self: (self.close() 
             if USERPREF['test_auto_close'] != False else None),
     ]

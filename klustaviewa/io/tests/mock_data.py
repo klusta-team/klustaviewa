@@ -62,11 +62,17 @@ def create_correlation_matrix(nclusters):
 def create_correlograms(clusters, ncorrbins):
     n = len(clusters)
     shape = (n, n, ncorrbins)
+    # data = np.clip(np.random.rand(*shape), .75, 1)
+    data = np.random.rand(*shape)
+    data[0, 0] /= 10
+    data[1, 1] *= 10
     return IndexedMatrix(clusters, shape=shape,
-        data=np.random.rand(*shape))
+        data=data)
     
 def create_baselines(clusters):
-    baselines = np.random.rand(len(clusters), len(clusters))
+    baselines = np.clip(np.random.rand(len(clusters), len(clusters)), .75, 1)
+    baselines[0, 0] /= 10
+    baselines[1, 1] *= 10
     return baselines
     
 def create_xml(nchannels, nsamples, fetdim):

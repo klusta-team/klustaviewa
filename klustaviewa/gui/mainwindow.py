@@ -164,6 +164,8 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('change_ncorrbins', 'Change time &window')
         self.add_action('change_corrbin', 'Change &bin size')
         
+        self.add_action('change_corr_normalization', 'Change &normalization')
+        
     def create_robot_actions(self):
         self.add_action('previous_clusters', '&Previous clusters', 
             shortcut='CTRL+Space')
@@ -197,6 +199,8 @@ class MainWindow(QtGui.QMainWindow):
         correlograms_menu = self.menuBar().addMenu("&Correlograms")
         correlograms_menu.addAction(self.change_ncorrbins_action)
         correlograms_menu.addAction(self.change_corrbin_action)
+        correlograms_menu.addSeparator()
+        correlograms_menu.addAction(self.change_corr_normalization_action)
         
         # Actions menu.
         actions_menu = self.menuBar().addMenu("&Actions")
@@ -369,6 +373,9 @@ class MainWindow(QtGui.QMainWindow):
             # print corrbin_new, ncorrbins_new, duration
             self.change_correlograms_parameters(corrbin=corrbin_new,
                 ncorrbins=ncorrbins_new)
+    
+    def change_corr_normalization_callback(self, checked):
+        self.get_view('CorrelogramsView').change_normalization()
     
     
     # Actions callbacks.
