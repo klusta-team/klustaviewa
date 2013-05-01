@@ -832,6 +832,8 @@ class MainWindow(QtGui.QMainWindow):
             baselines=baselines,
             clusters_selected=clusters_selected,
             cluster_colors=self.loader.get_cluster_colors(),
+            ncorrbins=self.loader.ncorrbins,
+            corrbin=self.loader.corrbin,
         )
         [view.set_data(**data) for view in self.get_views('CorrelogramsView')]
     

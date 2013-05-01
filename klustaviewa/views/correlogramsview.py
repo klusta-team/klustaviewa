@@ -75,13 +75,15 @@ def get_histogram_points(hist):
 # -----------------------------------------------------------------------------
 class CorrelogramsDataManager(Manager):
     def set_data(self, correlograms=None, cluster_colors=None, baselines=None,
-        clusters_selected=None):
+        clusters_selected=None, ncorrbins=None, corrbin=None):
         
         if correlograms is None:
             correlograms = IndexedMatrix(shape=(0, 0, 0))
             cluster_colors = np.zeros(0)
             clusters_selected = []
             ncorrbins = 0            
+            corrbin = 0            
+        
         
         # self.correlograms_array = get_correlograms_array(correlograms,
             # clusters_selected=clusters_selected, ncorrbins=ncorrbins)
@@ -90,6 +92,9 @@ class CorrelogramsDataManager(Manager):
         self.correlograms_array = correlograms.to_array()
         nclusters, nclusters, self.nbins = self.correlograms_array.shape
         self.ncorrelograms = nclusters * nclusters
+        self.nticks = (ncorrbins + 1) * self.ncorrelograms
+        self.ncorrbins = ncorrbins
+        self.corrbin = corrbin
         self.clusters_selected = clusters_selected
         self.clusters_unique = sorted(clusters_selected)
         self.nclusters = len(clusters_selected)
@@ -167,6 +172,7 @@ class CorrelogramsDataManager(Manager):
 # -----------------------------------------------------------------------------
 class CorrelogramsVisual(PlotVisual):
     def initialize(self, nclusters=None, ncorrelograms=None, #nsamples=None,
+        ncorrbins=None, corrbin=None,
         position=None, color=None, color_array_index=None, clusters=None):
         
         self.position_attribute_name = "transformed_position"
@@ -188,7 +194,8 @@ class CorrelogramsVisual(PlotVisual):
 
         
 class CorrelogramsBaselineVisual(PlotVisual):
-    def initialize(self, nclusters=None, baselines=None, clusters=None):
+    def initialize(self, nclusters=None, baselines=None, clusters=None,
+        corrbin=None):
         
         self.position_attribute_name = "transformed_position"
         
@@ -220,6 +227,53 @@ class CorrelogramsBaselineVisual(PlotVisual):
         self.add_vertex_main(VERTEX_SHADER)
         
         
+class CorrelogramsTicksVisual(PlotVisual):
+    def initialize(self, ncorrbins=None, corrbin=None, ncorrelograms=None,
+        clusters=None, nclusters=None):
+        
+        if ncorrbins is None:
+            ncorrbins = 0
+        if corrbin is None:
+            corrbin = 0
+        
+        ncorrbins += 1
+        
+        self.position_attribute_name = "transformed_position"
+        
+        nticks = ncorrbins * ncorrelograms
+        n = 2 * nticks
+        position = np.zeros((n, 2))
+        position[:, 0] = np.tile(np.repeat(np.linspace(-1., 1., ncorrbins), 2),
+            ncorrelograms)
+        position[1::2, 1] = 0.05
+        position = np.array(position, dtype=np.float32)
+        
+        clusters = np.repeat(clusters, 2 * ncorrbins, axis=0)
+        
+        color = .25 * np.ones((ncorrbins, 4))
+        if ncorrbins % 2 == 1:
+            color[ncorrbins // 2, 3] = .85
+        else:
+            color[ncorrbins // 2, 3] = .85
+            color[ncorrbins // 2 - 1, 3] = .85
+        color = np.repeat(color, 2, axis=0)
+        color = np.tile(color, (ncorrelograms, 1))
+        
+        super(CorrelogramsTicksVisual, self).initialize(
+            position=position,
+            nprimitives=nticks,
+            color=color,
+            autonormalizable=False,
+            )
+            
+        self.primitive_type = 'LINES'
+        
+        self.add_attribute("cluster", vartype="int", ndim=2, data=clusters)
+        self.add_uniform("nclusters", vartype="int", ndim=1, data=nclusters)
+        
+        self.add_vertex_main(VERTEX_SHADER)
+        
+        
 class CorrelogramsPaintManager(PlotPaintManager):
     def initialize(self, **kwargs):
         self.add_visual(CorrelogramsVisual,
@@ -229,6 +283,8 @@ class CorrelogramsPaintManager(PlotPaintManager):
             color=self.data_manager.color,
             color_array_index=self.data_manager.color_array_index,
             clusters=self.data_manager.clusters,
+            ncorrbins=self.data_manager.ncorrbins,
+            corrbin=self.data_manager.corrbin,
             name='correlograms')
             
         self.add_visual(CorrelogramsBaselineVisual,
@@ -236,6 +292,15 @@ class CorrelogramsPaintManager(PlotPaintManager):
             nclusters=self.data_manager.nclusters,
             clusters=self.data_manager.clusters0,
             name='baselines',
+            )
+            
+        self.add_visual(CorrelogramsTicksVisual,
+            ncorrbins=self.data_manager.ncorrbins,
+            corrbin=self.data_manager.corrbin,
+            nclusters=self.data_manager.nclusters,
+            ncorrelograms=self.data_manager.ncorrelograms,
+            clusters=self.data_manager.clusters0,
+            name='ticks',
             )
             
         self.add_visual(TextVisual, text='0', name='clusterinfo', fontsize=16,
@@ -258,6 +323,8 @@ class CorrelogramsPaintManager(PlotPaintManager):
             color=self.data_manager.color,
             color_array_index=self.data_manager.color_array_index,
             clusters=self.data_manager.clusters,
+            ncorrbins=self.data_manager.ncorrbins,
+            corrbin=self.data_manager.corrbin,
             visual='correlograms')
             
         self.reinitialize_visual(
@@ -266,6 +333,15 @@ class CorrelogramsPaintManager(PlotPaintManager):
             nclusters=self.data_manager.nclusters,
             clusters=self.data_manager.clusters0,
             visual='baselines')
+            
+        self.reinitialize_visual(
+            size=2 * self.data_manager.nticks,
+            ncorrbins=self.data_manager.ncorrbins,
+            corrbin=self.data_manager.corrbin,
+            nclusters=self.data_manager.nclusters,
+            ncorrelograms=self.data_manager.ncorrelograms,
+            clusters=self.data_manager.clusters0,
+            visual='ticks')
             
 
 # -----------------------------------------------------------------------------

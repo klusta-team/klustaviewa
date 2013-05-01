@@ -10,7 +10,7 @@ import numpy.random as rnd
 import pandas as pd
 
 from klustaviewa.io.tests.mock_data import (setup, teardown,
-        nspikes, nclusters, nsamples, nchannels, fetdim, ncorrbins, 
+        nspikes, nclusters, nsamples, nchannels, fetdim, ncorrbins, corrbin,
         create_baselines, create_correlograms)
 from klustaviewa.io.loader import KlustersLoader
 from klustaviewa.io.selection import select
@@ -32,6 +32,8 @@ def test_correlogramsview():
     kwargs['correlograms'] = create_correlograms(kwargs['clusters_selected'], 
         ncorrbins)
     kwargs['baselines'] = create_baselines(kwargs['clusters_selected'])
+    kwargs['ncorrbins'] = ncorrbins
+    kwargs['corrbin'] = corrbin
     
     kwargs['operators'] = [
         lambda self: (self.close() 

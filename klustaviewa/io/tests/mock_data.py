@@ -24,6 +24,7 @@ nclusters = 20
 cluster_offset = 2
 nsamples = 20
 ncorrbins = 50
+corrbin = .001
 nchannels = 32
 fetdim = 3
 
