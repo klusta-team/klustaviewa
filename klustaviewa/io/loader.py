@@ -181,6 +181,10 @@ class Loader(object):
         """
         self.spikes_selected = None
         self.clusters_selected = None
+        
+        self.ncorrbins = 100
+        self.corrbin = .001
+        
         if filename:
             self.open(filename)
     
@@ -321,6 +325,9 @@ class Loader(object):
             return groups.max() + 1
         else:
             return 0
+    
+    def get_correlogram_window(self):
+        return self.ncorrbins * self.corrbin
     
     
     # Control methods
@@ -587,7 +594,7 @@ class KlustersLoader(Loader):
         self.waveforms = pd.Panel(self.waveforms, dtype=np.float32)
     
     def read_stats(self):
-        self.ncorrbins = 50
+        self.ncorrbins = 100
         self.corrbin = .001
     
     

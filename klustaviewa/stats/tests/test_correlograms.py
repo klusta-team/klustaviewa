@@ -25,7 +25,7 @@ def test_compute_correlograms():
     clusters = clusters[indices_sorting]
 
     correlograms = compute_correlograms(spiketimes, clusters,
-                                        halfwidth=.010, bin=.001)
+                                        ncorrbins=20, corrbin=.001)
 
     c01 = np.zeros(20, dtype=np.int32)
     c01[11] = 100

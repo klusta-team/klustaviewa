@@ -51,18 +51,18 @@ class CorrelogramsTask(QtCore.QObject):
     correlogramsComputed = QtCore.pyqtSignal(np.ndarray, object)
     
     def compute(self, spiketimes, clusters, clusters_to_update=None,
-            clusters_selected=None, halfwidth=None, bin=None):
+            clusters_selected=None, ncorrbins=None, corrbin=None):
         log.debug("Computing correlograms for clusters {0:s}.".format(
             str(list(clusters_to_update))))
         if len(clusters_to_update) == 0:
             return {}
         correlograms = compute_correlograms(spiketimes, clusters,
             clusters_to_update=clusters_to_update,
-            halfwidth=halfwidth, bin=bin)
+            ncorrbins=ncorrbins, corrbin=corrbin)
         return correlograms
         
     def compute_done(self, spiketimes, clusters, clusters_to_update=None,
-            clusters_selected=None, halfwidth=None, bin=None, _result=None):
+            clusters_selected=None, ncorrbins=None, corrbin=None, _result=None):
         correlograms = _result
         self.correlogramsComputed.emit(np.array(clusters_selected),
             correlograms)

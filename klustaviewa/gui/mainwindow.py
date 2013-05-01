@@ -77,6 +77,7 @@ class MainWindow(QtGui.QMainWindow):
         self.create_views()
         self.create_file_actions()
         self.create_view_actions()
+        self.create_correlograms_actions()
         self.create_control_actions()
         self.create_robot_actions()
         self.create_help_actions()
@@ -155,6 +156,10 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('merge', '&Merge', shortcut='G')
         self.add_action('split', '&Split', shortcut='K')
 
+    def create_correlograms_actions(self):
+        self.add_action('change_ncorrbins', 'Change time &window')
+        self.add_action('change_corrbin', 'Change &bin size')
+        
     def create_robot_actions(self):
         self.add_action('previous_clusters', '&Previous clusters', 
             shortcut='CTRL+Space')
@@ -183,6 +188,11 @@ class MainWindow(QtGui.QMainWindow):
         views_menu.addAction(self.add_waveform_view_action)
         views_menu.addAction(self.add_correlograms_view_action)
         views_menu.addAction(self.add_correlation_matrix_view_action)
+        
+        # Correlograms menu.
+        correlograms_menu = self.menuBar().addMenu("&Correlograms")
+        correlograms_menu.addAction(self.change_ncorrbins_action)
+        correlograms_menu.addAction(self.change_corrbin_action)
         
         # Actions menu.
         actions_menu = self.menuBar().addMenu("&Actions")
@@ -287,6 +297,54 @@ class MainWindow(QtGui.QMainWindow):
         
     def add_correlograms_view_callback(self, checked):
         self.add_correlograms_view()
+    
+    
+    # Correlograms callbacks.
+    # -----------------------
+    def change_correlograms_parameters(self, ncorrbins=None, corrbin=None):
+        # Update the correlograms parameters.
+        if ncorrbins is not None:
+            self.loader.ncorrbins = ncorrbins
+        if corrbin is not None:
+            self.loader.corrbin = corrbin
+        # Reset the cache.
+        self.statscache.reset(self.loader.ncorrbins)
+        # Update the correlograms.
+        view = self.get_view('ClusterView')
+        clusters = view.selected_clusters()
+        self.start_compute_correlograms(clusters)
+        
+    def change_ncorrbins_callback(self, checked):
+        if not self.loader:
+            return
+        corrbin = self.loader.corrbin
+        duration = self.loader.get_correlogram_window()
+        duration_new, ok = QtGui.QInputDialog.getDouble(self,
+            "Correlograms time window", "Half width (ms):", 
+            duration / 2 * 1000, 1, 1000, 1)
+        if ok:
+            duration_new = duration_new * .001 * 2
+            ncorrbins_new = 2 * int(np.ceil(.5 * duration_new / corrbin))
+            # ncorrbins_new = int(duration_new / corrbin * .001)
+            self.change_correlograms_parameters(ncorrbins=ncorrbins_new)
+    
+    def change_corrbin_callback(self, checked):
+        if not self.loader:
+            return
+        ncorrbins = self.loader.ncorrbins
+        corrbin = self.loader.corrbin
+        duration = self.loader.get_correlogram_window()
+        # duration = self.loader.get_correlogram_window() * 1000
+        corrbin_new, ok = QtGui.QInputDialog.getDouble(self,
+            "Correlograms bin size", "Bin size (ms):", 
+            corrbin * 1000, .1, 10, 2)
+        if ok:
+            corrbin_new = corrbin_new * .001
+            # ncorrbins_new = int(duration / corrbin_new)
+            ncorrbins_new = 2 * int(np.ceil(.5 * duration/ corrbin_new))
+            # print corrbin_new, ncorrbins_new, duration
+            self.change_correlograms_parameters(corrbin=corrbin_new,
+                ncorrbins=ncorrbins_new)
     
     
     # Actions callbacks.
@@ -462,8 +520,11 @@ class MainWindow(QtGui.QMainWindow):
         # computation of the correlograms begins.
         clusters = np.array(get_array(self.loader.get_clusters('all')))
         # clusters_all = self.loader.get_clusters_unique()
-        bin = self.loader.corrbin
-        halfwidth = self.loader.ncorrbins * bin / 2
+        corrbin = self.loader.corrbin
+        ncorrbins = self.loader.ncorrbins
+        # halfwidth = self.loader.ncorrbins * corrbin / 2
+        # halfwidth = .5 * (self.loader.ncorrbins - 1) * corrbin
+        # print self.loader.ncorrbins, corrbin, halfwidth
         
         # Add new cluster indices if needed.
         # self.statscache.correlograms.add_indices(clusters_selected)
@@ -478,7 +539,7 @@ class MainWindow(QtGui.QMainWindow):
             self.tasks.correlograms_task.compute(spiketimes, clusters,
                 clusters_to_update=clusters_to_update, 
                 clusters_selected=clusters_selected,
-                halfwidth=halfwidth, bin=bin)    
+                ncorrbins=ncorrbins, corrbin=corrbin)    
         # Otherwise, update directly the correlograms view without launching
         # the task in the external process.
         else:
@@ -825,8 +886,8 @@ class MainWindow(QtGui.QMainWindow):
         # Compute the baselines.
         sizes = get_array(self.loader.get_cluster_sizes())
         duration = self.loader.get_duration()
-        bin = self.loader.corrbin
-        baselines = get_baselines(sizes, duration, bin)
+        corrbin = self.loader.corrbin
+        baselines = get_baselines(sizes, duration, corrbin)
         data = dict(
             correlograms=correlograms,
             baselines=baselines,

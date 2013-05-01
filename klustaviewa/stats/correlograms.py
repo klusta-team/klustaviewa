@@ -87,21 +87,26 @@ def compute_spike_delays(spiketimes, clusters, clusters_to_update=None,
     return delays
 
 def compute_correlograms(spiketimes, clusters, clusters_to_update=None,
-    halfwidth=.01, bin=.001):
+    ncorrbins=100, corrbin=.001):
     """
     
     Compute all (i, *) and (i, *) for i in clusters_to_update
     
     """
-
+    
+    # Ensure ncorrbins is an even number.
+    assert ncorrbins % 2 == 0
+    
+    # Compute the histogram corrbins.
+    # n = int(np.ceil(halfwidth / corrbin))
+    n = ncorrbins // 2
+    bins = np.arange(ncorrbins + 1) * corrbin - n * corrbin
+    halfwidth = corrbin * n
+    
     # Compute all delays between any two close spikes.
     delays_pairs = compute_spike_delays(spiketimes, clusters,
                                   clusters_to_update=clusters_to_update,
                                   halfwidth=halfwidth)
-    
-    # Compute the histogram bins.
-    n = int(np.ceil(halfwidth / bin))
-    bins = np.arange(2 * n + 1) * bin - n * bin
     
     # Compute the histograms of the delays.
     correlograms = {}
@@ -116,9 +121,9 @@ def compute_correlograms(spiketimes, clusters, clusters_to_update=None,
 # -----------------------------------------------------------------------------
 # Baselines
 # -----------------------------------------------------------------------------
-def get_baselines(sizes, duration, bin):
+def get_baselines(sizes, duration, corrbin):
     baselines = (sizes.reshape((-1, 1)) * sizes.reshape((1, -1)) 
-                    * bin / (duration))
+                    * corrbin / (duration))
     return baselines
     
     

@@ -14,7 +14,7 @@ from klustaviewa.stats.cache import StatsCache
 # -----------------------------------------------------------------------------
 def test_cache():
     indices = [2, 3, 5, 7]
-    cache = StatsCache(ncorrbin=50)
+    cache = StatsCache(ncorrbins=100)
     
     np.array_equal(cache.correlograms.not_in_indices(indices), indices)
     np.array_equal(cache.correlation_matrix.not_in_indices(indices), indices)

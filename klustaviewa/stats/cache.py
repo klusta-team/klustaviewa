@@ -28,13 +28,19 @@ def is_indices(item):
 # Stats cache
 # -----------------------------------------------------------------------------
 class StatsCache(object):
-    def __init__(self, ncorrbin=None):
-        self.correlograms = CacheMatrix(shape=(0, 0, ncorrbin))
-        self.correlation_matrix = CacheMatrix()
+    def __init__(self, ncorrbins=None):
+        self.ncorrbins = ncorrbins
+        self.reset()
     
     def invalidate(self, clusters):
         self.correlograms.invalidate(clusters)
         self.correlation_matrix.invalidate(clusters)
+        
+    def reset(self, ncorrbins=None):
+        if ncorrbins is not None:
+            self.ncorrbins = ncorrbins
+        self.correlograms = CacheMatrix(shape=(0, 0, self.ncorrbins))
+        self.correlation_matrix = CacheMatrix()
         
     # def add(self, clusters):
         # self.correlograms.add_indices(clusters)
