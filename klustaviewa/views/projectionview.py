@@ -17,6 +17,7 @@ from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
     TextVisual, PlotVisual, AxesVisual)
 from klustaviewa.io.selection import get_indices
 from klustaviewa.io.tools import get_array
+from klustaviewa.gui.icons import get_icon
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
 from klustaviewa.utils.colors import COLORMAP, HIGHLIGHT_COLORMAP
 import klustaviewa.utils.logger as log
@@ -119,6 +120,14 @@ class ProjectionView(QtGui.QWidget):
         self.feature_widget1 = self.create_feature_widget(0)
         box.addLayout(self.feature_widget1)
         
+        # Switch button.
+        # button = QtGui.QPushButton('Flip', self)
+        button = QtGui.QPushButton(self)
+        button.setIcon(get_icon('flip'))
+        button.setMaximumWidth(40)
+        button.clicked.connect(self.flip_projections_callback)
+        box.addWidget(button)
+        
         # add feature widget
         self.feature_widget2 = self.create_feature_widget(1)
         box.addLayout(self.feature_widget2)
@@ -208,57 +217,12 @@ class ProjectionView(QtGui.QWidget):
         if do_emit:
             self.projectionChanged.emit(coord, channel, feature)
         
+    def flip_projections_callback(self, checked):
+        c0, f0 = self.projection[0]
+        c1, f1 = self.projection[1]
+        self.set_projection(0, c1, f1)
+        self.set_projection(1, c0, f0)
         
     def sizeHint(self):
         return QtCore.QSize(400, 80)
-        
-    
-    # Slots.
-    # ------
-    # def slotProjectionChanged(self, sender, coord, channel, feature):
-        # """Process the ProjectionChanged signal."""
-        
-        # if self.view.data_manager.projection is None:
-            # return
-            
-        # # feature == -1 means that it should be automatically selected as
-        # # a function of the current projection
-        # if feature < 0:
-            # # current channel and feature in the other coordinate
-            # ch_fet = self.view.data_manager.projection[1 - coord]
-            # if ch_fet is not None:
-                # other_channel, other_feature = ch_fet
-            # else:
-                # other_channel, other_feature = 0, 1
-            # fetdim = self.fetdim
-            # # first dimension: we force to 0
-            # if coord == 0:
-                # feature = 0
-            # # other dimension: 0 if different channel, or next feature if the same
-            # # channel
-            # else:
-                # # same channel case
-                # if channel == other_channel:
-                    # feature = np.mod(other_feature + 1, fetdim)
-                # # different channel case
-                # else:
-                    # feature = 0
-        
-        # # print sender
-        # log.debug("Projection changed in coord %s, channel=%d, feature=%d" \
-            # % (('X', 'Y')[coord], channel, feature))
-        # # record the new projection
-        # self.projection[coord] = (channel, feature)
-        
-        # # prevent the channelbox to raise signals when we change its state
-        # # programmatically
-        # self.channel_box[coord].blockSignals(True)
-        # # update the channel box
-        # self.channel_box[coord].setCurrentIndex(channel)
-        # # update the feature button
-        # if feature < len(self.feature_buttons[coord]):
-            # self.feature_buttons[coord][feature].setChecked(True)
-        # # reactive signals for the channel box
-        # self.channel_box[coord].blockSignals(False)
-        
         

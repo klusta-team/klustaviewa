@@ -608,9 +608,11 @@ class MainWindow(QtGui.QMainWindow):
             return
         # Update the different views, with autozoom on if the selection has
         # been made by the robot.
+        # print "acquire lock..."
         with LOCK:
             self.update_feature_view(autozoom=self.robot_active)
             self.update_waveform_view(autozoom=self.robot_active)
+        # print "release lock"
         # if self.robot_active:
             # self.autozoom()
         # Launch the computation of the correlograms.
@@ -640,10 +642,10 @@ class MainWindow(QtGui.QMainWindow):
         # Update the view.
         self.update_correlograms_view(clusters)
     
-    def correlation_matrix_computed(self, clusters, matrix):
-        self.statscache.correlation_matrix.update(clusters, matrix)
+    def correlation_matrix_computed(self, clusters_selected, matrix, clusters):
+        self.statscache.correlation_matrix.update(clusters_selected, matrix)
         # Update the robot.
-        self.update_robot()
+        self.update_robot(clusters_selected, clusters)
         # Update the view.
         self.update_correlation_matrix_view()
     
@@ -664,11 +666,12 @@ class MainWindow(QtGui.QMainWindow):
             correlation_matrix=self.statscache.correlation_matrix,
             )
     
-    def update_robot(self):
+    def update_robot(self, clusters_selected, clusters):
         self.tasks.robot_task.set_data(
-            clusters=self.loader.get_clusters('all'),
-            clusters_unique=self.loader.get_clusters_unique(),
-            correlograms=self.statscache.correlograms,
+            # clusters=self.loader.get_clusters('all'),
+            clusters=clusters,
+            # clusters_unique=self.loader.get_clusters_unique(),
+            # correlograms=self.statscache.correlograms,
             correlation_matrix=normalize(
                 self.statscache.correlation_matrix.to_array(copy=True)),
             )

@@ -11,6 +11,7 @@ from qtools import inthread, inprocess
 from qtools import QtGui, QtCore
 
 from klustaviewa.io import KlustersLoader
+from klustaviewa.io.tools import get_array
 from klustaviewa.robot.robot import Robot
 import klustaviewa.utils.logger as log
 from klustaviewa.stats import compute_correlograms, compute_correlations
@@ -69,7 +70,8 @@ class CorrelogramsTask(QtCore.QObject):
 
             
 class CorrelationMatrixTask(QtCore.QObject):
-    correlationMatrixComputed = QtCore.pyqtSignal(np.ndarray, object)
+    correlationMatrixComputed = QtCore.pyqtSignal(np.ndarray, object,
+        np.ndarray)
     
     def compute(self, features, clusters, masks, clusters_selected):
         log.debug("Computing correlation for clusters {0:s}.".format(
@@ -84,7 +86,7 @@ class CorrelationMatrixTask(QtCore.QObject):
         _result=None):
         correlations = _result
         self.correlationMatrixComputed.emit(np.array(clusters_selected),
-            correlations)
+            correlations, get_array(clusters, copy=True))
             
 
 class RobotTask(QtCore.QObject):

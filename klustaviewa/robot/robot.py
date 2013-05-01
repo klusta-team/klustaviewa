@@ -16,7 +16,9 @@ class Robot(object):
     clusters to select."""
     def __init__(self, features=None, spiketimes=None, clusters=None, 
         masks=None, cluster_groups=None, 
-        correlograms=None, correlation_matrix=None, clusters_unique=None):
+        correlograms=None, correlation_matrix=None, 
+        # clusters_unique=None
+        ):
         self.features = features
         self.spiketimes = spiketimes
         self.clusters = clusters
@@ -24,7 +26,7 @@ class Robot(object):
         self.cluster_groups = cluster_groups
         self.correlograms = correlograms
         self.correlation_matrix = correlation_matrix
-        self.clusters_unique = clusters_unique
+        # self.clusters_unique = clusters_unique
         self.best_pairs = []
         self.current = -1
     
@@ -32,8 +34,10 @@ class Robot(object):
     # Internal methods.
     # -----------------
     def _compute_best_pairs(self):
-        if (self.correlation_matrix is not None and 
-            self.clusters_unique is not None):
+        self.clusters_unique = np.unique(self.clusters)
+        if (self.correlation_matrix is not None #and 
+            # self.clusters_unique is not None
+            ):
             matrix = self.correlation_matrix
             n = matrix.shape[0]
             if n > 0:
