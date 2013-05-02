@@ -65,7 +65,8 @@ class MainWindow(QtGui.QMainWindow):
         self.setAnimated(False)
         
         # Initialize some variables.
-        self.loader = None
+        self.loader = KlustersLoader()
+        self.loader.progressReported.connect(self.open_progress_reported)
         self.controller = None
         self.spikes_highlighted = []
         self.spikes_selected = []
@@ -84,6 +85,7 @@ class MainWindow(QtGui.QMainWindow):
         self.create_help_actions()
         self.create_menu()
         self.create_toolbar()
+        self.create_open_progress_dialog()
         self.create_threads()
         
         # Update action enabled/disabled property.
@@ -242,6 +244,13 @@ class MainWindow(QtGui.QMainWindow):
         
         self.addToolBar(QtCore.Qt.LeftToolBarArea, self.toolbar)
         
+    def create_open_progress_dialog(self):
+        self.open_progress = QtGui.QProgressDialog("Loading...", "Cancel", 0, 0, self)
+        self.open_progress.setWindowModality(QtCore.Qt.WindowModal)
+        self.open_progress.setValue(0)
+        self.open_progress.setCancelButton(None)
+        self.open_progress.setMinimumDuration(0)
+        
     def update_action_enabled(self):
         self.undo_action.setEnabled(self.can_undo())
         self.redo_action.setEnabled(self.can_redo())
@@ -282,7 +291,7 @@ class MainWindow(QtGui.QMainWindow):
         # If a file has been selected, open it.
         if path:
             # Launch the loading task in the background asynchronously.
-            self.tasks.open_task.open(path)
+            self.tasks.open_task.open(self.loader, path)
             # Save the folder.
             folder = os.path.dirname(path)
             SETTINGS['main_window.last_data_dir'] = folder
@@ -306,7 +315,7 @@ class MainWindow(QtGui.QMainWindow):
     def open_last_callback(self, checked):
         path = SETTINGS['main_window.last_data_file']
         if path:
-            self.tasks.open_task.open(path)
+            self.tasks.open_task.open(self.loader, path)
             
     def quit_callback(self, checked):
         self.close()
@@ -524,18 +533,16 @@ class MainWindow(QtGui.QMainWindow):
     
     # Task methods.
     # -------------
-    def open_done(self, loader):
+    def open_done(self):
         clusters = self.get_view('ClusterView').selected_clusters()
         if clusters:
             self.get_view('ClusterView').unselect()
         
-        # Save the loader object.
-        self.loader = loader
         # Create the Controller.
         self.controller = Controller(self.loader)
         # Create the cache for the cluster statistics that need to be
         # computed in the background.
-        self.statscache = StatsCache(loader.ncorrbins)
+        self.statscache = StatsCache(self.loader.ncorrbins)
         # Start computing the correlation matrix.
         self.start_compute_similarity_matrix()
         # Update the wizard.
@@ -543,6 +550,10 @@ class MainWindow(QtGui.QMainWindow):
         # Update the views.
         self.update_cluster_view()
         self.update_projection_view()
+        
+    def open_progress_reported(self, progress, progress_max):
+        self.open_progress.setMaximum(progress_max)
+        self.open_progress.setValue(progress)
         
     def start_compute_correlograms(self, clusters_selected):
         # Get the correlograms parameters.

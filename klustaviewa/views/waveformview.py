@@ -100,6 +100,9 @@ FRAGMENT_SHADER_AVERAGE = """
 class WaveformPositionManager(Manager):
     # Initialization methods
     # ----------------------
+    # def initialize(self):
+        # self.arranged = False
+    
     def reset(self):
         # set parameters
         self.alpha = .02
@@ -258,10 +261,31 @@ class WaveformPositionManager(Manager):
         # record box positions and size
         self.box_positions = Tx, Ty
         self.box_size = (w, h)
+        
+        # self.arranged = True
                       
     def get_transformation(self):
         return self.box_positions, self.box_size
 
+        
+    # Geometry preferences
+    # --------------------
+    def set_geometry_preferences(self, pref=None):
+        if pref is None:
+            return
+        self.spatial_arrangement = pref['spatial_arrangement']
+        self.superposition = pref['superposition']
+        self.box_sizes[self.spatial_arrangement] = pref['box_size']
+        self.probe_scale = pref['probe_scale']
+        
+    def get_geometry_preferences(self):
+        return {
+            'spatial_arrangement': self.spatial_arrangement,
+            'superposition': self.superposition,
+            'box_size': self.load_box_size(effective=False),
+            'probe_scale': self.probe_scale,
+        }
+        
 
     # Internal methods
     # ----------------
@@ -394,7 +418,6 @@ class WaveformDataManager(Manager):
                  cluster_colors=None,
                  geometrical_positions=None,
                  autozoom=None,
-                 geometry_preferences=None,
                  ):
                  
         self.autozoom = autozoom
@@ -456,10 +479,7 @@ class WaveformDataManager(Manager):
         
         # position waveforms
         self.position_manager.set_info(self.nchannels, self.nclusters, 
-                                       geometrical_positions=self.geometrical_positions,
-                                       )
-        if geometry_preferences is not None:
-            self.position_manager.update_arrangement(**geometry_preferences)
+           geometrical_positions=self.geometrical_positions,)
         
         # update the highlight manager
         self.highlight_manager.initialize()
@@ -1171,18 +1191,20 @@ class WaveformView(GalryWidget):
                 paint_manager=WaveformPaintManager,
                 highlight_manager=WaveformHighlightManager,
                 )
+        self.first = True
 
     def set_data(self, *args, **kwargs):
-        # if not kwargs.get('clusters_selected'):
-            # return
-        if 'geometry_preferences' not in kwargs:
-            kwargs['geometry_preferences'] = self.restore_geometry()
+        if self.first:
+            self.restore_geometry()
+            
         self.data_manager.set_data(*args, **kwargs)
         
         # update?
         if self.initialized:
             self.paint_manager.update()
             self.updateGL()
+            
+        self.first = False
 
         
     # Public methods
@@ -1199,18 +1221,14 @@ class WaveformView(GalryWidget):
     # Save and restore geometry
     # -------------------------
     def save_geometry(self):
-        geometry_preferences = {
-            'spatial_arrangement': self.position_manager.spatial_arrangement,
-            'superposition': self.position_manager.superposition,
-            'box_size': self.position_manager.load_box_size(effective=False),
-            'probe_scale': self.position_manager.probe_scale,
-        }
-        SETTINGS.set('waveform_view.geometry', geometry_preferences)
+        pref = self.position_manager.get_geometry_preferences()
+        SETTINGS.set('waveform_view.geometry', pref)
         
     def restore_geometry(self):
         """Return a dictionary with the user preferences regarding geometry
         in the WaveformView."""
-        return SETTINGS.get('waveform_view.geometry')
+        pref = SETTINGS.get('waveform_view.geometry')
+        self.position_manager.set_geometry_preferences(pref)
         
     def closeEvent(self, e):
         self.save_geometry()

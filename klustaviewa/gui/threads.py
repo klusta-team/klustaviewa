@@ -27,11 +27,11 @@ LOCK = Lock()
 # Tasks
 # -----------------------------------------------------------------------------
 class OpenTask(QtCore.QObject):
-    dataOpened = QtCore.pyqtSignal(object)
+    dataOpened = QtCore.pyqtSignal()
     
-    def open(self, path):
-        loader = KlustersLoader(path)
-        self.dataOpened.emit(loader)
+    def open(self, loader, path):
+        loader.open(path)
+        self.dataOpened.emit()
 
         
 class SelectTask(QtCore.QObject):
@@ -91,6 +91,7 @@ class SimilarityMatrixTask(QtCore.QObject):
 
 class WizardTask(QtCore.QObject):
     def __init__(self,):
+        super(WizardTask, self).__init__()
         self.wizard = Wizard()
         
     def set_data(self, **kwargs):
@@ -108,6 +109,7 @@ class WizardTask(QtCore.QObject):
 # -----------------------------------------------------------------------------
 class ThreadedTasks(QtCore.QObject):
     def __init__(self):
+        super(ThreadedTasks, self).__init__()
         # In external threads.
         self.open_task = inthread(OpenTask)()
         self.select_task = inthread(SelectTask)(impatient=True)

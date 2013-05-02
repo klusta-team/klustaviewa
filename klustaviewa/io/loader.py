@@ -10,6 +10,7 @@ from collections import Counter
 
 import numpy as np
 import pandas as pd
+from galry import QtGui, QtCore
 
 from tools import (find_filename, find_index, load_text, load_xml, normalize,
     load_binary, load_pickle, save_text, get_array, find_any_filename)
@@ -167,7 +168,14 @@ def renumber_clusters(clusters, cluster_info):
 # -----------------------------------------------------------------------------
 # Generic Loader class
 # -----------------------------------------------------------------------------
-class Loader(object):
+class Loader(QtCore.QObject):
+    progressReported = QtCore.pyqtSignal(int, int)
+    
+    # Progress report
+    # ---------------
+    def report_progress(self, index, count):
+        self.progressReported.emit(index, count)
+        
     
     # Initialization methods
     # ----------------------
@@ -179,6 +187,7 @@ class Loader(object):
             dataset.
         
         """
+        super(Loader, self).__init__()
         self.spikes_selected = None
         self.clusters_selected = None
         
@@ -623,14 +632,19 @@ class KlustersLoader(Loader):
     # ---------------
     def read(self):
         info("Opening {0:s}.".format(self.filename))
+        self.report_progress(0, 4)
         self.read_metadata()
         self.read_probe()
         self.read_features()
+        self.report_progress(1, 4)
         self.read_clusters()
+        self.report_progress(2, 4)
         self.read_cluster_info()
         self.read_group_info()
         self.read_masks()
+        self.report_progress(3, 4)
         self.read_waveforms()
+        self.report_progress(4, 4)
         self.read_stats()
     
     def save(self, renumber=False):
