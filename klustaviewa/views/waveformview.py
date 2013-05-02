@@ -18,6 +18,7 @@ from klustaviewa.io.selection import get_spikes_in_clusters, select, get_indices
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
 from klustaviewa.utils.colors import COLORMAP, HIGHLIGHT_COLORMAP
 import klustaviewa.utils.logger as log
+from klustaviewa.utils.settings import SETTINGS
 
 
 __all__ = ['WaveformView']
@@ -393,6 +394,7 @@ class WaveformDataManager(Manager):
                  cluster_colors=None,
                  geometrical_positions=None,
                  autozoom=None,
+                 geometry_preferences=None,
                  ):
                  
         self.autozoom = autozoom
@@ -456,6 +458,8 @@ class WaveformDataManager(Manager):
         self.position_manager.set_info(self.nchannels, self.nclusters, 
                                        geometrical_positions=self.geometrical_positions,
                                        )
+        if geometry_preferences is not None:
+            self.position_manager.update_arrangement(**geometry_preferences)
         
         # update the highlight manager
         self.highlight_manager.initialize()
@@ -1171,6 +1175,8 @@ class WaveformView(GalryWidget):
     def set_data(self, *args, **kwargs):
         # if not kwargs.get('clusters_selected'):
             # return
+        if 'geometry_preferences' not in kwargs:
+            kwargs['geometry_preferences'] = self.restore_geometry()
         self.data_manager.set_data(*args, **kwargs)
         
         # update?
@@ -1188,3 +1194,26 @@ class WaveformView(GalryWidget):
         
     def sizeHint(self):
         return QtCore.QSize(800, 800)
+        
+        
+    # Save and restore geometry
+    # -------------------------
+    def save_geometry(self):
+        geometry_preferences = {
+            'spatial_arrangement': self.position_manager.spatial_arrangement,
+            'superposition': self.position_manager.superposition,
+            'box_size': self.position_manager.load_box_size(effective=False),
+            'probe_scale': self.position_manager.probe_scale,
+        }
+        SETTINGS.set('waveform_view.geometry', geometry_preferences)
+        
+    def restore_geometry(self):
+        """Return a dictionary with the user preferences regarding geometry
+        in the WaveformView."""
+        return SETTINGS.get('waveform_view.geometry')
+        
+    def closeEvent(self, e):
+        self.save_geometry()
+        super(WaveformView, self).closeEvent(e)
+        
+        

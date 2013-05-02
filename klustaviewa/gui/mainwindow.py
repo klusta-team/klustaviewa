@@ -1036,9 +1036,10 @@ class MainWindow(QtGui.QMainWindow):
         self.join_threads()
         
         # Close all views.
-        for view in self.views.values():
-            if hasattr(view, 'closeEvent'):
-                view.closeEvent(e)
+        for views in self.views.values():
+            for view in views:
+                if hasattr(view, 'closeEvent'):
+                    view.closeEvent(e)
         
         # Close the main window.
         return super(MainWindow, self).closeEvent(e)
