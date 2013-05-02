@@ -59,7 +59,9 @@ if __name__ == '__main__':
         description='Spike sorting graphical interface.',
         long_description=LONG_DESCRIPTION,
         install_requires=[
-            "numpy >= 1.6",
+            "numpy >= 1.7",
+            "pandas >= 0.10",
+            "matplotlib >= 1.1.1",
             "PyOpenGL >= 3.0",
         ],
     )

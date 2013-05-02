@@ -127,8 +127,8 @@ you have:
   * Alternatively, on Linux, run `glxinfo`.
 
 KlustaViewa works better with a good graphics card as it uses
-hardware-accelerated visualization. With a bad graphics card, it will still
-work but somewhat slightly slower.
+hardware-accelerated visualization. With a lower end graphics card, the
+software will work but somewhat slower.
 
 
 ### Development version
