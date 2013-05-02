@@ -19,14 +19,57 @@ version here.
 
 ### Step 1
 
-If you don't already have a Python distribution, install [Enthought Python Distribution](http://www.enthought.com/products/edudownload.php) (EPD), which is free for academics (*EPD ACADEMIC SUBSCRIPTION* and **NOT** *EPD FREE*).
+You need Python 2.7 and a bunch of other common scientific packages.
 
-You need to click on *request an academic license here* on the webpage and create an account with your **academic e-mail address**.
+  * Install [Python 2.7](http://python.org/download/) (available on Windows, OS X, or Linux),
+    64 bits (recommended) or 32 bits.
+
+For the external packages, the procedure depends on your system.
+
+#### Windows
+
+[Go on this webpage](http://www.lfd.uci.edu/~gohlke/pythonlibs/) and 
+download:
+    
+  * Numpy >= 1.7
+  * Pandas >= 0.10
+  * Matplotlib >= 1.1.1
+  * PyOpenGL >= 3.0.1
+  * PyQt4
+  * Distribute
+  * (optional) Pip 
+  * (optional) PyTables 
+  * (optional) IPython 
+  
+For each package, be sure to choose the appropriate version (it should be
+`*.win-amd64-py2.7.exe` for Python 64 bits, or `*.win32-py2.7.exe`
+for Python 32 bits).
+
+#### OS X
+
+Go on [HomeBrew](http://mxcl.github.io/homebrew/) and install the packages
+listed above.
+
+#### Ubuntu >= 13.x
+
+(Untested) Type in a shell:
+
+    $ sudo apt-get install python2.7 python-numpy python-pandas python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip ipython
+
+#### Ubuntu < 13.x
+
+(Untested) Type in a shell:
+
+    $ sudo apt-get install python2.7 python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip ipython
+    $ sudo pip install numpy
+    $ sudo pip install pandas
+    
+The reason is that old versions of Ubuntu do not provide packages for NumPy 1.7 and Pandas 0.10. Using `pip` means compiling the libraries directly, which may not work all the time. Another solution is to download the correct Ubuntu packages available for the latest Ubuntu distributions, and install them on the old Ubuntu.
 
 
 ### Step 2
 
-[Download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip)
+[Download KlustaViewa.](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip)
 
 
 ### Step 3
@@ -57,45 +100,35 @@ Gallery
 [![Screenshot 3](images/thumbnails/img2.png)](images/img2.png)
 
 
-Installation for advanced users
--------------------------------
+Details
+-------
 
 ### Dependencies
   
 The following libraries are required:
   
   * Python 2.7
-  * Numpy
+  * Numpy >= 1.7
   * Pandas >= 0.10
   * Matplotlib >= 1.1.1
   * PyOpenGL >= 3.0.1
   * either PyQt4 or PySide
 
-There are two possibilities to install these dependencies.
+More generally, we also recommend [pip](https://pypi.python.org/pypi/pip) and 
+[IPython](http://ipython.org/) as they are commonly used for 
+scientific computing with Python.
   
-#### Use an all-in-one Python distribution
+### OpenGL
+  
+For KlustaView, you need OpenGL >= 2.1. To find out which version of OpenGL 
+you have:
 
-All these dependencies are included in the 
-[Enthought Python Distribution](http://www.enthought.com/products/epd.php) (EPD),
-which is free for academics.
+  * Use [OpenGL Extensions Viewer](http://www.realtech-vr.com/glview/)
+  * Alternatively, on Linux, run `glxinfo`.
 
-
-#### Install all packages one by one
-
-This solution can be useful if you already have a Python installation and 
-only a few packages are missing.
-
-  * On Windows, [find the packages on this webpage](http://www.lfd.uci.edu/~gohlke/pythonlibs/).
-  * On OS X, find them on [Homebrew](http://mxcl.github.com/homebrew/) or [Macports](http://www.macports.org/)
-  * On Ubuntu, use `apt-get install` with the appropriate package name, which you can find [here](http://packages.ubuntu.com/):
-        
-        sudo apt-get install python-numpy python-pandas python-matplotlib python-opengl python-qt4 python-qt4-gl
-
-
-### Installer
-
-[Download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip), extract that package
-and execute `python setup.py install`.
+KlustaViewa works better with a good graphics card as it uses
+hardware-accelerated visualization. With a bad graphics card, it will still
+work but somewhat slightly slower.
 
 
 ### Development version
@@ -112,4 +145,3 @@ Use this if you want to be able to update with `git pull` (you need git).
         pip install -r requirements.txt
 
   
-    

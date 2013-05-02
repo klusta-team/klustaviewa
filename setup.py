@@ -18,11 +18,11 @@ if __name__ == '__main__':
                   'klustaviewa.control',
                   'klustaviewa.gui',
                   'klustaviewa.io',
-                  'klustaviewa.robot',
                   'klustaviewa.scripts',
                   'klustaviewa.stats',
                   'klustaviewa.utils',
                   'klustaviewa.views',
+                  'klustaviewa.wizard',
 
                   #<
                   # 'qtools',
