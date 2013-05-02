@@ -4,7 +4,7 @@ clusters."""
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-from collections import Counter
+# from collections import Counter
 from itertools import product
 
 import numpy as np
@@ -27,8 +27,8 @@ def compute_spike_delays(spiketimes, clusters, clusters_to_update=None,
     delays = {}
 
     # unique clusters
-    counter = Counter(clusters)
-    clusters_unique = sorted(counter.keys())
+    # counter = Counter(clusters)
+    clusters_unique = np.unique(clusters)
     nclusters = len(clusters_unique)
     cluster_max = clusters_unique[-1]
     

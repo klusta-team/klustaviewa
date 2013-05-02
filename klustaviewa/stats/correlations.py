@@ -89,8 +89,8 @@ def compute_correlations(features, clusters, masks,
     """
     nPoints = features.shape[0] #size(Fet1, 1)
     nDims = features.shape[1] #size(Fet1, 2)
-    c = Counter(clusters)
-    spikes_in_clusters = dict([(clu, np.nonzero(clusters == clu)[0]) for clu in sorted(c)])
+    c = np.unique(clusters)
+    spikes_in_clusters = dict([(clu, np.nonzero(clusters == clu)[0]) for clu in c])
     nclusters = len(spikes_in_clusters)
     # clumax = max(spikes_in_clusters.keys()) + 1
     

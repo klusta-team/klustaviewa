@@ -124,10 +124,11 @@ def polygon_contains_points(polygon, points):
 class FeatureDataManager(Manager):
     # Initialization methods
     # ----------------------
+    
     def set_data(self,
-                 features=None,
-                 masks=None,
-                 clusters=None,
+                 features=None,  # a subset of all spikes, disregarding cluster
+                 masks=None,  # masks for all spikes in selected clusters
+                 clusters=None,  # clusters for all spikes in selected clusters
                  clusters_selected=None,
                  cluster_colors=None,
                  fetdim=None,
@@ -148,20 +149,44 @@ class FeatureDataManager(Manager):
         
         assert fetdim is not None
         
+        # Indices of all subset spikes.
+        indices_all = get_indices(features)
+        
+        # Select only the clusters for subset of spikes.
+        clusters = select(clusters, indices_all)
+        
+        # Indices of subset spikes in selected clusters.
+        indices_selection = get_indices(clusters)
+        
+        # Indices of subset spikes that are not in selected clusters.
+        indices_background = np.setdiff1d(indices_all, indices_selection, True)
+        
         # Extract the relevant spikes, but keep the other ones in features_full
         self.clusters = clusters
         self.clusters_array = get_array(self.clusters)
-        self.spikes_in_selected_clusters = get_indices(self.clusters)
-        self.spikes_in_background = np.array(sorted(set(get_indices(features)) - 
-            set(self.spikes_in_selected_clusters)), dtype=np.int32)
-        self.features_background = select(features, self.spikes_in_background)
+        
+        # self.features contains selected spikes.
+        self.features = select(features, indices_selection)
+        self.features_array = get_array(self.features)
+        
+        # self.features_background contains all non-selected spikes
+        self.features_background = select(features, indices_background)
         self.features_background_array = get_array(self.features_background)
-        self.features = select(features, self.spikes_in_selected_clusters)
+        
+        # self.features_full_array = get_array(features)
+        # spikes_selection_masks = np.zeros(features.shape[0], dtype=np.bool)
+        # spikes_selection_masks[get_indices(self.clusters)] = True
+        # self.features_background_array = select(self.features_full_array, 
+            # ~spikes_selection_masks)
+        # self.spikes_in_selected_clusters = get_indices(self.clusters)
+        # self.spikes_in_background = np.array(sorted(set(get_indices(features)) - 
+            # set(self.spikes_in_selected_clusters)), dtype=np.int32)
+        # self.features_background = select(features, self.spikes_in_background)
+        # self.features = select(features, self.spikes_in_selected_clusters)
         
         # Background spikes are those which do not belong to the selected clusters
         self.npoints_background = self.features_background_array.shape[0]
         self.nspikes_background = self.npoints_background
-        
         
         self.nspikes, self.ndim = self.features.shape
         self.fetdim = fetdim
@@ -172,12 +197,11 @@ class FeatureDataManager(Manager):
         self.feature_indices = get_indices(self.features)
         self.feature_indices_array = get_array(self.feature_indices)
         
-        self.features_array = get_array(self.features)
         self.masks_array = get_array(self.masks)
         self.cluster_colors = get_array(cluster_colors)
         
         # Relative indexing.
-        if len(clusters_selected) > 0:
+        if self.npoints > 0:
             self.clusters_rel = np.digitize(self.clusters_array, sorted(clusters_selected)) - 1
             self.clusters_rel_ordered = np.argsort(clusters_selected)[self.clusters_rel]
         else:
@@ -185,7 +209,7 @@ class FeatureDataManager(Manager):
             self.clusters_rel_ordered = np.zeros(0, dtype=np.int32)
         
         self.clusters_unique = sorted(clusters_selected)
-        self.nclusters = len(Counter(clusters))
+        self.nclusters = len(clusters_selected)
         self.masks_full = self.masks_array.T.ravel()
         self.clusters_full_depth = self.clusters_rel_ordered
         self.clusters_full = self.clusters_rel

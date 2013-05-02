@@ -14,7 +14,7 @@ import pandas as pd
 from tools import (find_filename, find_index, load_text, load_xml, normalize,
     load_binary, load_pickle, save_text, get_array, find_any_filename)
 from selection import (select, select_pairs, get_spikes_in_clusters,
-    get_some_spikes_in_clusters, get_indices)
+    get_some_spikes_in_clusters, get_some_spikes, get_indices)
 from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.utils.logger import debug, info, warn, exception
 from klustaviewa.utils.colors import COLORS_COUNT
@@ -225,6 +225,27 @@ class Loader(object):
             spikes = self.spikes_selected
         return select(self.features, spikes)
     
+    def get_some_features(self, clusters=None):
+        """Return the features for a subset of all spikes: a large number
+        of spikes from any cluster, and a controlled subset of the selected 
+        clusters."""
+        if clusters is None:
+            clusters = self.clusters_selected
+        if clusters is not None:
+            spikes_background = get_some_spikes(self.clusters,
+                nspikes_max=USERPREF['features_nspikes_background_max'],)
+            spikes_clusters = get_some_spikes_in_clusters(
+                clusters,
+                self.clusters,
+                nspikes_max_expected=USERPREF[
+                    'features_nspikes_selection_max'],
+                nspikes_per_cluster_min=USERPREF[
+                    'features_nspikes_per_cluster_min'])
+            spikes = np.union1d(spikes_background, spikes_clusters)
+        else:
+            spikes = self.spikes_selected
+        return select(self.features, spikes)
+        
     def get_spiketimes(self, spikes=None, clusters=None):
         if clusters is not None:
             spikes = get_spikes_in_clusters(clusters, self.clusters)

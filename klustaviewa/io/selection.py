@@ -63,7 +63,7 @@ def select(data, indices=None):
     
     """
     # indices=None or 'all' means select all.
-    if indices is None or indices == 'all':
+    if indices is None or indices is 'all':
         return data
         
     indices_argument = indices
@@ -160,6 +160,19 @@ def get_some_spikes_in_clusters(clusters_selected, clusters,
         spikes.extend(spikes_selected)
     # Return the sorted array of all selected spikes.
     return np.array(sorted(spikes))
+
+def get_some_spikes(clusters,
+        nspikes_max=None,):
+    """Select a sample of spikes, with a maximum number of spikes equal to 
+    `nspikes_max`.
+    """
+    if nspikes_max is None:
+        nspikes_max = 10000
+    spikes = get_indices(clusters)
+    spikes_selected = np.random.choice(spikes,
+        min(nspikes_max, len(spikes)), replace=False)
+    # Return the sorted array of all selected spikes.
+    return np.array(sorted(spikes_selected))
 
 def get_indices(data):
     if type(data) == np.ndarray:

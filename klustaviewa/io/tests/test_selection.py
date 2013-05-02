@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from klustaviewa.io.selection import (select, select_pairs, get_spikes_in_clusters,
-    to_array, get_some_spikes_in_clusters)
+    to_array, get_some_spikes_in_clusters, get_some_spikes)
 
 
 # -----------------------------------------------------------------------------
@@ -89,6 +89,10 @@ def test_select_some():
         nspikes_per_cluster_min=nspikes_per_cluster_min)
     
     assert len(spikes) >= nspikes_per_cluster_min * len(clusters_selected)
+    
+    spikes = get_some_spikes(clusters, 10)
+    
+    assert len(spikes) == 10
     
     
 def test_select_array():

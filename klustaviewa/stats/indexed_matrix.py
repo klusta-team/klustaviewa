@@ -141,6 +141,7 @@ class IndexedMatrix(object):
     
     # Access
     # ------
+    # @profile
     def __getitem__(self, item):
         """Access [:,indices] or [indices,:]."""
         # If item is (item0, item1).
@@ -168,6 +169,7 @@ class IndexedMatrix(object):
         raise IndexError(("Indexed matrices can only be accessed with [x,y] "
         "with x and y indices or default slice ':'."))
         
+    # @profile
     def __setitem__(self, item, value):
         # If item is (item0, item1).
         if isinstance(item, tuple) and len(item) == 2:
@@ -259,6 +261,7 @@ class CacheMatrix(IndexedMatrix):
             indices = [indices]
         return sorted(set(indices) - set(self.key_indices))
     
+    # @profile
     def update(self, key_indices, dic):
         """Update the cache using a dictionary indexed by pairs of absolute
         indices. New indices are silently added. The key indices must also

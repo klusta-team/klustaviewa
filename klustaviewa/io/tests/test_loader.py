@@ -19,6 +19,7 @@ from klustaviewa.io.loader import (KlustersLoader, read_clusters, save_clusters,
     renumber_clusters, reorder)
 from klustaviewa.io.selection import select, get_indices
 from klustaviewa.io.tools import check_dtype, check_shape, get_array, load_text
+from klustaviewa.utils.userpref import USERPREF
 
 
 # -----------------------------------------------------------------------------
@@ -176,6 +177,7 @@ def test_klusters_loader_1():
     
     # Get full data sets.
     features = l.get_features()
+    features_some = l.get_some_features()
     masks = l.get_masks()
     waveforms = l.get_waveforms()
     clusters = l.get_clusters()
@@ -192,6 +194,7 @@ def test_klusters_loader_1():
     # Check the shape of the data sets.
     # ---------------------------------
     assert check_shape(features, (nspikes, nchannels * fetdim + 1))
+    assert features_some.shape[1] == nchannels * fetdim + 1
     assert check_shape(masks, (nspikes, nchannels))
     assert check_shape(waveforms, (nspikes, nsamples, nchannels))
     assert check_shape(clusters, (nspikes,))

@@ -79,8 +79,8 @@ class Processor(object):
         cluster_colors, clusters_new):
         spikes = get_indices(clusters_old)
         # Find groups and colors of old clusters.
-        cluster_indices_old = sorted(Counter(clusters_old).keys())
-        cluster_indices_new = sorted(Counter(clusters_new).keys())
+        cluster_indices_old = np.unique(clusters_old)
+        cluster_indices_new = np.unique(clusters_new)
         # Get group and color of the new clusters, from the old clusters.
         groups = self.loader.get_cluster_groups(cluster_indices_old)
         colors = self.loader.get_cluster_colors(cluster_indices_old)
@@ -105,8 +105,8 @@ class Processor(object):
         cluster_colors, clusters_new):
         spikes = get_indices(clusters_old)
         # Find groups and colors of old clusters.
-        cluster_indices_old = sorted(Counter(clusters_old).keys())
-        cluster_indices_new = sorted(Counter(clusters_new).keys())
+        cluster_indices_old = np.unique(clusters_old)
+        cluster_indices_new = np.unique(clusters_new)
         # Add clusters that were removed after the split operation.
         clusters_empty = sorted(set(cluster_indices_old) - 
             set(cluster_indices_new))

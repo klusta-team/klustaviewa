@@ -30,9 +30,14 @@ waveforms_nspikes_per_cluster_min = 3
 # Feature view
 # -----------------------------------------------------------------------------
 # Opacity value of the background spikes.
-feature_background_alpha = .15
+feature_background_alpha = .2
 
-
+# Maximum number of spikes in the view.
+features_nspikes_background_max = 10000
+features_nspikes_selection_max = 1000
+features_nspikes_per_cluster_min = 100
+                    
+                    
 # -----------------------------------------------------------------------------
 # Unit tests
 # -----------------------------------------------------------------------------

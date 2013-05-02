@@ -432,7 +432,7 @@ class WaveformDataManager(Manager):
         self.geometrical_positions = geometrical_positions
         self.clusters_selected = clusters_selected
         self.clusters_unique = sorted(clusters_selected)
-        self.nclusters = len(Counter(clusters))
+        self.nclusters = len(clusters_selected)
         self.waveforms = waveforms
         self.clusters = clusters
         # self.cluster_colors = cluster_colors

@@ -86,7 +86,7 @@ class Controller(object):
         clusters_old = self.loader.get_clusters(spikes=spikes)
         assert np.all(np.in1d(clusters_old, clusters))
         # Old cluster indices.
-        cluster_indices_old = np.sort(Counter(clusters_old).keys())
+        cluster_indices_old = np.unique(clusters_old)
         nclusters = len(cluster_indices_old)
         # New clusters indices.
         clusters_indices_new = self.loader.get_new_clusters(nclusters)
