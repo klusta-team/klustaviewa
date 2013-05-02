@@ -19,7 +19,6 @@ from klustaviewa.io.selection import get_indices
 from klustaviewa.io.tools import get_array
 from klustaviewa.gui.icons import get_icon
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
-from klustaviewa.utils.colors import COLORMAP, HIGHLIGHT_COLORMAP
 import klustaviewa.utils.logger as log
 import klustaviewa
 

@@ -17,7 +17,7 @@ from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
 from klustaviewa.io.selection import get_indices, select
 from klustaviewa.io.tools import get_array
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
-from klustaviewa.utils.colors import COLORMAP, HIGHLIGHT_COLORMAP
+from klustaviewa.utils.colors import COLORMAP_TEXTURE, SHIFTLEN
 from klustaviewa.utils.userpref import USERPREF
 import klustaviewa.utils.logger as log
 import klustaviewa
@@ -53,29 +53,15 @@ VERTEX_SHADER = """
     //gl_PointSize = 20;
 """
      
-     
+
 FRAGMENT_SHADER = """
     float index = %CMAP_OFFSET% + cmap_vindex * %CMAP_STEP%;
-    if ((vhighlight > 0) || (vselection > 0)) {
-        out_color = texture1D(hcmap, index);
+    vec2 index2d = vec2(index, %SHIFT_OFFSET% + (1 + toggle_mask * (1 - vmask) * %SHIFTLEN%) * %SHIFT_STEP%);
+    if (vhighlight > 0) {
+        index2d.y = 0;
     }
-    else {
-        out_color = texture1D(cmap, index);
-    }
-    out_color.w = .75;
-        
-    // toggle mask and masked points
-    if ((vmask == 0) && (toggle_mask > 0)) {
-        if (vhighlight > 0) {
-            out_color.xyz = vec3(.95, .95, .95);
-        }
-        else {
-            out_color.xyz = vec3(.75, .75, .75);
-        }
-        
-        // mask only for masked points in mask activated mode
-        out_color.w = .5 + .25 * vmask;
-    }
+    out_color = texture2D(cmap, index2d);
+    out_color.w = .5;
 """
 
 # Background spikes.
@@ -268,28 +254,35 @@ class FeatureVisual(Visual):
         
         # color map for cluster colors, each spike has an index of the color
         # in the color map
-        ncolors = COLORMAP.shape[0]
-        ncomponents = COLORMAP.shape[1]
+        # ncolors = COLORMAP.shape[0]
+        # ncomponents = COLORMAP.shape[1]
         
         # associate the cluster color to each spike
         # give the correct shape to cmap
-        colormap = COLORMAP.reshape((1, ncolors, ncomponents))
-        hcolormap = HIGHLIGHT_COLORMAP.reshape((1, ncolors, ncomponents))
+                
+        ncolors = COLORMAP_TEXTURE.shape[1]
+        ncomponents = COLORMAP_TEXTURE.shape[2]
         
+        global FRAGMENT_SHADER
+                    
         cmap_index = cluster_colors[cluster]
-        
-        self.add_texture('cmap', ncomponents=ncomponents, ndim=1, data=colormap)
-        self.add_texture('hcmap', ncomponents=ncomponents, ndim=1, data=hcolormap)
-        
+        self.add_texture('cmap', ncomponents=ncomponents, ndim=2, data=COLORMAP_TEXTURE)
         self.add_attribute('cmap_index', ndim=1, vartype='int', data=cmap_index)
         self.add_varying('cmap_vindex', vartype='int', ndim=1)
         
         dx = 1. / ncolors
         offset = dx / 2.
+        dx_shift = 1. / SHIFTLEN
+        offset_shift = dx / 2.
         
-        global FRAGMENT_SHADER
         FRAGMENT_SHADER = FRAGMENT_SHADER.replace('%CMAP_OFFSET%', "%.5f" % offset)
         FRAGMENT_SHADER = FRAGMENT_SHADER.replace('%CMAP_STEP%', "%.5f" % dx)
+        
+        FRAGMENT_SHADER = FRAGMENT_SHADER.replace('%SHIFT_OFFSET%', "%.5f" % offset_shift)
+        FRAGMENT_SHADER = FRAGMENT_SHADER.replace('%SHIFT_STEP%', "%.5f" % dx_shift)
+        FRAGMENT_SHADER = FRAGMENT_SHADER.replace('%SHIFTLEN%', "%d" % (SHIFTLEN - 1))
+
+        
         
         # necessary so that the navigation shader code is updated
         self.is_position_3D = True

@@ -16,7 +16,7 @@ from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
 from klustaviewa.io.tools import get_array
 from klustaviewa.io.selection import get_spikes_in_clusters, select, get_indices
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
-from klustaviewa.utils.colors import COLORMAP, HIGHLIGHT_COLORMAP
+from klustaviewa.utils.colors import COLORMAP_TEXTURE, SHIFTLEN
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.settings import SETTINGS
 
@@ -27,6 +27,45 @@ __all__ = ['WaveformView']
 # -----------------------------------------------------------------------------
 # Shaders
 # -----------------------------------------------------------------------------
+# FSH = """
+# vec3 Hue(float H)
+# {
+    # float R = abs(H * 6 - 3) - 1;
+    # float G = 2 - abs(H * 6 - 2);
+    # float B = 2 - abs(H * 6 - 4);
+    # return vec3(clamp(R, 0, 1), clamp(G, 0, 1), clamp(B, 0, 1));
+# }
+
+# vec3 HSVtoRGB(vec3 HSV)
+# {
+    # return ((Hue(HSV.x) - 1) * HSV.y + 1) * HSV.z;
+# }
+
+# vec3 RGBtoHSV(vec3 RGB)
+# {
+    # vec3 HSV = vec3(0., 0., 0.);
+    # HSV.z = max(RGB.r, max(RGB.g, RGB.b));
+    # float M = min(RGB.r, min(RGB.g, RGB.b));
+    # float C = HSV.z - M;
+    # if (C != 0)
+    # {
+        # HSV.y = C / HSV.z;
+        # vec3 Delta = (HSV.z - RGB) / C;
+        # Delta.rgb -= Delta.brg;
+        # Delta.rg += vec2(2,4);
+        # if (RGB.r >= HSV.z)
+            # HSV.x = Delta.b;
+        # else if (RGB.g >= HSV.z)
+            # HSV.x = Delta.r;
+        # else
+            # HSV.x = Delta.g;
+        # HSV.x = fract(HSV.x / 6);
+    # }
+    # return HSV;
+# }
+# """
+
+
 VERTEX_SHADER = """
     // get channel position
     vec2 channel_position = channel_positions[int(channel)];
@@ -59,38 +98,19 @@ VERTEX_SHADER = """
 
 FRAGMENT_SHADER = """
     float index = %CMAP_OFFSET% + cmap_vindex * %CMAP_STEP%;
-    
+    vec2 index2d = vec2(index, %SHIFT_OFFSET% + (1 + toggle_mask * (1 - vmask) * %SHIFTLEN%) * %SHIFT_STEP%);
     if (vhighlight > 0) {
-        out_color = texture1D(hcmap, index);
+        index2d.y = 0;
     }
-    else {
-        out_color = texture1D(cmap, index);
-    }
-    
-    if ((vmask == 0) && (toggle_mask > 0)) {
-        if (vhighlight > 0) {
-            out_color.xyz = vec3(.75, .75, .75);
-        }
-        else {
-            out_color.xyz = vec3(.5, .5, .5);
-        }
-    }
-    out_color.w = .25 + .5 * vmask;
+    out_color = texture2D(cmap, index2d);
+    out_color.w = .5;
 """
 
 FRAGMENT_SHADER_AVERAGE = """
     float index = %CMAP_OFFSET% + cmap_vindex * %CMAP_STEP%;
-    out_color = texture1D(cmap, index);
-    
-    if (vmask == 0) {
-        if (vhighlight > 0) {
-            out_color.xyz = vec3(.75, .75, .75);
-        }
-        else {
-            out_color.xyz = vec3(.5, .5, .5);
-        }
-    }
-    out_color.w = .25 + .75 * vmask;
+    vec2 index2d = vec2(index, %SHIFT_OFFSET% + (1 + toggle_mask * (1 - vmask) * %SHIFTLEN%) * %SHIFT_STEP%);
+    out_color = texture2D(cmap, index2d);
+    out_color.w = .5;
 """
 
 
@@ -615,40 +635,33 @@ class WaveformVisual(Visual):
         self.add_uniform("channel_positions", vartype="float", ndim=2,
             size=1000)
         
-        
-        ncolors = COLORMAP.shape[0]
-        ncomponents = COLORMAP.shape[1]
-        
-        
-        colormap = COLORMAP.reshape((1, ncolors, ncomponents))
-        hcolormap = HIGHLIGHT_COLORMAP.reshape((1, ncolors, ncomponents))
-        
+        ncolors = COLORMAP_TEXTURE.shape[1]
+        ncomponents = COLORMAP_TEXTURE.shape[2]
         
         global FRAGMENT_SHADER
         if average:
             FRAGMENT_SHADER = FRAGMENT_SHADER_AVERAGE
             
-            
-            
         cmap_index = cluster_colors[cluster]
-        self.add_texture('cmap', ncomponents=ncomponents, ndim=1, data=colormap)
-        self.add_texture('hcmap', ncomponents=ncomponents, ndim=1, data=hcolormap)
+        self.add_texture('cmap', ncomponents=ncomponents, ndim=2, data=COLORMAP_TEXTURE)
         self.add_attribute('cmap_index', ndim=1, vartype='int', data=cmap_index)
         self.add_varying('cmap_vindex', vartype='int', ndim=1)
         
         dx = 1. / ncolors
         offset = dx / 2.
+        dx_shift = 1. / SHIFTLEN
+        offset_shift = dx / 2.
         
         FRAGMENT_SHADER = FRAGMENT_SHADER.replace('%CMAP_OFFSET%', "%.5f" % offset)
         FRAGMENT_SHADER = FRAGMENT_SHADER.replace('%CMAP_STEP%', "%.5f" % dx)
         
+        FRAGMENT_SHADER = FRAGMENT_SHADER.replace('%SHIFT_OFFSET%', "%.5f" % offset_shift)
+        FRAGMENT_SHADER = FRAGMENT_SHADER.replace('%SHIFT_STEP%', "%.5f" % dx_shift)
+        FRAGMENT_SHADER = FRAGMENT_SHADER.replace('%SHIFTLEN%', "%d" % (SHIFTLEN - 1))
         
         
         # necessary so that the navigation shader code is updated
         self.is_position_3D = True
-        
-        # add hsv rgb conversion routines
-        # self.add_fragment_header(FSH)
         
         self.add_vertex_main(VERTEX_SHADER)
         self.add_fragment_main(FRAGMENT_SHADER)
@@ -792,7 +805,6 @@ class WaveformPaintManager(PlotPaintManager):
         
         if self.data_manager.autozoom and size > 0:
             self.interaction_manager.autozoom()
-        
         
 
 # -----------------------------------------------------------------------------

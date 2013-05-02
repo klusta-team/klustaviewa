@@ -1,25 +1,5 @@
 KlustaViewa: graphical interface for semi-automatic spike sorting
 ===========================================================
-
-Message for alpha pre-release version:
-
-    This is an alpha version of a software that is still in development.
-    Some features are missing, bugs and crashes may appear, and the software
-    may be slow with large data sets. 
-    These issues will be fixed in later releases.
-    Make sure you backup your data before loading it (although the software
-    won't modify any of your files by default, proposing you to save in 
-    a different CLU file).
-  
-  
-Minor features
---------------
-
-  * store visualization-related information in the XML file (cluster colors,
-    probe scaling, etc) (klustaviewa table)
-    
-  * masks & transparency: shading, continuity, hsv space
-  
   
 Ideas
 -----

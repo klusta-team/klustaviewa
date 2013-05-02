@@ -54,7 +54,7 @@ def create_cluster_colors(maxcluster):
     return np.mod(np.arange(maxcluster + 1, dtype=np.int32), COLORS_COUNT) + 1
     
 def create_masks(nspikes, nchannels, fetdim):
-    return rnd.rand(nspikes, nchannels * fetdim + 1) < .1
+    return np.clip(rnd.rand(nspikes, nchannels * fetdim + 1) * 1.5, 0, 1)
     
 def create_similarity_matrix(nclusters):
     return np.random.rand(nclusters, nclusters)
@@ -144,7 +144,8 @@ def setup():
         header=nchannels * fetdim + 1)
     save_text(os.path.join(dir, 'test.clu.1'), clusters, header=nclusters)
     # save_text(os.path.join(dir, 'test.clucol.1'), cluster_colors)
-    save_text(os.path.join(dir, 'test.mask.1'), masks, header=nclusters)
+    save_text(os.path.join(dir, 'test.fmask.1'), masks, header=nclusters,
+        fmt='%.6f')
     save_text(os.path.join(dir, 'test.xml'), xml)
     save_text(os.path.join(dir, 'test.probe'), probe)
     
