@@ -60,8 +60,6 @@ if __name__ == '__main__':
         long_description=LONG_DESCRIPTION,
         install_requires=[
             "numpy >= 1.7",
-            "pandas >= 0.10",
             "matplotlib >= 1.1.1",
-            "PyOpenGL >= 3.0",
         ],
     )
