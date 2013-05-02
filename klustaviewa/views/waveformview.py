@@ -67,7 +67,7 @@ FRAGMENT_SHADER = """
         out_color = texture1D(cmap, index);
     }
     
-    if (vmask == 0) {
+    if ((vmask == 0) && (toggle_mask > 0)) {
         if (vhighlight > 0) {
             out_color.xyz = vec3(.75, .75, .75);
         }
@@ -603,6 +603,7 @@ class WaveformVisual(Visual):
         self.add_attribute("highlight", vartype="int", ndim=1, data=highlight)
         self.add_varying("vhighlight", vartype="int", ndim=1)
         
+        self.add_uniform("toggle_mask", vartype="int", ndim=1, data=1)
         
         self.add_uniform("nclusters", vartype="int", ndim=1, data=nclusters)
         self.add_uniform("box_size", vartype="float", ndim=2)
@@ -791,6 +792,7 @@ class WaveformPaintManager(PlotPaintManager):
         
         if self.data_manager.autozoom and size > 0:
             self.interaction_manager.autozoom()
+        
         
 
 # -----------------------------------------------------------------------------
@@ -984,6 +986,8 @@ class WaveformInteractionManager(PlotInteractionManager):
         self.parent.boxClicked.emit(coord, cluster, channel)
     
     def initialize(self):
+        self.toggle_mask_value = True
+        
         self.register('ToggleSuperposition', self.toggle_superposition)
         self.register('ToggleSpatialArrangement', self.toggle_spatial_arrangement)
         self.register('ChangeBoxScale', self.change_box_scale)
@@ -992,6 +996,7 @@ class WaveformInteractionManager(PlotInteractionManager):
         self.register('SelectChannel', self.select_channel_callback)
         self.register('ToggleAverage', self.toggle_average)
         self.register('ShowClosestCluster', self.show_closest_cluster)
+        self.register('ToggleMask', self.toggle_mask)
         self.register(None, self.none_callback)
         self.average_toggled = False
   
@@ -1044,6 +1049,13 @@ class WaveformInteractionManager(PlotInteractionManager):
         channels = channels[:2]
         viewbox = self.position_manager.get_viewbox(channels)
         self.parent.process_interaction('SetViewbox', viewbox)
+        
+    # Misc
+    # ----
+    def toggle_mask(self, parameter=None):
+        self.toggle_mask_value = 1 - self.toggle_mask_value
+        self.paint_manager.set_data(visual='waveforms', 
+            toggle_mask=self.toggle_mask_value)
         
     
 class WaveformBindings(KlustaViewaBindings):
@@ -1155,6 +1167,9 @@ class WaveformBindings(KlustaViewaBindings):
             param_getter=lambda p:
             (p['mouse_position'][0], p['mouse_position'][1]))
         
+    def set_toggle_mask(self):
+        self.set('KeyPress', 'ToggleMask', key='Y')
+        
     def initialize(self):
         # super(WaveformBindings, self).initialize()
         self.set_arrangement_toggling()
@@ -1164,6 +1179,7 @@ class WaveformBindings(KlustaViewaBindings):
         self.set_highlight()
         self.set_channel_selection()
         self.set_clusterinfo()
+        self.set_toggle_mask()
 
 
 # -----------------------------------------------------------------------------
@@ -1213,6 +1229,9 @@ class WaveformView(GalryWidget):
         self.highlight_manager.highlight_spikes(spikes)
         self.updateGL()
 
+    def toggle_mask(self):
+        self.interaction_manager.toggle_mask()
+        self.updateGL()
         
     def sizeHint(self):
         return QtCore.QSize(800, 800)

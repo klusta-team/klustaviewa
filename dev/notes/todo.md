@@ -18,7 +18,6 @@ Minor features
   * store visualization-related information in the XML file (cluster colors,
     probe scaling, etc) (klustaviewa table)
     
-  * option to toggle showing masks as gray waveforms in waveform view (T)
   * masks & transparency: shading, continuity, hsv space
   
   

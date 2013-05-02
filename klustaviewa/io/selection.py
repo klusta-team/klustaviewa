@@ -147,12 +147,15 @@ def get_some_spikes_in_clusters(clusters_selected, clusters,
         # Compute the number of spikes to select in this cluster.
         # This number is proportional to the relative size of the cluster,
         # so that large clusters have more spikes than small clusters.
-        nspikes_in_cluster_requested = np.clip(int(
-            nspikes_max_expected / float(nspikes_in_clusters_selected) * 
-                len(spikes_in_cluster)),
-            min(nspikes_per_cluster_min, nspikes_in_cluster),
-            nspikes_in_cluster
-            )
+        try:
+            nspikes_in_cluster_requested = np.clip(int(
+                nspikes_max_expected / float(nspikes_in_clusters_selected) * 
+                    len(spikes_in_cluster)),
+                min(nspikes_per_cluster_min, nspikes_in_cluster),
+                nspikes_in_cluster
+                )
+        except OverflowError:
+            nspikes_in_cluster_requested = nspikes_in_cluster
         # Choose randomly the appropriate number of spikes among those
         # belonging to the given cluster.
         spikes_selected = np.random.choice(spikes_in_cluster,

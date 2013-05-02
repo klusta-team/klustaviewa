@@ -108,6 +108,12 @@ class MainWindow(QtGui.QMainWindow):
         stylesheet = stylesheet.replace('%ACCENT4%', '#cdcdcd')
         self.setStyleSheet(stylesheet)
     
+    def set_cursor(self, cursor=None):
+        if cursor is None:
+            QtGui.QApplication.restoreOverrideCursor()
+        else:
+            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(cursor))
+    
     
     # Actions.
     # --------
@@ -556,6 +562,8 @@ class MainWindow(QtGui.QMainWindow):
         self.open_progress.setValue(progress)
         
     def start_compute_correlograms(self, clusters_selected):
+        # Set wait cursor.
+        self.set_cursor(QtCore.Qt.BusyCursor)
         # Get the correlograms parameters.
         spiketimes = get_array(self.loader.get_spiketimes('all'))
         # Make a copy of the array so that it does not change before the
@@ -588,6 +596,8 @@ class MainWindow(QtGui.QMainWindow):
             self.update_correlograms_view(clusters_selected)
         
     def start_compute_similarity_matrix(self, clusters_to_update=None):
+        # Set wait cursor.
+        # self.set_cursor(QtCore.Qt.BusyCursor)
         # Get the correlation matrix parameters.
         features = get_array(self.loader.get_features('all'))
         masks = get_array(self.loader.get_masks('all', full=True))
@@ -617,17 +627,15 @@ class MainWindow(QtGui.QMainWindow):
                     str(clusters_selected),
                     str(self.loader.get_clusters_selected())))
             return
+        # Launch the computation of the correlograms.
+        self.start_compute_correlograms(clusters_selected)
+        
         # Update the different views, with autozoom on if the selection has
         # been made by the wizard.
-        # print "acquire lock..."
         with LOCK:
             self.update_feature_view(autozoom=self.wizard_active)
             self.update_waveform_view(autozoom=self.wizard_active)
-        # print "release lock"
-        # if self.wizard_active:
-            # self.autozoom()
-        # Launch the computation of the correlograms.
-        self.start_compute_correlograms(clusters_selected)
+            
         # Update action enabled/disabled property.
         self.update_action_enabled()
         self.wizard_active = False
@@ -652,13 +660,17 @@ class MainWindow(QtGui.QMainWindow):
             # correlograms=self.statscache.correlograms)
         # Update the view.
         self.update_correlograms_view(clusters)
-    
+        # Reset the cursor.
+        self.set_cursor()
+        
     def similarity_matrix_computed(self, clusters_selected, matrix, clusters):
         self.statscache.similarity_matrix.update(clusters_selected, matrix)
         # Update the wizard.
         self.update_wizard(clusters_selected, clusters)
         # Update the view.
         self.update_similarity_matrix_view()
+        # Reset the cursor.
+        # self.set_cursor()
     
     
     # Wizard.

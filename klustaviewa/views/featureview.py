@@ -679,9 +679,10 @@ class FeatureProjectionManager(Manager):
             self.set_projection(1, self.projection[1][0], self.projection[1][1])
 
     def auto_projection(self):
-        channel_best = np.argmax(self.data_manager.masks_array.sum(axis=0))
-        self.set_projection(0, channel_best, 0)
-        self.set_projection(1, channel_best, 1)
+        channels_best = np.argsort(self.data_manager.masks_array.sum(axis=0)
+            )[::-1]
+        self.set_projection(0, channels_best[0], 0)
+        self.set_projection(1, channels_best[1], 0)
         
     def select_neighbor_channel(self, coord, channel_dir):
         # current channel and feature in the given coordinate
@@ -705,8 +706,8 @@ class FeatureProjectionManager(Manager):
             
     def get_projection(self, coord):
         return self.projection[coord]
-        
-        
+    
+    
 # -----------------------------------------------------------------------------
 # Interaction
 # -----------------------------------------------------------------------------
@@ -729,8 +730,8 @@ class FeatureInfoManager(Manager):
             text=text,
             visible=True,
             visual='clusterinfo')
-        
-
+    
+    
 class FeatureInteractionManager(PlotInteractionManager):
     def initialize(self):
         self.constrain_navigation = False
@@ -830,7 +831,7 @@ class FeatureInteractionManager(PlotInteractionManager):
     
     # Misc
     # ----
-    def toggle_mask(self, parameter):
+    def toggle_mask(self, parameter=None):
         self.paint_manager.toggle_mask()
         
     def show_closest_cluster(self, parameter):
@@ -987,7 +988,8 @@ class FeatureView(GalryWidget):
         pass
     
     def toggle_mask(self):
-        pass
+        self.interaction_manager.toggle_mask()
+        self.updateGL()
         
     def set_projection(self, coord, channel, feature):
         log.debug(("Set projection on channel {0:d}, feature {1:d} "

@@ -35,7 +35,7 @@ def test_waveformview():
     # kwargs['clusters'] = 
     
     operators = [
-        # lambda self: self.view.set_data(**kwargs),
+        lambda self: self.view.toggle_mask(),
         lambda self: (self.close() 
             if USERPREF['test_auto_close'] != False else None),
     ]
