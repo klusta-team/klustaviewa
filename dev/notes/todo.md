@@ -15,12 +15,9 @@ Message for alpha pre-release version:
 Minor features
 --------------
 
-  * in feature view, add non-selected spikes in gray in the background
-  
   * store visualization-related information in the XML file (cluster colors,
     probe scaling, etc) (klustaviewa table)
     
-  * feature view: switch X/Y
   * option to toggle showing masks as gray waveforms in waveform view (T)
   * masks & transparency: shading, continuity, hsv space
   

@@ -1,4 +1,4 @@
-"""Robot selecting automatically the best clusters to show to the user."""
+"""Wizard selecting automatically the best clusters to show to the user."""
 
 # -----------------------------------------------------------------------------
 # Imports
@@ -9,14 +9,14 @@ import numpy as np
 
 
 # -----------------------------------------------------------------------------
-# Robot
+# Wizard
 # -----------------------------------------------------------------------------
-class Robot(object):
-    """Robot object, takes the data parameters and returns propositions of
+class Wizard(object):
+    """Wizard object, takes the data parameters and returns propositions of
     clusters to select."""
     def __init__(self, features=None, spiketimes=None, clusters=None, 
         masks=None, cluster_groups=None, 
-        correlograms=None, correlation_matrix=None, 
+        correlograms=None, similarity_matrix=None, 
         # clusters_unique=None
         ):
         self.features = features
@@ -25,7 +25,7 @@ class Robot(object):
         self.masks = masks
         self.cluster_groups = cluster_groups
         self.correlograms = correlograms
-        self.correlation_matrix = correlation_matrix
+        self.similarity_matrix = similarity_matrix
         # self.clusters_unique = clusters_unique
         self.best_pairs = []
         self.current = -1
@@ -35,10 +35,10 @@ class Robot(object):
     # -----------------
     def _compute_best_pairs(self):
         self.clusters_unique = np.unique(self.clusters)
-        if (self.correlation_matrix is not None #and 
+        if (self.similarity_matrix is not None #and 
             # self.clusters_unique is not None
             ):
-            matrix = self.correlation_matrix
+            matrix = self.similarity_matrix
             n = matrix.shape[0]
             if n > 0:
                 self.current = -1
@@ -65,20 +65,20 @@ class Robot(object):
             self._compute_best_pairs()
             
     def merged(self, clusters_to_merge, cluster_new):
-        """Called to signify the robot that a merge has happened.
+        """Called to signify the wizard that a merge has happened.
         No data update happens here, rather, self.update needs to be called
         with the updated data."""
         pass
             
     def split(self, clusters_old, clusters_new):
-        """Called to signify the robot that a split has happened."""
+        """Called to signify the wizard that a split has happened."""
         pass
         
     # def data_changed(self, clusters=None):
         # self._compute_best_pairs()
         
     
-    # Robot output methods.
+    # Wizard output methods.
     # ---------------------
     def previous(self):
         if len(self.best_pairs) >= 1:

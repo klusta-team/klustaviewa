@@ -69,7 +69,7 @@ class MainWindow(QtGui.QMainWindow):
         self.controller = None
         self.spikes_highlighted = []
         self.spikes_selected = []
-        self.robot_active = False
+        self.wizard_active = False
         self.need_save = False
         self.last_selection_time = time.clock()
         # self.do_renumber = False
@@ -80,7 +80,7 @@ class MainWindow(QtGui.QMainWindow):
         self.create_view_actions()
         self.create_correlograms_actions()
         self.create_control_actions()
-        self.create_robot_actions()
+        self.create_wizard_actions()
         self.create_help_actions()
         self.create_menu()
         self.create_toolbar()
@@ -149,8 +149,8 @@ class MainWindow(QtGui.QMainWindow):
     def create_view_actions(self):
         self.add_action('add_feature_view', 'Add FeatureView')
         self.add_action('add_waveform_view', 'Add WaveformView')
-        self.add_action('add_correlation_matrix_view',
-            'Add CorrelationMatrixView')
+        self.add_action('add_similarity_matrix_view',
+            'Add SimilarityMatrixView')
         self.add_action('add_correlograms_view', 'Add CorrelogramsView')
     
     def create_control_actions(self):
@@ -166,7 +166,7 @@ class MainWindow(QtGui.QMainWindow):
         
         self.add_action('change_corr_normalization', 'Change &normalization')
         
-    def create_robot_actions(self):
+    def create_wizard_actions(self):
         self.add_action('previous_clusters', '&Previous clusters', 
             shortcut='CTRL+Space')
         self.add_action('next_clusters', '&Next clusters', 
@@ -193,7 +193,7 @@ class MainWindow(QtGui.QMainWindow):
         views_menu.addAction(self.add_feature_view_action)
         views_menu.addAction(self.add_waveform_view_action)
         views_menu.addAction(self.add_correlograms_view_action)
-        views_menu.addAction(self.add_correlation_matrix_view_action)
+        views_menu.addAction(self.add_similarity_matrix_view_action)
         
         # Correlograms menu.
         correlograms_menu = self.menuBar().addMenu("&Correlograms")
@@ -213,10 +213,10 @@ class MainWindow(QtGui.QMainWindow):
         actions_menu.addAction(self.merge_action)
         actions_menu.addAction(self.split_action)
         
-        # Robot menu.
-        robot_menu = self.menuBar().addMenu("&Robot")
-        robot_menu.addAction(self.previous_clusters_action)
-        robot_menu.addAction(self.next_clusters_action)
+        # Wizard menu.
+        wizard_menu = self.menuBar().addMenu("&Wizard")
+        wizard_menu.addAction(self.previous_clusters_action)
+        wizard_menu.addAction(self.next_clusters_action)
         
         help_menu = self.menuBar().addMenu("&Help")
         help_menu.addAction(self.shortcuts_action)
@@ -320,8 +320,8 @@ class MainWindow(QtGui.QMainWindow):
     def add_waveform_view_callback(self, checked):
         self.add_waveform_view()
         
-    def add_correlation_matrix_view_callback(self, checked):
-        self.add_correlation_matrix_view()
+    def add_similarity_matrix_view_callback(self, checked):
+        self.add_similarity_matrix_view()
         
     def add_correlograms_view_callback(self, checked):
         self.add_correlograms_view()
@@ -403,7 +403,7 @@ class MainWindow(QtGui.QMainWindow):
             self.statscache.invalidate(to_invalidate)
         # Compute the correlation matrix for the requested clusters.
         if to_compute is not None:
-            self.start_compute_correlation_matrix(to_compute)
+            self.start_compute_similarity_matrix(to_compute)
         self.need_save = True
         
     def merge_callback(self, checked):
@@ -489,7 +489,7 @@ class MainWindow(QtGui.QMainWindow):
         
     def cluster_pair_selected_callback(self, clusters):
         """Callback when the user clicks on a pair in the
-        CorrelationMatrixView."""
+        SimilarityMatrixView."""
         self.get_view('ClusterView').select(clusters)
     
     
@@ -537,9 +537,9 @@ class MainWindow(QtGui.QMainWindow):
         # computed in the background.
         self.statscache = StatsCache(loader.ncorrbins)
         # Start computing the correlation matrix.
-        self.start_compute_correlation_matrix()
-        # Update the robot.
-        self.initialize_robot()
+        self.start_compute_similarity_matrix()
+        # Update the wizard.
+        self.initialize_wizard()
         # Update the views.
         self.update_cluster_view()
         self.update_projection_view()
@@ -576,7 +576,7 @@ class MainWindow(QtGui.QMainWindow):
         else:
             self.update_correlograms_view(clusters_selected)
         
-    def start_compute_correlation_matrix(self, clusters_to_update=None):
+    def start_compute_similarity_matrix(self, clusters_to_update=None):
         # Get the correlation matrix parameters.
         features = get_array(self.loader.get_features('all'))
         masks = get_array(self.loader.get_masks('all', full=True))
@@ -584,17 +584,17 @@ class MainWindow(QtGui.QMainWindow):
         clusters_all = self.loader.get_clusters_unique()
         # Get cluster indices that need to be updated.
         if clusters_to_update is None:
-            clusters_to_update = (self.statscache.correlation_matrix.
+            clusters_to_update = (self.statscache.similarity_matrix.
                 not_in_key_indices(clusters_all))
         # If there are pairs that need to be updated, launch the task.
         if len(clusters_to_update) > 0:
             # Launch the task.
-            self.tasks.correlation_matrix_task.compute(features,
+            self.tasks.similarity_matrix_task.compute(features,
                 clusters, masks, clusters_to_update)
         # Otherwise, update directly the correlograms view without launching
         # the task in the external process.
         else:
-            self.update_correlation_matrix_view()
+            self.update_similarity_matrix_view()
         
     def selection_done(self, clusters_selected):
         """Called on the main thread once the clusters have been loaded 
@@ -607,19 +607,19 @@ class MainWindow(QtGui.QMainWindow):
                     str(self.loader.get_clusters_selected())))
             return
         # Update the different views, with autozoom on if the selection has
-        # been made by the robot.
+        # been made by the wizard.
         # print "acquire lock..."
         with LOCK:
-            self.update_feature_view(autozoom=self.robot_active)
-            self.update_waveform_view(autozoom=self.robot_active)
+            self.update_feature_view(autozoom=self.wizard_active)
+            self.update_waveform_view(autozoom=self.wizard_active)
         # print "release lock"
-        # if self.robot_active:
+        # if self.wizard_active:
             # self.autozoom()
         # Launch the computation of the correlograms.
         self.start_compute_correlograms(clusters_selected)
         # Update action enabled/disabled property.
         self.update_action_enabled()
-        self.robot_active = False
+        self.wizard_active = False
     
     def correlograms_computed(self, clusters, correlograms, ncorrbins, corrbin):
         clusters_selected = self.loader.get_clusters_selected()
@@ -636,24 +636,24 @@ class MainWindow(QtGui.QMainWindow):
             return
         # Put the computed correlograms in the cache.
         self.statscache.correlograms.update(clusters, correlograms)
-        # Update the robot.
-        # self.tasks.robot_task.update(
+        # Update the wizard.
+        # self.tasks.wizard_task.update(
             # correlograms=self.statscache.correlograms)
         # Update the view.
         self.update_correlograms_view(clusters)
     
-    def correlation_matrix_computed(self, clusters_selected, matrix, clusters):
-        self.statscache.correlation_matrix.update(clusters_selected, matrix)
-        # Update the robot.
-        self.update_robot(clusters_selected, clusters)
+    def similarity_matrix_computed(self, clusters_selected, matrix, clusters):
+        self.statscache.similarity_matrix.update(clusters_selected, matrix)
+        # Update the wizard.
+        self.update_wizard(clusters_selected, clusters)
         # Update the view.
-        self.update_correlation_matrix_view()
+        self.update_similarity_matrix_view()
     
     
-    # Robot.
+    # Wizard.
     # ------
-    def initialize_robot(self):
-        self.tasks.robot_task.set_data(
+    def initialize_wizard(self):
+        self.tasks.wizard_task.set_data(
             # Data.
             features=self.loader.get_features('all'),
             spiketimes=self.loader.get_spiketimes('all'),
@@ -663,35 +663,35 @@ class MainWindow(QtGui.QMainWindow):
             cluster_groups=self.loader.get_cluster_groups('all'),
             # Statistics.
             correlograms=self.statscache.correlograms,
-            correlation_matrix=self.statscache.correlation_matrix,
+            similarity_matrix=self.statscache.similarity_matrix,
             )
     
-    def update_robot(self, clusters_selected, clusters):
-        self.tasks.robot_task.set_data(
+    def update_wizard(self, clusters_selected, clusters):
+        self.tasks.wizard_task.set_data(
             # clusters=self.loader.get_clusters('all'),
             clusters=clusters,
             # clusters_unique=self.loader.get_clusters_unique(),
             # correlograms=self.statscache.correlograms,
-            correlation_matrix=normalize(
-                self.statscache.correlation_matrix.to_array(copy=True)),
+            similarity_matrix=normalize(
+                self.statscache.similarity_matrix.to_array(copy=True)),
             )
             
     def previous_clusters_callback(self, checked):
-        clusters =  self.tasks.robot_task.previous(
+        clusters =  self.tasks.wizard_task.previous(
             _sync=True)[2]['_result']
-        # log.info("The robot proposes clusters {0:s}.".format(str(clusters)))
+        # log.info("The wizard proposes clusters {0:s}.".format(str(clusters)))
         if clusters is None or len(clusters) == 0:
             return
-        self.robot_active = True
+        self.wizard_active = True
         self.get_view('ClusterView').select(clusters)
             
     def next_clusters_callback(self, checked):
-        clusters =  self.tasks.robot_task.next(
+        clusters =  self.tasks.wizard_task.next(
             _sync=True)[2]['_result']
         if clusters is None or len(clusters) == 0:
             return
-        log.info("The robot proposes clusters {0:s}.".format(str(clusters)))
-        self.robot_active = True
+        log.info("The wizard proposes clusters {0:s}.".format(str(clusters)))
+        self.wizard_active = True
         self.get_view('ClusterView').select(clusters)
         
     
@@ -704,8 +704,8 @@ class MainWindow(QtGui.QMainWindow):
         self.tasks.select_task.clustersSelected.connect(self.selection_done)
         self.tasks.correlograms_task.correlogramsComputed.connect(
             self.correlograms_computed)
-        self.tasks.correlation_matrix_task.correlationMatrixComputed.connect(
-            self.correlation_matrix_computed)
+        self.tasks.similarity_matrix_task.correlationMatrixComputed.connect(
+            self.similarity_matrix_computed)
     
     def join_threads(self):
          self.tasks.join()
@@ -773,11 +773,11 @@ class MainWindow(QtGui.QMainWindow):
         
         self.views['ProjectionView'].append(view)
         
-    def add_correlation_matrix_view(self):
-        view = self.create_view(vw.CorrelationMatrixView,
+    def add_similarity_matrix_view(self):
+        view = self.create_view(vw.SimilarityMatrixView,
             position=QtCore.Qt.LeftDockWidgetArea,)
         view.clustersSelected.connect(self.cluster_pair_selected_callback)
-        self.views['CorrelationMatrixView'].append(view)
+        self.views['SimilarityMatrixView'].append(view)
     
     def add_waveform_view(self):
         view = self.create_view(vw.WaveformView,
@@ -819,7 +819,7 @@ class MainWindow(QtGui.QMainWindow):
         self.views = dict(
             ClusterView=[],
             ProjectionView=[],
-            CorrelationMatrixView=[],
+            SimilarityMatrixView=[],
             WaveformView=[],
             FeatureView=[],
             CorrelogramsView=[],
@@ -827,7 +827,7 @@ class MainWindow(QtGui.QMainWindow):
         
         self.add_projection_view()
         self.add_cluster_view()
-        self.add_correlation_matrix_view()
+        self.add_similarity_matrix_view()
             
         self.splitDockWidget(
             self.get_view('ProjectionView').parentWidget(), 
@@ -837,7 +837,7 @@ class MainWindow(QtGui.QMainWindow):
             
         self.splitDockWidget(
             self.get_view('ClusterView').parentWidget(), 
-            self.get_view('CorrelationMatrixView').parentWidget(), 
+            self.get_view('SimilarityMatrixView').parentWidget(), 
             QtCore.Qt.Vertical
             )
             
@@ -948,23 +948,23 @@ class MainWindow(QtGui.QMainWindow):
         )
         [view.set_data(**data) for view in self.get_views('CorrelogramsView')]
     
-    def update_correlation_matrix_view(self):
-        matrix = self.statscache.correlation_matrix
+    def update_similarity_matrix_view(self):
+        matrix = self.statscache.similarity_matrix
         # Clusters in groups 0 or 1 to hide.
         cluster_groups = self.loader.get_cluster_groups('all')
         clusters_hidden = np.nonzero(np.in1d(cluster_groups, [0, 1]))[0]
         # Cluster quality.
-        correlation_matrix = normalize(matrix.to_array(copy=True))
-        cluster_quality = np.diag(correlation_matrix)
+        similarity_matrix = normalize(matrix.to_array(copy=True))
+        cluster_quality = np.diag(similarity_matrix)
         data = dict(
             # WARNING: copy the matrix here so that we don't modify the
             # original matrix while normalizing it.
-            correlation_matrix=correlation_matrix,
+            similarity_matrix=similarity_matrix,
             cluster_colors_full=self.loader.get_cluster_colors('all'),
             clusters_hidden=clusters_hidden,
         )
         [view.set_data(**data) 
-            for view in self.get_views('CorrelationMatrixView')]
+            for view in self.get_views('SimilarityMatrixView')]
     
     
     # Geometry.

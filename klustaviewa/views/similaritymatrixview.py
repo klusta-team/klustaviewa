@@ -75,30 +75,30 @@ def colormap(x, col0=None, col1=None):
 # -----------------------------------------------------------------------------
 # Data manager
 # -----------------------------------------------------------------------------
-class CorrelationMatrixDataManager(Manager):
-    def set_data(self, correlation_matrix=None,
+class SimilarityMatrixDataManager(Manager):
+    def set_data(self, similarity_matrix=None,
         cluster_colors_full=None,
         clusters_hidden=[],
         ):
         
-        if correlation_matrix is None:
-            correlation_matrix = np.zeros(0)
+        if similarity_matrix is None:
+            similarity_matrix = np.zeros(0)
             cluster_colors_full = np.zeros(0)
         
-        if correlation_matrix.size == 0:
-            correlation_matrix = -np.ones((2, 2))
-        elif correlation_matrix.shape[0] == 1:
-            correlation_matrix = -np.ones((2, 2))
+        if similarity_matrix.size == 0:
+            similarity_matrix = -np.ones((2, 2))
+        elif similarity_matrix.shape[0] == 1:
+            similarity_matrix = -np.ones((2, 2))
         # else:
             # # Normalize the correlation matrix.
-            # s = correlation_matrix.sum(axis=1)
-            # correlation_matrix[s == 0, 0] = 1e-9
-            # s = correlation_matrix.sum(axis=1)
-            # correlation_matrix *= (1. / s.reshape((-1, 1)))
-        n = correlation_matrix.shape[0]
+            # s = similarity_matrix.sum(axis=1)
+            # similarity_matrix[s == 0, 0] = 1e-9
+            # s = similarity_matrix.sum(axis=1)
+            # similarity_matrix *= (1. / s.reshape((-1, 1)))
+        n = similarity_matrix.shape[0]
         
-        self.texture = colormap(correlation_matrix)[::-1, :, :]
-        self.correlation_matrix = correlation_matrix
+        self.texture = colormap(similarity_matrix)[::-1, :, :]
+        self.similarity_matrix = similarity_matrix
         
         # Hide some clusters.
         tex0 = self.texture.copy()
@@ -115,11 +115,11 @@ class CorrelationMatrixDataManager(Manager):
 # -----------------------------------------------------------------------------
 # Visuals
 # -----------------------------------------------------------------------------
-class CorrelationMatrixPaintManager(PlotPaintManager):
+class SimilarityMatrixPaintManager(PlotPaintManager):
     def initialize(self):
         self.add_visual(TextureVisual,
             texture=self.data_manager.texture, 
-            name='correlation_matrix')
+            name='similarity_matrix')
 
         self.add_visual(TextVisual, text='0', name='clusterinfo', fontsize=16,
             background_transparent=False,
@@ -134,13 +134,13 @@ class CorrelationMatrixPaintManager(PlotPaintManager):
         
     def update(self):
         self.set_data(
-            texture=self.data_manager.texture, visual='correlation_matrix')
+            texture=self.data_manager.texture, visual='similarity_matrix')
         
 
 # -----------------------------------------------------------------------------
 # Interaction
 # -----------------------------------------------------------------------------
-class CorrelationMatrixInfoManager(Manager):
+class SimilarityMatrixInfoManager(Manager):
     def initialize(self):
         pass
         
@@ -162,11 +162,11 @@ class CorrelationMatrixInfoManager(Manager):
         cx = self.data_manager.clusters_unique[cx_rel]
         cy = self.data_manager.clusters_unique[cy_rel]
         
-        if ((cx_rel >= self.data_manager.correlation_matrix.shape[0]) or
-            (cy_rel >= self.data_manager.correlation_matrix.shape[1])):
+        if ((cx_rel >= self.data_manager.similarity_matrix.shape[0]) or
+            (cy_rel >= self.data_manager.similarity_matrix.shape[1])):
             return
             
-        val = self.data_manager.correlation_matrix[cx_rel, cy_rel]
+        val = self.data_manager.similarity_matrix[cx_rel, cy_rel]
         
         text = "%d/%d:%.3f" % (cy, cx, val)
         
@@ -176,7 +176,7 @@ class CorrelationMatrixInfoManager(Manager):
             visual='clusterinfo')
         
     
-class CorrelationMatrixInteractionManager(PlotInteractionManager):
+class SimilarityMatrixInteractionManager(PlotInteractionManager):
     def initialize(self):
         # self.register('ShowClosestCluster', self.show_closest_cluster)
         self.register('SelectPair', self.select_pair)
@@ -259,7 +259,7 @@ class CorrelationMatrixInteractionManager(PlotInteractionManager):
             visual='square')
         
         
-class CorrelationMatrixBindings(KlustaViewaBindings):
+class SimilarityMatrixBindings(KlustaViewaBindings):
     def get_base_cursor(self):
         return 'ArrowCursor'
     
@@ -278,7 +278,7 @@ class CorrelationMatrixBindings(KlustaViewaBindings):
             param_getter=lambda p: p['mouse_position'])
     
     def initialize(self):
-        # super(CorrelationMatrixBindings, self).initialize()
+        # super(SimilarityMatrixBindings, self).initialize()
         # self.set_clusterinfo()
         self.set_selectcluster()
         self.set_move()
@@ -287,21 +287,21 @@ class CorrelationMatrixBindings(KlustaViewaBindings):
 # -----------------------------------------------------------------------------
 # Top-level module
 # -----------------------------------------------------------------------------
-class CorrelationMatrixView(GalryWidget):
+class SimilarityMatrixView(GalryWidget):
     
     # Raise the list of highlighted spike absolute indices.
     clustersSelected = QtCore.pyqtSignal(np.ndarray)
     
     def initialize(self):
-        self.set_bindings(CorrelationMatrixBindings)
+        self.set_bindings(SimilarityMatrixBindings)
         self.set_companion_classes(
-            paint_manager=CorrelationMatrixPaintManager,
-            info_manager=CorrelationMatrixInfoManager,
-            interaction_manager=CorrelationMatrixInteractionManager,
-            data_manager=CorrelationMatrixDataManager,)
+            paint_manager=SimilarityMatrixPaintManager,
+            info_manager=SimilarityMatrixInfoManager,
+            interaction_manager=SimilarityMatrixInteractionManager,
+            data_manager=SimilarityMatrixDataManager,)
     
     def set_data(self, *args, **kwargs):
-        # if kwargs.get('correlation_matrix', None) is None:
+        # if kwargs.get('similarity_matrix', None) is None:
             # return
         self.data_manager.set_data(*args, **kwargs)
         

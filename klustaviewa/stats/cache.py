@@ -34,21 +34,21 @@ class StatsCache(object):
     
     def invalidate(self, clusters):
         self.correlograms.invalidate(clusters)
-        self.correlation_matrix.invalidate(clusters)
+        self.similarity_matrix.invalidate(clusters)
         
     def reset(self, ncorrbins=None):
         if ncorrbins is not None:
             self.ncorrbins = ncorrbins
         self.correlograms = CacheMatrix(shape=(0, 0, self.ncorrbins))
-        self.correlation_matrix = CacheMatrix()
+        self.similarity_matrix = CacheMatrix()
         
     # def add(self, clusters):
         # self.correlograms.add_indices(clusters)
-        # self.correlation_matrix.add_indices(clusters)
+        # self.similarity_matrix.add_indices(clusters)
         
     # def remove(self, clusters):
         # self.correlograms.remove_indices(clusters)
-        # self.correlation_matrix.remove_indices(clusters)
+        # self.similarity_matrix.remove_indices(clusters)
         
         
         

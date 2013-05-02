@@ -76,10 +76,10 @@ def test_recompute_correlation():
     clusters0 = get_array(l.get_clusters('all'))
     clusters_all = l.get_clusters_unique()
     
-    correlation_matrix = CacheMatrix()
+    similarity_matrix = CacheMatrix()
     correlations0 = compute_correlations(features, clusters0, masks)
-    correlation_matrix.update(clusters_unique, correlations0)
-    matrix0 = normalize(correlation_matrix.to_array().copy())
+    similarity_matrix.update(clusters_unique, correlations0)
+    matrix0 = normalize(similarity_matrix.to_array().copy())
     
     
     
@@ -88,12 +88,12 @@ def test_recompute_correlation():
     cluster_new = output['to_select']
     
     # Compute the new matrix
-    correlation_matrix.invalidate([2, 4, 6, cluster_new])
+    similarity_matrix.invalidate([2, 4, 6, cluster_new])
     clusters1 = get_array(l.get_clusters('all'))
     correlations1 = compute_correlations(features, clusters1, masks,#)
         [cluster_new])
-    correlation_matrix.update([cluster_new], correlations1)
-    matrix1 = normalize(correlation_matrix.to_array().copy())
+    similarity_matrix.update([cluster_new], correlations1)
+    matrix1 = normalize(similarity_matrix.to_array().copy())
     
     
     # Undo.
@@ -102,7 +102,7 @@ def test_recompute_correlation():
     
     
     # Compute the new matrix
-    correlation_matrix.invalidate([2, 4, 6, cluster_new])
+    similarity_matrix.invalidate([2, 4, 6, cluster_new])
     clusters2 = get_array(l.get_clusters('all'))
     correlations2 = compute_correlations(features, clusters2, masks,)
     correlations2b = compute_correlations(features, clusters2, masks,#)
@@ -111,8 +111,8 @@ def test_recompute_correlation():
     for (clu0, clu1) in correlations2b.keys():
         assert np.allclose(correlations2[clu0, clu1], correlations2b[clu0, clu1]), (clu0, clu1, correlations2[clu0, clu1], correlations2b[clu0, clu1])
     
-    correlation_matrix.update(clusters_selected, correlations2b)
-    matrix2 = normalize(correlation_matrix.to_array().copy())
+    similarity_matrix.update(clusters_selected, correlations2b)
+    matrix2 = normalize(similarity_matrix.to_array().copy())
     
     assert np.array_equal(clusters0, clusters2)
     assert np.allclose(matrix0, matrix2)

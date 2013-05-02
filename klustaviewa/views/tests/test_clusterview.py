@@ -10,7 +10,7 @@ import numpy as np
 import numpy.random as rnd
 import pandas as pd
 
-from klustaviewa.io.tests.mock_data import (setup, teardown, create_correlation_matrix,
+from klustaviewa.io.tests.mock_data import (setup, teardown, create_similarity_matrix,
         nspikes, nclusters, nsamples, nchannels, fetdim, ncorrbins)
 from klustaviewa.io.loader import KlustersLoader
 from klustaviewa.io.selection import select

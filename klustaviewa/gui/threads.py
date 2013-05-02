@@ -12,7 +12,7 @@ from qtools import QtGui, QtCore
 
 from klustaviewa.io import KlustersLoader
 from klustaviewa.io.tools import get_array
-from klustaviewa.robot.robot import Robot
+from klustaviewa.wizard.wizard import Wizard
 import klustaviewa.utils.logger as log
 from klustaviewa.stats import compute_correlograms, compute_correlations
 
@@ -69,7 +69,7 @@ class CorrelogramsTask(QtCore.QObject):
             correlograms, ncorrbins, corrbin)
 
             
-class CorrelationMatrixTask(QtCore.QObject):
+class SimilarityMatrixTask(QtCore.QObject):
     correlationMatrixComputed = QtCore.pyqtSignal(np.ndarray, object,
         np.ndarray)
     
@@ -89,18 +89,18 @@ class CorrelationMatrixTask(QtCore.QObject):
             correlations, get_array(clusters, copy=True))
             
 
-class RobotTask(QtCore.QObject):
+class WizardTask(QtCore.QObject):
     def __init__(self,):
-        self.robot = Robot()
+        self.wizard = Wizard()
         
     def set_data(self, **kwargs):
-        self.robot.set_data(**kwargs)
+        self.wizard.set_data(**kwargs)
         
     def previous(self):
-        return self.robot.previous()
+        return self.wizard.previous()
         
     def next(self):
-        return self.robot.next()
+        return self.wizard.next()
 
 
 # -----------------------------------------------------------------------------
@@ -113,21 +113,21 @@ class ThreadedTasks(QtCore.QObject):
         self.select_task = inthread(SelectTask)(impatient=True)
         # In external processes.
         self.correlograms_task = inprocess(CorrelogramsTask)(impatient=True)
-        self.correlation_matrix_task = inprocess(CorrelationMatrixTask)(
+        self.similarity_matrix_task = inprocess(SimilarityMatrixTask)(
             impatient=True)
-        self.robot_task = inprocess(RobotTask)(impatient=False)
+        self.wizard_task = inprocess(WizardTask)(impatient=False)
 
     def join(self):
         self.open_task.join()
         self.select_task.join()
         self.correlograms_task.join()
-        self.correlation_matrix_task.join()
-        self.robot_task.join()
+        self.similarity_matrix_task.join()
+        self.wizard_task.join()
         
     def terminate(self):
         self.correlograms_task.terminate()
-        self.correlation_matrix_task.terminate()
-        self.robot_task.terminate()
+        self.similarity_matrix_task.terminate()
+        self.wizard_task.terminate()
     
     
         

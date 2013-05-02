@@ -54,7 +54,7 @@ def get_data():
         spiketimes=l.get_spiketimes(),
         geometrical_positions=l.get_probe(),
         
-        # correlation_matrix=l.get_correlation_matrix(),
+        # similarity_matrix=l.get_similarity_matrix(),
         
         nchannels=l.nchannels,
         nsamples=l.nsamples,

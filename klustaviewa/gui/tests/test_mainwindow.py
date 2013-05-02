@@ -12,7 +12,7 @@ import pandas as pd
 from galry import show_window
 
 from klustaviewa.gui.mainwindow import MainWindow
-# from klustaviewa.io.tests.mock_data import (setup, teardown, create_correlation_matrix,
+# from klustaviewa.io.tests.mock_data import (setup, teardown, create_similarity_matrix,
         # nspikes, nclusters, nsamples, nchannels, fetdim, ncorrbins)
 from klustaviewa.io.loader import KlustersLoader
 from klustaviewa.io.selection import select

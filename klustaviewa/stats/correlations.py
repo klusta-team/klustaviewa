@@ -128,7 +128,7 @@ def compute_correlations(features, clusters, masks,
     
     return matrix_new
     
-def get_correlation_matrix(dic):
+def get_similarity_matrix(dic):
     """Return a correlation matrix from a dictionary. Normalization happens
     here."""
     clu0, clu1 = zip(*matrix.keys())

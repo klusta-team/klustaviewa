@@ -17,7 +17,7 @@ def test_cache():
     cache = StatsCache(ncorrbins=100)
     
     np.array_equal(cache.correlograms.not_in_indices(indices), indices)
-    np.array_equal(cache.correlation_matrix.not_in_indices(indices), indices)
+    np.array_equal(cache.similarity_matrix.not_in_indices(indices), indices)
     
     d = {(2, i): 0 for i in indices}
     d.update({(i, 2): 0 for i in indices})
@@ -28,7 +28,7 @@ def test_cache():
     cache.invalidate(2)
     
     np.array_equal(cache.correlograms.not_in_key_indices(indices), indices)
-    np.array_equal(cache.correlation_matrix.not_in_key_indices(indices), 
+    np.array_equal(cache.similarity_matrix.not_in_key_indices(indices), 
         indices)
     
     

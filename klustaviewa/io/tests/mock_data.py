@@ -56,7 +56,7 @@ def create_cluster_colors(maxcluster):
 def create_masks(nspikes, nchannels, fetdim):
     return rnd.rand(nspikes, nchannels * fetdim + 1) < .1
     
-def create_correlation_matrix(nclusters):
+def create_similarity_matrix(nclusters):
     return np.random.rand(nclusters, nclusters)
     
 def create_correlograms(clusters, ncorrbins):
