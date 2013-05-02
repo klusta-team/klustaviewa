@@ -73,6 +73,8 @@ class MainWindow(QtGui.QMainWindow):
         self.wizard_active = False
         self.need_save = False
         self.last_selection_time = time.clock()
+        self.busy_cursor = QtGui.QCursor(QtCore.Qt.BusyCursor)
+        self.normal_cursor = QtGui.QCursor(QtCore.Qt.ArrowCursor)
         # self.do_renumber = False
         
         # Create the main window.
@@ -108,11 +110,14 @@ class MainWindow(QtGui.QMainWindow):
         stylesheet = stylesheet.replace('%ACCENT4%', '#cdcdcd')
         self.setStyleSheet(stylesheet)
     
-    def set_cursor(self, cursor=None):
-        if cursor is None:
-            QtGui.QApplication.restoreOverrideCursor()
-        else:
-            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(cursor))
+    def set_busy_cursor(self):
+        cursor = QtGui.QApplication.overrideCursor()
+        if cursor is None or cursor.shape() != QtCore.Qt.BusyCursor:
+            QtGui.QApplication.setOverrideCursor(self.busy_cursor)
+        
+    def set_normal_cursor(self):
+        # QtGui.QApplication.setOverrideCursor(self.normal_cursor)
+        QtGui.QApplication.restoreOverrideCursor()
     
     
     # Actions.
@@ -562,8 +567,6 @@ class MainWindow(QtGui.QMainWindow):
         self.open_progress.setValue(progress)
         
     def start_compute_correlograms(self, clusters_selected):
-        # Set wait cursor.
-        self.set_cursor(QtCore.Qt.BusyCursor)
         # Get the correlograms parameters.
         spiketimes = get_array(self.loader.get_spiketimes('all'))
         # Make a copy of the array so that it does not change before the
@@ -585,6 +588,8 @@ class MainWindow(QtGui.QMainWindow):
         
         # If there are pairs that need to be updated, launch the task.
         if len(clusters_to_update) > 0:
+            # Set wait cursor.
+            self.set_busy_cursor()
             # Launch the task.
             self.tasks.correlograms_task.compute(spiketimes, clusters,
                 clusters_to_update=clusters_to_update, 
@@ -644,6 +649,8 @@ class MainWindow(QtGui.QMainWindow):
         clusters_selected = self.loader.get_clusters_selected()
         # Abort if the selection has changed during the computation of the
         # correlograms.
+        # Reset the cursor.
+        self.set_normal_cursor()
         if not np.array_equal(clusters, clusters_selected):
             log.debug("Skip update correlograms with clusters selected={0:s}"
             " and clusters updated={1:s}.".format(clusters_selected, clusters))
@@ -660,8 +667,6 @@ class MainWindow(QtGui.QMainWindow):
             # correlograms=self.statscache.correlograms)
         # Update the view.
         self.update_correlograms_view(clusters)
-        # Reset the cursor.
-        self.set_cursor()
         
     def similarity_matrix_computed(self, clusters_selected, matrix, clusters):
         self.statscache.similarity_matrix.update(clusters_selected, matrix)
