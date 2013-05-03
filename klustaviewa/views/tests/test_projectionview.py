@@ -9,9 +9,9 @@ import numpy as np
 import numpy.random as rnd
 import pandas as pd
 
-from klustaviewa.io.loader import KlustersLoader
-from klustaviewa.io.selection import select
-from klustaviewa.io.tools import check_dtype, check_shape
+from klustaviewa.dataio.loader import KlustersLoader
+from klustaviewa.dataio.selection import select
+from klustaviewa.dataio.tools import check_dtype, check_shape
 from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.views import ProjectionView
 from klustaviewa.views.tests.utils import show_view, get_data, assert_fun

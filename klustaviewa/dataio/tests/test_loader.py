@@ -12,13 +12,13 @@ import pandas as pd
 import shutil
 from nose.tools import with_setup
 
-from klustaviewa.io.tests.mock_data import (setup, teardown,
+from klustaviewa.dataio.tests.mock_data import (setup, teardown,
                             nspikes, nclusters, nsamples, nchannels, fetdim)
-from klustaviewa.io.loader import (KlustersLoader, read_clusters, save_clusters,
+from klustaviewa.dataio.loader import (KlustersLoader, read_clusters, save_clusters,
     read_cluster_info, save_cluster_info, read_group_info, save_group_info,
     renumber_clusters, reorder)
-from klustaviewa.io.selection import select, get_indices
-from klustaviewa.io.tools import check_dtype, check_shape, get_array, load_text
+from klustaviewa.dataio.selection import select, get_indices
+from klustaviewa.dataio.tools import check_dtype, check_shape, get_array, load_text
 from klustaviewa.utils.userpref import USERPREF
 
 

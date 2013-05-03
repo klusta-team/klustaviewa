@@ -1,11 +1,11 @@
-"""Unit tests for io.tools module."""
+"""Unit tests for dataio.tools module."""
 
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
 import numpy as np
 
-from klustaviewa.io.tools import normalize, find_filename
+from klustaviewa.dataio.tools import normalize, find_filename
 
 
 # -----------------------------------------------------------------------------

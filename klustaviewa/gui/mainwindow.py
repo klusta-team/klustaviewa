@@ -18,8 +18,8 @@ from qtools import inprocess, inthread
 import klustaviewa.views as vw
 from klustaviewa.gui.icons import get_icon
 from klustaviewa.control.controller import Controller
-from klustaviewa.io.tools import get_array
-from klustaviewa.io.loader import KlustersLoader
+from klustaviewa.dataio.tools import get_array
+from klustaviewa.dataio.loader import KlustersLoader
 from klustaviewa.stats.cache import StatsCache
 from klustaviewa.stats.correlations import normalize
 from klustaviewa.stats.correlograms import get_baselines
@@ -298,7 +298,7 @@ class MainWindow(QtGui.QMainWindow):
     
     # File menu callbacks.
     # --------------------
-    def open_callback(self, checked):
+    def open_callback(self, checked=None):
         # HACK: Force release of Ctrl key.
         self.force_key_release()
         
@@ -314,7 +314,7 @@ class MainWindow(QtGui.QMainWindow):
             SETTINGS['main_window.last_data_dir'] = folder
             SETTINGS['main_window.last_data_file'] = path
             
-    def save_callback(self, checked):
+    def save_callback(self, checked=None):
         folder = SETTINGS.get('main_window.last_data_file')
         self.loader.save(renumber=self.renumber_action.isChecked())
         self.need_save = False
@@ -329,30 +329,30 @@ class MainWindow(QtGui.QMainWindow):
             # self.provider.save(filename)
         
             
-    def open_last_callback(self, checked):
+    def open_last_callback(self, checked=None):
         path = SETTINGS['main_window.last_data_file']
         if path:
             self.tasks.open_task.open(self.loader, path)
             
-    def quit_callback(self, checked):
+    def quit_callback(self, checked=None):
         self.close()
     
     
     # Views menu callbacks.
     # ---------------------
-    def add_feature_view_callback(self, checked):
+    def add_feature_view_callback(self, checked=None):
         self.add_feature_view()
         
-    def add_waveform_view_callback(self, checked):
+    def add_waveform_view_callback(self, checked=None):
         self.add_waveform_view()
         
-    def add_similarity_matrix_view_callback(self, checked):
+    def add_similarity_matrix_view_callback(self, checked=None):
         self.add_similarity_matrix_view()
         
-    def add_correlograms_view_callback(self, checked):
+    def add_correlograms_view_callback(self, checked=None):
         self.add_correlograms_view()
     
-    def override_color_callback(self, checked):
+    def override_color_callback(self, checked=None):
         self.override_color = not self.override_color
         self.loader.set_override_color(self.override_color)
         # view = self.get_view('ClusterView')
@@ -380,7 +380,7 @@ class MainWindow(QtGui.QMainWindow):
         clusters = view.selected_clusters()
         self.start_compute_correlograms(clusters)
         
-    def change_ncorrbins_callback(self, checked):
+    def change_ncorrbins_callback(self, checked=None):
         if not self.loader:
             return
         corrbin = self.loader.corrbin
@@ -394,7 +394,7 @@ class MainWindow(QtGui.QMainWindow):
             # ncorrbins_new = int(duration_new / corrbin * .001)
             self.change_correlograms_parameters(ncorrbins=ncorrbins_new)
     
-    def change_corrbin_callback(self, checked):
+    def change_corrbin_callback(self, checked=None):
         if not self.loader:
             return
         ncorrbins = self.loader.ncorrbins
@@ -412,7 +412,7 @@ class MainWindow(QtGui.QMainWindow):
             self.change_correlograms_parameters(corrbin=corrbin_new,
                 ncorrbins=ncorrbins_new)
     
-    def change_corr_normalization_callback(self, checked):
+    def change_corr_normalization_callback(self, checked=None):
         self.get_view('CorrelogramsView').change_normalization()
     
     
@@ -448,7 +448,7 @@ class MainWindow(QtGui.QMainWindow):
             self.start_compute_similarity_matrix(to_compute)
         self.need_save = True
         
-    def merge_callback(self, checked):
+    def merge_callback(self, checked=None):
         cluster_view = self.get_view('ClusterView')
         clusters = cluster_view.selected_clusters()
         if len(clusters) >= 2:
@@ -456,7 +456,7 @@ class MainWindow(QtGui.QMainWindow):
                 action, output = self.controller.merge_clusters(clusters)
             self.action_processed(action, **output)
             
-    def split_callback(self, checked):
+    def split_callback(self, checked=None):
         cluster_view = self.get_view('ClusterView')
         clusters = cluster_view.selected_clusters()
         spikes_selected = self.spikes_selected
@@ -466,14 +466,14 @@ class MainWindow(QtGui.QMainWindow):
                     clusters, spikes_selected)
             self.action_processed(action, **output)
             
-    def undo_callback(self, checked):
+    def undo_callback(self, checked=None):
         with LOCK:
             action, output = self.controller.undo()
         if output is None:
             output = {}
         self.action_processed(action, **output)
         
-    def redo_callback(self, checked):
+    def redo_callback(self, checked=None):
         with LOCK:
             action, output = self.controller.redo()
         if output is None:
@@ -513,10 +513,10 @@ class MainWindow(QtGui.QMainWindow):
     
     # Help callbacks.
     # ---------------
-    def about_callback(self, checked):
+    def about_callback(self, checked=None):
         QtGui.QMessageBox.about(self, "KlustaViewa", ABOUT)
     
-    def shortcuts_callback(self, checked):
+    def shortcuts_callback(self, checked=None):
         e = QtGui.QKeyEvent(QtCore.QEvent.KeyPress, 
                              QtCore.Qt.Key_H,
                              QtCore.Qt.NoModifier,)
@@ -732,7 +732,7 @@ class MainWindow(QtGui.QMainWindow):
                 self.statscache.similarity_matrix.to_array(copy=True)),
             )
             
-    def previous_clusters_callback(self, checked):
+    def previous_clusters_callback(self, checked=None):
         clusters =  self.tasks.wizard_task.previous(
             _sync=True)[2]['_result']
         # log.info("The wizard proposes clusters {0:s}.".format(str(clusters)))
@@ -741,7 +741,7 @@ class MainWindow(QtGui.QMainWindow):
         self.wizard_active = True
         self.get_view('ClusterView').select(clusters)
             
-    def next_clusters_callback(self, checked):
+    def next_clusters_callback(self, checked=None):
         clusters =  self.tasks.wizard_task.next(
             _sync=True)[2]['_result']
         if clusters is None or len(clusters) == 0:

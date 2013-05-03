@@ -12,11 +12,11 @@ import pandas as pd
 from galry import show_window
 
 from klustaviewa.gui.mainwindow import MainWindow
-# from klustaviewa.io.tests.mock_data import (setup, teardown, create_similarity_matrix,
+# from klustaviewa.dataio.tests.mock_data import (setup, teardown, create_similarity_matrix,
         # nspikes, nclusters, nsamples, nchannels, fetdim, ncorrbins)
-from klustaviewa.io.loader import KlustersLoader
-from klustaviewa.io.selection import select
-from klustaviewa.io.tools import check_dtype, check_shape
+from klustaviewa.dataio.loader import KlustersLoader
+from klustaviewa.dataio.selection import select
+from klustaviewa.dataio.tools import check_dtype, check_shape
 from klustaviewa.gui.mainwindow import MainWindow
 
 

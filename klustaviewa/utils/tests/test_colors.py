@@ -39,7 +39,7 @@ def test_colors_1():
         assert next_color(c) == c + 1
     assert next_color(COLORS_COUNT) == 1
     
-def test_color_galry():
+def teast_color_galry():
     figure(constrain_navigation=False, 
         autodestruct=100,
         )

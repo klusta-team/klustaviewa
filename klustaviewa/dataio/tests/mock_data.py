@@ -11,8 +11,9 @@ import pandas as pd
 import shutil
 
 from klustaviewa.utils.colors import COLORS_COUNT
-from klustaviewa.io.tools import save_binary, save_text, check_dtype, check_shape
+from klustaviewa.dataio.tools import save_binary, save_text, check_dtype, check_shape
 from klustaviewa.stats.cache import IndexedMatrix
+import klustaviewa.utils.logger as log
 
 
 # -----------------------------------------------------------------------------
@@ -55,8 +56,8 @@ def create_clusters(nspikes, nclusters):
     return rnd.randint(size=nspikes, low=cluster_offset, 
         high=nclusters + cluster_offset)
     
-def create_cluster_colors(maxcluster):
-    return np.mod(np.arange(maxcluster + 1, dtype=np.int32), COLORS_COUNT) + 1
+def create_cluster_colors(nclusters):
+    return np.mod(np.arange(nclusters, dtype=np.int32), COLORS_COUNT) + 1
     
 def create_masks(nspikes, nchannels, fetdim):
     return np.clip(rnd.rand(nspikes, nchannels * fetdim + 1) * 1.5, 0, 1)
@@ -129,11 +130,13 @@ def create_probe(nchannels):
 # Fixtures
 # -----------------------------------------------------------------------------
 def setup():
+    log.debug("Creating mock data for dataio subpackage.")
+    
     # Create mock data.
     waveforms = create_waveforms(nspikes, nsamples, nchannels)
     features = create_features(nspikes, nchannels, fetdim, duration, freq)
     clusters = create_clusters(nspikes, nclusters)
-    cluster_colors = create_cluster_colors(nclusters - 1)
+    cluster_colors = create_cluster_colors(nclusters)
     masks = create_masks(nspikes, nchannels, fetdim)
     xml = create_xml(nchannels, nsamples, fetdim)
     probe = create_probe(nchannels)
@@ -155,6 +158,8 @@ def setup():
     save_text(os.path.join(dir, 'test.probe'), probe)
     
 def teardown():
+    log.debug("Erasing mock data for dataio subpackage.")
+    
     # Erase the temporary data directory.
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
     if os.path.exists(dir):

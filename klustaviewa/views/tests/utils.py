@@ -9,7 +9,7 @@ import time
 
 from galry import QtGui, QtCore, show_window
 
-from klustaviewa.io.loader import KlustersLoader
+import mock_data as md
 from klustaviewa.utils.userpref import USERPREF
 
 
@@ -22,13 +22,7 @@ def assert_fun(statement):
 def get_data():
     """Return a dictionary with data variables, after the fixture setup
     has been called."""
-    # Mock data folder.
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                '../../io/tests/mockdata')
-    
-    # Load data files.
-    xmlfile = os.path.join(dir, 'test.xml')
-    l = KlustersLoader(xmlfile)
+    l = md.LOADER
     
     # Get full data sets.
     clusters_selected = [2, 4, 10]
@@ -40,7 +34,6 @@ def get_data():
         features_full=l.get_features('all'),
         masks=l.get_masks(),
         waveforms=l.get_waveforms(),
-        # correlograms=l.get_correlograms(),
         clusters=l.get_clusters(),
         
         cluster_colors=l.get_cluster_colors(),
@@ -53,8 +46,6 @@ def get_data():
         
         spiketimes=l.get_spiketimes(),
         geometrical_positions=l.get_probe(),
-        
-        # similarity_matrix=l.get_similarity_matrix(),
         
         nchannels=l.nchannels,
         nsamples=l.nsamples,
@@ -98,7 +89,7 @@ def show_view(view_class, **kwargs):
                     dt = self.operator_list[i][1]
                 else:
                     # Default delay.
-                    dt = USERPREF['test_operator_delay'] or .5
+                    dt = USERPREF['test_operator_delay'] or .1
                 time.sleep(dt)
                 self.operatorStarted.emit(i)
             
@@ -125,5 +116,6 @@ def show_view(view_class, **kwargs):
                 self._thread.join()
             return super(TestWindow, self).closeEvent(e)
                 
-    show_window(TestWindow)
+    window = show_window(TestWindow)
+    return window
     

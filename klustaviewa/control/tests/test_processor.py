@@ -8,11 +8,11 @@ import os
 import numpy as np
 
 from klustaviewa.control.processor import Processor
-from klustaviewa.io.tests.mock_data import (setup, teardown,
+from klustaviewa.dataio.tests.mock_data import (setup, teardown,
                             nspikes, nclusters, nsamples, nchannels, fetdim)
-from klustaviewa.io.loader import KlustersLoader
-from klustaviewa.io.selection import select, get_indices
-from klustaviewa.io.tools import check_dtype, check_shape, get_array
+from klustaviewa.dataio.loader import KlustersLoader
+from klustaviewa.dataio.selection import select, get_indices
+from klustaviewa.dataio.tools import check_dtype, check_shape, get_array
 
 
 # -----------------------------------------------------------------------------
@@ -21,7 +21,7 @@ from klustaviewa.io.tools import check_dtype, check_shape, get_array
 def load():
     # Open the mock data.
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                '../../io/tests/mockdata')
+                '../../dataio/tests/mockdata')
     xmlfile = os.path.join(dir, 'test.xml')
     l = KlustersLoader(xmlfile)
     c = Processor(l)

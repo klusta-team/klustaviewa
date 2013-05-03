@@ -13,8 +13,8 @@ import time
 from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
     GalryWidget, QtGui, QtCore, show_window, enforce_dtype, RectanglesVisual,
     TextVisual)
-from klustaviewa.io.tools import get_array
-from klustaviewa.io.selection import get_spikes_in_clusters, select, get_indices
+from klustaviewa.dataio.tools import get_array
+from klustaviewa.dataio.selection import get_spikes_in_clusters, select, get_indices
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
 from klustaviewa.utils.colors import COLORMAP_TEXTURE, SHIFTLEN
 import klustaviewa.utils.logger as log

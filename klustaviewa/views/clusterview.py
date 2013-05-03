@@ -12,7 +12,7 @@ import numpy as np
 import numpy.random as rnd
 from galry import QtGui, QtCore
 
-from klustaviewa.io.selection import get_indices, select
+from klustaviewa.dataio.selection import get_indices, select
 from klustaviewa.gui.icons import get_icon
 from klustaviewa.utils.colors import COLORMAP, next_color
 import klustaviewa.utils.logger as log
@@ -828,7 +828,7 @@ class ClusterView(QtGui.QTreeView):
         self.add_group_action.triggered.connect(self.add_group_callback)
         
         self.rename_group_action = QtGui.QAction("Re&name group", self)
-        self.rename_group_action.setShortcut(QtCore.Qt.Key_F2)
+        self.rename_group_action.setShortcut("F2")
         self.rename_group_action.triggered.connect(self.rename_group_callback)
         
         self.remove_group_action = QtGui.QAction("&Remove group", self)
@@ -900,7 +900,7 @@ class ClusterView(QtGui.QTreeView):
     
     # Callback
     # --------
-    def change_color_callback(self, checked):
+    def change_color_callback(self, checked=None):
         item = self.current_item
         initial_color = item.color()
         if initial_color >= 0:
@@ -922,19 +922,19 @@ class ClusterView(QtGui.QTreeView):
         elif isinstance(item, GroupItem):
             self.change_group_color(item.groupidx(), color)
             
-    def add_group_callback(self, checked):
+    def add_group_callback(self, checked=None):
         text, ok = QtGui.QInputDialog.getText(self, 
             "Group name", "Name group:",
             QtGui.QLineEdit.Normal, "New group")
         if ok:
             self.add_group(text, self.selected_clusters())
         
-    def remove_group_callback(self, checked):
+    def remove_group_callback(self, checked=None):
         item = self.current_item
         if isinstance(item, GroupItem):
             self.remove_group(item.groupidx())
             
-    def rename_group_callback(self, checked):
+    def rename_group_callback(self, checked=None):
         group = self.current_item
         if isinstance(group, GroupItem):
             groupidx = group.groupidx()
@@ -946,11 +946,11 @@ class ClusterView(QtGui.QTreeView):
                 # Rename the group.
                 self.rename_group(groupidx, text)
     
-    def move_to_noise_callback(self, checked):
+    def move_to_noise_callback(self, checked=None):
         clusters = self.selected_clusters()
         self.move_to_noise(clusters)
         
-    def move_to_mua_callback(self, checked):
+    def move_to_mua_callback(self, checked=None):
         clusters = self.selected_clusters()
         self.move_to_mua(clusters)
     

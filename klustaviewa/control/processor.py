@@ -10,8 +10,8 @@ import numpy as np
 import pandas as pd
 
 import klustaviewa.utils.logger as log
-from klustaviewa.io.selection import get_indices, select
-from klustaviewa.io.tools import get_array
+from klustaviewa.dataio.selection import get_indices, select
+from klustaviewa.dataio.tools import get_array
 from klustaviewa.utils.colors import next_color
 
 

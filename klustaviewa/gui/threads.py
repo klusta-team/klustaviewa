@@ -10,8 +10,8 @@ import numpy as np
 from qtools import inthread, inprocess
 from qtools import QtGui, QtCore
 
-from klustaviewa.io import KlustersLoader
-from klustaviewa.io.tools import get_array
+from klustaviewa.dataio import KlustersLoader
+from klustaviewa.dataio.tools import get_array
 from klustaviewa.wizard.wizard import Wizard
 import klustaviewa.utils.logger as log
 from klustaviewa.stats import compute_correlograms, compute_correlations

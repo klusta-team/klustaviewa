@@ -39,15 +39,8 @@ def read_xml(filename_xml, fileindex):
     
     return metadata
 
-# def read_clusters_info(filename_cluinfo, fileindex):
-    # info = load_pickle(filename_cluinfo)
-    # return info
-    
-def read_features(filename_fet, nchannels, fetdim, freq):
-    """Read a .fet file and return the normalize features array,
-    as well as the spiketimes."""
-    
-    features = load_text(filename_fet, np.int32, skiprows=1)
+# Features.
+def process_features(features, fetdim, nchannels, freq):
     features = np.array(features, dtype=np.float32)
     
     # HACK: There are either 1 or 5 dimensions more than fetdim*nchannels
@@ -64,7 +57,7 @@ def read_features(filename_fet, nchannels, fetdim, freq):
         raise ValueError("""The number of columns in the feature matrix
         is not fetdim (%d) x nchannels (%d) + 1 or 5.""" % 
             (fetdim, nchannels))
-    
+            
     # get the spiketimes
     spiketimes = features[:,-1].copy()
     spiketimes *= (1. / freq)
@@ -81,41 +74,70 @@ def read_features(filename_fet, nchannels, fetdim, freq):
     
     return features, spiketimes
     
+def read_features(filename_fet, nchannels, fetdim, freq):
+    """Read a .fet file and return the normalize features array,
+    as well as the spiketimes."""
+    features = load_text(filename_fet, np.int32, skiprows=1)
+    return process_features(features, fetdim, nchannels, freq)
+    
+# Clusters.
+def process_clusters(clusters):
+    return clusters[1:]
+
 def read_clusters(filename_clu):
     clusters = load_text(filename_clu, np.int32)
-    clusters = clusters[1:]
-    return clusters
+    return process_clusters(clusters)
 
-def read_cluster_info(filename_clusterinfo):
-    # For each cluster (absolute indexing): cluster index, color index, 
-    # and group index
-    cluster_info = load_text(filename_clusterinfo, np.int32)
+# Cluster info.
+def process_cluster_info(cluster_info):
     cluster_info = pd.DataFrame({'color': cluster_info[:, 1], 
         'group': cluster_info[:, 2]}, dtype=np.int32, index=cluster_info[:, 0])
     return cluster_info
     
-def read_group_info(filename_groups):
-    # For each group (absolute indexing): color index, and name
-    group_info = load_text(filename_groups, str, delimiter='\t')
+def read_cluster_info(filename_clusterinfo):
+    # For each cluster (absolute indexing): cluster index, color index, 
+    # and group index
+    cluster_info = load_text(filename_clusterinfo, np.int32)
+    return process_cluster_info(cluster_info)
+    
+# Group info.
+def process_group_info(group_info):
     group_info = pd.DataFrame(
         {'color': group_info[:, 1].astype(np.int32),
          'name': group_info[:, 2]}, index=group_info[:, 0].astype(np.int32))
     return group_info
+
+def read_group_info(filename_groups):
+    # For each group (absolute indexing): color index, and name
+    group_info = load_text(filename_groups, str, delimiter='\t')
+    return process_group_info(group_info)
     
-def read_masks(filename_mask, fetdim):
-    masks_full = load_text(filename_mask, np.float32, skiprows=1)
+# Masks.
+def process_masks(masks_full, fetdim):
     masks = masks_full[:,:-1:fetdim]
     return masks, masks_full
+
+def read_masks(filename_mask, fetdim):
+    masks_full = load_text(filename_mask, np.float32, skiprows=1)
+    return process_masks(masks_full, fetdim)
     
-def read_waveforms(filename_spk, nsamples, nchannels):
-    waveforms = np.array(load_binary(filename_spk), dtype=np.float32)
+# Waveforms.
+def process_waveforms(waveforms, nsamples, nchannels):
+    waveforms = np.array(waveforms, dtype=np.float32)
     waveforms = normalize(waveforms, symmetric=True)
     waveforms = waveforms.reshape((-1, nsamples, nchannels))
     return waveforms
 
+def read_waveforms(filename_spk, nsamples, nchannels):
+    waveforms = np.array(load_binary(filename_spk), dtype=np.float32)
+    return process_waveforms(waveforms, nsamples, nchannels)
+
+# Probe.
+def process_probe(probe):
+    return normalize(np.array(probe, dtype=np.float32))
+
 def read_probe(filename_probe):
-    return normalize(np.array(load_text(filename_probe, np.int32),
-        dtype=np.float32))
+    return process_probe(load_text(filename_probe, np.int32))
 
 
 # -----------------------------------------------------------------------------
@@ -674,6 +696,94 @@ class KlustersLoader(Loader):
         save_clusters(self.filename_clu_klustaviewa, clusters)
         save_cluster_info(self.filename_clusterinfo, cluster_info)
         save_group_info(self.filename_groups, self.group_info)
+    
+    
+# -----------------------------------------------------------------------------
+# Klusters Loader
+# -----------------------------------------------------------------------------
+class MemoryLoader(Loader):
+    def __init__(self, **kwargs):
+        super(MemoryLoader, self).__init__()
+        self.read(**kwargs)
+    
+    # Internal read methods.
+    # ----------------------
+    def read_metadata(self, nsamples=None, nchannels=None, fetdim=None,
+        freq=None):
+        self.nsamples = nsamples
+        self.nchannels = nchannels
+        self.fetdim = fetdim
+        self.freq = freq
+        
+    def read_probe(self, probe):
+        self.probe = process_probe(probe)
+    
+    def read_features(self, features):
+        self.features, self.spiketimes = process_features(features,
+            self.nchannels, self.fetdim, self.freq)
+        # Convert to Pandas.
+        self.features = pd.DataFrame(self.features, dtype=np.float32)
+        self.duration = self.spiketimes[-1]
+        self.spiketimes = pd.Series(self.spiketimes, dtype=np.float32)
+        
+        # Count the number of spikes and save it in the metadata.
+        self.nspikes = self.features.shape[0]
+        self.nextrafet = self.features.shape[1] - self.nchannels * self.fetdim
+    
+    def read_clusters(self, clusters):
+        self.clusters = process_clusters(clusters)
+        # Convert to Pandas.
+        self.clusters = pd.Series(self.clusters, dtype=np.int32)
+        # Count clusters.
+        self.update_clusters_unique()
+    
+    def read_cluster_info(self, cluster_info):
+        self.cluster_info = process_cluster_info(cluster_info)
+                
+        assert np.array_equal(self.cluster_info.index, self.clusters_unique), \
+            "The CLUINFO file does not correspond to the loaded CLU file."
+            
+        self.cluster_colors = self.cluster_info['color'].astype(np.int32)
+        self.cluster_groups = self.cluster_info['group'].astype(np.int32)
+        
+    def read_group_info(self, group_info):
+        self.group_info = process_group_info(group_info)
+        # Convert to Pandas.
+        self.group_colors = self.group_info['color'].astype(np.int32)
+        self.group_names = self.group_info['name']
+        
+    def read_masks(self, masks):
+        self.masks, self.masks_full = process_masks(masks, self.fetdim)
+        self.masks = pd.DataFrame(self.masks)
+        self.masks_full = pd.DataFrame(self.masks_full)
+    
+    def read_waveforms(self, waveforms):
+        self.waveforms = process_waveforms(waveforms, self.nsamples,
+                                        self.nchannels)
+        # Convert to Pandas.
+        self.waveforms = pd.Panel(self.waveforms, dtype=np.float32)
+    
+    def read_stats(self):
+        self.ncorrbins = 100
+        self.corrbin = .001
+    
+    
+    # Public methods.
+    # ---------------
+    def read(self, nsamples=None, nchannels=None, fetdim=None,
+            freq=None, probe=None, features=None, clusters=None,
+            cluster_info=None, group_info=None, masks=None,
+            waveforms=None):
+        self.read_metadata(nsamples=nsamples, nchannels=nchannels,
+            fetdim=fetdim, freq=freq)
+        self.read_probe(probe)
+        self.read_features(features)
+        self.read_clusters(clusters)
+        self.read_cluster_info(cluster_info)
+        self.read_group_info(group_info)
+        self.read_masks(masks)
+        self.read_waveforms(waveforms)
+        self.read_stats()
     
     
     

@@ -12,8 +12,8 @@ import pandas as pd
 from klustaviewa.control.processor import Processor
 from klustaviewa.control.stack import Stack
 import klustaviewa.utils.logger as log
-from klustaviewa.io.selection import get_indices, select
-from klustaviewa.io.tools import get_array
+from klustaviewa.dataio.selection import get_indices, select
+from klustaviewa.dataio.tools import get_array
 from klustaviewa.utils.colors import next_color
 
 

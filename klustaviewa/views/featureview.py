@@ -19,8 +19,8 @@ from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
 # import galry.processors.grid_processor as galrygrid
 # galrygrid.NTICKS = 5
     
-from klustaviewa.io.selection import get_indices, select
-from klustaviewa.io.tools import get_array
+from klustaviewa.dataio.selection import get_indices, select
+from klustaviewa.dataio.tools import get_array
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
 from klustaviewa.utils.colors import COLORMAP_TEXTURE, SHIFTLEN
 from klustaviewa.utils.userpref import USERPREF

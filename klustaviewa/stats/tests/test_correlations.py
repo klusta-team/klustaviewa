@@ -10,10 +10,10 @@ import numpy as np
 from klustaviewa.stats.cache import CacheMatrix
 from klustaviewa.stats.correlations import compute_correlations, normalize
 from klustaviewa.stats.tools import matrix_of_pairs
-from klustaviewa.io.tests.mock_data import (setup, teardown,
+from klustaviewa.dataio.tests.mock_data import (setup, teardown,
                             nspikes, nclusters, nsamples, nchannels, fetdim)
-from klustaviewa.io.loader import KlustersLoader
-from klustaviewa.io.tools import get_array
+from klustaviewa.dataio.loader import KlustersLoader
+from klustaviewa.dataio.tools import get_array
 from klustaviewa.control.controller import Controller
 
 
@@ -23,7 +23,7 @@ from klustaviewa.control.controller import Controller
 def load():
     # Open the mock data.
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                '../../io/tests/mockdata')
+                '../../dataio/tests/mockdata')
     xmlfile = os.path.join(dir, 'test.xml')
     l = KlustersLoader(xmlfile)
     c = Controller(l)

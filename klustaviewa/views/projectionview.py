@@ -15,8 +15,8 @@ from matplotlib.path import Path
 from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
     GalryWidget, QtGui, QtCore, show_window, enforce_dtype, RectanglesVisual,
     TextVisual, PlotVisual, AxesVisual)
-from klustaviewa.io.selection import get_indices
-from klustaviewa.io.tools import get_array
+from klustaviewa.dataio.selection import get_indices
+from klustaviewa.dataio.tools import get_array
 from klustaviewa.gui.icons import get_icon
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
 import klustaviewa.utils.logger as log
@@ -216,7 +216,7 @@ class ProjectionView(QtGui.QWidget):
         if do_emit:
             self.projectionChanged.emit(coord, channel, feature)
         
-    def flip_projections_callback(self, checked):
+    def flip_projections_callback(self, checked=None):
         c0, f0 = self.projection[0]
         c1, f1 = self.projection[1]
         self.set_projection(0, c1, f1)
