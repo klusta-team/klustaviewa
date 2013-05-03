@@ -737,31 +737,6 @@ class ClusterView(QtGui.QTreeView):
                     cluster.index,
                     QtGui.QItemSelectionModel.NoUpdate)
                     
-    # def select_groups(self, groups):
-        # """Select multiple groups from their indices."""
-        # if groups is None:
-            # return
-        # if isinstance(groups, (int, long)):
-            # groups = [groups]
-        # selection_model = self.selectionModel()
-        # selection = QtGui.QItemSelection()
-        # for groupidx in groups:
-            # group = self.model.get_group(groupidx)
-            # if group is not None:
-                # selection.select(group.index, group.index)
-        # selection_model.select(selection, 
-                # selection_model.Clear |
-                # selection_model.Current |
-                # selection_model.Select | 
-                # selection_model.Rows 
-                # )
-        # if len(groups) > 0:
-            # group = self.model.get_group(groups[-1])
-            # if group is not None:
-                # selection_model.setCurrentIndex(
-                    # group.index,
-                    # QtGui.QItemSelectionModel.NoUpdate)
-    
     def unselect(self):
         self.selectionModel().clear()
     

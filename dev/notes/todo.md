@@ -5,8 +5,6 @@ Ideas
 -----
   
   * ISI widget
-  * feature view: when masks toggled (features gray) not possible to select
-    them. when no masks, everything can be selected.
   * trace view (neuroscope)
   * (Measure of cluster quality: ratio of mask/unmask on each channel)
 

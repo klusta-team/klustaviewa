@@ -571,6 +571,8 @@ class MainWindow(QtGui.QMainWindow):
     # Task methods.
     # -------------
     def open_done(self):
+        # HACK: force release of Control key.
+        self.force_key_release()
         clusters = self.get_view('ClusterView').selected_clusters()
         if clusters:
             self.get_view('ClusterView').unselect()
