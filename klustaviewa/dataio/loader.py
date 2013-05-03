@@ -702,12 +702,13 @@ class KlustersLoader(Loader):
     
     
 # -----------------------------------------------------------------------------
-# Klusters Loader
+# Memory Loader
 # -----------------------------------------------------------------------------
 class MemoryLoader(Loader):
     def __init__(self, parent=None, **kwargs):
         super(MemoryLoader, self).__init__(parent)
         self.read(**kwargs)
+    
     
     # Internal read methods.
     # ----------------------

@@ -11,6 +11,7 @@ import klustaviewa.utils.globalpaths as paths
 
 APPNAME_ORIGINAL = paths.APPNAME
 
+
 # -----------------------------------------------------------------------------
 # Fixtures
 # -----------------------------------------------------------------------------
@@ -35,12 +36,15 @@ def teardown():
     
     reload(klustaviewa.utils.userpref)
 
+
 # -----------------------------------------------------------------------------
 # Tests
 # -----------------------------------------------------------------------------
 def test_userpref():
-    import klustaviewa.utils.userpref as pref
+    from klustaviewa.utils.userpref import USERPREF
+    assert USERPREF['field1'] == 123
+    assert USERPREF['field2'] == None
+    assert USERPREF['field_inexisting'] == None
     
-    pref.USERPREF._load_once()
-    assert pref.USERPREF['field1'] == 123    
+    
     

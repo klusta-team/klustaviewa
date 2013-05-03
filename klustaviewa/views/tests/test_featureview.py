@@ -25,7 +25,7 @@ from klustaviewa.views.tests.utils import show_view, get_data
 def test_featureview():
         
     keys = ('features,masks,clusters,clusters_selected,cluster_colors,'
-            'fetdim,nchannels,nextrafet,duration').split(',')
+            'fetdim,nchannels,nextrafet,duration,freq').split(',')
            
     data = get_data()
     kwargs = {k: data[k] for k in keys}

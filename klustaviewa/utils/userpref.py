@@ -74,6 +74,10 @@ class UserPreferences(object):
             ensure_folder_exists(self.folder)
             # Load or create the preferences file.
             self.preferences = load(self.filepath, appname=self.appname)
+
+    def refresh(self):
+        self.preferences = None
+        self._load_once()
     
     
     # Getter methods

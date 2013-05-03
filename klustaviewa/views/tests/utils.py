@@ -47,6 +47,7 @@ def get_data():
         spiketimes=l.get_spiketimes(),
         geometrical_positions=l.get_probe(),
         
+        freq=l.freq,
         nchannels=l.nchannels,
         nsamples=l.nsamples,
         fetdim=l.fetdim,
