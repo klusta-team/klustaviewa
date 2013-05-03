@@ -29,6 +29,9 @@ LOCK = Lock()
 class OpenTask(QtCore.QObject):
     dataOpened = QtCore.pyqtSignal()
     
+    def __init__(self, parent=None):
+        super(OpenTask, self).__init__(parent)
+    
     def open(self, loader, path):
         loader.open(path)
         self.dataOpened.emit()
@@ -36,6 +39,9 @@ class OpenTask(QtCore.QObject):
         
 class SelectTask(QtCore.QObject):
     clustersSelected = QtCore.pyqtSignal(np.ndarray)
+    
+    def __init__(self, parent=None):
+        super(SelectTask, self).__init__(parent)
     
     def select(self, loader, clusters):
         # This delay makes the interface smoother and reduces the risk of 
@@ -50,6 +56,9 @@ class SelectTask(QtCore.QObject):
         
 class CorrelogramsTask(QtCore.QObject):
     correlogramsComputed = QtCore.pyqtSignal(np.ndarray, object, int, float)
+    
+    def __init__(self, parent=None):
+        super(CorrelogramsTask, self).__init__(parent)
     
     def compute(self, spiketimes, clusters, clusters_to_update=None,
             clusters_selected=None, ncorrbins=None, corrbin=None):
@@ -73,6 +82,9 @@ class SimilarityMatrixTask(QtCore.QObject):
     correlationMatrixComputed = QtCore.pyqtSignal(np.ndarray, object,
         np.ndarray)
     
+    def __init__(self, parent=None):
+        super(SimilarityMatrixTask, self).__init__(parent)
+        
     def compute(self, features, clusters, masks, clusters_selected):
         log.debug("Computing correlation for clusters {0:s}.".format(
             str(list(clusters_selected))))
@@ -90,8 +102,8 @@ class SimilarityMatrixTask(QtCore.QObject):
             
 
 class WizardTask(QtCore.QObject):
-    def __init__(self,):
-        super(WizardTask, self).__init__()
+    def __init__(self, parent=None):
+        super(WizardTask, self).__init__(parent)
         self.wizard = Wizard()
         
     def set_data(self, **kwargs):
@@ -108,8 +120,8 @@ class WizardTask(QtCore.QObject):
 # Container
 # -----------------------------------------------------------------------------
 class ThreadedTasks(QtCore.QObject):
-    def __init__(self):
-        super(ThreadedTasks, self).__init__()
+    def __init__(self, parent=None):
+        super(ThreadedTasks, self).__init__(parent)
         # In external threads.
         self.open_task = inthread(OpenTask)()
         self.select_task = inthread(SelectTask)(impatient=True)

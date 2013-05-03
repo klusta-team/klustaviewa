@@ -193,6 +193,9 @@ def renumber_clusters(clusters, cluster_info):
 class Loader(QtCore.QObject):
     progressReported = QtCore.pyqtSignal(int, int)
     
+    def __init__(self, parent=None):
+        super(Loader, self).__init__(parent)
+    
     # Progress report
     # ---------------
     def report_progress(self, index, count):
@@ -702,8 +705,8 @@ class KlustersLoader(Loader):
 # Klusters Loader
 # -----------------------------------------------------------------------------
 class MemoryLoader(Loader):
-    def __init__(self, **kwargs):
-        super(MemoryLoader, self).__init__()
+    def __init__(self, parent=None, **kwargs):
+        super(MemoryLoader, self).__init__(parent)
         self.read(**kwargs)
     
     # Internal read methods.

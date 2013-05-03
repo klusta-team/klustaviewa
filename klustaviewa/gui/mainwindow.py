@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 import numpy.random as rnd
 from galry import QtGui, QtCore
-from qtools import inprocess, inthread
+from qtools import inprocess, inthread, QT_BINDING
 
 import klustaviewa.views as vw
 from klustaviewa.gui.icons import get_icon
@@ -50,6 +50,8 @@ class MainWindow(QtGui.QMainWindow):
     
     def __init__(self):
         super(MainWindow, self).__init__()
+        
+        log.debug("Using {0:s}.".format(QT_BINDING))
         
         # Main window options.
         self.move(50, 50)
