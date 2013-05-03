@@ -47,7 +47,7 @@ class SelectTask(QtCore.QObject):
         # This delay makes the interface smoother and reduces the risk of 
         # thread-induced bugs when selecting lots of different clusters
         # quickly.
-        time.sleep(.05)
+        # time.sleep(.05)
         with LOCK:
             loader.select(clusters=clusters)
         log.debug("Selected clusters {0:s}.".format(str(clusters)))

@@ -20,6 +20,7 @@ from klustaviewa.gui.icons import get_icon
 from klustaviewa.control.controller import Controller
 from klustaviewa.dataio.tools import get_array
 from klustaviewa.dataio.loader import KlustersLoader
+from klustaviewa.gui.buffer import Buffer
 from klustaviewa.stats.cache import StatsCache
 from klustaviewa.stats.correlations import normalize
 from klustaviewa.stats.correlograms import get_baselines
@@ -74,7 +75,7 @@ class MainWindow(QtGui.QMainWindow):
         self.spikes_selected = []
         self.wizard_active = False
         self.need_save = False
-        self.last_selection_time = time.clock()
+        # self.last_selection_time = time.clock()
         self.busy_cursor = QtGui.QCursor(QtCore.Qt.BusyCursor)
         self.normal_cursor = QtGui.QCursor(QtCore.Qt.ArrowCursor)
         self.override_color = False
@@ -424,7 +425,6 @@ class MainWindow(QtGui.QMainWindow):
         self.update_cluster_view()
         self.get_view('ClusterView').select(clusters, 
             groups=groups)
-        # self.get_view('ClusterView').select_groups(groups_selected)
     
     def action_processed(self, action, to_select=[], to_invalidate=[],
         to_compute=None, groups_to_select=None):
@@ -524,22 +524,6 @@ class MainWindow(QtGui.QMainWindow):
         self.keyPressEvent(e)
     
     
-    # Selection callbacks.
-    # --------------------
-    def clusters_selected_callback(self, clusters):
-        # HACK: teach patience.
-        if time.clock() - self.last_selection_time < .25:
-            return
-        # Launch cluster selection on the Loader in an external thread.
-        self.tasks.select_task.select(self.loader, clusters)
-        self.last_selection_time = time.clock()
-        
-    def cluster_pair_selected_callback(self, clusters):
-        """Callback when the user clicks on a pair in the
-        SimilarityMatrixView."""
-        self.get_view('ClusterView').select(clusters)
-    
-    
     # Views callbacks.
     # ----------------
     def waveform_spikes_highlighted_callback(self, spikes):
@@ -572,6 +556,11 @@ class MainWindow(QtGui.QMainWindow):
     # Task methods.
     # -------------
     def open_done(self):
+        # Start the selection buffer.
+        self.buffer = Buffer(self, delay_timer=.1, delay_buffer=.2)
+        self.buffer.start()
+        self.buffer.accepted.connect(self.buffer_accepted_callback)
+        
         # HACK: force release of Control key.
         self.force_key_release()
         clusters = self.get_view('ClusterView').selected_clusters()
@@ -651,29 +640,6 @@ class MainWindow(QtGui.QMainWindow):
         else:
             self.update_similarity_matrix_view()
         
-    def selection_done(self, clusters_selected):
-        """Called on the main thread once the clusters have been loaded 
-        in the main thread."""
-        if not np.array_equal(clusters_selected, 
-            self.loader.get_clusters_selected()):
-            log.debug(("Skip updating views with clusters_selected={0:s} and "
-                "actual selected clusters={1:s}").format(
-                    str(clusters_selected),
-                    str(self.loader.get_clusters_selected())))
-            return
-        # Launch the computation of the correlograms.
-        self.start_compute_correlograms(clusters_selected)
-        
-        # Update the different views, with autozoom on if the selection has
-        # been made by the wizard.
-        with LOCK:
-            self.update_feature_view(autozoom=self.wizard_active)
-            self.update_waveform_view(autozoom=self.wizard_active)
-            
-        # Update action enabled/disabled property.
-        self.update_action_enabled()
-        self.wizard_active = False
-    
     def correlograms_computed(self, clusters, correlograms, ncorrbins, corrbin):
         clusters_selected = self.loader.get_clusters_selected()
         # Abort if the selection has changed during the computation of the
@@ -703,8 +669,43 @@ class MainWindow(QtGui.QMainWindow):
         self.update_wizard(clusters_selected, clusters)
         # Update the view.
         self.update_similarity_matrix_view()
-        # Reset the cursor.
-        # self.set_cursor()
+        
+    
+    # Selection methods.
+    # ------------------
+    def buffer_accepted_callback(self, clusters):
+        self.tasks.select_task.select(self.loader, clusters)
+        
+    def selection_done(self, clusters_selected):
+        """Called on the main thread once the clusters have been loaded 
+        in the main thread."""
+        if not np.array_equal(clusters_selected, 
+            self.loader.get_clusters_selected()):
+            log.debug(("Skip updating views with clusters_selected={0:s} and "
+                "actual selected clusters={1:s}").format(
+                    str(clusters_selected),
+                    str(self.loader.get_clusters_selected())))
+            return
+        # Launch the computation of the correlograms.
+        self.start_compute_correlograms(clusters_selected)
+        
+        # Update the different views, with autozoom on if the selection has
+        # been made by the wizard.
+        with LOCK:
+            self.update_feature_view(autozoom=self.wizard_active)
+            self.update_waveform_view(autozoom=self.wizard_active)
+            
+        # Update action enabled/disabled property.
+        self.update_action_enabled()
+        self.wizard_active = False
+    
+    def clusters_selected_callback(self, clusters):
+        self.buffer.request(clusters)
+    
+    def cluster_pair_selected_callback(self, clusters):
+        """Callback when the user clicks on a pair in the
+        SimilarityMatrixView."""
+        self.get_view('ClusterView').select(clusters)
     
     
     # Wizard.
@@ -914,12 +915,6 @@ class MainWindow(QtGui.QMainWindow):
             self.get_view('CorrelogramsView').parentWidget(), 
             QtCore.Qt.Vertical
             )
-            
-        # self.splitDockWidget(
-            # self.get_view('ProjectionView').parentWidget(), 
-            # self.get_view('FeatureView').parentWidget(), 
-            # QtCore.Qt.Vertical
-            # )
     
     def dock_widget_closed(self, dock):
         for key in self.views.keys():
