@@ -190,6 +190,7 @@ class Loader(QtCore.QObject):
         super(Loader, self).__init__()
         self.spikes_selected = None
         self.clusters_selected = None
+        self.override_color = False
         
         self.ncorrbins = 100
         self.corrbin = .001
@@ -305,10 +306,17 @@ class Loader(QtCore.QObject):
     
     # Access to the data: clusters
     # ----------------------------
-    def get_cluster_colors(self, clusters=None):
+    def get_cluster_colors(self, clusters=None, can_override=True):
         if clusters is None:
             clusters = self.clusters_selected
-        return select(self.cluster_colors, clusters)
+        if can_override and self.override_color:
+            group_colors = self.get_group_colors('all')
+            groups = self.get_cluster_groups('all')
+            colors = pd.Series(get_array(group_colors[groups]), 
+                index=get_indices(groups))
+        else:
+            colors = self.cluster_colors
+        return select(colors, clusters)
     
     def get_cluster_groups(self, clusters=None):
         if clusters is None:
@@ -358,6 +366,9 @@ class Loader(QtCore.QObject):
     
     def get_correlogram_window(self):
         return self.ncorrbins * self.corrbin
+    
+    def set_override_color(self, override_color):
+        self.override_color = override_color
     
     
     # Control methods

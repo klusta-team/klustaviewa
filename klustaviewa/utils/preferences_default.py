@@ -1,8 +1,13 @@
 """User preferences."""
 # -----------------------------------------------------------------------------
-# Logging
+# Imports
 # -----------------------------------------------------------------------------
 import logging
+import numpy as np
+
+# -----------------------------------------------------------------------------
+# Logging
+# -----------------------------------------------------------------------------
 
 # Logging level, can be DEBUG, INFO or WARNING.
 loglevel = logging.DEBUG
@@ -32,10 +37,14 @@ waveforms_nspikes_per_cluster_min = 3
 # Opacity value of the background spikes.
 feature_background_alpha = .2
 
-# Maximum number of spikes in the view.
-features_nspikes_background_max = 10000
-features_nspikes_selection_max = 1000
-features_nspikes_per_cluster_min = 100
+# Number of spikes to show in the background.
+features_nspikes_background_max = 10000  
+
+# Maximum number of spikes to show in the selected clusters.
+features_nspikes_selection_max = np.inf  # always show all selected clusters
+
+# Minimum number of spikes to show per selected cluster.
+features_nspikes_per_cluster_min = np.inf  # always show all selected clusters
                     
                     
 # -----------------------------------------------------------------------------

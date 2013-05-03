@@ -37,9 +37,10 @@ download:
   * PyOpenGL >= 3.0.1
   * PyQt4
   * Distribute
-  * (optional) Pip 
-  * (optional) PyTables 
-  * (optional) IPython 
+  * (optional) Pip (for installing Python packages easily)
+  * (optional) PyTables (for a future version which will support HDF5)
+  * (optional) IPython (for interactive computing)
+  * (optional) Nose (for unit tests)
   
 For each package, be sure to choose the appropriate version (it should be
 `*.win-amd64-py2.7.exe` for Python 64 bits, or `*.win32-py2.7.exe`
@@ -54,13 +55,13 @@ listed above.
 
 (Untested) Type in a shell:
 
-    $ sudo apt-get install python2.7 python-numpy python-pandas python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip ipython
+    $ sudo apt-get install python2.7 python-numpy python-pandas python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose ipython
 
 #### Ubuntu < 13.x
 
 (Untested) Type in a shell:
 
-    $ sudo apt-get install python2.7 python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip ipython
+    $ sudo apt-get install python2.7 python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose ipython
     $ sudo pip install numpy
     $ sudo pip install pandas
     

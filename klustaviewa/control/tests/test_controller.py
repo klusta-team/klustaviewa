@@ -282,7 +282,7 @@ def test_controller_recolor_groups():
     action, output = c.undo()
     
     assert action == 'change_group_color_undo'
-    assert np.array_equal(output['group_to_select'], group)
+    assert np.array_equal(output['groups_to_select'], [group])
     
     assert l.get_group_colors(group) == color
     
@@ -291,7 +291,7 @@ def test_controller_recolor_groups():
     action, output = c.redo()
     
     assert action == 'change_group_color'
-    assert np.array_equal(output['group_to_select'], group)
+    assert np.array_equal(output['groups_to_select'], [group])
     
     assert l.get_group_colors(group) == 10
     

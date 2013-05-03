@@ -75,6 +75,7 @@ class MainWindow(QtGui.QMainWindow):
         self.last_selection_time = time.clock()
         self.busy_cursor = QtGui.QCursor(QtCore.Qt.BusyCursor)
         self.normal_cursor = QtGui.QCursor(QtCore.Qt.ArrowCursor)
+        self.override_color = False
         # self.do_renumber = False
         
         # Create the main window.
@@ -165,6 +166,9 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('add_similarity_matrix_view',
             'Add SimilarityMatrixView')
         self.add_action('add_correlograms_view', 'Add CorrelogramsView')
+        
+        self.add_action('override_color', 'Override cluster &color',
+            icon='override_color', shortcut='C')
     
     def create_control_actions(self):
         self.add_action('undo', '&Undo', shortcut='Ctrl+Z', icon='undo')
@@ -207,6 +211,8 @@ class MainWindow(QtGui.QMainWindow):
         views_menu.addAction(self.add_waveform_view_action)
         views_menu.addAction(self.add_correlograms_view_action)
         views_menu.addAction(self.add_similarity_matrix_view_action)
+        views_menu.addSeparator()
+        views_menu.addAction(self.override_color_action)
         
         # Correlograms menu.
         correlograms_menu = self.menuBar().addMenu("&Correlograms")
@@ -251,7 +257,7 @@ class MainWindow(QtGui.QMainWindow):
         self.toolbar.addAction(self.undo_action)
         self.toolbar.addAction(self.redo_action)
         self.toolbar.addSeparator()
-        # self.toolbar.addAction(self.override_color_action)
+        self.toolbar.addAction(self.override_color_action)
         
         self.addToolBar(QtCore.Qt.LeftToolBarArea, self.toolbar)
         
@@ -346,6 +352,18 @@ class MainWindow(QtGui.QMainWindow):
     def add_correlograms_view_callback(self, checked):
         self.add_correlograms_view()
     
+    def override_color_callback(self, checked):
+        self.override_color = not self.override_color
+        self.loader.set_override_color(self.override_color)
+        # view = self.get_view('ClusterView')
+        # clusters = view.selected_clusters()
+        # groups = view.selected_groups()
+        # if groups:
+            # view.select_groups(groups)
+        # if clusters:
+            # view.select(clusters)
+        self.update_views()
+    
     
     # Correlograms callbacks.
     # -----------------------
@@ -400,13 +418,15 @@ class MainWindow(QtGui.QMainWindow):
     
     # Actions callbacks.
     # ------------------
-    def update_cluster_selection(self, clusters_selected):
+    def update_cluster_selection(self, clusters, groups=[]):
         self.update_action_enabled()
         self.update_cluster_view()
-        self.get_view('ClusterView').select(clusters_selected)
+        self.get_view('ClusterView').select(clusters, 
+            groups=groups)
+        # self.get_view('ClusterView').select_groups(groups_selected)
     
     def action_processed(self, action, to_select=[], to_invalidate=[],
-        to_compute=None, group_to_select=None):
+        to_compute=None, groups_to_select=None):
         """Called after an action has been processed. Used to update the 
         different views and launch tasks."""
         if isinstance(to_select, (int, long)):
@@ -417,7 +437,9 @@ class MainWindow(QtGui.QMainWindow):
             to_compute = [to_compute]
         # Select clusters to be selected.
         if len(to_select) > 0:
-            self.update_cluster_selection(to_select)
+            self.update_cluster_selection(to_select, groups=groups_to_select)
+        elif len(groups_to_select) > 0:
+            self.update_cluster_selection([], groups=groups_to_select)
         # Invalidate clusters.
         if len(to_invalidate) > 0:
             self.statscache.invalidate(to_invalidate)
@@ -447,11 +469,15 @@ class MainWindow(QtGui.QMainWindow):
     def undo_callback(self, checked):
         with LOCK:
             action, output = self.controller.undo()
+        if output is None:
+            output = {}
         self.action_processed(action, **output)
         
     def redo_callback(self, checked):
         with LOCK:
             action, output = self.controller.redo()
+        if output is None:
+            output = {}
         self.action_processed(action, **output)
         
     def cluster_color_changed_callback(self, cluster, color):
@@ -598,7 +624,7 @@ class MainWindow(QtGui.QMainWindow):
         # Otherwise, update directly the correlograms view without launching
         # the task in the external process.
         else:
-            self.update_correlograms_view(clusters_selected)
+            self.update_correlograms_view()
         
     def start_compute_similarity_matrix(self, clusters_to_update=None):
         # Set wait cursor.
@@ -666,7 +692,7 @@ class MainWindow(QtGui.QMainWindow):
         # self.tasks.wizard_task.update(
             # correlograms=self.statscache.correlograms)
         # Update the view.
-        self.update_correlograms_view(clusters)
+        self.update_correlograms_view()
         
     def similarity_matrix_computed(self, clusters_selected, matrix, clusters):
         self.statscache.similarity_matrix.update(clusters_selected, matrix)
@@ -907,7 +933,8 @@ class MainWindow(QtGui.QMainWindow):
         """Update the cluster view using the data stored in the loader
         object."""
         data = dict(
-            cluster_colors=self.loader.get_cluster_colors('all'),
+            cluster_colors=self.loader.get_cluster_colors('all',
+                can_override=False),
             cluster_groups=self.loader.get_cluster_groups('all'),
             group_colors=self.loader.get_group_colors('all'),
             group_names=self.loader.get_group_names('all'),
@@ -951,14 +978,8 @@ class MainWindow(QtGui.QMainWindow):
         )
         [view.set_data(**data) for view in self.get_views('FeatureView')]
         
-    def update_correlograms_view(self, clusters):
+    def update_correlograms_view(self):
         clusters_selected = self.loader.get_clusters_selected()
-        # # Abort if the selection has changed during the computation of the
-        # # correlograms.
-        # if not np.array_equal(clusters, clusters_selected):
-            # log.debug("Skip update correlograms with clusters selected={0:s}"
-            # " and clusters updated={1:s}.".format(clusters_selected, clusters))
-            # return
         correlograms = self.statscache.correlograms.submatrix(
             clusters_selected)
         # Compute the baselines.
@@ -993,6 +1014,11 @@ class MainWindow(QtGui.QMainWindow):
         )
         [view.set_data(**data) 
             for view in self.get_views('SimilarityMatrixView')]
+    
+    def update_views(self):
+        self.update_feature_view()
+        self.update_waveform_view()
+        self.update_correlograms_view()
     
     
     # Geometry.

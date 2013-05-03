@@ -699,16 +699,31 @@ class ClusterView(QtGui.QTreeView):
     
     # Public methods
     # --------------
-    def select(self, clusters):
+    def select(self, clusters, groups=None):
         """Select multiple clusters from their indices."""
+        if clusters is None:
+            clusters = []
+        if groups is None:
+            groups = []
         if isinstance(clusters, (int, long)):
             clusters = [clusters]
+        if isinstance(groups, (int, long)):
+            groups = [groups]
+        if len(clusters) == len(groups) == 0:
+            return
         selection_model = self.selectionModel()
         selection = QtGui.QItemSelection()
+        # Select groups.
+        for groupidx in groups:
+            group = self.model.get_group(groupidx)
+            if group is not None:
+                selection.select(group.index, group.index)
+        # Select clusters.
         for clusteridx in clusters:
             cluster = self.model.get_cluster(clusteridx)
             if cluster is not None:
                 selection.select(cluster.index, cluster.index)
+        # Process selection.
         selection_model.select(selection, 
                 selection_model.Clear |
                 selection_model.Current |
@@ -721,6 +736,31 @@ class ClusterView(QtGui.QTreeView):
                 selection_model.setCurrentIndex(
                     cluster.index,
                     QtGui.QItemSelectionModel.NoUpdate)
+                    
+    # def select_groups(self, groups):
+        # """Select multiple groups from their indices."""
+        # if groups is None:
+            # return
+        # if isinstance(groups, (int, long)):
+            # groups = [groups]
+        # selection_model = self.selectionModel()
+        # selection = QtGui.QItemSelection()
+        # for groupidx in groups:
+            # group = self.model.get_group(groupidx)
+            # if group is not None:
+                # selection.select(group.index, group.index)
+        # selection_model.select(selection, 
+                # selection_model.Clear |
+                # selection_model.Current |
+                # selection_model.Select | 
+                # selection_model.Rows 
+                # )
+        # if len(groups) > 0:
+            # group = self.model.get_group(groups[-1])
+            # if group is not None:
+                # selection_model.setCurrentIndex(
+                    # group.index,
+                    # QtGui.QItemSelectionModel.NoUpdate)
     
     def unselect(self):
         self.selectionModel().clear()

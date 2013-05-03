@@ -164,11 +164,11 @@ class Processor(object):
     # Change group color.
     def change_group_color(self, group, color_old, color_new):
         self.loader.set_group_colors(group, color_new)
-        return dict(group_to_select=group)
+        return dict(groups_to_select=[group])
         
     def change_group_color_undo(self, group, color_old, color_new):
         self.loader.set_group_colors(group, color_old)
-        return dict(group_to_select=group)
+        return dict(groups_to_select=[group])
     
     
     # Add group.
