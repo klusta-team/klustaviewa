@@ -101,9 +101,13 @@ FRAGMENT_SHADER = """
     vec2 index2d = vec2(index, %SHIFT_OFFSET% + (1 + toggle_mask * (1 - vmask) * %SHIFTLEN%) * %SHIFT_STEP%);
     if (vhighlight > 0) {
         index2d.y = 0;
+        out_color = texture2D(cmap, index2d);
+        out_color.w = .5;
     }
-    out_color = texture2D(cmap, index2d);
-    out_color.w = .5;
+    else {
+        out_color = texture2D(cmap, index2d);
+        out_color.w = .5;
+    }
 """
 
 FRAGMENT_SHADER_AVERAGE = """

@@ -59,7 +59,7 @@ COLORMAP = np.vstack(((1., 1., 1.), COLORMAP))
 
 # HSV shifts
 shifts = np.array([
-                   [0, -.5, .5],    # highlight
+                   [0, -.75, .75],    # highlight
                    [0, 0, 0],       # normal
                    [0, -.2, -.2],    # gradient
                    [0, -.4, -.4],    # gradient
