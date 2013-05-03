@@ -378,8 +378,7 @@ class MainWindow(QtGui.QMainWindow):
         # Reset the cache.
         self.statscache.reset(self.loader.ncorrbins)
         # Update the correlograms.
-        view = self.get_view('ClusterView')
-        clusters = view.selected_clusters()
+        clusters = self.loader.get_clusters_selected()
         self.start_compute_correlograms(clusters)
         
     def change_ncorrbins_callback(self, checked=None):
@@ -615,7 +614,7 @@ class MainWindow(QtGui.QMainWindow):
         # Get cluster indices that need to be updated.
         clusters_to_update = (self.statscache.correlograms.
             not_in_key_indices(clusters_selected))
-        
+            
         # If there are pairs that need to be updated, launch the task.
         if len(clusters_to_update) > 0:
             # Set wait cursor.
