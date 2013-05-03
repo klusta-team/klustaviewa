@@ -61,6 +61,7 @@ def get_data():
         fetdim=l.fetdim,
         nextrafet=l.nextrafet,
         ncorrbins=l.ncorrbins,
+        duration=l.get_duration(),
     )
     
     return data

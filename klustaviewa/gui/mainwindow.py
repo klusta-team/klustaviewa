@@ -977,6 +977,7 @@ class MainWindow(QtGui.QMainWindow):
             fetdim=self.loader.fetdim,
             nextrafet=self.loader.nextrafet,
             autozoom=autozoom,
+            duration=self.loader.get_duration(),
         )
         [view.set_data(**data) for view in self.get_views('FeatureView')]
         

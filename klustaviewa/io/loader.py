@@ -301,7 +301,7 @@ class Loader(QtCore.QObject):
         return get_indices(self.get_clusters(clusters=clusters))
     
     def get_duration(self):
-        return get_array(self.spiketimes)[-1]
+        return self.duration
     
     
     # Access to the data: clusters
@@ -544,6 +544,7 @@ class KlustersLoader(Loader):
             raise IOError("The FET file is missing.")
         # Convert to Pandas.
         self.features = pd.DataFrame(self.features, dtype=np.float32)
+        self.duration = self.spiketimes[-1]
         self.spiketimes = pd.Series(self.spiketimes, dtype=np.float32)
         
         # Count the number of spikes and save it in the metadata.

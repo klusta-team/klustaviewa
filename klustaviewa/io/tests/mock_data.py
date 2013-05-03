@@ -27,6 +27,8 @@ ncorrbins = 100
 corrbin = .001
 nchannels = 32
 fetdim = 3
+duration = 60.
+freq = 20000.
 
 
 # -----------------------------------------------------------------------------
@@ -41,9 +43,12 @@ def create_waveforms(nspikes, nsamples, nchannels):
             np.array(32768 // 2 * (.5 + .5 * rnd.rand()) * np.cos(t),
             dtype=np.int16))
     
-def create_features(nspikes, nchannels, fetdim):
-    return np.array(rnd.randint(size=(nspikes, nchannels * fetdim + 1),
-        low=-32768, high=32768), dtype=np.int16)
+def create_features(nspikes, nchannels, fetdim, duration, freq):
+    features = np.array(rnd.randint(size=(nspikes, nchannels * fetdim + 1),
+        low=-1e5, high=1e5), dtype=np.float32)
+    features[:, -1] = np.sort(np.random.randint(size=nspikes, low=0,
+        high=duration * freq))
+    return features
     
 def create_clusters(nspikes, nclusters):
     # Add shift in cluster indices to test robustness.
@@ -126,7 +131,7 @@ def create_probe(nchannels):
 def setup():
     # Create mock data.
     waveforms = create_waveforms(nspikes, nsamples, nchannels)
-    features = create_features(nspikes, nchannels, fetdim)
+    features = create_features(nspikes, nchannels, fetdim, duration, freq)
     clusters = create_clusters(nspikes, nclusters)
     cluster_colors = create_cluster_colors(nclusters - 1)
     masks = create_masks(nspikes, nchannels, fetdim)
