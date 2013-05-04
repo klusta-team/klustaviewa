@@ -57,21 +57,20 @@ VERTEX_SHADER = """
     // DEBUG
     //gl_PointSize = 20;
 """
-     
 
 FRAGMENT_SHADER = """
     float index = %CMAP_OFFSET% + cmap_vindex * %CMAP_STEP%;
     vec2 index2d = vec2(index, %SHIFT_OFFSET% + (1 + toggle_mask * (1 - vmask) * %SHIFTLEN%) * %SHIFT_STEP%);
-    if (vhighlight > 0) {
+    if (vhighlight > 0) {{
         index2d.y = 0;
         out_color = texture2D(cmap, index2d);
         out_color.w = .85;
-    }
-    else {
+    }}
+    else {{
         out_color = texture2D(cmap, index2d);
-        out_color.w = .5;
-    }
-"""
+        out_color.w = {0:.3f};
+    }}
+""".format(USERPREF.get('feature_selected_alpha', .75))
 
 # Background spikes.
 VERTEX_SHADER_BACKGROUND = """
@@ -85,9 +84,8 @@ VERTEX_SHADER_BACKGROUND = """
 """
      
 FRAGMENT_SHADER_BACKGROUND = """
-    out_color.xyz = vec3(.75, .75, .75);
-    out_color.w = {0:.3f};
-""".format(USERPREF['feature_background_alpha'] or .1)
+    out_color = vec4(.75, .75, .75, {0:.3f});
+""".format(USERPREF.get('feature_background_alpha', .1))
 
 
 # -----------------------------------------------------------------------------
@@ -265,7 +263,8 @@ class FeatureDataManager(Manager):
                  nchannels=None,
                  nextrafet=None,
                  autozoom=None,
-                 duration=None
+                 duration=None,
+                 freq=None,
                  ):
         
         if features is None:
@@ -281,6 +280,7 @@ class FeatureDataManager(Manager):
         assert fetdim is not None
         
         self.duration = duration
+        self.freq = freq
         self.interaction_manager.get_processor('grid').update_viewbox()
         # Update the grid x scale.
         # self.paint_manager.normalization_viewbox = (0, -1, self.duration, 1)
@@ -504,8 +504,8 @@ class FeaturePaintManager(PlotPaintManager):
         self.add_visual(TextVisual, text='0', name='clusterinfo', fontsize=16,
             background_transparent=False,
             # posoffset=(20., -50.),
-            coordinates=(1., -1.),
-            posoffset=(-60., 30.),
+            coordinates=(1., 1.),
+            posoffset=(-120., -30.),
             is_static=True,
             color=(1., 1., 1., 1.),
             letter_spacing=350.,
@@ -858,21 +858,29 @@ class FeatureProjectionManager(Manager):
 # Interaction
 # -----------------------------------------------------------------------------
 class FeatureInfoManager(Manager):
-    def show_closest_cluster(self, xd, yd):
+    def show_closest_cluster(self, xd, yd, zx=1, zy=1):
         # find closest spike
-        dist = (self.data_manager.data[:, 0] - xd) ** 2 + \
-                (self.data_manager.data[:, 1] - yd) ** 2
+        dist = (np.abs(self.data_manager.data[:, 0] - xd) * zx + 
+                np.abs(self.data_manager.data[:, 1] - yd) * zy)
         ispk = dist.argmin()
         cluster = self.data_manager.clusters_rel[ispk]
         
-        # color = self.data_manager.cluster_colors[cluster]
-        # r, g, b = COLORMAP[color,:]
-        # color = (r, g, b, .75)
+        # Absolute spike index.
+        ispk_abs = self.data_manager.feature_indices[ispk]
+        time = select(self.data_manager.features, ispk_abs)[-1]
+        time = (time + 1) * .5 * self.parent.data_manager.duration
         
-        # text = "cluster {0:d}".format(self.data_manager.clusters_unique[cluster])
-        text = "{0:d}".format(self.data_manager.clusters_unique[cluster])
+        unit = USERPREF['features_info_time_unit'] or 'second'
+        if unit == 'second':
+            text = "{0:d}, {1:.5f}".format(
+                self.data_manager.clusters_unique[cluster],
+                time)
+        else:
+            text = "{0:d}, {1:d}".format(
+                self.data_manager.clusters_unique[cluster],
+                int(time * self.data_manager.freq))
         
-        self.paint_manager.set_data(#coordinates=(xd, yd), #color=color,
+        self.paint_manager.set_data(
             text=text,
             visible=True,
             visual='clusterinfo')
@@ -997,12 +1005,13 @@ class FeatureInteractionManager(PlotInteractionManager):
         x, y = parameter
         # data coordinates
         xd, yd = nav.get_data_coordinates(x, y)
+        zx, zy = nav.get_scaling()
         
         # print self.data_manager.data
         if self.data_manager.data.size == 0:
             return
             
-        self.info_manager.show_closest_cluster(xd, yd)
+        self.info_manager.show_closest_cluster(xd, yd, zx, zy)
     
     
 class FeatureBindings(KlustaViewaBindings):

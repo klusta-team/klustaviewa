@@ -686,6 +686,10 @@ class MainWindow(QtGui.QMainWindow):
                     str(clusters_selected),
                     str(self.loader.get_clusters_selected())))
             return
+            
+        # Force refreshing the preference file.
+        # USERPREF.refresh()
+            
         # Launch the computation of the correlograms.
         self.start_compute_correlograms(clusters_selected)
         
@@ -972,6 +976,7 @@ class MainWindow(QtGui.QMainWindow):
             nchannels=self.loader.nchannels,
             fetdim=self.loader.fetdim,
             nextrafet=self.loader.nextrafet,
+            freq=self.loader.freq,
             autozoom=autozoom,
             duration=self.loader.get_duration(),
         )

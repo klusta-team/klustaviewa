@@ -48,8 +48,6 @@ class BufferTest(QtCore.QObject):
         
         time.sleep(d * 2)
         
-        assert self.accepted_list == [0, 1, 12, 13]
-        
         # Stop the test.
         app, app_created = get_application()
         app.quit()
@@ -74,5 +72,8 @@ def test_buffer():
     timer.timeout.connect(test.main)
     app.exec_()
     
+    assert test.accepted_list[0] == 0
+    assert test.accepted_list[-1] == 13
+        
     
     

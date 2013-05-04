@@ -1,4 +1,5 @@
-"""User preferences."""
+"""User preferences for KlustaViewa."""
+
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
@@ -10,7 +11,7 @@ import numpy as np
 # -----------------------------------------------------------------------------
 
 # Logging level, can be DEBUG, INFO or WARNING.
-loglevel = logging.DEBUG
+loglevel = logging.INFO
 
 
 # -----------------------------------------------------------------------------
@@ -37,6 +38,9 @@ waveforms_nspikes_per_cluster_min = 3
 # Opacity value of the background spikes.
 feature_background_alpha = .2
 
+# Opacity value of the spikes in the selected clusters.
+feature_selected_alpha = .75
+
 # Number of spikes to show in the background.
 features_nspikes_background_max = 10000  
 
@@ -45,8 +49,11 @@ features_nspikes_selection_max = np.inf  # always show all selected clusters
 
 # Minimum number of spikes to show per selected cluster.
 features_nspikes_per_cluster_min = np.inf  # always show all selected clusters
-                    
-                    
+
+# Unit of the spike time in the feature view. Can be 'samples' or 'second'.
+features_info_time_unit = 'second'
+
+
 # -----------------------------------------------------------------------------
 # Unit tests
 # -----------------------------------------------------------------------------
