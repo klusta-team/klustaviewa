@@ -17,7 +17,8 @@ from tools import (find_filename, find_index, load_text, load_xml, normalize,
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices)
 from klustaviewa.utils.userpref import USERPREF
-from klustaviewa.utils.logger import debug, info, warn, exception
+from klustaviewa.utils.logger import (debug, info, warn, exception, FileLogger,
+    register, unregister)
 from klustaviewa.utils.colors import COLORS_COUNT
 
 
@@ -193,9 +194,6 @@ def renumber_clusters(clusters, cluster_info):
 class Loader(QtCore.QObject):
     progressReported = QtCore.pyqtSignal(int, int)
     
-    def __init__(self, parent=None):
-        super(Loader, self).__init__(parent)
-    
     # Progress report
     # ---------------
     def report_progress(self, index, count):
@@ -204,7 +202,7 @@ class Loader(QtCore.QObject):
     
     # Initialization methods
     # ----------------------
-    def __init__(self, filename=None):
+    def __init__(self, parent=None, filename=None):
         """Initialize a Loader object for loading Klusters-formatted files.
         
         Arguments:
@@ -233,6 +231,9 @@ class Loader(QtCore.QObject):
         pass
     
     def save(self):
+        pass
+    
+    def close(self):
         pass
     
     
@@ -663,11 +664,22 @@ class KlustersLoader(Loader):
     def read_stats(self):
         self.ncorrbins = 100
         self.corrbin = .001
-    
+
+        
+    # Log file.
+    # ---------
+    def initialize_logfile(self):
+        filename = self.filename_clu.replace('.clu.', '.kvwlg.')
+        self.logfile = FileLogger(filename, name='datafile', 
+            level=USERPREF['loglevel_file'])
+        # Register log file.
+        register(self.logfile)
+        
     
     # Public methods.
     # ---------------
     def read(self):
+        self.initialize_logfile()
         info("Opening {0:s}.".format(self.filename))
         self.report_progress(0, 4)
         self.read_metadata()
@@ -700,6 +712,13 @@ class KlustersLoader(Loader):
         save_cluster_info(self.filename_clusterinfo, cluster_info)
         save_group_info(self.filename_groups, self.group_info)
     
+    def close(self):
+        if hasattr(self, 'logfile'):
+            unregister(self.logfile)
+            
+    def __del__(self):
+        self.close()
+        
     
 # -----------------------------------------------------------------------------
 # Memory Loader

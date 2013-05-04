@@ -130,8 +130,18 @@ def create_probe(nchannels):
 # Fixtures
 # -----------------------------------------------------------------------------
 def setup():
-    log.debug("Creating mock data for dataio subpackage.")
+    # log.debug("Creating mock data for dataio subpackage.")
     
+    # Create mock directory if needed.
+    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
+    if not os.path.exists(dir):
+        # import time
+        # time.sleep(1)
+        os.mkdir(dir)
+    else:
+        # No need to recreate the files.
+        return
+        
     # Create mock data.
     waveforms = create_waveforms(nspikes, nsamples, nchannels)
     features = create_features(nspikes, nchannels, fetdim, duration, freq)
@@ -141,10 +151,6 @@ def setup():
     xml = create_xml(nchannels, nsamples, fetdim)
     probe = create_probe(nchannels)
     
-    # Create mock directory if needed.
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
-    if not os.path.exists(dir):
-        os.mkdir(dir)
     
     # Create mock files.
     save_binary(os.path.join(dir, 'test.spk.1'), waveforms)
@@ -158,10 +164,10 @@ def setup():
     save_text(os.path.join(dir, 'test.probe'), probe)
     
 def teardown():
-    log.debug("Erasing mock data for dataio subpackage.")
+    # log.debug("Erasing mock data for dataio subpackage.")
     
     # Erase the temporary data directory.
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
     if os.path.exists(dir):
-        shutil.rmtree(dir)
+        shutil.rmtree(dir, ignore_errors=True)
     

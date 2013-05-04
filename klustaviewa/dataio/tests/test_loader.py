@@ -173,7 +173,7 @@ def test_klusters_loader_1():
     # Open the mock data.
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
     xmlfile = os.path.join(dir, 'test.xml')
-    l = KlustersLoader(xmlfile)
+    l = KlustersLoader(filename=xmlfile)
     
     # Get full data sets.
     features = l.get_features()
@@ -224,11 +224,13 @@ def test_klusters_loader_1():
     assert check_dtype(group_names, object)
     assert check_dtype(cluster_sizes, np.int32)
     
+    l.close()
+    
 def test_klusters_loader_2():
     # Open the mock data.
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
     xmlfile = os.path.join(dir, 'test.xml')
-    l = KlustersLoader(xmlfile)
+    l = KlustersLoader(filename=xmlfile)
     
     # Get full data sets.
     features = l.get_features()
@@ -274,11 +276,13 @@ def test_klusters_loader_2():
     assert np.array_equal(get_array(select(waveforms_selected, index)), 
         get_array(waveform))
         
+    l.close()
+        
 def test_klusters_loader_control():
     # Open the mock data.
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
     xmlfile = os.path.join(dir, 'test.xml')
-    l = KlustersLoader(xmlfile)
+    l = KlustersLoader(filename=xmlfile)
     
     # Take all spikes in cluster 3.
     spikes = get_indices(l.get_clusters(clusters=3))
@@ -339,13 +343,15 @@ def test_klusters_loader_control():
     assert np.all(~np.in1d(10000, l.get_clusters()))
     assert np.all(~np.in1d(100, l.get_cluster_groups()))
     
+    l.close()
+    
 def test_klusters_save():
     """WARNING: this test should occur at the end of the module since it
     changes the mock data sets."""
     # Open the mock data.
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
     xmlfile = os.path.join(dir, 'test.xml')
-    l = KlustersLoader(xmlfile)
+    l = KlustersLoader(filename=xmlfile)
     
     clusters = l.get_clusters()
     cluster_colors = l.get_cluster_colors()
@@ -381,4 +387,7 @@ def test_klusters_save():
     assert np.all(cluster_info.values[::2, 1] == 1)
     assert np.all(cluster_info.values[1::2, 1] == 0)
 
+    l.close()
+    
+    
     

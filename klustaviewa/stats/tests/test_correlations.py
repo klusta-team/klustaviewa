@@ -25,7 +25,7 @@ def load():
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                 '../../dataio/tests/mockdata')
     xmlfile = os.path.join(dir, 'test.xml')
-    l = KlustersLoader(xmlfile)
+    l = KlustersLoader(filename=xmlfile)
     c = Controller(l)
     return (l, c)
 
@@ -117,4 +117,5 @@ def test_recompute_correlation():
     assert np.array_equal(clusters0, clusters2)
     assert np.allclose(matrix0, matrix2)
     
+    l.close()
     

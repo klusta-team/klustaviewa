@@ -25,10 +25,11 @@ from klustaviewa.stats.cache import StatsCache
 from klustaviewa.stats.correlations import normalize
 from klustaviewa.stats.correlograms import get_baselines
 import klustaviewa.utils.logger as log
+from klustaviewa.utils.logger import FileLogger, register, unregister
 from klustaviewa.utils.persistence import encode_bytearray, decode_bytearray
 from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.utils.settings import SETTINGS
-from klustaviewa.utils.globalpaths import APPNAME, ABOUT
+from klustaviewa.utils.globalpaths import APPNAME, ABOUT, get_global_path
 from klustaviewa.gui.threads import ThreadedTasks, LOCK
 import rcicons
 
@@ -49,8 +50,12 @@ class ViewDockWidget(QtGui.QDockWidget):
 # -----------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
     
-    def __init__(self):
-        super(MainWindow, self).__init__()
+    def __init__(self, parent=None, dolog=True):
+        super(MainWindow, self).__init__(parent)
+        
+        self.dolog = dolog
+        if self.dolog:
+            create_file_logger()
         
         log.debug("Using {0:s}.".format(QT_BINDING))
         
@@ -1093,11 +1098,18 @@ class MainWindow(QtGui.QMainWindow):
         # End the threads.
         self.join_threads()
         
+        # Close the loader.
+        self.loader.close()
+        
         # Close all views.
         for views in self.views.values():
             for view in views:
                 if hasattr(view, 'closeEvent'):
                     view.closeEvent(e)
+        
+        # Close the logger file.
+        if self.dolog:
+            close_file_logger()
         
         # Close the main window.
         return super(MainWindow, self).closeEvent(e)
@@ -1108,4 +1120,17 @@ class MainWindow(QtGui.QMainWindow):
         return QtCore.QSize(1200, 800)
         
         
-        
+# -----------------------------------------------------------------------------
+# File logger
+# -----------------------------------------------------------------------------
+def create_file_logger():
+    global LOGGER_FILE
+    LOGFILENAME = get_global_path('logfile.txt')
+    LOGGER_FILE = FileLogger(LOGFILENAME, name='file', 
+        level=USERPREF['loglevel_file'])
+    register(LOGGER_FILE)
+
+def close_file_logger():
+    unregister(LOGGER_FILE)
+    
+    

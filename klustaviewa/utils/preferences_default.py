@@ -10,8 +10,11 @@ import numpy as np
 # Logging
 # -----------------------------------------------------------------------------
 
-# Logging level, can be DEBUG, INFO or WARNING.
+# Console logging level, can be DEBUG, INFO or WARNING.
 loglevel = logging.INFO
+
+# Level of the logging file. DEBUG, INFO or WARNING, or just None to disable.
+loglevel_file = logging.DEBUG
 
 
 # -----------------------------------------------------------------------------

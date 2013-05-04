@@ -23,7 +23,7 @@ def load():
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                 '../../dataio/tests/mockdata')
     xmlfile = os.path.join(dir, 'test.xml')
-    l = KlustersLoader(xmlfile)
+    l = KlustersLoader(filename=xmlfile)
     c = Processor(l)
     return (l, c)
 
@@ -34,6 +34,7 @@ def load():
 def test_processor():
     l, p = load()
     
+    l.close()
     
     
     

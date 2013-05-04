@@ -5,4 +5,5 @@ import klustaviewa.utils.userpref as pref
 loglevel = pref.USERPREF['loglevel']
 if loglevel:
     log.set_level(loglevel)
-
+    
+    

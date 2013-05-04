@@ -23,7 +23,7 @@ def load():
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                 '../../dataio/tests/mockdata')
     xmlfile = os.path.join(dir, 'test.xml')
-    l = KlustersLoader(xmlfile)
+    l = KlustersLoader(filename=xmlfile)
     c = Controller(l)
     return (l, c)
 
@@ -82,6 +82,8 @@ def test_controller_merge():
     assert np.array_equal(l.get_spikes(cluster_new), spikes)
     assert np.all(~np.in1d(clusters, get_indices(l.get_cluster_groups('all'))))
     
+    l.close()
+    
 def test_controller_split():
     l, c = load()
     
@@ -125,6 +127,8 @@ def test_controller_split():
     assert np.array_equal(output['to_compute'], [cluster_new, cluster_split])
     
     assert np.array_equal(l.get_spikes(cluster_split), spikes_sample)
+    
+    l.close()
     
 def test_controller_misc():
     l, c = load()
@@ -179,6 +183,8 @@ def test_controller_misc():
     assert c.can_undo()
     assert not c.can_redo()
     
+    l.close()
+    
 def test_controller_recolor_clusters():
     l, c = load()
     group = 1
@@ -208,6 +214,8 @@ def test_controller_recolor_clusters():
     
     assert action == 'change_cluster_color'
     assert output['to_select'] is None
+    
+    l.close()
     
 def test_controller_move_clusters():
     l, c = load()
@@ -239,6 +247,8 @@ def test_controller_move_clusters():
     
     assert np.all(l.get_cluster_groups(clusters) == 1)
     
+    l.close()
+    
 def test_controller_rename_groups():
     l, c = load()
     group = 1
@@ -264,6 +274,8 @@ def test_controller_rename_groups():
     assert action == 'rename_group'
     
     assert l.get_group_names(group) == name
+    
+    l.close()
     
 def test_controller_recolor_groups():
     l, c = load()
@@ -294,6 +306,8 @@ def test_controller_recolor_groups():
     assert np.array_equal(output['groups_to_select'], [group])
     
     assert l.get_group_colors(group) == 10
+    
+    l.close()
     
 def test_controller_add_group():
     l, c = load()
@@ -326,6 +340,8 @@ def test_controller_add_group():
     assert l.get_group_names(group) == 'My group'
     assert l.get_group_colors(group) == 2
     
+    l.close()
+    
 def test_controller_remove_group():
     l, c = load()
     
@@ -354,5 +370,7 @@ def test_controller_remove_group():
     
     assert np.all(~np.in1d(l.get_cluster_groups(), group))
     
+    
+    l.close()
     
     
