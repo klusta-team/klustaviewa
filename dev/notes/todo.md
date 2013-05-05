@@ -6,7 +6,6 @@ Ideas
   
   * ISI widget
   * trace view (neuroscope)
-  * (Measure of cluster quality: ratio of mask/unmask on each channel)
 
 
 Bugs

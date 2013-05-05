@@ -84,8 +84,8 @@ VERTEX_SHADER_BACKGROUND = """
 """
      
 FRAGMENT_SHADER_BACKGROUND = """
-    out_color = vec4(.75, .75, .75, {0:.3f});
-""".format(USERPREF.get('feature_background_alpha', .1))
+    out_color = vec4(.75, .75, .75, alpha);
+"""
 
 
 # -----------------------------------------------------------------------------
@@ -285,6 +285,9 @@ class FeatureDataManager(Manager):
         # Update the grid x scale.
         # self.paint_manager.normalization_viewbox = (0, -1, self.duration, 1)
         
+        # Feature background alpha value.
+        self.alpha = USERPREF.get('feature_background_alpha', .1)
+        
         # Indices of all subset spikes.
         indices_all = get_indices(features)
         
@@ -433,12 +436,15 @@ class FeatureVisual(Visual):
 class FeatureBackgroundVisual(Visual):
     def initialize(self, npoints=None,
                     position0=None,
+                    alpha=None,
                     ):
+        
         
         self.primitive_type = 'POINTS'
         self.size = npoints
         
         self.add_attribute("position0", vartype="float", ndim=2, data=position0)
+        self.add_uniform("alpha", vartype="float", ndim=1, data=alpha)
         
         # necessary so that the navigation shader code is updated
         self.is_position_3D = True
@@ -457,6 +463,7 @@ class FeaturePaintManager(PlotPaintManager):
         
     def initialize(self):
         self.toggle_mask_value = False
+        self.toggle_background_value = 1
         
         self.add_visual(FeatureVisual, name='features',
             npoints=self.data_manager.npoints,
@@ -476,6 +483,7 @@ class FeaturePaintManager(PlotPaintManager):
         self.add_visual(FeatureBackgroundVisual, name='features_background',
             npoints=self.data_manager.npoints_background,
             position0=self.data_manager.data_background,
+            alpha=self.data_manager.alpha,
             )
         
         self.add_visual(TextVisual, name='projectioninfo_x',
@@ -537,6 +545,11 @@ class FeaturePaintManager(PlotPaintManager):
     def toggle_mask(self):
         self.toggle_mask_value = 1 - self.toggle_mask_value
         self.set_data(visual='features', toggle_mask=self.toggle_mask_value)
+            
+    def toggle_background(self):
+        self.toggle_background_value = 1 - self.toggle_background_value
+        self.set_data(visual='features_background', 
+            alpha=self.toggle_background_value * self.data_manager.alpha)
 
 
 # -----------------------------------------------------------------------------
@@ -897,6 +910,7 @@ class FeatureInteractionManager(PlotInteractionManager):
         self.register('EndSelectionPoint', self.selection_end_point)
         self.register('SelectProjection', self.select_projection)
         self.register('ToggleMask', self.toggle_mask)
+        self.register('ToggleBackground', self.toggle_background)
         self.register('SelectNeighborChannel', self.select_neighbor_channel)
         self.register('SelectFeature', self.select_feature)
         
@@ -996,6 +1010,9 @@ class FeatureInteractionManager(PlotInteractionManager):
     def toggle_mask(self, parameter=None):
         self.paint_manager.toggle_mask()
         
+    def toggle_background(self, parameter=None):
+        self.paint_manager.toggle_background()
+        
     def show_closest_cluster(self, parameter):
         
         self.cursor = None
@@ -1046,6 +1063,11 @@ class FeatureBindings(KlustaViewaBindings):
                  'ToggleMask',
                  key='T')
         
+    def set_toggle_background(self):
+        self.set('KeyPress',
+                 'ToggleBackground',
+                 key='B')
+        
     def set_neighbor_channel(self):
         # select previous/next channel for coordinate 0
         self.set('Wheel', 'SelectNeighborChannel',
@@ -1090,6 +1112,7 @@ class FeatureBindings(KlustaViewaBindings):
     def initialize(self):
         self.set_highlight()
         self.set_toggle_mask()
+        self.set_toggle_background()
         self.set_neighbor_channel()
         self.set_feature()
         self.set_selection()
