@@ -8,6 +8,7 @@ import time
 import os
 import inspect
 from collections import OrderedDict, Counter
+from functools import partial
 
 import pandas as pd
 import numpy as np
@@ -781,7 +782,7 @@ class MainWindow(QtGui.QMainWindow):
     # View methods.
     # -------------
     def create_view(self, view_class, position=None, 
-        closable=True, **kwargs):
+        closable=True, index=0, **kwargs):
         """Add a widget to the main window."""
         view = view_class(self, getfocus=False)
         view.set_data(**kwargs)
@@ -789,8 +790,10 @@ class MainWindow(QtGui.QMainWindow):
             position = QtCore.Qt.LeftDockWidgetArea
             
         # Create the dock widget.
+        name = view_class.__name__ + '_' + str(index)
         dockwidget = ViewDockWidget(view_class.__name__)
-        dockwidget.setObjectName(view_class.__name__)
+        # dockwidget = ViewDockWidget(name)
+        dockwidget.setObjectName(name)
         dockwidget.setWidget(view)
         dockwidget.closed.connect(self.dock_widget_closed)
         
@@ -809,6 +812,10 @@ class MainWindow(QtGui.QMainWindow):
             QtCore.Qt.RightDockWidgetArea |
             QtCore.Qt.TopDockWidgetArea |
             QtCore.Qt.BottomDockWidgetArea)
+        # dockwidget.setAttribute(QtCore.Qt.WA_DeleteOnClose )
+        
+        dockwidget.visibilityChanged.connect(partial(
+            self.dock_visibility_changed_callback, view))
             
         # Add the dock widget to the main window.
         self.addDockWidget(position, dockwidget)
@@ -818,7 +825,9 @@ class MainWindow(QtGui.QMainWindow):
     
     def add_cluster_view(self):
         view = self.create_view(vw.ClusterView,
-            position=QtCore.Qt.LeftDockWidgetArea, closable=False)
+            position=QtCore.Qt.LeftDockWidgetArea,
+            index=len(self.views['ClusterView']),
+            closable=False)
             
         # Connect callback functions.
         view.clustersSelected.connect(self.clusters_selected_callback)
@@ -833,6 +842,7 @@ class MainWindow(QtGui.QMainWindow):
         
     def add_projection_view(self):
         view = self.create_view(vw.ProjectionView,
+            index=len(self.views['ProjectionView']),
             position=QtCore.Qt.LeftDockWidgetArea, closable=False)
             
         # Connect callback functions.
@@ -840,14 +850,42 @@ class MainWindow(QtGui.QMainWindow):
         
         self.views['ProjectionView'].append(view)
         
+    def dock_visibility_changed_callback(self, view, visibility):
+        # Register dock widget visibility.
+        view.visibility = visibility
+        
+    def restore_last_view(self, name):
+        """Return True if the last view was successfully restored,
+        False if the view needs to be restored manually by creating a new
+        view."""
+        # No existing view: need to create a new view.
+        if not self.views[name]:
+            return False
+        view = self.views[name][-1]
+        # A view exists and it is hidden: restore it.
+        if getattr(view, 'visibility', None) is False:
+            view.parent().toggleViewAction().activate(QtGui.QAction.Trigger)
+            return True
+        # A view exists but it is not hidden: just add a new view.
+        else:
+            return False
+        
     def add_similarity_matrix_view(self):
+        # Try restoring the last view if it exists and it is hidden, and if
+        # successfully restored, do nothing more. Otherwise, need to create 
+        # a new view.
+        if self.restore_last_view('SimilarityMatrixView'):
+            return
         view = self.create_view(vw.SimilarityMatrixView,
+            index=len(self.views['SimilarityMatrixView']),
             position=QtCore.Qt.LeftDockWidgetArea,)
         view.clustersSelected.connect(self.cluster_pair_selected_callback)
         self.views['SimilarityMatrixView'].append(view)
+        self.update_similarity_matrix_view()
     
     def add_waveform_view(self):
         view = self.create_view(vw.WaveformView,
+            index=len(self.views['WaveformView']),
             position=QtCore.Qt.RightDockWidgetArea,)
         view.spikesHighlighted.connect(
             self.waveform_spikes_highlighted_callback)
@@ -856,6 +894,7 @@ class MainWindow(QtGui.QMainWindow):
         
     def add_feature_view(self):
         view = self.create_view(vw.FeatureView,
+            index=len(self.views['FeatureView']),
             position=QtCore.Qt.RightDockWidgetArea,)
         view.spikesHighlighted.connect(
             self.features_spikes_highlighted_callback)
@@ -866,8 +905,10 @@ class MainWindow(QtGui.QMainWindow):
         self.views['FeatureView'].append(view)
             
     def add_correlograms_view(self):
-        self.views['CorrelogramsView'].append(self.create_view(vw.CorrelogramsView,
-            position=QtCore.Qt.RightDockWidgetArea,))
+        view = self.create_view(vw.CorrelogramsView,
+            index=len(self.views['CorrelogramsView']),
+            position=QtCore.Qt.RightDockWidgetArea,)
+        self.views['CorrelogramsView'].append(view)
             
     def get_view(self, name, index=0):
         views = self.views[name] 
@@ -1007,6 +1048,8 @@ class MainWindow(QtGui.QMainWindow):
         [view.set_data(**data) for view in self.get_views('CorrelogramsView')]
     
     def update_similarity_matrix_view(self):
+        if not hasattr(self, 'statscache'):
+            return
         matrix = self.statscache.similarity_matrix
         # Clusters in groups 0 or 1 to hide.
         cluster_groups = self.loader.get_cluster_groups('all')
@@ -1034,18 +1077,21 @@ class MainWindow(QtGui.QMainWindow):
     # ---------
     def save_geometry(self):
         """Save the arrangement of the whole window."""
+        # SETTINGS['main_window.dockwidgets'] = {name: len(self.get_views(name))
+            # for name in self.views.keys()}
         SETTINGS['main_window.geometry'] = encode_bytearray(
             self.saveGeometry())
         SETTINGS['main_window.state'] = encode_bytearray(self.saveState())
         
     def restore_geometry(self):
         """Restore the arrangement of the whole window."""
+        # count = SETTINGS['main_window.dockwidgets']
         g = SETTINGS['main_window.geometry']
         s = SETTINGS['main_window.state']
-        if g:
-            self.restoreGeometry(decode_bytearray(g))
         if s:
             self.restoreState(decode_bytearray(s))
+        if g:
+            self.restoreGeometry(decode_bytearray(g))
     
     
     # Event handlers.
