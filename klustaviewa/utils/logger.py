@@ -88,6 +88,7 @@ class Logger(object):
         self._logger.addHandler(self.handler)
         
     def get_message(self, msg):
+        msg = str(msg)
         if self.print_caller:
             return get_caller() + msg
         else:

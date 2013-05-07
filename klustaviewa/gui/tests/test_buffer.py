@@ -10,6 +10,7 @@ import threading
 
 from galry import get_application, QtCore, QtGui
 
+import klustaviewa.utils.logger as log
 from klustaviewa.gui.buffer import Buffer
 
 
@@ -43,6 +44,7 @@ class BufferTest(QtCore.QObject):
         delays.extend([d * 2] * 2)
         
         for i, delay in enumerate(delays):
+            # log.debug((i, delay))
             self.buffer.request(i)
             time.sleep(delay)
         
@@ -72,8 +74,9 @@ def test_buffer():
     timer.timeout.connect(test.main)
     app.exec_()
     
+    # print test.accepted_list
     assert test.accepted_list[0] == 0
     assert test.accepted_list[-1] == 13
-        
+    
     
     

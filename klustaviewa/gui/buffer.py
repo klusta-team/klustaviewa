@@ -3,12 +3,20 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-import time
+import timeit
 from threading import Lock
 
 import numpy as np
 
 from qtools import QtGui, QtCore
+import klustaviewa.utils.logger as log
+
+
+# -----------------------------------------------------------------------------
+# Functions
+# -----------------------------------------------------------------------------
+def time():
+    return timeit.default_timer()
 
 
 # -----------------------------------------------------------------------------
@@ -37,12 +45,15 @@ class Buffer(QtCore.QObject):
     # Internal methods.
     # -----------------
     def _accept(self):
+        # log.debug("Accept")
         self.accepted.emit(self._buffer.pop())
+        self._last_accepted = time()
         self._buffer = []
     
     def _visit(self):
-        delay = time.clock() - self._last_request
+        delay = time() - self._last_request
         n = len(self._buffer)
+        # log.debug("Visit {0:d} {1:.5f}".format(n, delay))
         # Only accept items that have been put after a sufficiently long
         # idle time.
         if ((n == 1 and (delay >= self.delay_buffer / 2)) or 
@@ -55,6 +66,7 @@ class Buffer(QtCore.QObject):
     def start(self):
         self._buffer = []
         self._last_request = 0
+        self._last_accepted = 0
         
         self.timer = QtCore.QTimer(self)
         self.timer.setInterval(int(self.delay_timer * 1000))
@@ -66,7 +78,8 @@ class Buffer(QtCore.QObject):
         
     def request(self, item):
         self._buffer.append(item)
-        self._last_request = time.clock()
+        n = len(self._buffer)
+        self._last_request = time()
     
     
     
