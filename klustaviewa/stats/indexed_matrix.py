@@ -18,7 +18,7 @@ def is_default_slice(item):
 
 def is_indices(item):
     return (isinstance(item, list) or isinstance(item, tuple) or 
-        isinstance(item, np.ndarray) or isinstance(item, (int, long)))
+        isinstance(item, np.ndarray) or isinstance(item, (int, long, np.integer)))
         
 
 # -----------------------------------------------------------------------------
@@ -47,7 +47,7 @@ class IndexedMatrix(object):
     # -------
     def add_indices(self, indices):
         """Add new indices only if they don't already exist."""
-        if isinstance(indices, (int, long)):
+        if isinstance(indices, (int, long, np.integer)):
             indices = [indices]
         if len(indices) == 0:
             return
@@ -78,7 +78,7 @@ class IndexedMatrix(object):
         self._array = array_new
     
     def remove_indices(self, indices):
-        if isinstance(indices, (int, long)):
+        if isinstance(indices, (int, long, np.integer)):
             indices = [indices]
         if len(indices) == 0:
             return
@@ -103,7 +103,7 @@ class IndexedMatrix(object):
             return self._array
         
     def to_absolute(self, indices_relative, conserve_single_indices=True):
-        if isinstance(indices_relative, (int, long)):
+        if isinstance(indices_relative, (int, long, np.integer)):
             indices_relative = [indices_relative]
             single_index = True
         else:
@@ -116,7 +116,7 @@ class IndexedMatrix(object):
         return indices_absolute
         
     def to_relative(self, indices_absolute, conserve_single_indices=True):
-        if isinstance(indices_absolute, (int, long)):
+        if isinstance(indices_absolute, (int, long, np.integer)):
             indices_absolute = [indices_absolute]
             single_index = True
         else:
@@ -158,12 +158,12 @@ class IndexedMatrix(object):
                     [:, self.to_relative(item[1], False), ...])
                 # Squeeze the appropriate dimensions if the requested indices
                 # are scalars and not enumerables.
-                if (isinstance(item[0], (int, long)) and 
-                    isinstance(item[1], (int, long))):
+                if (isinstance(item[0], (int, long, np.integer)) and 
+                    isinstance(item[1], (int, long, np.integer))):
                     value = value[0, 0, ...]
-                elif isinstance(item[0], (int, long)):
+                elif isinstance(item[0], (int, long, np.integer)):
                     value = value[0, ...]
-                elif isinstance(item[1], (int, long)):
+                elif isinstance(item[1], (int, long, np.integer)):
                     value = value[:, 0, ...]
                 return value
         raise IndexError(("Indexed matrices can only be accessed with [x,y] "
@@ -184,8 +184,8 @@ class IndexedMatrix(object):
             # item0 and item1 are indices.
             elif is_indices(item[0]) and is_indices(item[1]):
                 # Case where both items are enumerables.
-                if (not isinstance(item[0], (int, long)) and 
-                    not isinstance(item[1], (int, long))):
+                if (not isinstance(item[0], (int, long, np.integer)) and 
+                    not isinstance(item[1], (int, long, np.integer))):
                     # TODO: this is inefficient. Rather inspire from update.
                     # Assign value slice after slice.
                     for j in xrange(len(item[1])):
@@ -245,7 +245,7 @@ class CacheMatrix(IndexedMatrix):
     
     def invalidate(self, indices):
         """Remove indices from the cache."""
-        if isinstance(indices, (int, long)):
+        if isinstance(indices, (int, long, np.integer)):
             indices = [indices]
         # Only remove the indices that are present in the existing indices.
         indices = sorted(set(indices).intersection(set(self.indices)))
@@ -257,7 +257,7 @@ class CacheMatrix(IndexedMatrix):
     def not_in_key_indices(self, indices):
         """Return those indices which are not key indices and thus need to
         be updated."""
-        if isinstance(indices, (int, long)):
+        if isinstance(indices, (int, long, np.integer)):
             indices = [indices]
         return sorted(set(indices) - set(self.key_indices))
     
@@ -274,7 +274,7 @@ class CacheMatrix(IndexedMatrix):
         if len(indices_new) > 0:
             self.add_indices(indices_new)
         # Update key indices.
-        if isinstance(key_indices, (int, long)):
+        if isinstance(key_indices, (int, long, np.integer)):
             key_indices = [key_indices]
         self.key_indices = sorted(set(self.key_indices).union(
             set(key_indices)))

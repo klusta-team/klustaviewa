@@ -62,10 +62,16 @@ listed above.
 (Untested) Type in a shell:
 
     $ sudo apt-get install python2.7 python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose ipython
-    $ sudo pip install numpy
-    $ sudo pip install pandas
     
-The reason is that old versions of Ubuntu do not provide packages for NumPy 1.7 and Pandas 0.10. Using `pip` means compiling the libraries directly, which may not work all the time. Another solution is to download the correct Ubuntu packages available for the latest Ubuntu distributions, and install them on the old Ubuntu.
+Then, you need to install NumPy >= 1.7 and Pandas >= 0.10, and they are only available for Ubuntu >= 13.x. To install them on Ubuntu < 13.x, you can do the following:
+
+  * Go [here](http://packages.ubuntu.com/raring/python/) and download:
+  
+      * python-numpy
+      * python-pandas-lib
+      * python-pandas
+      
+  * Install them, in that order, with `dpgk -i python-numpy_1.7.1-1ubuntu1_amd64.deb` and so on, replacing the file name with the appropriate ones (`amd64` for Python 64 bits, `i386` for Python 32 bits).
 
 
 ### Step 2

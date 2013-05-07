@@ -705,12 +705,15 @@ class ClusterView(QtGui.QTreeView):
             clusters = []
         if groups is None:
             groups = []
-        if isinstance(clusters, (int, long)):
+        if isinstance(clusters, (int, long, np.integer)):
             clusters = [clusters]
-        if isinstance(groups, (int, long)):
+        if isinstance(groups, (int, long, np.integer)):
             groups = [groups]
         if len(clusters) == len(groups) == 0:
             return
+        # Convert to lists.
+        clusters = list(clusters)
+        groups = list(groups)
         selection_model = self.selectionModel()
         selection = QtGui.QItemSelection()
         # Select groups.

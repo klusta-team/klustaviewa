@@ -435,11 +435,11 @@ class MainWindow(QtGui.QMainWindow):
         to_compute=None, groups_to_select=None):
         """Called after an action has been processed. Used to update the 
         different views and launch tasks."""
-        if isinstance(to_select, (int, long)):
+        if isinstance(to_select, (int, long, np.integer)):
             to_select = [to_select]
-        if isinstance(to_invalidate, (int, long)):
+        if isinstance(to_invalidate, (int, long, np.integer)):
             to_invalidate = [to_invalidate]
-        if isinstance(to_compute, (int, long)):
+        if isinstance(to_compute, (int, long, np.integer)):
             to_compute = [to_compute]
         # Select clusters to be selected.
         if len(to_select) > 0:

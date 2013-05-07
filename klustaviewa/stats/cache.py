@@ -21,7 +21,7 @@ def is_default_slice(item):
 
 def is_indices(item):
     return (isinstance(item, list) or isinstance(item, tuple) or 
-        isinstance(item, np.ndarray) or isinstance(item, (int, long)))
+        isinstance(item, np.ndarray) or isinstance(item, (int, long, np.integer)))
         
 
 # -----------------------------------------------------------------------------

@@ -192,9 +192,9 @@ class ProjectionView(QtGui.QWidget):
     # -----------------
     def _change_projection(self, coord, channel, feature, do_emit=True):
         assert coord in (0, 1)
-        assert isinstance(channel, (int, long))# and 
+        assert isinstance(channel, (int, long, np.integer))# and 
             # 0 <= channel < self.nchannels + self.nextrafet)
-        assert isinstance(feature, (int, long))# and 0 <= feature < self.fetdim)
+        assert isinstance(feature, (int, long, np.integer))# and 0 <= feature < self.fetdim)
         
         # coord = np.clip(coord, 0, 1)
         feature = np.clip(feature, 0, self.fetdim - 1)
