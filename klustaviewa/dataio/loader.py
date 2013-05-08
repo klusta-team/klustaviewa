@@ -556,7 +556,7 @@ class KlustersLoader(Loader):
         else:
             try:
                 self.probe = read_probe(self.filename_probe)
-            except IOError as e:
+            except Exception as e:
                 info(("There was an error while loading the probe file "
                           "'{0:s}' : {1:s}").format(self.filename_probe,
                             e.message))
