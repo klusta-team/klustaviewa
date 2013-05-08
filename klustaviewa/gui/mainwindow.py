@@ -671,6 +671,16 @@ class MainWindow(QtGui.QMainWindow):
         
     def similarity_matrix_computed(self, clusters_selected, matrix, clusters):
         self.statscache.similarity_matrix.update(clusters_selected, matrix)
+        self.statscache.similarity_matrix_normalized = normalize(
+            self.statscache.similarity_matrix.to_array(copy=True))
+        # Update the cluster view with cluster quality.
+        quality = np.diag(self.statscache.similarity_matrix_normalized)
+        self.statscache.cluster_quality = pd.Series(
+            quality,
+            index=self.statscache.similarity_matrix.indices,
+            )
+        self.get_view('ClusterView').set_quality(
+            self.statscache.cluster_quality)
         # Update the wizard.
         self.update_wizard(clusters_selected, clusters)
         # Update the view.
@@ -740,8 +750,9 @@ class MainWindow(QtGui.QMainWindow):
             clusters=clusters,
             # clusters_unique=self.loader.get_clusters_unique(),
             # correlograms=self.statscache.correlograms,
-            similarity_matrix=normalize(
-                self.statscache.similarity_matrix.to_array(copy=True)),
+            similarity_matrix=#normalize(
+                # self.statscache.similarity_matrix.to_array(copy=True)),
+                self.statscache.similarity_matrix_normalized,
             )
             
     def previous_clusters_callback(self, checked=None):
@@ -987,6 +998,7 @@ class MainWindow(QtGui.QMainWindow):
             group_colors=self.loader.get_group_colors('all'),
             group_names=self.loader.get_group_names('all'),
             cluster_sizes=self.loader.get_cluster_sizes('all'),
+            cluster_quality=self.statscache.cluster_quality,
         )
         self.get_view('ClusterView').set_data(**data)
     
@@ -1050,13 +1062,14 @@ class MainWindow(QtGui.QMainWindow):
     def update_similarity_matrix_view(self):
         if not hasattr(self, 'statscache'):
             return
-        matrix = self.statscache.similarity_matrix
+        # matrix = self.statscache.similarity_matrix
+        similarity_matrix = self.statscache.similarity_matrix_normalized
         # Clusters in groups 0 or 1 to hide.
         cluster_groups = self.loader.get_cluster_groups('all')
         clusters_hidden = np.nonzero(np.in1d(cluster_groups, [0, 1]))[0]
         # Cluster quality.
-        similarity_matrix = normalize(matrix.to_array(copy=True))
-        cluster_quality = np.diag(similarity_matrix)
+        # similarity_matrix = normalize(matrix.to_array(copy=True))
+        # cluster_quality = np.diag(similarity_matrix)
         data = dict(
             # WARNING: copy the matrix here so that we don't modify the
             # original matrix while normalizing it.

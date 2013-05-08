@@ -244,11 +244,14 @@ class TreeModel(QtCore.QAbstractItemModel):
 # ---------------------
 class ClusterItem(TreeItem):
     def __init__(self, parent=None, clusteridx=None, color=None, 
-            spkcount=None):
+            spkcount=None, quality=None):
         if color is None:
-            color = 0 #(1., 1., 1.)
+            color = 0
+        if quality is None:
+            quality = 0.
         data = OrderedDict()
         # different columns fields
+        data['quality'] = quality
         data['spkcount'] = spkcount
         data['color'] = color
         # the index is the last column
@@ -257,6 +260,9 @@ class ClusterItem(TreeItem):
 
     def spkcount(self):
         return self.item_data['spkcount']
+
+    def quality(self):
+        return self.item_data['quality']
 
     def color(self):
         return self.item_data['color']
@@ -270,6 +276,7 @@ class GroupItem(TreeItem):
         data = OrderedDict()
         # different columns fields
         data['name'] = name
+        data['quality'] = 0.
         data['spkcount'] = spkcount
         data['color'] = color
         # the index is the last column
@@ -282,6 +289,9 @@ class GroupItem(TreeItem):
     def color(self):
         return self.item_data['color']
 
+    def quality(self):
+        return self.item_data['quality']
+        
     def spkcount(self):
         return self.item_data['spkcount']
         
@@ -294,12 +304,11 @@ class GroupItem(TreeItem):
 
 # Custom model
 # ------------
-class ClusterGroupManager(TreeModel):
-    headers = ['Cluster', 'Spikes', 'Color']
+class ClusterViewModel(TreeModel):
+    headers = ['Cluster', 'Quality', 'Spikes', 'Color']
     clustersMoved = QtCore.pyqtSignal(np.ndarray, int)
     
-    def __init__(self, cluster_colors=None, cluster_groups=None,
-        group_colors=None, group_names=None, cluster_sizes=None):
+    def __init__(self, **kwargs):
         """Initialize the tree model.
         
         Arguments:
@@ -309,18 +318,15 @@ class ClusterGroupManager(TreeModel):
             groups_info.
         
         """
-        super(ClusterGroupManager, self).__init__(self.headers)
-        self.load(cluster_colors=cluster_colors,
-                  cluster_groups=cluster_groups,
-                  group_colors=group_colors,
-                  group_names=group_names,
-                  cluster_sizes=cluster_sizes)
+        super(ClusterViewModel, self).__init__(self.headers)
+        self.load(**kwargs)
         
     
     # I/O methods
     # -----------
     def load(self, cluster_colors=None, cluster_groups=None,
-        group_colors=None, group_names=None, cluster_sizes=None):
+        group_colors=None, group_names=None, cluster_sizes=None,
+        cluster_quality=None):
 
         # Create the tree.
         # go through all groups
@@ -333,15 +339,22 @@ class ClusterGroupManager(TreeModel):
         
         # go through all clusters
         for clusteridx, color in cluster_colors.iteritems():
+            if cluster_quality is not None:
+                try:
+                    quality = select(cluster_quality, clusteridx)
+                except IndexError:
+                    quality = 0.
+            else:
+                quality = 0.
             # add cluster
             clusteritem = self.add_cluster(
                 clusteridx=clusteridx,
                 # name=info.names[clusteridx],
                 color=color,
+                quality=quality,
                 # spkcount=cluster_sizes[clusteridx],
                 spkcount=select(cluster_sizes, clusteridx),
                 # assign the group as a parent of this cluster
-                # parent=self.get_group(cluster_groups[clusteridx]))
                 parent=self.get_group(select(cluster_groups, clusteridx)))
     
     def save(self):
@@ -393,8 +406,14 @@ class ClusterGroupManager(TreeModel):
             if col == 0:
                 if role == QtCore.Qt.DisplayRole:
                     return str(item.name())
-            # spkcount
+            # quality
             elif col == 1:
+                if role == QtCore.Qt.TextAlignmentRole:
+                    return QtCore.Qt.AlignRight
+                if role == QtCore.Qt.DisplayRole:
+                    return #"%.2f" % item.quality()
+            # spkcount
+            elif col == 2:
                 if role == QtCore.Qt.TextAlignmentRole:
                     return QtCore.Qt.AlignRight
                 if role == QtCore.Qt.DisplayRole:
@@ -414,8 +433,14 @@ class ClusterGroupManager(TreeModel):
             if col == 0:
                 if role == QtCore.Qt.DisplayRole:
                     return str(item.clusteridx())
-            # spkcount
+            # quality
             elif col == 1:
+                if role == QtCore.Qt.TextAlignmentRole:
+                    return QtCore.Qt.AlignRight
+                if role == QtCore.Qt.DisplayRole:
+                    return "%.2f" % item.quality()
+            # spkcount
+            elif col == 2:
                 if role == QtCore.Qt.TextAlignmentRole:
                     return QtCore.Qt.AlignRight
                 if role == QtCore.Qt.DisplayRole:
@@ -438,8 +463,10 @@ class ClusterGroupManager(TreeModel):
             if index.column() == 0:
                 item.item_data['name'] = data
             elif index.column() == 1:
-                item.item_data['spkcount'] = data
+                item.item_data['quality'] = data
             elif index.column() == 2:
+                item.item_data['spkcount'] = data
+            elif index.column() == 3:
                 item.item_data['color'] = data
             self.dataChanged.emit(index, index)
             return True
@@ -454,7 +481,15 @@ class ClusterGroupManager(TreeModel):
         for group in self.get_groups():
             spkcount = np.sum([cluster.spkcount() 
                 for cluster in self.get_clusters_in_group(group.groupidx())])
-            self.setData(self.index(group.row(), 1), spkcount)
+            self.setData(self.index(group.row(), 2), spkcount)
+    
+    def set_quality(self, quality):
+        """quality is a Series with cluster index and quality value."""
+        for clusteridx, value in quality.iteritems():
+            groupidx = self.get_groupidx(clusteridx)
+            group = self.get_group(groupidx)
+            cluster = self.get_cluster(clusteridx)
+            self.setData(self.index(cluster.row(), 1, parent=group.index), value)
     
     
     # Action methods
@@ -555,8 +590,6 @@ class ClusterGroupManager(TreeModel):
         # effectively move the clusters.
         self.clustersMoved.emit(np.array([cluster.clusteridx() 
             for cluster in source_items]), groupidx)
-        # Move clusters.
-        # self.move_clusters(source_items, target)
     
     def rename_group(self, group, name):
         self.setData(self.index(group.row(), 0), name)
@@ -667,30 +700,22 @@ class ClusterView(QtGui.QTreeView):
     
     # Data methods
     # ------------
-    def set_data(self, 
-        cluster_colors=None,
-        cluster_groups=None,
-        group_colors=None,
-        group_names=None,
-        cluster_sizes=None,):
+    def set_data(self, **kwargs):
         
-        if cluster_colors is None:
+        # if cluster_colors is None:
+        if kwargs.get('cluster_colors', None) is None:
             return
         
-        self.model = ClusterGroupManager(
-                          cluster_colors=cluster_colors,
-                          cluster_groups=cluster_groups,
-                          group_colors=group_colors,
-                          group_names=group_names,
-                          cluster_sizes=cluster_sizes)
+        self.model = ClusterViewModel(**kwargs)
         
         self.setModel(self.model)
         self.expandAll()
         
         # set spkcount column size
-        self.header().resizeSection(1, 100)
+        self.header().resizeSection(1, 60)
+        self.header().resizeSection(2, 60)
         # set color column size
-        self.header().resizeSection(2, 40)
+        self.header().resizeSection(3, 40)
         
         # HACK: drag is triggered in the model, so connect it to move_clusters
         # in this function
@@ -748,8 +773,6 @@ class ClusterView(QtGui.QTreeView):
             clusters = [clusters]
         if len(clusters) == 0:
             return
-        # self.model.move_clusters([self.model.get_cluster(clusteridx)
-            # for clusteridx in clusters], self.model.get_group(groupidx))
         # Signal.
         log.debug("Moving clusters {0:s} to group {1:d}.".format(
             str(clusters), groupidx))
@@ -806,6 +829,9 @@ class ClusterView(QtGui.QTreeView):
         if not hasattr(clusters, '__len__'):
             clusters = [clusters]
         self.move_clusters(clusters, 1)
+    
+    def set_quality(self, quality):
+        self.model.set_quality(quality)
     
     
     # Menu methods

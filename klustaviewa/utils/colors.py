@@ -58,12 +58,13 @@ COLORMAP = np.clip(COLORMAP, 0, 1)
 COLORMAP = np.vstack(((1., 1., 1.), COLORMAP))
 
 # HSV shifts
+k = .15
 shifts = np.array([
                    [0, -.75, .75],    # highlight
                    [0, 0, 0],       # normal
-                   [0, -.2, -.2],    # gradient
-                   [0, -.4, -.4],    # gradient
-                   [0, -.6, -.6],    # gradient
+                   [0, -k, -k],    # gradient
+                   [0, -2 * k, -2 * k],    # gradient
+                   [0, -3 * k, -3 * k],    # gradient
                    ]).T
 SHIFTLEN = shifts.shape[1]                   
 # First shift: normal color.
