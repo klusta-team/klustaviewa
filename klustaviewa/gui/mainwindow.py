@@ -690,6 +690,9 @@ class MainWindow(QtGui.QMainWindow):
     # Selection methods.
     # ------------------
     def buffer_accepted_callback(self, clusters):
+        if clusters is not None and 1 <= len(clusters) <= 2:
+            self.get_view('SimilarityMatrixView').show_selection(
+                clusters[0], clusters[-1])
         self.tasks.select_task.select(self.loader, clusters)
         
     def selection_done(self, clusters_selected):

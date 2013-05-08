@@ -30,6 +30,7 @@ def test_similaritymatrixview():
     kwargs['cluster_colors_full'] = data['cluster_colors_full']
     
     kwargs['operators'] = [
+        lambda self: self.view.show_selection(5, 6),
         lambda self: (self.close() 
             if USERPREF['test_auto_close'] != False else None),
     ]
