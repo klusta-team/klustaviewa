@@ -70,7 +70,7 @@ FRAGMENT_SHADER = """
         out_color = texture2D(cmap, index2d);
         out_color.w = {0:.3f};
     }}
-""".format(USERPREF.get('feature_selected_alpha', .75))
+"""
 
 # Background spikes.
 VERTEX_SHADER_BACKGROUND = """
@@ -406,7 +406,9 @@ class FeatureVisual(Visual):
         ncomponents = COLORMAP_TEXTURE.shape[2]
         
         global FRAGMENT_SHADER
-                    
+        fragment = FRAGMENT_SHADER.format(
+            USERPREF.get('feature_selected_alpha', .75))
+        
         cmap_index = cluster_colors[cluster]
         self.add_texture('cmap', ncomponents=ncomponents, ndim=2, data=COLORMAP_TEXTURE)
         self.add_attribute('cmap_index', ndim=1, vartype='int', data=cmap_index)
@@ -417,12 +419,12 @@ class FeatureVisual(Visual):
         dx_shift = 1. / SHIFTLEN
         offset_shift = dx / 2.
         
-        FRAGMENT_SHADER = FRAGMENT_SHADER.replace('%CMAP_OFFSET%', "%.5f" % offset)
-        FRAGMENT_SHADER = FRAGMENT_SHADER.replace('%CMAP_STEP%', "%.5f" % dx)
+        fragment = fragment.replace('%CMAP_OFFSET%', "%.5f" % offset)
+        fragment = fragment.replace('%CMAP_STEP%', "%.5f" % dx)
         
-        FRAGMENT_SHADER = FRAGMENT_SHADER.replace('%SHIFT_OFFSET%', "%.5f" % offset_shift)
-        FRAGMENT_SHADER = FRAGMENT_SHADER.replace('%SHIFT_STEP%', "%.5f" % dx_shift)
-        FRAGMENT_SHADER = FRAGMENT_SHADER.replace('%SHIFTLEN%', "%d" % (SHIFTLEN - 1))
+        fragment = fragment.replace('%SHIFT_OFFSET%', "%.5f" % offset_shift)
+        fragment = fragment.replace('%SHIFT_STEP%', "%.5f" % dx_shift)
+        fragment = fragment.replace('%SHIFTLEN%', "%d" % (SHIFTLEN - 1))
 
         
         
@@ -430,7 +432,7 @@ class FeatureVisual(Visual):
         self.is_position_3D = True
         
         self.add_vertex_main(VERTEX_SHADER)
-        self.add_fragment_main(FRAGMENT_SHADER)
+        self.add_fragment_main(fragment)
         
         
 class FeatureBackgroundVisual(Visual):

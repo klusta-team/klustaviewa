@@ -201,6 +201,8 @@ class MainWindow(QtGui.QMainWindow):
     def create_help_actions(self):
         self.add_action('about', '&About')
         self.add_action('shortcuts', 'Show &shortcuts')
+        self.add_action('refresh_preferences', '&Refresh preferences',
+            shortcut='CTRL+R')
         
     def create_menu(self):
         # File menu.
@@ -247,6 +249,8 @@ class MainWindow(QtGui.QMainWindow):
         wizard_menu.addAction(self.next_clusters_action)
         
         help_menu = self.menuBar().addMenu("&Help")
+        help_menu.addAction(self.refresh_preferences_action)
+        help_menu.addSeparator()
         help_menu.addAction(self.shortcuts_action)
         help_menu.addAction(self.about_action)
         
@@ -528,6 +532,10 @@ class MainWindow(QtGui.QMainWindow):
                              QtCore.Qt.Key_H,
                              QtCore.Qt.NoModifier,)
         self.keyPressEvent(e)
+    
+    def refresh_preferences_callback(self, checked=None):
+        log.debug("Refreshing user preferences.")
+        USERPREF.refresh()
     
     
     # Views callbacks.
