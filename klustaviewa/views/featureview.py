@@ -1172,6 +1172,7 @@ class FeatureView(GalryWidget):
         log.debug(("Set projection on channel {0:d}, feature {1:d} "
                    "on coord {2:s}".format(channel, feature, 'xy'[coord])))
         self.projection_manager.set_projection(coord, channel, feature)
+        self.projectionChanged.emit(coord, channel, feature)
         self.paint_manager.update_points()
         self.paint_manager.updateGL()
         

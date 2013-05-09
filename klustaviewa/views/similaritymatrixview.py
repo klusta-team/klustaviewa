@@ -157,6 +157,9 @@ class SimilarityMatrixInfoManager(Manager):
         
     def show_closest_cluster(self, xd, yd):
         
+        if len(self.data_manager.clusters_unique) == 0:
+            return
+        
         cx_rel, cy_rel = self.get_closest_cluster(xd, yd)
         
         cx = self.data_manager.clusters_unique[cx_rel]
