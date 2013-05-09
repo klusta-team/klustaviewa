@@ -131,7 +131,7 @@ def compute_correlations(features, clusters, masks,
 def get_similarity_matrix(dic):
     """Return a correlation matrix from a dictionary. Normalization happens
     here."""
-    clu0, clu1 = zip(*matrix.keys())
+    clu0, clu1 = zip(*dic.keys())
     clusters = sorted(set(clu0).union(set(clu1)))
     nclusters = len(clusters)
     clumax = max(clusters) + 1
