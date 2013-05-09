@@ -77,7 +77,9 @@ Then, you need to install NumPy >= 1.7 and Pandas >= 0.10, and they are only ava
 
 ### Step 2
 
-[Download KlustaViewa.](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip)
+  * Windows & Python 64 bits: [download and install KlustaViewa.](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.win-amd64-py2.7.exe)
+  Skip steps 3 and 4 and go directly to step 5.
+  * Other configurations: [download KlustaViewa.](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip)
 
 
 ### Step 3
