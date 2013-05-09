@@ -6,4 +6,10 @@ loglevel = pref.USERPREF['loglevel']
 if loglevel:
     log.set_level(loglevel)
     
-    
+from utils import *
+from dataio import *
+from control import *
+from stats import *
+from wizard import *
+from views import *
+from gui import *
