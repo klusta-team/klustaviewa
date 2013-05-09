@@ -944,7 +944,7 @@ class ClusterView(QtGui.QTreeView):
         # get the RGB values of the chosen color
         rgb = np.array(color.getRgbF()[:3]).reshape((1, -1))
         # take the closest color in the palette
-        color = np.argmin(np.abs(COLORMAP - rgb).sum(axis=1))
+        color = np.argmin(np.abs(COLORMAP[1:,:] - rgb).sum(axis=1)) + 1 
         # Change the color and emit the signal.
         if isinstance(item, ClusterItem):
             self.change_cluster_color(item.clusteridx(), color)

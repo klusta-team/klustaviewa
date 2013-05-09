@@ -29,10 +29,10 @@ def generate_hsv(n0=20):
     S = np.ones(n)
     V = np.ones(n)
     # change V for half of the colors
-    V[1::2] = .75
+    V[1::2] = .9
     # change S for half of the colors
-    S[2::4] = .75
-    S[3::4] = .75
+    S[2::4] = .5
+    S[3::4] = .5
     
     hsv = np.zeros((n, 3))
     hsv[:,0] = H

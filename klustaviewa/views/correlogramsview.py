@@ -257,10 +257,9 @@ class CorrelogramsTicksVisual(PlotVisual):
         self.position_attribute_name = "transformed_position"
         
         nticks = ncorrbins * ncorrelograms
-        n = 2 * nticks
-        position = np.zeros((n, 2))
-        position[:, 0] = np.tile(np.repeat(np.linspace(-1., 1., ncorrbins), 2),
-            ncorrelograms)
+        # n = 2 * nticks
+        position = np.zeros((2 * ncorrbins, 2))
+        position[:, 0] = np.repeat(np.linspace(-1., 1., ncorrbins), 2)
         position[1::2, 1] = 0.05
         position = np.array(position, dtype=np.float32)
         
@@ -269,11 +268,16 @@ class CorrelogramsTicksVisual(PlotVisual):
         color = .25 * np.ones((ncorrbins, 4))
         if ncorrbins % 2 == 1:
             color[ncorrbins // 2, 3] = .85
+            position[ncorrbins, 1] = 1
         else:
             color[ncorrbins // 2, 3] = .85
             color[ncorrbins // 2 - 1, 3] = .85
+            position[ncorrbins, 1] = 1
+            position[ncorrbins, 1] = 1
+            
         color = np.repeat(color, 2, axis=0)
         color = np.tile(color, (ncorrelograms, 1))
+        position = np.tile(position, (ncorrelograms, 1))
         
         super(CorrelogramsTicksVisual, self).initialize(
             position=position,

@@ -536,6 +536,20 @@ class MainWindow(QtGui.QMainWindow):
     def refresh_preferences_callback(self, checked=None):
         log.debug("Refreshing user preferences.")
         USERPREF.refresh()
+        
+        # DEBUG: update cluster quality
+        # quality = USERPREF['cluster_quality'](
+            # self.loader.get_waveforms('all'), 
+            # self.loader.get_features('all'), 
+            # self.loader.get_clusters('all'), 
+            # self.loader.get_masks('all', full=True), 
+            # self.loader.get_clusters_unique())
+        # self.statscache.cluster_quality = pd.Series(
+            # quality,
+            # # index=self.statscache.similarity_matrix.indices,
+            # )
+        # self.get_view('ClusterView').set_quality(
+            # self.statscache.cluster_quality)
     
     
     # Views callbacks.
