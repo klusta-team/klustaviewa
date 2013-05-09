@@ -17,14 +17,14 @@ try:
     log.debug(("Trying to load the compiled Cython version of the correlograms"
                "computations..."))
 except Exception as e:
-    log.exception(e.message)
+    log.debug(e.message)
     try:
         log.debug(("failed. Trying to use Cython directly..."))
         import pyximport; pyximport.install(
             setup_args={'include_dirs': np.get_include()})
         from correlograms_cython import compute_correlograms_cython as compute_correlograms
     except Exception as e:
-        log.exception(e.message)
+        log.debug(e.message)
         log.info(("Unable to load the fast Cython version of the correlograms"
                    "computations, so falling back to the pure Python version.")
                    )
