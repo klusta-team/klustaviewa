@@ -60,6 +60,7 @@ with open('setup.py', 'r') as fr:
 copy('setup_dev.py', 'setup.py')
             
 # build the distribution
+call('python setup.py build_ext --inplace')
 call('python setup.py bdist_wininst sdist --formats=gztar,zip')
 
 # use the original setup.py

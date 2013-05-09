@@ -1,0 +1,86 @@
+import numpy as np
+cimport numpy as np
+DTYPE = np.float32
+ctypedef np.float32_t DTYPE_t
+DTYPEI = np.int32
+ctypedef np.int32_t DTYPEI_t
+
+def compute_correlograms_cython(
+     np.ndarray[DTYPE_t, ndim=1] spiketimes,
+     np.ndarray[DTYPEI_t, ndim=1] clusters,
+     np.ndarray[DTYPEI_t, ndim=1] clusters_to_update=None,
+     int ncorrbins=100,
+     float corrbin=.001):
+    
+    # Ensure ncorrbins is an even number.
+    assert ncorrbins % 2 == 0
+    
+    # Compute the histogram corrbins.
+    # n = int(np.ceil(halfwidth / corrbin))
+    cdef int n = ncorrbins // 2
+    cdef float halfwidth = corrbin * n
+    
+    # size of the histograms
+    cdef int nspikes = len(spiketimes)
+    
+    cdef int i, j, cl0, cl1, k, ind
+    cdef float t0, t1, t0min, t0max, d
+
+    # unique clusters
+    # counter = Counter(clusters)
+    cdef np.ndarray[DTYPEI_t, ndim=1] clusters_unique = np.unique(clusters)
+    cdef int nclusters = len(clusters_unique)
+    cdef int cluster_max = clusters_unique[-1]
+    
+    # clusters to update
+    if clusters_to_update is None:
+        clusters_to_update = clusters_unique
+    cdef np.ndarray[DTYPEI_t, ndim=1] clusters_mask = np.zeros(cluster_max + 1, dtype=DTYPEI)
+    clusters_mask[clusters_to_update] = 1
+    
+    # initialize the correlograms
+    cdef np.ndarray[DTYPEI_t, ndim=2] correlograms = np.zeros(
+        ((cluster_max + 1) ** 2, ncorrbins), dtype=DTYPEI)
+
+    # loop through all spikes, across all neurons, all sorted
+    for i in xrange(nspikes):
+        t0, cl0 = spiketimes[i], clusters[i]
+        # pass clusters that do not need to be processed
+        if clusters_mask[cl0]:
+            # i, t0, c0: current spike index, spike time, and cluster
+            # boundaries of the second loop
+            t0min, t0max = t0 - halfwidth, t0 + halfwidth
+            j = i + 1
+            # go forward in time up to the correlogram half-width
+            while j < nspikes:
+                t1, cl1 = spiketimes[j], clusters[j]
+                # pass clusters that do not need to be processed
+                # if clusters_mask[cl1]:
+                # compute only correlograms if necessary
+                # and avoid computing symmetric pairs twice
+                if t1 < t0max:
+                    d = t1 - t0
+                    k = int(d / corrbin) + n
+                    #ind = pairs[(cl0, cl1)]
+                    ind = (cluster_max + 1) * cl0 + cl1
+                    correlograms[ind, k] += 1
+                else:
+                    break
+                j += 1
+            j = i - 1
+            # go backward in time up to the correlogram half-width
+            while j >= 0:
+                t1, cl1 = spiketimes[j], clusters[j]
+                # pass clusters that do not need to be processed
+                # compute only correlograms if necessary
+                # and avoid computing symmetric pairs twice
+                if t0min < t1:
+                    d = t1 - t0
+                    k = int(d / corrbin) + n - 1
+                    #ind = pairs[(cl0, cl1)]
+                    ind = (cluster_max + 1) * cl0 + cl1
+                    correlograms[ind, k] += 1
+                else:
+                    break
+                j -= 1
+    return {(cl0, cl1): correlograms[(cluster_max + 1) * cl0 + cl1,:] for cl0 in clusters_to_update for cl1 in clusters_unique}

@@ -41,6 +41,7 @@ download:
   * (optional) PyTables (for a future version which will support HDF5)
   * (optional) IPython (for interactive computing)
   * (optional) Nose (for unit tests)
+  * (optional) Cython
   
 For each package, be sure to choose the appropriate version (it should be
 `*.win-amd64-py2.7.exe` for Python 64 bits, or `*.win32-py2.7.exe`

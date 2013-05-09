@@ -66,6 +66,7 @@ class CorrelogramsTask(QtCore.QObject):
             str(list(clusters_to_update))))
         if len(clusters_to_update) == 0:
             return {}
+        clusters_to_update = np.array(clusters_to_update, dtype=np.int32)
         correlograms = compute_correlograms(spiketimes, clusters,
             clusters_to_update=clusters_to_update,
             ncorrbins=ncorrbins, corrbin=corrbin)

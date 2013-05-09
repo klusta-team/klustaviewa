@@ -1,6 +1,36 @@
+
 import os
 # from distutils.core import setup
-from setuptools import *
+# from setuptools import *
+
+# Try importing Cython.
+from distutils.core import setup
+from distutils.extension import Extension
+
+try:
+    from Cython.Distutils import build_ext
+except ImportError:
+    use_cython = False
+else:
+    use_cython = True
+    
+import numpy as np
+
+cmdclass = { }
+ext_modules = [ ]
+
+if use_cython:
+    ext_modules += [
+        Extension("klustaviewa.stats.correlograms_cython", 
+            ["klustaviewa/stats/correlograms_cython.pyx"]),
+    ]
+    cmdclass.update({ 'build_ext': build_ext })
+else:
+    ext_modules += [
+        Extension("klustaviewa.stats.correlograms_cython", 
+            ["klustaviewa/stats/correlograms_cython.c"]),
+    ]
+
 
 LONG_DESCRIPTION = """Spike sorting graphical interface."""
 
@@ -38,10 +68,13 @@ if __name__ == '__main__':
                   #>
                   
                   ],
+        
+        # Scripts.
         entry_points = {
             'console_scripts': [
                 'klustaviewa = klustaviewa.scripts.runklustaviewa:main' ]
         },
+        
         package_data={
             'klustaviewa': ['icons/*.png', 'gui/*.css'],
             
@@ -52,7 +85,11 @@ if __name__ == '__main__':
             
         },
         
-        # scripts=['scripts/runklustaviewa.py'],
+        # Cython stuff.
+        cmdclass = cmdclass,
+        ext_modules=ext_modules,
+        
+        include_dirs=np.get_include(),
         
         url='https://github.com/rossant/klustavieway',
         license='LICENSE.md',
