@@ -175,6 +175,7 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('add_similarity_matrix_view',
             'Add SimilarityMatrixView')
         self.add_action('add_correlograms_view', 'Add CorrelogramsView')
+        self.add_action('add_ipython_view', 'Add IPythonView')
         
         self.add_action('override_color', 'Override cluster &color',
             icon='override_color', shortcut='C')
@@ -223,6 +224,9 @@ class MainWindow(QtGui.QMainWindow):
         views_menu.addAction(self.add_correlograms_view_action)
         views_menu.addAction(self.add_similarity_matrix_view_action)
         views_menu.addSeparator()
+        if vw.IPYTHON:
+            views_menu.addAction(self.add_ipython_view_action)
+            views_menu.addSeparator()
         views_menu.addAction(self.override_color_action)
         
         # Correlograms menu.
@@ -364,6 +368,9 @@ class MainWindow(QtGui.QMainWindow):
         
     def add_correlograms_view_callback(self, checked=None):
         self.add_correlograms_view()
+    
+    def add_ipython_view_callback(self, checked=None):
+        self.add_ipython_view()
     
     def override_color_callback(self, checked=None):
         self.override_color = not self.override_color
@@ -818,12 +825,12 @@ class MainWindow(QtGui.QMainWindow):
     # View methods.
     # -------------
     def create_view(self, view_class, position=None, 
-        closable=True, index=0, **kwargs):
+        closable=True, index=0, floating=None, **kwargs):
         """Add a widget to the main window."""
         view = view_class(self, getfocus=False)
         view.set_data(**kwargs)
-        if not position:
-            position = QtCore.Qt.LeftDockWidgetArea
+        # if not position:
+            # position = QtCore.Qt.LeftDockWidgetArea
             
         # Create the dock widget.
         name = view_class.__name__ + '_' + str(index)
@@ -853,9 +860,13 @@ class MainWindow(QtGui.QMainWindow):
         dockwidget.visibilityChanged.connect(partial(
             self.dock_visibility_changed_callback, view))
             
-        # Add the dock widget to the main window.
-        self.addDockWidget(position, dockwidget)
+        if position is not None:
+            # Add the dock widget to the main window.
+            self.addDockWidget(position, dockwidget)
         
+        if floating is not None:
+            dockwidget.setFloating(floating)
+            
         # Return the view widget.
         return view
     
@@ -940,6 +951,14 @@ class MainWindow(QtGui.QMainWindow):
             self.features_projection_changed_callback)
         self.views['FeatureView'].append(view)
             
+    def add_ipython_view(self):
+        view = self.create_view(vw.IPythonView,
+            index=len(self.views['IPythonView']),
+            position=QtCore.Qt.BottomDockWidgetArea,
+            floating=True)
+        view.set_data(w=self)
+        self.views['IPythonView'].append(view)
+        
     def add_correlograms_view(self):
         view = self.create_view(vw.CorrelogramsView,
             index=len(self.views['CorrelogramsView']),
@@ -967,6 +986,7 @@ class MainWindow(QtGui.QMainWindow):
             WaveformView=[],
             FeatureView=[],
             CorrelogramsView=[],
+            IPythonView=[],
             )
         
         self.add_projection_view()
