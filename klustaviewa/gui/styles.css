@@ -19,6 +19,7 @@ QToolTip
      /*padding: 2px;*/
      /*border-radius: 3px;*/
      opacity: 100;
+     color: black;
 }
 
 QWidget
