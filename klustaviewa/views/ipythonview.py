@@ -7,10 +7,10 @@ try:
     from IPython.frontend.qt.inprocess import QtInProcessKernelManager
     from IPython.lib import guisupport
     IPYTHON = True
-except:
+except Exception as e:
     IPYTHON = False
     log.debug(("You need IPython 1.0dev if you want the IPython console in the"
-    "application."))
+    "application: " + e.message))
     
     
 from galry import QtGui, QtCore

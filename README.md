@@ -39,7 +39,7 @@ download:
   * Distribute
   * (optional) Pip (for installing Python packages easily)
   * (optional) PyTables (for a future version which will support HDF5)
-  * (optional) IPython (for interactive computing)
+  * (optional) IPython 1.0.dev (for interactive computing)
   * (optional) Nose (for unit tests)
   * (optional) Cython
   
@@ -56,13 +56,13 @@ listed above.
 
 (Untested) Type in a shell:
 
-    $ sudo apt-get install python2.7 python-numpy python-pandas python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose ipython
+    $ sudo apt-get install python2.7 python-numpy python-pandas python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose
 
 #### Ubuntu < 13.x
 
 (Untested) Type in a shell:
 
-    $ sudo apt-get install python2.7 python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose ipython
+    $ sudo apt-get install python2.7 python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose
     
 Then, you need to install NumPy >= 1.7 and Pandas >= 0.10, and they are only available for Ubuntu >= 13.x. To install them on Ubuntu < 13.x, you can do the following:
 
@@ -75,6 +75,21 @@ Then, you need to install NumPy >= 1.7 and Pandas >= 0.10, and they are only ava
   * Install them, in that order, with `dpgk -i python-numpy_1.7.1-1ubuntu1_amd64.deb` and so on, replacing the file name with the appropriate ones (`amd64` for Python 64 bits, `i386` for Python 32 bits).
 
 
+#### IPython 1.0.dev
+
+This step is optional and only useful to experienced users. If IPython 1.0.dev is installed, then you will have the possibility to open an IPython terminal in the context of the GUI. This allows you to access all elements and data variables programatically. To install this version of IPython, do the following:
+
+  * Ensure that any version of IPython is uninstalled.
+  * Install pygments with `pip install pygments`
+  * Execute the following commands:
+  
+        git clone https://github.com/ipython/ipython.git
+        cd ipython
+        python setupegg.py develop
+  
+Then, in the software, you will be able to open an IPythonView in the Views menu. The variable `w` represents the main window, and you can explore the available methods with tab completion.
+
+  
 ### Step 2
 
   * Windows & Python 64 bits: [download and install KlustaViewa.](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.win-amd64-py2.7.exe)

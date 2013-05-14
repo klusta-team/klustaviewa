@@ -12,7 +12,7 @@ import pandas as pd
 
 import galry
 
-from klustaviewa.views.ipythonview import IPythonView
+from klustaviewa.views.ipythonview import IPythonView, IPYTHON
 from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.views.tests.utils import show_view, assert_fun
 
@@ -21,6 +21,9 @@ from klustaviewa.views.tests.utils import show_view, assert_fun
 # Tests
 # -----------------------------------------------------------------------------
 def test_ipythonview():
+
+    if not IPYTHON:
+        return
     
     kwargs = {}
     
