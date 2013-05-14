@@ -411,7 +411,7 @@ class ClusterViewModel(TreeModel):
                 if role == QtCore.Qt.TextAlignmentRole:
                     return QtCore.Qt.AlignRight
                 if role == QtCore.Qt.DisplayRole:
-                    return #"%.2f" % item.quality()
+                    return #"%." % item.quality()
             # spkcount
             elif col == 2:
                 if role == QtCore.Qt.TextAlignmentRole:
@@ -438,7 +438,7 @@ class ClusterViewModel(TreeModel):
                 if role == QtCore.Qt.TextAlignmentRole:
                     return QtCore.Qt.AlignRight
                 if role == QtCore.Qt.DisplayRole:
-                    return "%.2f" % item.quality()
+                    return "%.4f" % item.quality()
             # spkcount
             elif col == 2:
                 if role == QtCore.Qt.TextAlignmentRole:

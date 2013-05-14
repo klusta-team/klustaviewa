@@ -87,7 +87,7 @@ This step is optional and only useful to experienced users. If IPython 1.0.dev i
         cd ipython
         python setupegg.py develop
   
-Then, in the software, you will be able to open an IPythonView in the Views menu. The variable `w` represents the main window, and you can explore the available methods with tab completion.
+Then, in the software, you will be able to open an interactive IPython shell (with pylab mode activated) in the Views menu. Type `%who` to see the list of available variables.
 
   
 ### Step 2

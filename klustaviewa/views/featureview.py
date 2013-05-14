@@ -868,6 +868,15 @@ class FeatureProjectionManager(Manager):
     def get_projection(self, coord):
         return self.projection[coord]
     
+    def get_smart_feature(self, coord, channel):
+        """Choose the best feature according to the current projections."""
+        ch0, fet0 = self.projection[coord]
+        ch1, fet1 = self.projection[1 - coord]
+        if channel == ch1:
+            return (1, 0, 0)[fet1]
+        else:
+            return 0
+            
     
 # -----------------------------------------------------------------------------
 # Interaction
@@ -1169,6 +1178,8 @@ class FeatureView(GalryWidget):
         self.updateGL()
         
     def set_projection(self, coord, channel, feature):
+        if feature == -1:
+            feature = self.projection_manager.get_smart_feature(coord, channel)
         log.debug(("Set projection on channel {0:d}, feature {1:d} "
                    "on coord {2:s}".format(channel, feature, 'xy'[coord])))
         self.projection_manager.set_projection(coord, channel, feature)

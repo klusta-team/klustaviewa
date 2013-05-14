@@ -1,3 +1,8 @@
+"""IPython View: interactive shell in the interface."""
+
+# -----------------------------------------------------------------------------
+# Imports
+# -----------------------------------------------------------------------------
 import os
 
 import klustaviewa.utils.logger as log
@@ -12,9 +17,13 @@ except Exception as e:
     log.debug(("You need IPython 1.0dev if you want the IPython console in the"
     "application: " + e.message))
     
-    
+import galry
 from galry import QtGui, QtCore
 
+
+# -----------------------------------------------------------------------------
+# IPython view
+# -----------------------------------------------------------------------------
 class IPythonView(QtGui.QWidget):
     def __init__(self, parent=None, getfocus=None):
         super(IPythonView, self).__init__(parent)
@@ -24,6 +33,7 @@ class IPythonView(QtGui.QWidget):
         self.kernel_manager.start_kernel()
         self.kernel = self.kernel_manager.kernel
         self.kernel.gui = 'qt4'
+        self.shell = self.kernel.shell
 
         self.kernel_client = self.kernel_manager.client()
         self.kernel_client.start_channels()
@@ -34,17 +44,32 @@ class IPythonView(QtGui.QWidget):
         self.control.kernel_client = self.kernel_client
         self.control.exit_requested.connect(self.stop)
         
-        # self.control
+        # Enable Pylab mode.
+        self.shell.enable_pylab()
+        self.shell.automagic = True
+        
+        # Add some variables in the namespace.
+        self.push(galry=galry)
         
         box = QtGui.QVBoxLayout()
         box.addWidget(self.control)
         self.setLayout(box)
 
-    def set_data(self, **kwargs):
-        self.kernel.shell.push(kwargs)
-        
     def stop(self, *args):
         self.kernel_client.stop_channels()
         self.kernel_manager.shutdown_kernel()
-
+    
+    
+    # Public methods.
+    # ---------------
+    def set_data(self, **kwargs):
+        self.push(**kwargs)
+    
+    def push(self, **kwargs):
+        self.shell.push(kwargs)
+    
+    def run_cell(self, *args, **kwargs):
+        self.shell.run_cell(*args, **kwargs)
+        
+    
     

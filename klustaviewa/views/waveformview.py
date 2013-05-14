@@ -27,45 +27,6 @@ __all__ = ['WaveformView']
 # -----------------------------------------------------------------------------
 # Shaders
 # -----------------------------------------------------------------------------
-# FSH = """
-# vec3 Hue(float H)
-# {
-    # float R = abs(H * 6 - 3) - 1;
-    # float G = 2 - abs(H * 6 - 2);
-    # float B = 2 - abs(H * 6 - 4);
-    # return vec3(clamp(R, 0, 1), clamp(G, 0, 1), clamp(B, 0, 1));
-# }
-
-# vec3 HSVtoRGB(vec3 HSV)
-# {
-    # return ((Hue(HSV.x) - 1) * HSV.y + 1) * HSV.z;
-# }
-
-# vec3 RGBtoHSV(vec3 RGB)
-# {
-    # vec3 HSV = vec3(0., 0., 0.);
-    # HSV.z = max(RGB.r, max(RGB.g, RGB.b));
-    # float M = min(RGB.r, min(RGB.g, RGB.b));
-    # float C = HSV.z - M;
-    # if (C != 0)
-    # {
-        # HSV.y = C / HSV.z;
-        # vec3 Delta = (HSV.z - RGB) / C;
-        # Delta.rgb -= Delta.brg;
-        # Delta.rg += vec2(2,4);
-        # if (RGB.r >= HSV.z)
-            # HSV.x = Delta.b;
-        # else if (RGB.g >= HSV.z)
-            # HSV.x = Delta.r;
-        # else
-            # HSV.x = Delta.g;
-        # HSV.x = fract(HSV.x / 6);
-    # }
-    # return HSV;
-# }
-# """
-
-
 VERTEX_SHADER = """
     // get channel position
     vec2 channel_position = channel_positions[int(channel)];

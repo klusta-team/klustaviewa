@@ -74,6 +74,7 @@ class MainWindow(QtGui.QMainWindow):
         self.setAnimated(False)
         
         # Initialize some variables.
+        self.statscache = None
         self.loader = KlustersLoader()
         self.loader.progressReported.connect(self.open_progress_reported)
         self.controller = None
@@ -576,7 +577,7 @@ class MainWindow(QtGui.QMainWindow):
         
     def waveform_box_clicked_callback(self, coord, cluster, channel):
         """Changed in waveform ==> change in feature"""
-        self.get_view('FeatureView').set_projection(coord, channel, coord)
+        self.get_view('FeatureView').set_projection(coord, channel, -1)
         
     def projection_changed_callback(self, coord, channel, feature):
         """Changed in projection ==> change in feature"""
@@ -607,6 +608,10 @@ class MainWindow(QtGui.QMainWindow):
         # Create the cache for the cluster statistics that need to be
         # computed in the background.
         self.statscache = StatsCache(self.loader.ncorrbins)
+        # Update stats cache in IPython view.
+        ipython = self.get_view('IPythonView')
+        if ipython:
+            ipython.set_data(stats=self.statscache)
         # Start computing the correlation matrix.
         self.start_compute_similarity_matrix()
         # Update the wizard.
@@ -956,7 +961,14 @@ class MainWindow(QtGui.QMainWindow):
             index=len(self.views['IPythonView']),
             position=QtCore.Qt.BottomDockWidgetArea,
             floating=True)
-        view.set_data(w=self)
+        # Create namespace for the interactive session.
+        namespace = dict(
+            w=self,
+            select=self.get_view('ClusterView').select,
+            loader=self.loader,
+            stats=self.statscache,
+            )
+        view.set_data(**namespace)
         self.views['IPythonView'].append(view)
         
     def add_correlograms_view(self):
@@ -1105,7 +1117,7 @@ class MainWindow(QtGui.QMainWindow):
         [view.set_data(**data) for view in self.get_views('CorrelogramsView')]
     
     def update_similarity_matrix_view(self):
-        if not hasattr(self, 'statscache'):
+        if self.statscache is None:
             return
         # matrix = self.statscache.similarity_matrix
         similarity_matrix = self.statscache.similarity_matrix_normalized
