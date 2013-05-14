@@ -147,8 +147,8 @@ class SimilarityMatrixInfoManager(Manager):
     def get_closest_cluster(self, xd, yd):
         nclu = self.data_manager.nclusters
         
-        cy = int((xd + 1) / 2. * nclu)
-        cx = int((yd + 1) / 2. * nclu)
+        cx = int((xd + 1) / 2. * nclu)
+        cy = int((yd + 1) / 2. * nclu)
         
         cx_rel = np.clip(cx, 0, nclu - 1)
         cy_rel = np.clip(cy, 0, nclu - 1)
@@ -171,7 +171,7 @@ class SimilarityMatrixInfoManager(Manager):
             
         val = self.data_manager.similarity_matrix[cx_rel, cy_rel]
         
-        text = "%d/%d:%.3f" % (cy, cx, val)
+        text = "%d/%d:%.3f" % (cx, cy, val)
         
         self.paint_manager.set_data(coordinates=(xd, yd), 
             text=text,
@@ -206,14 +206,20 @@ class SimilarityMatrixInteractionManager(PlotInteractionManager):
         xd, yd = nav.get_data_coordinates(x, y)
         
         cx_rel, cy_rel = self.info_manager.get_closest_cluster(xd, yd)
-        
         cx = self.data_manager.clusters_unique[cx_rel]
         cy = self.data_manager.clusters_unique[cy_rel]
-        clusters = np.unique([cx, cy])
+        if cx != cy:
+            clusters = np.array([cx, cy])
+        else:
+            clusters = np.array([cx])
         
         if add:
             clusters = np.array(sorted(set(self.clusters_selected).union(
                 clusters)))
+            # clusters_new = clusters
+            # clusters = self.clusters_selected.extend([cluster 
+                # for cluster in clusters_new 
+                    # if cluster not in self.clusters_selected])
         
         self.clusters_selected = clusters
         

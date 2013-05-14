@@ -39,7 +39,7 @@ waveforms_nspikes_per_cluster_min = 3
 # Feature view
 # -----------------------------------------------------------------------------
 # Opacity value of the background spikes.
-feature_background_alpha = .2
+feature_background_alpha = .25
 
 # Opacity value of the spikes in the selected clusters.
 feature_selected_alpha = .75

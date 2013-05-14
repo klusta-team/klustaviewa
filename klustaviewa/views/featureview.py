@@ -15,15 +15,12 @@ from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
     GalryWidget, QtGui, QtCore, show_window, enforce_dtype, RectanglesVisual,
     TextVisual, PlotVisual, AxesVisual, GridVisual, NavigationEventProcessor,
     EventProcessor, DataNormalizer)
-# Set 5 ticks in the grid.
-# import galry.processors.grid_processor as galrygrid
-# galrygrid.NTICKS = 5
     
 from klustaviewa.dataio.selection import get_indices, select
 from klustaviewa.dataio.tools import get_array
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
 from klustaviewa.utils.colors import COLORMAP_TEXTURE, SHIFTLEN
-from klustaviewa.utils.userpref import USERPREF
+# from klustaviewa.utils.userpref import USERPREF
 import klustaviewa.utils.logger as log
 import klustaviewa
 
@@ -265,6 +262,9 @@ class FeatureDataManager(Manager):
                  autozoom=None,
                  duration=None,
                  freq=None,
+                 alpha_selected=.75,
+                 alpha_background=.25,
+                 time_unit=None,
                  ):
         
         if features is None:
@@ -286,7 +286,12 @@ class FeatureDataManager(Manager):
         # self.paint_manager.normalization_viewbox = (0, -1, self.duration, 1)
         
         # Feature background alpha value.
-        self.alpha = USERPREF.get('feature_background_alpha', .1)
+        # self.alpha = USERPREF.get('feature_background_alpha', .1)
+        self.alpha_selected = alpha_selected
+        self.alpha_background = alpha_background
+        
+        # can be 'second' or 'samples'
+        self.time_unit = time_unit
         
         # Indices of all subset spikes.
         indices_all = get_indices(features)
@@ -372,6 +377,7 @@ class FeatureVisual(Visual):
                     highlight=None,
                     selection=None,
                     cluster_colors=None,
+                    alpha=None,
                     ):
         
         self.primitive_type = 'POINTS'
@@ -406,8 +412,7 @@ class FeatureVisual(Visual):
         ncomponents = COLORMAP_TEXTURE.shape[2]
         
         global FRAGMENT_SHADER
-        fragment = FRAGMENT_SHADER.format(
-            USERPREF.get('feature_selected_alpha', .75))
+        fragment = FRAGMENT_SHADER.format(alpha)
         
         cmap_index = cluster_colors[cluster]
         self.add_texture('cmap', ncomponents=ncomponents, ndim=2, data=COLORMAP_TEXTURE)
@@ -477,6 +482,7 @@ class FeaturePaintManager(PlotPaintManager):
             cluster_colors=self.data_manager.cluster_colors,
             nclusters=self.data_manager.nclusters,
             cluster_depth=self.data_manager.clusters_full_depth,
+            alpha=self.data_manager.alpha_selected,
             )
         
         self.add_visual(AxesVisual, name='axes')
@@ -485,7 +491,7 @@ class FeaturePaintManager(PlotPaintManager):
         self.add_visual(FeatureBackgroundVisual, name='features_background',
             npoints=self.data_manager.npoints_background,
             position0=self.data_manager.data_background,
-            alpha=self.data_manager.alpha,
+            alpha=self.data_manager.alpha_background,
             )
         
         self.add_visual(TextVisual, name='projectioninfo_x',
@@ -536,12 +542,14 @@ class FeaturePaintManager(PlotPaintManager):
             selection=self.selection_manager.selection_mask,
             nclusters=self.data_manager.nclusters,
             cluster_depth=self.data_manager.clusters_full_depth,
-            cmap_index=cmap_index
+            cmap_index=cmap_index,
+            alpha=self.data_manager.alpha_selected,
             )
             
         self.set_data(visual='features_background',
             size=self.data_manager.npoints_background,
             position0=self.data_manager.data_background,
+            alpha=self.data_manager.alpha_background,
             )
             
     def toggle_mask(self):
@@ -551,7 +559,7 @@ class FeaturePaintManager(PlotPaintManager):
     def toggle_background(self):
         self.toggle_background_value = 1 - self.toggle_background_value
         self.set_data(visual='features_background', 
-            alpha=self.toggle_background_value * self.data_manager.alpha)
+            alpha=self.toggle_background_value * self.data_manager.alpha_background)
 
 
 # -----------------------------------------------------------------------------
@@ -894,7 +902,7 @@ class FeatureInfoManager(Manager):
         time = select(self.data_manager.features, ispk_abs)[-1]
         time = (time + 1) * .5 * self.parent.data_manager.duration
         
-        unit = USERPREF['features_info_time_unit'] or 'second'
+        unit = self.data_manager.time_unit
         if unit == 'second':
             text = "{0:d}, {1:.5f}".format(
                 self.data_manager.clusters_unique[cluster],

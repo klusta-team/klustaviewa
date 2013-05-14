@@ -761,9 +761,12 @@ class ClusterView(QtGui.QTreeView):
         if len(clusters) > 0:
             cluster = self.model.get_cluster(clusters[-1])
             if cluster is not None:
+                # Set current index in the selection.
                 selection_model.setCurrentIndex(
                     cluster.index,
                     QtGui.QItemSelectionModel.NoUpdate)
+                # Scroll to that cluster.
+                self.scrollTo(cluster.index)
                     
     def unselect(self):
         self.selectionModel().clear()
@@ -1023,10 +1026,10 @@ class ClusterView(QtGui.QTreeView):
         # log.debug("Selected clusters {0:s}.".format(str(clusters)))
         self.clustersSelected.emit(np.array(clusters, dtype=np.int32))
         
-        if group_indices:
-            self.scrollTo(group_indices[-1].index)
-        elif clusters:
-            self.scrollTo(self.model.get_cluster(clusters[-1]).index)
+        # if group_indices:
+            # self.scrollTo(group_indices[-1].index)
+        # elif clusters:
+            # self.scrollTo(self.model.get_cluster(clusters[-1]).index)
     
     
     # Selected items

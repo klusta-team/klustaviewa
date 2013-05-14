@@ -724,6 +724,8 @@ class MainWindow(QtGui.QMainWindow):
     # Selection methods.
     # ------------------
     def buffer_accepted_callback(self, clusters):
+        # Highlight row and column of the selected cluster(s) in the
+        # Similarity Matrix View.
         if clusters is not None and 1 <= len(clusters) <= 2:
             self.get_view('SimilarityMatrixView').show_selection(
                 clusters[0], clusters[-1])
@@ -1094,6 +1096,9 @@ class MainWindow(QtGui.QMainWindow):
             freq=self.loader.freq,
             autozoom=autozoom,
             duration=self.loader.get_duration(),
+            alpha_selected=USERPREF.get('feature_selected_alpha', .75),
+            alpha_background=USERPREF.get('feature_background_alpha', .1),
+            time_unit=USERPREF['features_info_time_unit'] or 'second',
         )
         [view.set_data(**data) for view in self.get_views('FeatureView')]
         
