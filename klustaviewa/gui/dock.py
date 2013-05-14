@@ -103,9 +103,9 @@ class DockTitleBar(QtGui.QWidget):
     def create_buttons(self):
         if self.is_floatable():
             self.dockable_button = self.add_button('dockable', 
-                'Toggle dockable', icon='pin', checkable=True)
+                'Pin/Unpin', icon='pin', checkable=True)
             self.dock_button = self.add_button('dock', 
-                'Dock', icon='dockable')
+                'Dock/Undock', icon='dockable')
             self.maximize_button = self.add_button('maximize', 
                 'Maximize', icon='fullscreen')
         if self.is_closable():

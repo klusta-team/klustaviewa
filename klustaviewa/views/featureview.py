@@ -862,6 +862,7 @@ class FeatureProjectionManager(Manager):
         # next or previous channel
         channel = np.mod(channel + channel_dir, self.data_manager.nchannels + 
             self.data_manager.nextrafet)
+        feature = self.get_smart_feature(coord, channel)
         self.set_projection(coord, channel, feature, do_update=True)
         
     def select_feature(self, coord, feature):

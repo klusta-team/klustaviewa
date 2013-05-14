@@ -53,6 +53,11 @@ class IPythonView(QtGui.QWidget):
         
         box = QtGui.QVBoxLayout()
         box.addWidget(self.control)
+        
+        box.setContentsMargins(0, 0, 0, 0)
+        box.setSpacing(0)
+
+        
         self.setLayout(box)
 
     def stop(self, *args):
