@@ -59,20 +59,29 @@ COLORMAP = np.vstack(((1., 1., 1.), COLORMAP))
 
 # HSV shifts
 k = .15
+# shifts = np.array([
+                   # [0, -.75, .75],    # highlight
+                   # [0, 0, 0],       # normal
+                   # [0, -k, -k],    # gradient
+                   # [0, -2 * k, -2 * k],    # gradient
+                   # [0, -3 * k, -3 * k],    # gradient
+                   # ]).T
 shifts = np.array([
-                   [0, -.75, .75],    # highlight
-                   [0, 0, 0],       # normal
-                   [0, -k, -k],    # gradient
-                   [0, -2 * k, -2 * k],    # gradient
-                   [0, -3 * k, -3 * k],    # gradient
+                   [1, .25, 2.],    # highlight
+                   [1, 1, 1],       # normal
+                   [1, .75, .9],    # gradient
+                   [1, .5, .8],    # gradient
+                   [1, .25, .7],    # gradient
+                   [1, 0, 0],    # gradient
                    ]).T
 SHIFTLEN = shifts.shape[1]                   
 # First shift: normal color.
 # Second shift: highlight.
 # Other shifts: gradients.
 COLORMAP_TEXTURE = np.zeros((SHIFTLEN, hsv.shape[0] + 1, 3))
-hsv_shifted = np.clip(hsv.reshape((-1, 3, 1)) + shifts.reshape((1, 3, -1)), 
+hsv_shifted = np.clip(hsv.reshape((-1, 3, 1)) * shifts.reshape((1, 3, -1)), 
     0, 1)
+hsv_shifted[:, 2, -1] = .6
 for i in xrange(SHIFTLEN):
     COLORMAP_TEXTURE[i, ...] = np.vstack(((1., 1., 1.), 
         np.clip(hsv_to_rgb(hsv_shifted[:, :, i]), 0, 1)))

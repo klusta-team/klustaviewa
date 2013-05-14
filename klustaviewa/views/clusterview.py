@@ -1028,8 +1028,8 @@ class ClusterView(QtGui.QTreeView):
         
         # if group_indices:
             # self.scrollTo(group_indices[-1].index)
-        # elif clusters:
-            # self.scrollTo(self.model.get_cluster(clusters[-1]).index)
+        if len(clusters) == 1:
+            self.scrollTo(self.model.get_cluster(clusters[0]).index)
     
     
     # Selected items

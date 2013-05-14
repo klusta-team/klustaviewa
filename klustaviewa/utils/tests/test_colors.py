@@ -8,9 +8,10 @@ import sys
 import numpy as np
 from galry import figure, imshow, show, ylim, rectangles
 
+from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.utils.colors import (COLORS_COUNT, COLORMAP, COLORMAP_TEXTURE,
     next_color, SHIFTLEN)
-
+    
 
 # -----------------------------------------------------------------------------
 # Utility functions
@@ -40,8 +41,12 @@ def test_colors_1():
     assert next_color(COLORS_COUNT) == 1
     
 def test_color_galry():
+    autodestruct = USERPREF['test_auto_close']
+    if autodestruct:
+        autodestruct = 100
+
     figure(constrain_navigation=False, toolbar=False, 
-        autodestruct=100,
+        autodestruct=autodestruct,
         )
     for i in xrange(SHIFTLEN):
         y0 = 1 - 2 * i / float(SHIFTLEN)
