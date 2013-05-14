@@ -742,7 +742,7 @@ class MainWindow(QtGui.QMainWindow):
         # been made by the wizard.
         with LOCK:
             self.update_feature_view(autozoom=self.wizard_active)
-            self.update_waveform_view(autozoom=self.wizard_active)
+            self.update_waveform_view()#autozoom=self.wizard_active)
             
         # Update action enabled/disabled property.
         self.update_action_enabled()
@@ -783,24 +783,24 @@ class MainWindow(QtGui.QMainWindow):
                 # self.statscache.similarity_matrix.to_array(copy=True)),
                 self.statscache.similarity_matrix_normalized,
             )
-            
-    def previous_clusters_callback(self, checked=None):
-        clusters =  self.tasks.wizard_task.previous(
-            _sync=True)[2]['_result']
+        
+    def wizard_change_callback(self, dir=1):
+        if dir == -1:
+            f = self.tasks.wizard_task.previous
+        else:
+            f = self.tasks.wizard_task.next
+        clusters = f(_sync=True)[2]['_result']
         # log.info("The wizard proposes clusters {0:s}.".format(str(clusters)))
         if clusters is None or len(clusters) == 0:
             return
         self.wizard_active = True
         self.get_view('ClusterView').select(clusters)
-            
+    
+    def previous_clusters_callback(self, checked=None):
+        self.wizard_change_callback(-1)
+        
     def next_clusters_callback(self, checked=None):
-        clusters =  self.tasks.wizard_task.next(
-            _sync=True)[2]['_result']
-        if clusters is None or len(clusters) == 0:
-            return
-        log.info("The wizard proposes clusters {0:s}.".format(str(clusters)))
-        self.wizard_active = True
-        self.get_view('ClusterView').select(clusters)
+        self.wizard_change_callback(1)
         
     
     # Threads.
