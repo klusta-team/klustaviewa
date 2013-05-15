@@ -14,6 +14,13 @@ from klustaviewa.dataio.tests.mock_data import (
     nspikes, nclusters, nsamples, nchannels, fetdim, cluster_offset,
     create_clusters, create_similarity_matrix)
 
+    
+# -----------------------------------------------------------------------------
+# Utility functions
+# -----------------------------------------------------------------------------
+def create_cluster_groups(nclusters):
+    return np.array(np.ones(nclusters) * 2, dtype=np.int32)
+    
 
 # -----------------------------------------------------------------------------
 # Wizard tests
@@ -22,6 +29,7 @@ def test_wizard():
     
     # Create mock data.
     clusters = create_clusters(nspikes, nclusters)
+    cluster_groups = create_cluster_groups(nclusters)
     similarity_matrix = create_similarity_matrix(nclusters)
     quality = np.diag(similarity_matrix)
     
@@ -32,7 +40,8 @@ def test_wizard():
     
     # Initialize the wizard.
     w = Wizard()
-    w.set_data(clusters=clusters, similarity_matrix=similarity_matrix)
+    w.set_data(clusters=clusters, similarity_matrix=similarity_matrix,
+               cluster_groups=cluster_groups)
     
     # Check the best pairs keys and best clusters.
     cluster = w.best_pairs.keys()[0]
@@ -87,6 +96,7 @@ def test_wizard_update():
     
     # Create mock data.
     clusters = create_clusters(nspikes, nclusters)
+    cluster_groups = create_cluster_groups(nclusters)
     similarity_matrix = create_similarity_matrix(nclusters)
     quality = np.diag(similarity_matrix)
     
@@ -97,7 +107,8 @@ def test_wizard_update():
     
     # Initialize the wizard.
     w = Wizard()
-    w.set_data(clusters=clusters, similarity_matrix=similarity_matrix)
+    w.set_data(clusters=clusters, similarity_matrix=similarity_matrix,
+               cluster_groups=cluster_groups)
     
     best_cluster, cluster = w.next()
     assert best_cluster != cluster
@@ -114,11 +125,13 @@ def test_wizard_update():
     
     # Update the wizard.
     similarity_matrix = create_similarity_matrix(nclusters - 1)
+    cluster_groups = create_cluster_groups(nclusters - 1)
     quality = np.diag(similarity_matrix)
     clusters_unique = np.unique(clusters)
     best_clusters = clusters_unique[np.argsort(quality)[::-1]]
     w.merged((best_cluster, cluster), cluster_new)
     w.set_data(clusters=clusters,
+               cluster_groups=cluster_groups,
                similarity_matrix=similarity_matrix)
     
     assert best_clusters[0] in w.next_cluster()

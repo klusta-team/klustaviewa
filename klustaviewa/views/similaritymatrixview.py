@@ -89,16 +89,16 @@ class SimilarityMatrixDataManager(Manager):
             similarity_matrix = -np.ones((2, 2))
         elif similarity_matrix.shape[0] == 1:
             similarity_matrix = -np.ones((2, 2))
-        # else:
-            # # Normalize the correlation matrix.
-            # s = similarity_matrix.sum(axis=1)
-            # similarity_matrix[s == 0, 0] = 1e-9
-            # s = similarity_matrix.sum(axis=1)
-            # similarity_matrix *= (1. / s.reshape((-1, 1)))
+            
+        self.similarity_matrix = similarity_matrix
         n = similarity_matrix.shape[0]
         
-        self.texture = colormap(similarity_matrix)[::-1, :, :]
-        self.similarity_matrix = similarity_matrix
+        self.texture = colormap(similarity_matrix)
+        # similarity_matrix axes are originally (x, y) from the lower left corner
+        # but when displayed, they are (i, j) from the upper left corner
+        # so we need to transpose
+        self.texture = np.swapaxes(self.texture, 0, 1)[::-1, :, :]
+        
         
         # Hide some clusters.
         tex0 = self.texture.copy()

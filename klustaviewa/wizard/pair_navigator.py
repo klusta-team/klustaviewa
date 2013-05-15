@@ -60,6 +60,8 @@ class PairNavigator(object):
         # Access the item pair.
         best_item = self.pairs.keys()[index0]
         item0 = best_item
+        if len(self.pairs[best_item]) == 0:
+            return
         item1 = self.pairs[best_item][index1]
         return item0, item1
         

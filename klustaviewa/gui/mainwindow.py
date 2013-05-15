@@ -491,6 +491,8 @@ class MainWindow(QtGui.QMainWindow):
                 action, output = self.controller.split_clusters(
                     clusters, spikes_selected)
             self.action_processed(action, **output)
+            # Cancel the selection after the split.
+            self.spikes_selected = []
             # Inform the wizard.
             # TODO
             
@@ -783,13 +785,14 @@ class MainWindow(QtGui.QMainWindow):
     # Wizard.
     # ------
     def initialize_wizard(self):
+        self.tasks.wizard_task.reset()
         self.tasks.wizard_task.set_data(
             # Data.
             features=self.loader.get_features('all'),
             spiketimes=self.loader.get_spiketimes('all'),
             masks=self.loader.get_masks('all'),
             clusters=self.loader.get_clusters('all'),
-            clusters_unique=self.loader.get_clusters_unique(),
+            # clusters_unique=self.loader.get_clusters_unique(),
             cluster_groups=self.loader.get_cluster_groups('all'),
             # Statistics.
             correlograms=self.statscache.correlograms,
@@ -799,6 +802,7 @@ class MainWindow(QtGui.QMainWindow):
     def update_wizard(self, clusters_selected, clusters):
         self.tasks.wizard_task.set_data(
             clusters=clusters,
+            cluster_groups=get_array(self.loader.get_cluster_groups('all')),
             similarity_matrix=#normalize(
                 self.statscache.similarity_matrix_normalized,
             )

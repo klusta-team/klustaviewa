@@ -362,6 +362,7 @@ class FeatureDataManager(Manager):
         # update the highlight manager
         self.highlight_manager.initialize()
         self.selection_manager.initialize()
+        self.selection_manager.cancel_selection()
 
 
 # -----------------------------------------------------------------------------
@@ -850,8 +851,12 @@ class FeatureProjectionManager(Manager):
     def auto_projection(self):
         channels_best = np.argsort(self.data_manager.masks_array.sum(axis=0)
             )[::-1]
-        self.set_projection(0, channels_best[0], 0)
-        self.set_projection(1, channels_best[1], 0)
+        channel0 = channels_best[0]
+        channel1 = channels_best[1]
+        self.set_projection(0, channel0, 0)
+        self.set_projection(1, channel1, 0)
+        self.parent.projectionChanged.emit(0, channel0, 0)
+        self.parent.projectionChanged.emit(1, channel1, 0)
         
     def select_neighbor_channel(self, coord, channel_dir):
         # current channel and feature in the given coordinate

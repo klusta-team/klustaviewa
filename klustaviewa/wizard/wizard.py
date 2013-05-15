@@ -54,16 +54,24 @@ class Wizard(object):
             return
         
         assert len(self.clusters_unique) == self.similarity_matrix.shape[0]
+        assert len(self.cluster_groups) == self.similarity_matrix.shape[0]
+        
             
         matrix = self.similarity_matrix
         quality = np.diag(matrix)
         n = matrix.shape[0]
+        
+        # Find hidden clusters (groups 0 or 1) so that they are not taken into
+        # account by the wizard.
+        hidden_clusters_rel = np.nonzero(self.cluster_groups < 2)[0]
     
         self.best_pairs = OrderedDict()
         
         # Sort first clusters by decreasing quality.
         # Relative indices.
         best_clusters_rel = np.argsort(quality)[-1::-1]
+        # Remove hidden clusters.
+        np.delete(best_clusters_rel, hidden_clusters_rel)
         # Absolute indices.
         self.best_clusters = self.clusters_unique[best_clusters_rel]
         
@@ -77,6 +85,8 @@ class Wizard(object):
             # Remove duplicates and preserve the order.
             clusters = unique(clusters)
             clusters.remove(cluster_rel)
+            # Remove hidden clusters.
+            [clusters.remove(cl) for cl in hidden_clusters_rel if cl in clusters]
             self.best_pairs[cluster] = self.clusters_unique[clusters]
             
     

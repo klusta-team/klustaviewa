@@ -105,11 +105,15 @@ class SimilarityMatrixTask(QtCore.QObject):
 class WizardTask(QtCore.QObject):
     def __init__(self, parent=None):
         super(WizardTask, self).__init__(parent)
+        self.reset()
+        
+    def reset(self):
         self.wizard = Wizard()
         
     def set_data(self, **kwargs):
         self.wizard.set_data(**kwargs)
         
+    
     # Actions.
     # --------
     def merged(self, *args, **kwargs):
