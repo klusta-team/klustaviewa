@@ -3,9 +3,11 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-from collections import Counter
+from collections import Counter, OrderedDict
 
 import numpy as np
+
+from klustaviewa.wizard.pair_navigator import PairNavigator
 
 
 # -----------------------------------------------------------------------------
@@ -26,15 +28,13 @@ class Wizard(object):
         self.correlograms = correlograms
         self.similarity_matrix = similarity_matrix
         
+        self.renamed = {}
         self.best_clusters = []
-        self.best_pairs = {}
-        self.propositions = []
-        self.cluster_index = 0
-        self.pair_index = -1
+        self.navigator = PairNavigator()
+        
     
-    
-    # Internal methods.
-    # -----------------
+    # Computation of the best pairs.
+    # ------------------------------
     def _compute_best_pairs(self):
         self.clusters_unique = np.unique(self.clusters)
         if (self.similarity_matrix is not None
@@ -43,8 +43,7 @@ class Wizard(object):
             quality = np.diag(matrix)
             n = matrix.shape[0]
             if n > 0:
-                # TODO: handle ignoring pairs
-                # self.current = -1
+                self.best_pairs = OrderedDict()
                 self.best_clusters = self.clusters_unique[np.argsort(quality)[::-1]]
                     
                 # Find all best pairs.
@@ -55,17 +54,22 @@ class Wizard(object):
                 best_pairs = zip(clusters0, clusters1)
                 
                 # Remove symmetric doublons.
-                best_pairs = [(a, b) if a <= b else (b, a) for a, b in best_pairs]
+                best_pairs = [(a, b) if a <= b else (b, a) for a, b in best_pairs if a != b]
                 seen = set()
                 seen_add = seen.add
                 best_pairs = [x for x in best_pairs if x not in seen and not seen_add(x)]
                 
                 # Find the best pairs associated to the best clusters.
                 for i, cluster in enumerate(self.best_clusters):
-                    pairs = [(cl0, cl1) for (cl0, cl1) in best_pairs
-                        if cl0 == cluster or cl1 == cluster]
+                    # pairs = [(cl0, cl1) for (cl0, cl1) in best_pairs
+                        # if cl0 == cluster or cl1 == cluster]
+                    # self.best_pairs[cluster] = pairs
+                    pairs = [cl0 for (cl0, cl1) in best_pairs
+                                if cl1 == cluster]
+                    pairs.extend([cl1 for (cl0, cl1) in best_pairs
+                                    if cl0 == cluster])
                     self.best_pairs[cluster] = pairs
-                
+    
     
     # Data update methods.
     # --------------------
@@ -82,82 +86,41 @@ class Wizard(object):
         """Called to signify the wizard that a merge has happened.
         No data update happens here, rather, self.update needs to be called
         with the updated data."""
-        pass
+        # Record the renaming, which will occur when calling next_cluster().
+        for cluster in clusters_to_merge:
+            self.renamed[cluster] = cluster_new
             
     def split(self, clusters_old, clusters_new):
         """Called to signify the wizard that a split has happened."""
         pass
         
         
-    # Internal proposition methods.
-    # -----------------------------
-    def change_proposition(self, dir=1):
-        pair = self.change_pair(dir)
-        if pair is None:
-            cluster = self.change_cluster(dir)
-            if cluster is not None:
-                return self.change_pair(dir)
-            else:
-                return None
-        return pair
-    
-    def change_cluster(self, dir=1):
-        if len(self.best_clusters) >= 1:
-            self.cluster_index += dir
-            self.pair_index = -1
-            if self.cluster_index == len(self.best_clusters):
-                return None
-            cluster = int(self.best_clusters[self.cluster_index])
-            # Add the cluster in propositions when changing cluster,
-            # so that we know in the history 'propositions' when the cluster 
-            # changed.
-            if cluster not in self.propositions:
-                self.propositions.append(cluster)
-            return cluster
-    
-    def change_pair(self, dir=1):
-        if len(self.best_clusters) >= 1:
-            cluster = self.best_clusters[self.cluster_index]
-            self.pair_index += dir
-            if self.pair_index == len(self.best_pairs[cluster]):
-                return None
-            proposition = self.best_pairs[cluster][self.pair_index]
-            if proposition not in self.propositions:
-                self.propositions.append(proposition)
-            return proposition
-    
     
     # Wizard output methods.
     # ---------------------
     def previous(self):
-        if len(self.propositions) > 0:
-            self.propositions.pop()
-            while not isinstance(self.propositions[-1], tuple):
-                self.propositions.pop()
-            return self.propositions[-1]
-        return None
+        pair = self.navigator.previous1()
+        if pair is None:
+            pair = self.previous_cluster()
+        return pair
             
     def next(self):
-        return self.change_proposition(1)
+        pair = self.navigator.next1()
+        if pair is None:
+            pair = self.next_cluster()
+        return pair
 
     def previous_cluster(self):
-        if len(self.propositions) == 0:
-            return None
-        # Current cluster.
-        cluster = int(self.best_clusters[self.cluster_index])
-        # Move to the previous cluster.
-        self.change_cluster(-1)
-        # Find the latest proposition before the change to the current cluster.
-        try:
-            i = self.propositions.index(cluster)
-        except ValueError:
-            return None
-        self.propositions = self.propositions[:i]
-        return self.propositions[-1]
+        return self.navigator.previous0()
 
     def next_cluster(self):
-        self.change_cluster(1)
-        return self.next()
+        # Update the navigator with the updated pairs.
+        pairs = self.best_pairs
+        self.navigator.update(pairs, renaming=self.renamed)
+        pair = self.navigator.next0()
+        # Reset the renaming dictionary.
+        self.renamed = {}
+        return pair
     
     
     

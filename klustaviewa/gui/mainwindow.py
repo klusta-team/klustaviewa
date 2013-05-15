@@ -185,10 +185,15 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('change_corr_normalization', 'Change &normalization')
         
     def create_wizard_actions(self):
-        self.add_action('previous_clusters', '&Previous clusters', 
+        self.add_action('previous_pairs', '&Previous pairs', 
             shortcut='CTRL+Space')
-        self.add_action('next_clusters', '&Next clusters', 
+        self.add_action('next_pairs', '&Next pairs', 
             shortcut='Space')
+            
+        self.add_action('previous_cluster', '&Previous cluster', 
+            shortcut='CTRL+SHIFT+Space')
+        self.add_action('next_cluster', '&Next cluster', 
+            shortcut='SHIFT+Space')
         
     def create_help_actions(self):
         self.add_action('about', '&About')
@@ -240,8 +245,11 @@ class MainWindow(QtGui.QMainWindow):
         
         # Wizard menu.
         wizard_menu = self.menuBar().addMenu("&Wizard")
-        wizard_menu.addAction(self.previous_clusters_action)
-        wizard_menu.addAction(self.next_clusters_action)
+        wizard_menu.addAction(self.previous_pairs_action)
+        wizard_menu.addAction(self.next_pairs_action)
+        wizard_menu.addSeparator()
+        wizard_menu.addAction(self.previous_cluster_action)
+        wizard_menu.addAction(self.next_cluster_action)
         
         help_menu = self.menuBar().addMenu("&Help")
         help_menu.addAction(self.refresh_preferences_action)
@@ -784,11 +792,7 @@ class MainWindow(QtGui.QMainWindow):
                 self.statscache.similarity_matrix_normalized,
             )
         
-    def wizard_change_callback(self, dir=1):
-        if dir == -1:
-            f = self.tasks.wizard_task.previous
-        else:
-            f = self.tasks.wizard_task.next
+    def wizard_callback(self, f):
         clusters = f(_sync=True)[2]['_result']
         # log.info("The wizard proposes clusters {0:s}.".format(str(clusters)))
         if clusters is None or len(clusters) == 0:
@@ -796,11 +800,17 @@ class MainWindow(QtGui.QMainWindow):
         self.wizard_active = True
         self.get_view('ClusterView').select(clusters)
     
-    def previous_clusters_callback(self, checked=None):
-        self.wizard_change_callback(-1)
+    def previous_pairs_callback(self, checked=None):
+        self.wizard_callback(self.tasks.wizard_task.previous)
         
-    def next_clusters_callback(self, checked=None):
-        self.wizard_change_callback(1)
+    def next_pairs_callback(self, checked=None):
+        self.wizard_callback(self.tasks.wizard_task.next)
+    
+    def previous_cluster_callback(self, checked=None):
+        self.wizard_callback(self.tasks.wizard_task.previous_cluster)
+        
+    def next_cluster_callback(self, checked=None):
+        self.wizard_callback(self.tasks.wizard_task.next_cluster)
         
     
     # Threads.

@@ -61,7 +61,7 @@ features_info_time_unit = 'second'
 # Unit tests
 # -----------------------------------------------------------------------------
 # Delay between two successive automatic operations in unit tests for views.
-test_operator_delay = .01
+test_operator_delay = .1
 
 # Whether to automatically close the views during unit testing.
 test_auto_close = True

@@ -115,6 +115,12 @@ class WizardTask(QtCore.QObject):
         
     def next(self):
         return self.wizard.next()
+        
+    def previous_cluster(self):
+        return self.wizard.previous_cluster()
+        
+    def next_cluster(self):
+        return self.wizard.next_cluster()
 
 
 # -----------------------------------------------------------------------------
