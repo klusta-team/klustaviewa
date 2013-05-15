@@ -21,6 +21,7 @@ class PairNavigator(object):
         self.pairs = pairs
         self.history = []  # list of visited item0
         self.index = (0, -1)  # best item index, item index
+        self.renaming = {}
         
         
     # Navigation get methods.
@@ -94,7 +95,7 @@ class PairNavigator(object):
                 if self.item0() not in self.history:
                     break
             # Return the pair (item0, item1).
-            return self.position()
+            return self.renamed(self.position())
         
     def next1(self):
         if not self.pairs:
@@ -107,7 +108,7 @@ class PairNavigator(object):
         else:
             self.index = (i0, i1 + 1)
             pair = self.position()
-        return pair
+        return self.renamed(pair)
             
     def previous0(self):
         if not self.pairs:
@@ -117,7 +118,7 @@ class PairNavigator(object):
             return
         else:
             self.index = (i0 - 1, 0)
-            return self.position()
+            return self.renamed(self.position())
             
     def previous1(self):
         if not self.pairs:
@@ -131,7 +132,7 @@ class PairNavigator(object):
             return #self.previous0()
         elif i1 > 0:
             self.index = (i0, i1 - 1)
-            return self.position()
+            return self.renamed(self.position())
     
     
     # Update methods.
@@ -144,6 +145,21 @@ class PairNavigator(object):
         # Items that are deleted are those who are renamed.
         deleted = set(renaming.keys()) - set(renaming.values())
         self.history = list(set(self.history) - deleted)
+        self.renaming.update(renaming)
+    
+    def undo_rename(self, keys):
+        for item in keys:
+            self.renaming.pop(item, None)
+        
+    def renamed(self, pair):
+        if pair is None:
+            return
+        item0, item1 = pair
+        while item0 in self.renaming:
+            item0 = self.renaming[item0]
+        while item1 in self.renaming:
+            item1 = self.renaming[item1]
+        return item0, item1
         
     def update(self, pairs, renaming={}):
         """Happens when going to the next item0, if a modification happened."""
@@ -156,6 +172,7 @@ class PairNavigator(object):
             self.rename(renaming)
         # Reset the indices. The next call to next0() will make the index
         # jump to the next non-visited cluster.
+        self.renaming = {}
         self.index = (-1, -1)
         # return self.next0()
     

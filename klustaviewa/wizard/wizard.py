@@ -28,7 +28,7 @@ class Wizard(object):
         self.correlograms = correlograms
         self.similarity_matrix = similarity_matrix
         
-        self.renamed = {}
+        self.renaming = {}
         self.best_clusters = []
         self.navigator = PairNavigator()
         
@@ -86,9 +86,11 @@ class Wizard(object):
         """Called to signify the wizard that a merge has happened.
         No data update happens here, rather, self.update needs to be called
         with the updated data."""
-        # Record the renaming, which will occur when calling next_cluster().
-        for cluster in clusters_to_merge:
-            self.renamed[cluster] = cluster_new
+        renaming = {cluster: cluster_new for cluster in clusters_to_merge}
+        self.navigator.rename(renaming)
+            
+    def merged_undo(self, clusters_to_merge):
+        self.navigator.undo_rename(clusters_to_merge)
             
     def split(self, clusters_old, clusters_new):
         """Called to signify the wizard that a split has happened."""
@@ -116,10 +118,10 @@ class Wizard(object):
     def next_cluster(self):
         # Update the navigator with the updated pairs.
         pairs = self.best_pairs
-        self.navigator.update(pairs, renaming=self.renamed)
+        self.navigator.update(pairs)#, renaming=self.renaming)
         pair = self.navigator.next0()
         # Reset the renaming dictionary.
-        self.renamed = {}
+        # self.renaming = {}
         return pair
     
     

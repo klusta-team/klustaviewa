@@ -110,6 +110,23 @@ class WizardTask(QtCore.QObject):
     def set_data(self, **kwargs):
         self.wizard.set_data(**kwargs)
         
+    # Actions.
+    # --------
+    def merged(self, *args, **kwargs):
+        self.wizard.merged(*args, **kwargs)
+        
+    def merged_undo(self, *args, **kwargs):
+        self.wizard.merged_undo(*args, **kwargs)
+        
+    def split(self, *args, **kwargs):
+        self.wizard.split(*args, **kwargs)
+        
+    def split_undo(self, *args, **kwargs):
+        self.wizard.split_undo(*args, **kwargs)
+        
+        
+    # Navigation.
+    # --------
     def previous(self):
         return self.wizard.previous()
         

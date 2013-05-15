@@ -472,6 +472,11 @@ class MainWindow(QtGui.QMainWindow):
             with LOCK:
                 action, output = self.controller.merge_clusters(clusters)
             self.action_processed(action, **output)
+            # Inform the wizard.
+            cluster_merged = output['to_select']
+            clusters_to_merge = output['to_invalidate']
+            clusters_to_merge.remove(cluster_merged)
+            self.tasks.wizard_task.merged(clusters_to_merge, cluster_merged)
             
     def split_callback(self, checked=None):
         cluster_view = self.get_view('ClusterView')
@@ -482,6 +487,8 @@ class MainWindow(QtGui.QMainWindow):
                 action, output = self.controller.split_clusters(
                     clusters, spikes_selected)
             self.action_processed(action, **output)
+            # Inform the wizard.
+            # TODO
             
     def undo_callback(self, checked=None):
         with LOCK:
@@ -489,6 +496,10 @@ class MainWindow(QtGui.QMainWindow):
         if output is None:
             output = {}
         self.action_processed(action, **output)
+        if action == 'merge_clusters_undo':
+            # Inform the wizard.
+            clusters_to_merge = list(output['to_select'])
+            self.tasks.wizard_task.merged_undo(clusters_to_merge)
         
     def redo_callback(self, checked=None):
         with LOCK:
@@ -783,17 +794,14 @@ class MainWindow(QtGui.QMainWindow):
     
     def update_wizard(self, clusters_selected, clusters):
         self.tasks.wizard_task.set_data(
-            # clusters=self.loader.get_clusters('all'),
             clusters=clusters,
-            # clusters_unique=self.loader.get_clusters_unique(),
-            # correlograms=self.statscache.correlograms,
             similarity_matrix=#normalize(
-                # self.statscache.similarity_matrix.to_array(copy=True)),
                 self.statscache.similarity_matrix_normalized,
             )
         
-    def wizard_callback(self, f):
-        clusters = f(_sync=True)[2]['_result']
+    def wizard_callback(self, f, *args, **kwargs):
+        kwargs['_sync'] = True
+        clusters = f(*args, **kwargs)[2]['_result']
         # log.info("The wizard proposes clusters {0:s}.".format(str(clusters)))
         if clusters is None or len(clusters) == 0:
             return
