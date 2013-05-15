@@ -985,7 +985,7 @@ class MainWindow(QtGui.QMainWindow):
             floating=True)
         # Create namespace for the interactive session.
         namespace = dict(
-            w=self,
+            window=self,
             select=self.get_view('ClusterView').select,
             loader=self.loader,
             stats=self.statscache,

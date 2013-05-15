@@ -112,14 +112,19 @@ def compute_correlations_approximation(features, clusters, masks,
             
             dmu = (muj - mui).reshape((-1, 1))
             
+            # pij is the probability that mui belongs to Cj:
+            #    $$p_{ij} = w_j * N(\mu_i | \mu_j; C_j)$$
+            # where wj is the relative size of cluster j
+            # pii is the probability that mui belongs to Ci a
             pij = np.log(2*np.pi)*(-nDims/2.)+(-.5*logdetj)+(-.5) * np.dot(np.dot(dmu.T, Cjinv), dmu)
             pji = np.log(2*np.pi)*(-nDims/2.)+(-.5*logdeti)+(-.5) * np.dot(np.dot(dmu.T, Ciinv), dmu)
             
-            alphai = float(npointsi) / nPoints
-            alphaj = float(npointsj) / nPoints
+            # nPoints is the total number of spikes.
+            wi = float(npointsi) / nPoints
+            wj = float(npointsj) / nPoints
             
-            C[ci, cj] = alphaj * np.exp(pij)[0,0]
-            C[cj, ci] = alphai * np.exp(pji)[0,0]
+            C[ci, cj] = wj * np.exp(pij)[0,0]
+            C[cj, ci] = wi * np.exp(pji)[0,0]
     
     return C
     
@@ -159,8 +164,8 @@ def compute_correlations_approximation(features, clusters, masks,
         # for cj in clusterslist:
             # muj, Cj, Cjinv, logdetj, npointsj = stats[cj]
             
-            # alphai = float(npointsi) / nPoints
-            # alphaj = float(npointsj) / nPoints
+            # wi = float(npointsi) / nPoints
+            # wj = float(npointsj) / nPoints
             
             # dmu = (muj - mui).reshape((-1, 1))
             
@@ -176,7 +181,7 @@ def compute_correlations_approximation(features, clusters, masks,
     # # HACK: put the cluster quality in the matrix diagonal
     # for ci in clusters_to_update:
         # # mui, Ci, Ciinv, logdeti, npointsi = stats[ci]
-        # # alphai = float(npointsi) / nPoints
+        # # wi = float(npointsi) / nPoints
         # C[ci, ci] = np.sum([C[ci, cj] * (float(stats[cj][-1]) / nPoints) for cj in clusterslist if cj != ci])
     
     # # print np.array([C[ci,ci] for ci in clusters_to_update])
