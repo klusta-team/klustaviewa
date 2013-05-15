@@ -19,6 +19,9 @@ class PairNavigator(object):
         is a list of item1.
         """
         self.pairs = pairs
+        self.reset()
+        
+    def reset(self):
         self.history = []  # list of visited item0
         self.index = (0, -1)  # best item index, item index
         self.renaming = {}
@@ -104,7 +107,7 @@ class PairNavigator(object):
         item0 = self.item0()
         items1 = self.pairs[item0]
         if i1 >= len(items1) - 1 or i0 < 0:
-            pair = None #self.next0()
+            pair = None
         else:
             self.index = (i0, i1 + 1)
             pair = self.position()
@@ -129,7 +132,7 @@ class PairNavigator(object):
         elif (i0, i1) == (0, 0):
             return
         elif i1 == 0:
-            return #self.previous0()
+            return
         elif i1 > 0:
             self.index = (i0, i1 - 1)
             return self.renamed(self.position())
@@ -174,6 +177,5 @@ class PairNavigator(object):
         # jump to the next non-visited cluster.
         self.renaming = {}
         self.index = (-1, -1)
-        # return self.next0()
     
     

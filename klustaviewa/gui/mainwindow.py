@@ -185,6 +185,8 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('change_corr_normalization', 'Change &normalization')
         
     def create_wizard_actions(self):
+        self.add_action('reset_navigation', '&Reset navigation')
+            
         self.add_action('previous_pairs', '&Previous pairs', 
             shortcut='CTRL+Space')
         self.add_action('next_pairs', '&Next pairs', 
@@ -245,6 +247,8 @@ class MainWindow(QtGui.QMainWindow):
         
         # Wizard menu.
         wizard_menu = self.menuBar().addMenu("&Wizard")
+        wizard_menu.addAction(self.reset_navigation_action)
+        wizard_menu.addSeparator()
         wizard_menu.addAction(self.previous_pairs_action)
         wizard_menu.addAction(self.next_pairs_action)
         wizard_menu.addSeparator()
@@ -807,6 +811,9 @@ class MainWindow(QtGui.QMainWindow):
             return
         self.wizard_active = True
         self.get_view('ClusterView').select(clusters)
+    
+    def reset_navigation_callback(self, checked=None):
+        self.wizard_callback(self.tasks.wizard_task.reset_navigation)
     
     def previous_pairs_callback(self, checked=None):
         self.wizard_callback(self.tasks.wizard_task.previous)

@@ -138,10 +138,13 @@ class IndexedMatrix(object):
             indices = self.indices
         return sorted(set(indices) - set(self.indices))
     
+    @property
+    def size(self):
+        return np.prod(self.shape)
+    
     
     # Access
     # ------
-    # @profile
     def __getitem__(self, item):
         """Access [:,indices] or [indices,:]."""
         # If item is (item0, item1).
@@ -169,7 +172,6 @@ class IndexedMatrix(object):
         raise IndexError(("Indexed matrices can only be accessed with [x,y] "
         "with x and y indices or default slice ':'."))
         
-    # @profile
     def __setitem__(self, item, value):
         # If item is (item0, item1).
         if isinstance(item, tuple) and len(item) == 2:

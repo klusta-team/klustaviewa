@@ -11,7 +11,7 @@ import numpy as np
 from klustaviewa.wizard.wizard import Wizard
 import klustaviewa.utils.logger as log
 from klustaviewa.dataio.tests.mock_data import (
-    nspikes, nclusters, nsamples, nchannels, fetdim, 
+    nspikes, nclusters, nsamples, nchannels, fetdim, cluster_offset,
     create_clusters, create_similarity_matrix)
 
 
@@ -34,6 +34,21 @@ def test_wizard():
     w = Wizard()
     w.set_data(clusters=clusters, similarity_matrix=similarity_matrix)
     
+    # Check the best pairs keys and best clusters.
+    cluster = w.best_pairs.keys()[0]
+    assert np.array_equal(w.best_pairs.keys(), best_clusters)
+    
+    # Look for the best similarity value.
+    m = similarity_matrix.copy()
+    np.fill_diagonal(m, 0)
+    best_similarity = max(m[cluster - cluster_offset, :].max(),
+                          m[:, cluster - cluster_offset].max())
+    
+    # Check that the first proposition pair is the right one.
+    pair = w.next()
+    cl0, cl1 = pair[0] - cluster_offset, pair[1] - cluster_offset
+    assert np.allclose(max(m[cl0, cl1], m[cl1, cl0]), best_similarity)
+               
     
     # Test impossible previous.
     assert w.previous_cluster() is None
@@ -105,16 +120,9 @@ def test_wizard_update():
     w.merged((best_cluster, cluster), cluster_new)
     w.set_data(clusters=clusters,
                similarity_matrix=similarity_matrix)
-    best_cluster_next = best_clusters[0]
-    if best_cluster_next == cluster_new:
-        best_cluster_next = best_clusters[1]
     
-    # Go to the next best_cluster.
-    pair = w.next_cluster()
-    
-    # return
-    # The new best cluster should be there.
-    [w.next() for _ in xrange(nclusters // 2)]
-    assert best_cluster_next in w.next()
+    assert best_clusters[0] in w.next_cluster()
+    assert best_clusters[0] in w.next()
+    assert best_clusters[0] in w.next()
     
     

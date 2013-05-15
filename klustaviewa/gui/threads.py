@@ -138,6 +138,9 @@ class WizardTask(QtCore.QObject):
         
     def next_cluster(self):
         return self.wizard.next_cluster()
+        
+    def reset_navigation(self):
+        return self.wizard.reset_navigation()
 
 
 # -----------------------------------------------------------------------------

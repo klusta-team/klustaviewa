@@ -11,6 +11,16 @@ from klustaviewa.wizard.pair_navigator import PairNavigator
 
 
 # -----------------------------------------------------------------------------
+# Utility functions
+# -----------------------------------------------------------------------------
+def unique(seq):
+    """Remove duplicates from a sequence whilst preserving order."""
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if x not in seen and not seen_add(x)]
+
+    
+# -----------------------------------------------------------------------------
 # Wizard
 # -----------------------------------------------------------------------------
 class Wizard(object):
@@ -28,8 +38,9 @@ class Wizard(object):
         self.correlograms = correlograms
         self.similarity_matrix = similarity_matrix
         
-        self.renaming = {}
+        # self.renaming = {}
         self.best_clusters = []
+        self.best_pairs = OrderedDict()
         self.navigator = PairNavigator()
         
     
@@ -37,39 +48,37 @@ class Wizard(object):
     # ------------------------------
     def _compute_best_pairs(self):
         self.clusters_unique = np.unique(self.clusters)
-        if (self.similarity_matrix is not None
-            ):
-            matrix = self.similarity_matrix
-            quality = np.diag(matrix)
-            n = matrix.shape[0]
-            if n > 0:
-                self.best_pairs = OrderedDict()
-                self.best_clusters = self.clusters_unique[np.argsort(quality)[::-1]]
-                    
-                # Find all best pairs.
-                matrix[np.arange(n), np.arange(n)] = 0
-                indices = np.argsort(matrix.ravel())[::-1]
-                clusters0 = self.clusters_unique[indices // n]
-                clusters1 = self.clusters_unique[indices % n]
-                best_pairs = zip(clusters0, clusters1)
-                
-                # Remove symmetric doublons.
-                best_pairs = [(a, b) if a <= b else (b, a) for a, b in best_pairs if a != b]
-                seen = set()
-                seen_add = seen.add
-                best_pairs = [x for x in best_pairs if x not in seen and not seen_add(x)]
-                
-                # Find the best pairs associated to the best clusters.
-                for i, cluster in enumerate(self.best_clusters):
-                    # pairs = [(cl0, cl1) for (cl0, cl1) in best_pairs
-                        # if cl0 == cluster or cl1 == cluster]
-                    # self.best_pairs[cluster] = pairs
-                    pairs = [cl0 for (cl0, cl1) in best_pairs
-                                if cl1 == cluster]
-                    pairs.extend([cl1 for (cl0, cl1) in best_pairs
-                                    if cl0 == cluster])
-                    self.best_pairs[cluster] = pairs
+        
+        if (self.similarity_matrix is None or 
+            self.similarity_matrix.size == 0):
+            return
+        
+        assert len(self.clusters_unique) == self.similarity_matrix.shape[0]
+            
+        matrix = self.similarity_matrix
+        quality = np.diag(matrix)
+        n = matrix.shape[0]
     
+        self.best_pairs = OrderedDict()
+        
+        # Sort first clusters by decreasing quality.
+        # Relative indices.
+        best_clusters_rel = np.argsort(quality)[-1::-1]
+        # Absolute indices.
+        self.best_clusters = self.clusters_unique[best_clusters_rel]
+        
+        for cluster_rel in best_clusters_rel:
+            # Absolute cluster index.
+            cluster = self.clusters_unique[cluster_rel]
+            # Sort all neighbor clusters.
+            clusters = np.argsort(
+                np.hstack((matrix[cluster_rel, :],
+                           matrix[:, cluster_rel])))[::-1] % n
+            # Remove duplicates and preserve the order.
+            clusters = unique(clusters)
+            clusters.remove(cluster_rel)
+            self.best_pairs[cluster] = self.clusters_unique[clusters]
+            
     
     # Data update methods.
     # --------------------
@@ -98,8 +107,8 @@ class Wizard(object):
         
         
     
-    # Wizard output methods.
-    # ---------------------
+    # Navigation methods.
+    # -------------------
     def previous(self):
         pair = self.navigator.previous1()
         if pair is None:
@@ -124,5 +133,7 @@ class Wizard(object):
         # self.renaming = {}
         return pair
     
+    def reset_navigation(self):
+        self.navigator.reset()
     
     
