@@ -900,7 +900,9 @@ class MainWindow(QtGui.QMainWindow):
         view = self.create_view(vw.ClusterView,
             position=QtCore.Qt.LeftDockWidgetArea,
             index=len(self.views['ClusterView']),
-            closable=False, floatable=False)
+            closable=False, 
+            # floatable=False
+            )
             
         # Connect callback functions.
         view.clustersSelected.connect(self.clusters_selected_callback)
@@ -917,7 +919,9 @@ class MainWindow(QtGui.QMainWindow):
         view = self.create_view(vw.ProjectionView,
             index=len(self.views['ProjectionView']),
             position=QtCore.Qt.LeftDockWidgetArea, 
-            closable=False, floatable=False)
+            closable=False, 
+            # floatable=False
+            )
             
         # Connect callback functions.
         view.projectionChanged.connect(self.projection_changed_callback)
@@ -991,6 +995,17 @@ class MainWindow(QtGui.QMainWindow):
             stats=self.statscache,
             )
         view.set_data(**namespace)
+        # Load all .py files in the code directory.
+        paths = USERPREF['ipython_import_paths'] or []
+        if isinstance(paths, basestring):
+            paths = [paths]
+        for path in paths:
+            path = os.path.realpath(os.path.expanduser(path))
+            if os.path.exists(path):
+                files = [file for file in os.listdir(path) if file.endswith('.py')]
+                for file in files:
+                    log.debug("Running {0:s}".format(file))
+                    view.run_file(os.path.join(path, file))
         self.views['IPythonView'].append(view)
         
     def add_correlograms_view(self):

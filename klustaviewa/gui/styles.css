@@ -40,6 +40,11 @@ QWidget:item:selected
 }
 
 
+QDockWidget {
+    border: 5px solid black;
+}
+
+
 /* MENUS */
 /***********************************************/
 QMenuBar::item

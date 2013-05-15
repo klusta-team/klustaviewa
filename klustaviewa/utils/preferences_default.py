@@ -58,6 +58,15 @@ features_info_time_unit = 'second'
 
 
 # -----------------------------------------------------------------------------
+# IPython import path
+# -----------------------------------------------------------------------------
+# Paths where all .py files are loaded in IPython view.
+# "~" corresponds to the user home path, C:\Users\Username\ on Windows,
+# /home/username/ on Linux, etc.
+ipython_import_paths = ['~/.klustaviewa/code']
+
+
+# -----------------------------------------------------------------------------
 # Unit tests
 # -----------------------------------------------------------------------------
 # Delay between two successive automatic operations in unit tests for views.

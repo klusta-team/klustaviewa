@@ -71,9 +71,15 @@ class IPythonView(QtGui.QWidget):
         self.push(**kwargs)
     
     def push(self, **kwargs):
+        """Inject variables in the interactive namespace."""
         self.shell.push(kwargs)
     
+    def run_file(self, file):
+        """Execute a Python file in the interactive namespace."""
+        self.shell.safe_execfile(file, self.shell.user_global_ns)
+    
     def run_cell(self, *args, **kwargs):
+        """Execute a cell."""
         self.shell.run_cell(*args, **kwargs)
         
     
