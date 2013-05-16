@@ -3,6 +3,8 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
+from collections import Counter
+
 import numpy as np
 import pandas as pd
 
@@ -85,6 +87,7 @@ def test_select_some():
     nspikes_max_expected = 20
     nspikes_per_cluster_min = 2
     spikes = get_some_spikes_in_clusters(clusters_selected, clusters,
+        counter=Counter(clusters),
         nspikes_max_expected=nspikes_max_expected,
         nspikes_per_cluster_min=nspikes_per_cluster_min)
     

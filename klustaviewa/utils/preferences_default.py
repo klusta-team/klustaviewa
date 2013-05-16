@@ -32,7 +32,7 @@ prompt_save_on_exit = True
 waveforms_nspikes_max_expected = 100
 
 # The minimum number of spikes per cluster to display.
-waveforms_nspikes_per_cluster_min = 3
+waveforms_nspikes_per_cluster_min = 10
 
 
 # -----------------------------------------------------------------------------

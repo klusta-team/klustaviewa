@@ -93,8 +93,12 @@ def select(data, indices=None):
     
     # Use NumPy or Pandas version
     if type(data) == np.ndarray:
+        if data.size == 0:
+            return data
         return select_numpy(data, indices_argument)
     else:
+        if data.values.size == 0:
+            return data
         return select_pandas(data, indices_argument)
 
 def select_pairs(data, indices=None, conjunction='and'):
@@ -118,8 +122,8 @@ def get_spikes_in_clusters(clusters_selected, clusters, return_indices=False):
         return spike_indices
     else:
         return np.nonzero(spike_indices)[0]
-        
-def get_some_spikes_in_clusters(clusters_selected, clusters,
+    
+def get_some_spikes_in_clusters(clusters_selected, clusters, counter=None,
         nspikes_max_expected=None,
         nspikes_per_cluster_min=None):
     """Select a sample of spikes among those belonging to the selected
@@ -131,27 +135,27 @@ def get_some_spikes_in_clusters(clusters_selected, clusters,
     if nspikes_per_cluster_min is None:
         nspikes_per_cluster_min = 5
     
-    spikes = []
+    nspikes = len(clusters)
+    spikes = np.zeros(nspikes, dtype=np.bool)
     # Number of spikes in all selected clusters.
-    counter = Counter(clusters)
+    # counter = Counter(clusters)
     nspikes_in_clusters_selected = np.sum(np.array([counter[cluster]
         for cluster in clusters_selected]))
     # Take a sample of the spikes in each cluster.
     nclusters_selected = len(clusters_selected)
+    s = np.zeros(nspikes, dtype=np.bool)
     for cluster in clusters_selected:
         # Find the spike indices in the current cluster.
-        spikes_in_cluster = get_spikes_in_clusters([cluster], clusters,
-            return_indices=True)
-        if len(spikes_in_cluster) == 0:
+        spikes_in_cluster = get_spikes_in_clusters([cluster], clusters)
+        # Discard empty clusters.
+        if not(np.any(spikes_in_cluster)):
             continue
-        nspikes_in_cluster = len(spikes_in_cluster)
+        nspikes_in_cluster = np.sum(spikes_in_cluster)
         # Compute the number of spikes to select in this cluster.
         # This number is proportional to the relative size of the cluster,
         # so that large clusters have more spikes than small clusters.
         try:
             nspikes_in_cluster_requested = np.clip(int(
-                # nspikes_max_expected / float(nspikes_in_clusters_selected) * 
-                    # len(spikes_in_cluster)),
                 nspikes_max_expected / float(nclusters_selected)),
                 min(nspikes_per_cluster_min, nspikes_in_cluster),
                 nspikes_in_cluster
@@ -160,11 +164,20 @@ def get_some_spikes_in_clusters(clusters_selected, clusters,
             nspikes_in_cluster_requested = nspikes_in_cluster
         # Choose randomly the appropriate number of spikes among those
         # belonging to the given cluster.
-        spikes_selected = np.random.choice(spikes_in_cluster,
-            nspikes_in_cluster_requested, replace=False)
-        spikes.extend(spikes_selected)
+        # Probability to take each spike.
+        p = nspikes_in_cluster_requested / float(nspikes_in_cluster)
+        if p > 0:
+            # Remove evenly distributed spikes so that the expected number
+            # of selected spikes in that cluster is approximately 
+            # nspikes_in_cluster_requested.
+            k = max(int(1. / p), 1)
+            s[:] = False
+            s[np.random.randint(low=0, high=k)::k] = True
+            spikes_in_cluster = spikes_in_cluster & s
+        spikes = spikes | spikes_in_cluster
+    
     # Return the sorted array of all selected spikes.
-    return np.array(sorted(spikes))
+    return np.nonzero(spikes)[0]
 
 def get_some_spikes(clusters,
         nspikes_max=None,):
@@ -174,10 +187,12 @@ def get_some_spikes(clusters,
     if nspikes_max is None:
         nspikes_max = 10000
     spikes = get_indices(clusters)
-    spikes_selected = np.random.choice(spikes,
-        min(nspikes_max, len(spikes)), replace=False)
-    # Return the sorted array of all selected spikes.
-    return np.array(sorted(spikes_selected))
+    spikes_selected = np.zeros(len(spikes), dtype=np.bool)
+    p = nspikes_max / float(len(spikes))
+    k = max(int(1. / p), 1)
+    spikes_selected[np.random.randint(low=0, high=k)::k] = True
+    return np.nonzero(spikes_selected)[0]
+    
 
 def get_indices(data):
     if type(data) == np.ndarray:

@@ -189,7 +189,6 @@ class GridEventProcessor(EventProcessor):
         
     def update_axes(self, parameter):
         nav = self.get_processor('navigation')
-        # print nav
         if not nav:
             return
             
@@ -198,11 +197,6 @@ class GridEventProcessor(EventProcessor):
             
         viewbox = nav.get_viewbox()
         
-        # nvb = nav.normalization_viewbox
-        # nvb = getattr(self.parent.paint_manager, 'normalization_viewbox', None)
-        # print nvb
-        # initialize the normalizer
-        # if nvb is not None:
         x0, y0, x1, y1 = viewbox
         x0 = self.normalizer.unnormalize_x(x0)
         y0 = self.normalizer.unnormalize_y(y0)
@@ -212,7 +206,6 @@ class GridEventProcessor(EventProcessor):
         
         text, coordinates, n = get_ticks_text(*viewbox)
         
-        # if nvb is not None:
         coordinates[:,0] = self.normalizer.normalize_x(coordinates[:,0])
         coordinates[:,1] = self.normalizer.normalize_y(coordinates[:,1])
         
@@ -282,11 +275,8 @@ class FeatureDataManager(Manager):
         self.duration = duration
         self.freq = freq
         self.interaction_manager.get_processor('grid').update_viewbox()
-        # Update the grid x scale.
-        # self.paint_manager.normalization_viewbox = (0, -1, self.duration, 1)
         
         # Feature background alpha value.
-        # self.alpha = USERPREF.get('feature_background_alpha', .1)
         self.alpha_selected = alpha_selected
         self.alpha_background = alpha_background
         
@@ -728,16 +718,6 @@ class FeatureSelectionManager(Manager):
                     visible=True,
                     position=self.points,
                     visual='selection_polygon')
-        # Cancel selection if one point is equal to the previous one
-        # (allows to cancel selection when double clicking for reset)
-        # print self.npoints
-        # print point
-        # print self.points[0,:]
-        
-        # if (self.npoints == 1 and 
-            # np.array_equal(point, self.points[0,:])):
-            # self.cancel_selection()
-        # else:
         self.is_selection_pending = True
         self.npoints += 1
         self.points[self.npoints,:] = point
@@ -958,7 +938,6 @@ class FeatureInteractionManager(PlotInteractionManager):
             visible=visible)
         self.paint_manager.set_data(visual='grid_text', visible=visible)
         processor = self.get_processor('grid')
-        # print processor
         if processor:
             processor.activate(visible)
             if visible:
@@ -1049,7 +1028,6 @@ class FeatureInteractionManager(PlotInteractionManager):
         xd, yd = nav.get_data_coordinates(x, y)
         zx, zy = nav.get_scaling()
         
-        # print self.data_manager.data
         if self.data_manager.data.size == 0:
             return
             

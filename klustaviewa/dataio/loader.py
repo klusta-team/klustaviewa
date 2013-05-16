@@ -185,7 +185,7 @@ def save_group_info(filename_groupinfo, group_info):
     save_text(filename_groupinfo, group_info_array, fmt='%s', delimiter='\t')
     
 def save_clusters(filename_clu, clusters):
-    save_text(filename_clu, clusters, header=len(Counter(clusters)))
+    save_text(filename_clu, clusters, header=len(np.unique(clusters)))
 
     
 # -----------------------------------------------------------------------------
@@ -303,6 +303,7 @@ class Loader(QtCore.QObject):
             spikes_clusters = get_some_spikes_in_clusters(
                 clusters,
                 self.clusters,
+                counter=self.counter,
                 nspikes_max_expected=USERPREF[
                     'features_nspikes_selection_max'],
                 nspikes_per_cluster_min=USERPREF[
@@ -345,6 +346,7 @@ class Loader(QtCore.QObject):
                 clusters = self.clusters_selected
             if clusters is not None:
                 spikes = get_some_spikes_in_clusters(clusters, self.clusters,
+                    counter=self.counter,
                     nspikes_max_expected=USERPREF['waveforms_nspikes_max_expected'],
                     nspikes_per_cluster_min=USERPREF['waveforms_nspikes_per_cluster_min'])
             else:
@@ -393,8 +395,8 @@ class Loader(QtCore.QObject):
     def get_cluster_sizes(self, clusters=None):
         if clusters is None:
             clusters = self.clusters_selected
-        counter = Counter(self.clusters)
-        sizes = pd.Series(counter, dtype=np.int32)
+        # counter = Counter(self.clusters)
+        sizes = pd.Series(self.counter, dtype=np.int32)
         return select(sizes, clusters)
     
         
@@ -434,14 +436,17 @@ class Loader(QtCore.QObject):
     
     # Control methods
     # ---------------
-    def update_clusters_unique(self):
-        self.clusters_unique = np.unique(get_array(self.clusters))
+    def _update_data(self):
+        """Update internal variables."""
+        clusters_array = get_array(self.clusters)
+        self.clusters_unique = np.unique(clusters_array)
         self.nclusters = len(self.clusters_unique)
+        self.counter = Counter(clusters_array)
         
     # Set.
     def set_cluster(self, spikes, cluster):
         self.clusters.ix[spikes] = cluster
-        self.update_clusters_unique()
+        self._update_data()
         
     def set_cluster_groups(self, clusters, group):
         self.cluster_groups.ix[clusters] = group
@@ -625,7 +630,7 @@ class KlustersLoader(Loader):
         self.clusters = pd.Series(self.clusters, dtype=np.int32)
         
         # Count clusters.
-        self.update_clusters_unique()
+        self._update_data()
     
     def read_cluster_info(self):
         try:
@@ -772,7 +777,7 @@ class MemoryLoader(Loader):
         # Convert to Pandas.
         self.clusters = pd.Series(self.clusters, dtype=np.int32)
         # Count clusters.
-        self.update_clusters_unique()
+        self._update_data()
     
     def read_cluster_info(self, cluster_info):
         self.cluster_info = process_cluster_info(cluster_info)

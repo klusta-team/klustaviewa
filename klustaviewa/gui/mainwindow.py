@@ -434,9 +434,7 @@ class MainWindow(QtGui.QMainWindow):
             corrbin * 1000, .1, 10, 2)
         if ok:
             corrbin_new = corrbin_new * .001
-            # ncorrbins_new = int(duration / corrbin_new)
             ncorrbins_new = 2 * int(np.ceil(.5 * duration/ corrbin_new))
-            # print corrbin_new, ncorrbins_new, duration
             self.change_correlograms_parameters(corrbin=corrbin_new,
                 ncorrbins=ncorrbins_new)
     
@@ -473,8 +471,6 @@ class MainWindow(QtGui.QMainWindow):
         # Compute the correlation matrix for the requested clusters.
         if to_compute is not None:
             self.start_compute_similarity_matrix(to_compute)
-            
-        # print action, to_select, to_invalidate, to_compute, groups_to_select
             
         self.need_save = True
         
