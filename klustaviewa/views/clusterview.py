@@ -647,7 +647,9 @@ class ClusterView(QtGui.QTreeView):
     # Signals
     # -------
     # Selection.
-    clustersSelected = QtCore.pyqtSignal(np.ndarray)
+    # The boolean indicates whether the selection has been initiated externally
+    # or not (internally by clicking on items in the view).
+    clustersSelected = QtCore.pyqtSignal(np.ndarray, bool)
     # groupsSelected = QtCore.pyqtSignal(np.ndarray)
     
     # Cluster and group info.
@@ -674,6 +676,7 @@ class ClusterView(QtGui.QTreeView):
         super(ClusterView, self).__init__(parent)
         # Current item.
         self.current_item = None
+        self.external_call = False
         
         # Focus policy.
         if getfocus:
@@ -726,6 +729,7 @@ class ClusterView(QtGui.QTreeView):
     # --------------
     def select(self, clusters, groups=None):
         """Select multiple clusters from their indices."""
+        self.external_call = True
         if clusters is None:
             clusters = []
         if groups is None:
@@ -1024,13 +1028,15 @@ class ClusterView(QtGui.QTreeView):
         
         # log.debug("Selected {0:d} clusters.".format(len(clusters)))
         # log.debug("Selected clusters {0:s}.".format(str(clusters)))
-        self.clustersSelected.emit(np.array(clusters, dtype=np.int32))
+        self.clustersSelected.emit(np.array(clusters, dtype=np.int32),
+            self.external_call)
         
         # if group_indices:
             # self.scrollTo(group_indices[-1].index)
         if len(clusters) == 1:
             self.scrollTo(self.model.get_cluster(clusters[0]).index)
     
+        self.external_call = False
     
     # Selected items
     # --------------

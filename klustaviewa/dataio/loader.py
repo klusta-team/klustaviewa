@@ -19,7 +19,7 @@ from selection import (select, select_pairs, get_spikes_in_clusters,
 from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.utils.logger import (debug, info, warn, exception, FileLogger,
     register, unregister)
-from klustaviewa.utils.colors import COLORS_COUNT
+from klustaviewa.utils.colors import COLORS_COUNT, generate_colors
 
 
 # -----------------------------------------------------------------------------
@@ -148,8 +148,7 @@ def default_cluster_info(clusters_unique):
     n = len(clusters_unique)
     cluster_info = np.zeros((n, 3), dtype=np.int32)
     cluster_info[:, 0] = clusters_unique
-    cluster_info[:, 1] = np.mod(np.arange(n, 
-        dtype=np.int32), COLORS_COUNT) + 1
+    cluster_info[:, 1] = generate_colors(n)
     # First column: color index, second column: group index (3 by
     # default)
     cluster_info[:, 2] = 3 * np.ones(n)
@@ -162,8 +161,7 @@ def default_cluster_info(clusters_unique):
 def default_group_info():
     group_info = np.zeros((4, 3), dtype=object)
     group_info[:, 0] = np.arange(4)
-    group_info[:, 1] = (
-        np.mod(np.arange(4), COLORS_COUNT) + 1)
+    group_info[:, 1] = generate_colors(group_info.shape[0])
     group_info[:, 2] = np.array(['Noise', 'MUA', 'Good', 'Unsorted'],
         dtype=object)
     group_info = pd.DataFrame(
@@ -364,14 +362,19 @@ class Loader(QtCore.QObject):
     
     # Access to the data: clusters
     # ----------------------------
-    def get_cluster_colors(self, clusters=None, can_override=True):
+    def get_cluster_colors(self, clusters=None, can_override=True,
+            wizard=False):
         if clusters is None:
             clusters = self.clusters_selected
-        if can_override and self.override_color:
-            group_colors = self.get_group_colors('all')
-            groups = self.get_cluster_groups('all')
-            colors = pd.Series(get_array(group_colors[groups]), 
-                index=get_indices(groups))
+        if wizard:
+            # Specific colors for clusters selected by the wizard.
+            return pd.Series(generate_colors(len(clusters)), 
+                               index=clusters)
+        elif can_override and self.override_color:
+            group_colors = get_array(self.get_group_colors('all'))
+            groups = get_array(self.get_cluster_groups('all'))
+            colors = pd.Series(group_colors[groups], 
+                index=self.get_clusters_unique())
         else:
             colors = self.cluster_colors
         return select(colors, clusters)

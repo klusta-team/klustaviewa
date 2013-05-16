@@ -766,14 +766,16 @@ class MainWindow(QtGui.QMainWindow):
             
         # Update action enabled/disabled property.
         self.update_action_enabled()
-        self.wizard_active = False
+        # self.wizard_active = False
     
-    def clusters_selected_callback(self, clusters):
+    def clusters_selected_callback(self, clusters, external_call):
+        self.wizard_active = external_call
         self.buffer.request(clusters)
     
     def cluster_pair_selected_callback(self, clusters):
         """Callback when the user clicks on a pair in the
         SimilarityMatrixView."""
+        self.wizard_active = False
         self.get_view('ClusterView').select(clusters)
     
     
@@ -1128,7 +1130,8 @@ class MainWindow(QtGui.QMainWindow):
         data = dict(
             waveforms=self.loader.get_waveforms(),
             clusters=self.loader.get_clusters(),
-            cluster_colors=self.loader.get_cluster_colors(),
+            cluster_colors=self.loader.get_cluster_colors(
+                wizard=self.wizard_active),
             clusters_selected=self.loader.get_clusters_selected(),
             masks=self.loader.get_masks(),
             geometrical_positions=self.loader.get_probe(),
@@ -1142,7 +1145,8 @@ class MainWindow(QtGui.QMainWindow):
             masks=self.loader.get_masks(),
             clusters=self.loader.get_clusters(),
             clusters_selected=self.loader.get_clusters_selected(),
-            cluster_colors=self.loader.get_cluster_colors(),
+            cluster_colors=self.loader.get_cluster_colors(
+                wizard=self.wizard_active),
             nchannels=self.loader.nchannels,
             fetdim=self.loader.fetdim,
             nextrafet=self.loader.nextrafet,
@@ -1168,7 +1172,8 @@ class MainWindow(QtGui.QMainWindow):
             correlograms=correlograms,
             baselines=baselines,
             clusters_selected=clusters_selected,
-            cluster_colors=self.loader.get_cluster_colors(),
+            cluster_colors=self.loader.get_cluster_colors(
+                wizard=self.wizard_active),
             ncorrbins=self.loader.ncorrbins,
             corrbin=self.loader.corrbin,
         )
