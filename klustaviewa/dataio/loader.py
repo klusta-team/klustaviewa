@@ -142,6 +142,38 @@ def read_probe(filename_probe):
 
 
 # -----------------------------------------------------------------------------
+# Default cluster/group info
+# -----------------------------------------------------------------------------
+def default_cluster_info(clusters_unique):
+    n = len(clusters_unique)
+    cluster_info = np.zeros((n, 3), dtype=np.int32)
+    cluster_info[:, 0] = clusters_unique
+    cluster_info[:, 1] = np.mod(np.arange(n, 
+        dtype=np.int32), COLORS_COUNT) + 1
+    # First column: color index, second column: group index (3 by
+    # default)
+    cluster_info[:, 2] = 3 * np.ones(n)
+    cluster_info = pd.DataFrame({
+        'color': cluster_info[:, 1],
+        'group': cluster_info[:, 2]},
+        dtype=np.int32, index=cluster_info[:, 0])
+    return cluster_info
+    
+def default_group_info():
+    group_info = np.zeros((4, 3), dtype=object)
+    group_info[:, 0] = np.arange(4)
+    group_info[:, 1] = (
+        np.mod(np.arange(4), COLORS_COUNT) + 1)
+    group_info[:, 2] = np.array(['Noise', 'MUA', 'Good', 'Unsorted'],
+        dtype=object)
+    group_info = pd.DataFrame(
+        {'color': group_info[:, 1].astype(np.int32),
+         'name': group_info[:, 2]},
+         index=group_info[:, 0].astype(np.int32))
+    return group_info
+         
+
+# -----------------------------------------------------------------------------
 # File saving functions
 # -----------------------------------------------------------------------------
 def save_cluster_info(filename_cluinfo, cluster_info):
@@ -597,19 +629,7 @@ class KlustersLoader(Loader):
             self.cluster_info = read_cluster_info(self.filename_clusterinfo)
         except IOError:
             info("The CLUINFO file is missing, generating a default one.")
-            n = len(self.clusters_unique)
-            self.cluster_info = np.zeros((n, 3), dtype=np.int32)
-            self.cluster_info[:, 0] = self.clusters_unique
-            self.cluster_info[:, 1] = np.mod(np.arange(n, 
-                dtype=np.int32), COLORS_COUNT) + 1
-            # First column: color index, second column: group index (2 by
-            # default)
-            self.cluster_info[:, 2] = 2 * np.ones(n)
-                
-            self.cluster_info = pd.DataFrame({
-                'color': self.cluster_info[:, 1],
-                'group': self.cluster_info[:, 2]},
-                dtype=np.int32, index=self.cluster_info[:, 0])
+            self.cluster_info = default_cluster_info(self.clusters_unique)
                 
         assert np.array_equal(self.cluster_info.index, self.clusters_unique), \
             "The CLUINFO file does not correspond to the loaded CLU file."
@@ -622,19 +642,9 @@ class KlustersLoader(Loader):
             self.group_info = read_group_info(self.filename_groups)
         except IOError:
             info("The GROUPINFO file is missing, generating a default one.")
-            self.group_info = np.zeros((3, 3), dtype=object)
-            self.group_info[:, 0] = np.arange(3)
-            self.group_info[:, 1] = (#np.array(
-                np.mod(np.arange(3), COLORS_COUNT) + 1)#, dtype=str)
-            self.group_info[:, 2] = np.array(['Noise', 'MUA', 'Good'],
-                dtype=object)
-            self.group_info = pd.DataFrame(
-                {'color': self.group_info[:, 1].astype(np.int32),
-                 'name': self.group_info[:, 2]},
-                 index=self.group_info[:, 0].astype(np.int32))
+            self.group_info = default_group_info()
+        
         # Convert to Pandas.
-        # self.group_info = pd.DataFrame(self.group_info)
-        # self.group_info[0] = self.group_info[0].astype(np.int32)
         self.group_colors = self.group_info['color'].astype(np.int32)
         self.group_names = self.group_info['name']
         

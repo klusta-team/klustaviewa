@@ -60,7 +60,7 @@ def test_wizard():
                
     
     # Test impossible previous.
-    assert w.previous_cluster() is None
+    assert w.previous_target() is None
     assert w.previous() is None
     
     
@@ -77,19 +77,19 @@ def test_wizard():
     
     
     # Check next cluster.
-    assert best_clusters[1] in w.next_cluster()
+    assert best_clusters[1] in w.next_target()
     for _ in xrange(10):
         assert best_clusters[1] in w.next()
     
     
     # Check previous cluster.
-    pair = w.previous_cluster()
+    pair = w.previous_target()
     assert best_clusters[0] in pair
     
     
     # Next agaiw.
     assert best_clusters[0] in w.next()
-    assert w.previous_cluster() is None
+    assert w.previous_target() is None
     
     
 def test_wizard_update():
@@ -134,7 +134,7 @@ def test_wizard_update():
                cluster_groups=cluster_groups,
                similarity_matrix=similarity_matrix)
     
-    assert best_clusters[0] in w.next_cluster()
+    assert best_clusters[0] in w.next_target()
     assert best_clusters[0] in w.next()
     assert best_clusters[0] in w.next()
     

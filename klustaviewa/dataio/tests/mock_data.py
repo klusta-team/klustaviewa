@@ -60,7 +60,7 @@ def create_cluster_colors(nclusters):
     return np.mod(np.arange(nclusters, dtype=np.int32), COLORS_COUNT) + 1
     
 def create_cluster_groups(nclusters):
-    return np.array(np.random.randint(size=nclusters, low=0, high=3), 
+    return np.array(np.random.randint(size=nclusters, low=0, high=4), 
         dtype=np.int32)
     
 def create_masks(nspikes, nchannels, fetdim):

@@ -143,6 +143,7 @@ class PairNavigator(object):
     # Update methods.
     # ---------------
     def rename(self, renaming):
+        """Rename items. Can be undoed."""
         for i in xrange(len(self.history)):
             item = self.history[i]
             if item in renaming:
@@ -153,10 +154,13 @@ class PairNavigator(object):
         self.renaming.update(renaming)
     
     def undo_rename(self, keys):
+        """Undo a renaming operation."""
         for item in keys:
             self.renaming.pop(item, None)
         
     def renamed(self, pair):
+        """Rename filter called right before returning items, so that renaming
+        can be reversed."""
         if pair is None:
             return
         item0, item1 = pair
@@ -165,6 +169,20 @@ class PairNavigator(object):
         while item1 in self.renaming:
             item1 = self.renaming[item1]
         return item0, item1
+        
+    def delete(self, items):
+        """Delete some items."""
+        if not self.pairs:
+            return
+        index0, index1 = self.index
+        # Current item0.
+        best_item = self.item0()
+        # Current list.
+        l = self.pairs[best_item]
+        # Take all items up to now, and the next items except those which are
+        # to be deleted.
+        self.pairs[best_item] = np.hstack((l[:index1 + 1], 
+            [l[i] for i in xrange(index1 + 1, len(l)) if l[i] not in items]))
         
     def update(self, pairs, renaming={}):
         """Happens when going to the next item0, if a modification happened."""

@@ -903,8 +903,8 @@ class ClusterView(QtGui.QTreeView):
         
         if len(groups) > 0:
             self.rename_group_action.setEnabled(True)
-            # First two groups are not removable (noise and MUA).
-            if 0 not in groups and 1 not in groups:
+            # First three groups are not removable (noise and MUA and good).
+            if 0 not in groups and 1 not in groups and 2 not in groups:
                 self.remove_group_action.setEnabled(True)
             else:
                 self.remove_group_action.setEnabled(False)

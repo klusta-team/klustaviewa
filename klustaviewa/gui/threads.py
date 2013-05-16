@@ -127,21 +127,30 @@ class WizardTask(QtCore.QObject):
         
     def split_undo(self, *args, **kwargs):
         self.wizard.split_undo(*args, **kwargs)
-        
+    
+    def target_deleted(self, *args, **kwargs):
+        return self.wizard.target_deleted(*args, **kwargs)
+    
+    def candidate_deleted(self, *args, **kwargs):
+        return self.wizard.candidate_deleted(*args, **kwargs)
+    
         
     # Navigation.
     # --------
+    def current(self):
+        return self.wizard.current()
+    
     def previous(self):
         return self.wizard.previous()
         
     def next(self):
         return self.wizard.next()
         
-    def previous_cluster(self):
-        return self.wizard.previous_cluster()
+    def previous_target(self):
+        return self.wizard.previous_target()
         
-    def next_cluster(self):
-        return self.wizard.next_cluster()
+    def next_target(self):
+        return self.wizard.next_target()
         
     def reset_navigation(self):
         return self.wizard.reset_navigation()

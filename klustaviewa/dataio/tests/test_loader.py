@@ -158,9 +158,9 @@ def test_group_info():
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
     groupinfofile = os.path.join(dir, 'test.groups.1')
 
-    group_info = np.zeros((3, 2), dtype=object)
-    group_info[:,0] = (np.arange(3) + 1)
-    group_info[:,1] = np.array(['Noise', 'MUA', 'Good'],
+    group_info = np.zeros((4, 2), dtype=object)
+    group_info[:,0] = (np.arange(4) + 1)
+    group_info[:,1] = np.array(['Noise', 'MUA', 'Good', 'Unsorted'],
         dtype=object)
     group_info = pd.DataFrame(group_info)
     
@@ -203,8 +203,8 @@ def test_klusters_loader_1():
     assert check_shape(probe, (nchannels, 2))
     assert check_shape(cluster_colors, (nclusters,))
     assert check_shape(cluster_groups, (nclusters,))
-    assert check_shape(group_colors, (3,))
-    assert check_shape(group_names, (3,))
+    assert check_shape(group_colors, (4,))
+    assert check_shape(group_names, (4,))
     assert check_shape(cluster_sizes, (nclusters,))
     
     

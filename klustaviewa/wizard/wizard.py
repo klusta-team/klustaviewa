@@ -79,15 +79,15 @@ class Wizard(object):
             # Absolute cluster index.
             cluster = self.clusters_unique[cluster_rel]
             # Sort all neighbor clusters.
-            clusters = np.argsort(
+            clusters_rel = np.argsort(
                 np.hstack((matrix[cluster_rel, :],
                            matrix[:, cluster_rel])))[::-1] % n
             # Remove duplicates and preserve the order.
-            clusters = unique(clusters)
-            clusters.remove(cluster_rel)
+            clusters_rel = unique(clusters_rel)
+            clusters_rel.remove(cluster_rel)
             # Remove hidden clusters.
-            [clusters.remove(cl) for cl in hidden_clusters_rel if cl in clusters]
-            self.best_pairs[cluster] = self.clusters_unique[clusters]
+            [clusters_rel.remove(cl) for cl in hidden_clusters_rel if cl in clusters_rel]
+            self.best_pairs[cluster] = self.clusters_unique[clusters_rel]
             
     
     # Data update methods.
@@ -115,32 +115,44 @@ class Wizard(object):
         """Called to signify the wizard that a split has happened."""
         pass
         
+    def target_deleted(self, cluster):
+        # Caller needs to recompute call set_data before, so that the best
+        # pairs are updated and the deleted target are discarded.
+        return self.next_target()
+        
+    def candidate_deleted(self, cluster):
+        # Delete the cluster from the list of candidates in the navigator.
+        self.navigator.delete([cluster])
+        # Go to the next candidate.
+        return self.next()
+    
         
     
     # Navigation methods.
     # -------------------
+    def current(self):
+        return self.navigator.position()
+    
     def previous(self):
         pair = self.navigator.previous1()
-        if pair is None:
-            pair = self.previous_cluster()
+        # if pair is None:
+            # pair = self.previous_target()
         return pair
             
     def next(self):
         pair = self.navigator.next1()
         if pair is None:
-            pair = self.next_cluster()
+            pair = self.next_target()
         return pair
 
-    def previous_cluster(self):
+    def previous_target(self):
         return self.navigator.previous0()
 
-    def next_cluster(self):
+    def next_target(self):
         # Update the navigator with the updated pairs.
         pairs = self.best_pairs
-        self.navigator.update(pairs)#, renaming=self.renaming)
+        self.navigator.update(pairs)
         pair = self.navigator.next0()
-        # Reset the renaming dictionary.
-        # self.renaming = {}
         return pair
     
     def reset_navigation(self):

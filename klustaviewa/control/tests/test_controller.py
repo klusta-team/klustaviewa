@@ -171,7 +171,7 @@ def test_controller_misc():
     assert action == 'move_clusters_undo'
     assert np.array_equal(output['to_select'], clusters)
     
-    assert np.all(l.get_cluster_groups(clusters) == 2)
+    assert np.all(l.get_cluster_groups(clusters) == 3)
     
     
     assert not c.can_undo()
@@ -236,7 +236,7 @@ def test_controller_move_clusters():
     assert action == 'move_clusters_undo'
     assert np.array_equal(output['to_select'], clusters)
     
-    assert np.all(l.get_cluster_groups(clusters) == 2)
+    assert np.all(l.get_cluster_groups(clusters) == 3)
     
     
     # Redo.
@@ -313,14 +313,14 @@ def test_controller_add_group():
     l, c = load()
     
     # Add a group.
-    group = 3
-    action, output = c.add_group(group, 'My group', 2)
+    group = 4
+    action, output = c.add_group(group, 'My group', 3)
     
     assert action == 'add_group'
     
     assert np.all(~np.in1d(l.get_cluster_groups(), group))
     assert l.get_group_names(group) == 'My group'
-    assert l.get_group_colors(group) == 2
+    assert l.get_group_colors(group) == 3
     
     
     # Undo.
@@ -338,7 +338,7 @@ def test_controller_add_group():
     
     assert np.all(~np.in1d(l.get_cluster_groups(), group))
     assert l.get_group_names(group) == 'My group'
-    assert l.get_group_colors(group) == 2
+    assert l.get_group_colors(group) == 3
     
     l.close()
     
