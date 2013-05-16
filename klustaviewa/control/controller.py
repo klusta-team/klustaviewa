@@ -22,9 +22,15 @@ from klustaviewa.utils.colors import next_color
 # -----------------------------------------------------------------------------
 def get_pretty_arg(item):
     if isinstance(item, (pd.Series)):
-        return '[{0:s}, ..., {1:s}]'.format(*map(str, item.values[[0, -1]]))
+        if item.size == 0:
+            return '[]'
+        else:
+            return '[{0:s}, ..., {1:s}]'.format(*map(str, item.values[[0, -1]]))
     if isinstance(item, (pd.Int64Index, pd.Index)):
-        return '[{0:s}, ..., {1:s}]'.format(*map(str, item.values[[0, -1]]))
+        if item.size == 0:
+            return '[]'
+        else:
+            return '[{0:s}, ..., {1:s}]'.format(*map(str, item.values[[0, -1]]))
     return str(item).replace('\n', '')
 
 def get_pretty_action(method_name, args, kwargs, verb='Process'):

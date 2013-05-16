@@ -1037,6 +1037,7 @@ class ClusterView(QtGui.QTreeView):
             self.scrollTo(self.model.get_cluster(clusters[0]).index)
     
         self.external_call = False
+        
     
     # Selected items
     # --------------

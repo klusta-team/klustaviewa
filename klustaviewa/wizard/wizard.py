@@ -131,7 +131,7 @@ class Wizard(object):
     # Navigation methods.
     # -------------------
     def current(self):
-        return self.navigator.position()
+        return self.navigator.current()
     
     def previous(self):
         pair = self.navigator.previous1()

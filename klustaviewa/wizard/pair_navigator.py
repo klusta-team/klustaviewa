@@ -139,6 +139,9 @@ class PairNavigator(object):
             self.index = (i0, i1 - 1)
             return self.renamed(self.position())
     
+    def current(self):
+        return self.renamed(self.position())
+    
     
     # Update methods.
     # ---------------

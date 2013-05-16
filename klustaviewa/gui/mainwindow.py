@@ -155,7 +155,7 @@ class MainWindow(QtGui.QMainWindow):
             
         self.add_action('save', '&Save', shortcut='Ctrl+S', icon='save')
         
-        self.add_action('renumber', '&Renumber when closing', checkable=True)
+        self.add_action('renumber', '&Renumber when saving', checkable=True)
         
         # Quit action.
         self.add_action('quit', '&Quit', shortcut='Ctrl+Q')
@@ -473,6 +473,9 @@ class MainWindow(QtGui.QMainWindow):
         # Compute the correlation matrix for the requested clusters.
         if to_compute is not None:
             self.start_compute_similarity_matrix(to_compute)
+            
+        print action, to_select, to_invalidate, to_compute, groups_to_select
+            
         self.need_save = True
         
     def merge_callback(self, checked=None):
