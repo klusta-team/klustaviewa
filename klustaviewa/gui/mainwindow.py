@@ -474,7 +474,7 @@ class MainWindow(QtGui.QMainWindow):
         if to_compute is not None:
             self.start_compute_similarity_matrix(to_compute)
             
-        print action, to_select, to_invalidate, to_compute, groups_to_select
+        # print action, to_select, to_invalidate, to_compute, groups_to_select
             
         self.need_save = True
         
@@ -543,8 +543,8 @@ class MainWindow(QtGui.QMainWindow):
             action, output = self.controller.move_clusters(clusters, group)
         self.action_processed(action, **output)
         # Update the wizard.
-        self.update_wizard(clusters,
-            get_array(self.loader.get_clusters('all')))
+        self.tasks.wizard_task.moved(clusters, group)
+        
         
     def group_removed_callback(self, group):
         with LOCK:
@@ -643,15 +643,8 @@ class MainWindow(QtGui.QMainWindow):
         # Make a copy of the array so that it does not change before the
         # computation of the correlograms begins.
         clusters = np.array(get_array(self.loader.get_clusters('all')))
-        # clusters_all = self.loader.get_clusters_unique()
         corrbin = self.loader.corrbin
         ncorrbins = self.loader.ncorrbins
-        # halfwidth = self.loader.ncorrbins * corrbin / 2
-        # halfwidth = .5 * (self.loader.ncorrbins - 1) * corrbin
-        # print self.loader.ncorrbins, corrbin, halfwidth
-        
-        # Add new cluster indices if needed.
-        # self.statscache.correlograms.add_indices(clusters_selected)
         
         # Get cluster indices that need to be updated.
         clusters_to_update = (self.statscache.correlograms.
@@ -678,6 +671,7 @@ class MainWindow(QtGui.QMainWindow):
         features = get_array(self.loader.get_features('all'))
         masks = get_array(self.loader.get_masks('all', full=True))
         clusters = get_array(self.loader.get_clusters('all'))
+        cluster_groups = get_array(self.loader.get_cluster_groups('all'))
         clusters_all = self.loader.get_clusters_unique()
         # Get cluster indices that need to be updated.
         if clusters_to_update is None:
@@ -687,7 +681,7 @@ class MainWindow(QtGui.QMainWindow):
         if len(clusters_to_update) > 0:
             # Launch the task.
             self.tasks.similarity_matrix_task.compute(features,
-                clusters, masks, clusters_to_update)
+                clusters, cluster_groups, masks, clusters_to_update)
         # Otherwise, update directly the correlograms view without launching
         # the task in the external process.
         else:
@@ -710,13 +704,11 @@ class MainWindow(QtGui.QMainWindow):
             return
         # Put the computed correlograms in the cache.
         self.statscache.correlograms.update(clusters, correlograms)
-        # Update the wizard.
-        # self.tasks.wizard_task.update(
-            # correlograms=self.statscache.correlograms)
         # Update the view.
         self.update_correlograms_view()
         
-    def similarity_matrix_computed(self, clusters_selected, matrix, clusters):
+    def similarity_matrix_computed(self, clusters_selected, matrix, clusters,
+            cluster_groups):
         self.statscache.similarity_matrix.update(clusters_selected, matrix)
         self.statscache.similarity_matrix_normalized = normalize(
             self.statscache.similarity_matrix.to_array(copy=True))
@@ -729,7 +721,12 @@ class MainWindow(QtGui.QMainWindow):
         self.get_view('ClusterView').set_quality(
             self.statscache.cluster_quality)
         # Update the wizard.
-        self.update_wizard(clusters_selected, clusters)
+        # self.update_wizard(clusters_selected, clusters)
+        self.tasks.wizard_task.set_data(
+            clusters=clusters,
+            cluster_groups=cluster_groups,
+            similarity_matrix=self.statscache.similarity_matrix_normalized,
+            )
         # Update the view.
         self.update_similarity_matrix_view()
         
@@ -799,12 +796,12 @@ class MainWindow(QtGui.QMainWindow):
             similarity_matrix=self.statscache.similarity_matrix,
             )
     
-    def update_wizard(self, clusters_selected, clusters):
-        self.tasks.wizard_task.set_data(
-            clusters=clusters,
-            cluster_groups=get_array(self.loader.get_cluster_groups('all')),
-            similarity_matrix=self.statscache.similarity_matrix_normalized,
-            )
+    # def update_wizard(self, clusters, cluster_groups, similarity_matrix):
+        # self.tasks.wizard_task.set_data(
+            # clusters=clusters,
+            # cluster_groups=cluster_groups,#get_array(self.loader.get_cluster_groups('all')),
+            # similarity_matrix=similarity_matrix#self.statscache.similarity_matrix_normalized,
+            # )
         
     def wizard_callback(self, f, *args, **kwargs):
         kwargs['_sync'] = True
@@ -813,7 +810,7 @@ class MainWindow(QtGui.QMainWindow):
         if clusters is None or len(clusters) == 0:
             return
         self.wizard_active = True
-        self.get_view('ClusterView').select(clusters)
+        self.get_view('ClusterView').select(clusters, external_call=True)
     
     def reset_navigation_callback(self, checked=None):
         self.wizard_callback(self.tasks.wizard_task.reset_navigation)
@@ -843,7 +840,8 @@ class MainWindow(QtGui.QMainWindow):
         # Delete the cluster, and update the wizard
         self.clusters_moved_callback([candidate], 1)
         # Inform the wizard of the deletion.
-        self.wizard_callback(self.tasks.wizard_task.candidate_deleted, candidate)
+        # self.wizard_callback(self.tasks.wizard_task.candidate_deleted, candidate)
+        self.next_candidate_callback()
         
     def delete_target_callback(self, checked=None):
         # Get the current target and candidate.
@@ -852,7 +850,8 @@ class MainWindow(QtGui.QMainWindow):
         # Delete the cluster, and update the wizard.
         self.clusters_moved_callback([target], 1)
         # Inform the wizard of the deletion.
-        self.wizard_callback(self.tasks.wizard_task.target_deleted, target)
+        # self.wizard_callback(self.tasks.wizard_task.target_deleted, target)
+        self.next_target_callback()
     
     
     # Threads.

@@ -487,6 +487,9 @@ class ClusterViewModel(TreeModel):
         """quality is a Series with cluster index and quality value."""
         for clusteridx, value in quality.iteritems():
             groupidx = self.get_groupidx(clusteridx)
+            # If the cluster does not exist yet in the view, just discard it.
+            if groupidx is None:
+                continue
             group = self.get_group(groupidx)
             cluster = self.get_cluster(clusteridx)
             self.setData(self.index(cluster.row(), 1, parent=group.index), value)
@@ -727,9 +730,9 @@ class ClusterView(QtGui.QTreeView):
     
     # Public methods
     # --------------
-    def select(self, clusters, groups=None):
+    def select(self, clusters, groups=None, external_call=False):
         """Select multiple clusters from their indices."""
-        self.external_call = True
+        self.external_call = external_call
         if clusters is None:
             clusters = []
         if groups is None:

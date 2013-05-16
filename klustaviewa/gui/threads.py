@@ -81,25 +81,29 @@ class CorrelogramsTask(QtCore.QObject):
             
 class SimilarityMatrixTask(QtCore.QObject):
     correlationMatrixComputed = QtCore.pyqtSignal(np.ndarray, object,
-        np.ndarray)
+        np.ndarray, np.ndarray)
     
     def __init__(self, parent=None):
         super(SimilarityMatrixTask, self).__init__(parent)
         
-    def compute(self, features, clusters, masks, clusters_selected):
+    def compute(self, features, clusters, 
+            cluster_groups, masks, clusters_selected):
         log.debug("Computing correlation for clusters {0:s}.".format(
             str(list(clusters_selected))))
         if len(clusters_selected) == 0:
             return {}
-        correlations = compute_correlations(features, clusters, masks, 
-            clusters_selected)
+        correlations = compute_correlations(features, clusters, 
+            masks, clusters_selected)
         return correlations
         
-    def compute_done(self, features, clusters, masks, clusters_selected,
+    def compute_done(self, features, clusters, 
+            cluster_groups, masks, clusters_selected,
         _result=None):
         correlations = _result
         self.correlationMatrixComputed.emit(np.array(clusters_selected),
-            correlations, get_array(clusters, copy=True))
+            correlations, 
+            get_array(clusters, copy=True), 
+            get_array(cluster_groups, copy=True))
             
 
 class WizardTask(QtCore.QObject):
@@ -128,11 +132,8 @@ class WizardTask(QtCore.QObject):
     def split_undo(self, *args, **kwargs):
         self.wizard.split_undo(*args, **kwargs)
     
-    def target_deleted(self, *args, **kwargs):
-        return self.wizard.target_deleted(*args, **kwargs)
-    
-    def candidate_deleted(self, *args, **kwargs):
-        return self.wizard.candidate_deleted(*args, **kwargs)
+    def moved(self, *args, **kwargs):
+        return self.wizard.moved(*args, **kwargs)
     
         
     # Navigation.

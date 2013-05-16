@@ -51,7 +51,7 @@ def create_features(nspikes, nchannels, fetdim, duration, freq):
         high=duration * freq))
     return features
     
-def create_clusters(nspikes, nclusters):
+def create_clusters(nspikes, nclusters, cluster_offset=cluster_offset):
     # Add shift in cluster indices to test robustness.
     return rnd.randint(size=nspikes, low=cluster_offset, 
         high=nclusters + cluster_offset)

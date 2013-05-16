@@ -128,66 +128,6 @@ def compute_correlations_approximation(features, clusters, masks,
     
     return C
     
-# def compute_correlations_kl(features, clusters, masks,
-        # clusters_to_update=None):
-    # """Compute the correlation matrix between every pair of clusters.
-    
-    # Use an approximation of the original Klusters grouping assistant, with
-    # an integral instead of a sum (integral of the product of the Gaussian 
-    # densities).
-    
-    # A dictionary pairs => value is returned.
-    
-    # Compute all (i, *) and (i, *) for i in clusters_to_update
-    
-    # """
-    # nPoints = features.shape[0] #size(Fet1, 1)
-    # nDims = features.shape[1] #size(Fet1, 2)
-    # c = np.unique(clusters)
-    # spikes_in_clusters = dict([(clu, np.nonzero(clusters == clu)[0]) for clu in c])
-    # nclusters = len(spikes_in_clusters)
-    
-    # stats = compute_statistics(features, features, spikes_in_clusters, masks)
-    
-    # clusterslist = sorted(stats.keys())
-    
-    # # New matrix (clu0, clu1) => new value
-    # C = {}
-
-    # if clusters_to_update is None:
-        # clusters_to_update = clusterslist
-    
-    # # Update the new matrix on the rows and diagonals of the clusters to
-    # # update.
-    # for ci in clusters_to_update:
-        # mui, Ci, Ciinv, logdeti, npointsi = stats[ci]
-        # for cj in clusterslist:
-            # muj, Cj, Cjinv, logdetj, npointsj = stats[cj]
-            
-            # wi = float(npointsi) / nPoints
-            # wj = float(npointsj) / nPoints
-            
-            # dmu = (muj - mui).reshape((-1, 1))
-            
-            # # KL divergence
-            # # dkli = .5 * (np.trace(np.dot(Cjinv, Ci)) + np.dot(np.dot(dmu.T, Cjinv), dmu) - logdeti + logdetj - nDims)
-            # # dklj = .5 * (np.trace(np.dot(Ciinv, Cj)) + np.dot(np.dot(dmu.T, Ciinv), dmu) - logdetj + logdeti - nDims)
-            # dkli = .5 * (np.dot(np.dot(dmu.T, Cjinv), dmu))
-            # dklj = .5 * (np.dot(np.dot(dmu.T, Ciinv), dmu))
-            
-            # C[ci, cj] = np.exp(-dkli)
-            # C[cj, ci] = np.exp(-dklj)
-    
-    # # HACK: put the cluster quality in the matrix diagonal
-    # for ci in clusters_to_update:
-        # # mui, Ci, Ciinv, logdeti, npointsi = stats[ci]
-        # # wi = float(npointsi) / nPoints
-        # C[ci, ci] = np.sum([C[ci, cj] * (float(stats[cj][-1]) / nPoints) for cj in clusterslist if cj != ci])
-    
-    # # print np.array([C[ci,ci] for ci in clusters_to_update])
-    
-    # return C
-    
 def get_similarity_matrix(dic):
     """Return a correlation matrix from a dictionary. Normalization happens
     here."""

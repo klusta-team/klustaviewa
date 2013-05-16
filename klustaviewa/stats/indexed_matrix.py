@@ -242,7 +242,7 @@ class CacheMatrix(IndexedMatrix):
     """
     def __init__(self, dtype=None, shape=None, data=None):
         super(CacheMatrix, self).__init__(dtype=dtype, shape=shape, data=data)
-        # List of key indices, which
+        # List of key indices.
         self.key_indices = []
     
     def invalidate(self, indices):
@@ -263,11 +263,11 @@ class CacheMatrix(IndexedMatrix):
             indices = [indices]
         return sorted(set(indices) - set(self.key_indices))
     
-    # @profile
     def update(self, key_indices, dic):
         """Update the cache using a dictionary indexed by pairs of absolute
         indices. New indices are silently added. The key indices must also
         be provided."""
+        
         items0, items1 = zip(*dic.keys())
         # Add non-existing indices.
         indices_new0 = self.not_in_indices(items0)

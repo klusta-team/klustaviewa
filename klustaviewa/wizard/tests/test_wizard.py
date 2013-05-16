@@ -91,8 +91,7 @@ def test_wizard():
     assert best_clusters[0] in w.next()
     assert w.previous_target() is None
     
-    
-def test_wizard_update():
+def test_wizard_merge():
     
     # Create mock data.
     clusters = create_clusters(nspikes, nclusters)
@@ -137,5 +136,35 @@ def test_wizard_update():
     assert best_clusters[0] in w.next_target()
     assert best_clusters[0] in w.next()
     assert best_clusters[0] in w.next()
+    
+def test_wizard_move():
+    
+    # Create mock data.
+    clusters = create_clusters(nspikes, nclusters, cluster_offset=0)
+    cluster_groups = create_cluster_groups(nclusters)
+    similarity_matrix = create_similarity_matrix(nclusters)
+    quality = np.diag(similarity_matrix)
+    
+    # Get the best clusters.
+    best_clusters = np.argsort(quality)[::-1]
+    
+    
+    # Initialize the wizard.
+    w = Wizard()
+    w.set_data(clusters=clusters, similarity_matrix=similarity_matrix,
+               cluster_groups=cluster_groups)
+    
+    best_cluster, cluster = w.next()
+    assert best_cluster != cluster
+    
+    # Simulate a move.
+    cluster_groups[best_cluster] = 1
+    w.set_data(cluster_groups=cluster_groups)
+    w.moved([best_cluster], 1)
+    
+    for _ in xrange(nclusters):
+        target, candidate = w.next()
+        assert (target != best_cluster and candidate != best_cluster)
+    
     
     

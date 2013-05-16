@@ -16,7 +16,6 @@ def compute_correlograms_cython(
     assert ncorrbins % 2 == 0
     
     # Compute the histogram corrbins.
-    # n = int(np.ceil(halfwidth / corrbin))
     cdef int n = ncorrbins // 2
     cdef float halfwidth = corrbin * n
     
@@ -54,14 +53,11 @@ def compute_correlograms_cython(
             # go forward in time up to the correlogram half-width
             while j < nspikes:
                 t1, cl1 = spiketimes[j], clusters[j]
-                # pass clusters that do not need to be processed
-                # if clusters_mask[cl1]:
                 # compute only correlograms if necessary
                 # and avoid computing symmetric pairs twice
                 if t1 < t0max:
                     d = t1 - t0
                     k = int(d / corrbin) + n
-                    #ind = pairs[(cl0, cl1)]
                     ind = (cluster_max + 1) * cl0 + cl1
                     correlograms[ind, k] += 1
                 else:
@@ -71,16 +67,19 @@ def compute_correlograms_cython(
             # go backward in time up to the correlogram half-width
             while j >= 0:
                 t1, cl1 = spiketimes[j], clusters[j]
-                # pass clusters that do not need to be processed
                 # compute only correlograms if necessary
                 # and avoid computing symmetric pairs twice
                 if t0min < t1:
                     d = t1 - t0
                     k = int(d / corrbin) + n - 1
-                    #ind = pairs[(cl0, cl1)]
                     ind = (cluster_max + 1) * cl0 + cl1
                     correlograms[ind, k] += 1
                 else:
                     break
                 j -= 1
-    return {(cl0, cl1): correlograms[(cluster_max + 1) * cl0 + cl1,:] for cl0 in clusters_to_update for cl1 in clusters_unique}
+    dic = {(cl0, cl1): correlograms[(cluster_max + 1) * cl0 + cl1,:] 
+        for cl0 in clusters_to_update for cl1 in clusters_unique}
+    # Add the symmetric pairs.
+    dic.update({(cl1, cl0): dic[cl0, cl1][::-1]
+        for cl0 in clusters_to_update for cl1 in clusters_unique})
+    return dic

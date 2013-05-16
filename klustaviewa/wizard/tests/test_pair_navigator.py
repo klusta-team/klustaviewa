@@ -67,7 +67,6 @@ def test_navigation():
     [n.next1() for _ in xrange(nitems)]
     assert n.next1() is None
     
-    
 def test_navigation_empty():
     nitems = 10
     pairs = OrderedDict()
@@ -89,7 +88,6 @@ def test_navigation_empty():
     # Test impossible previous.
     assert n.previous0() is None
     assert n.previous1() is None
-    
     
 def test_navigation_update():
     nitems = 10
@@ -137,5 +135,45 @@ def test_navigation_update():
     # The old (renamed) best cluster should not be there as we visited it.
     assert item0_new not in pair
     
+def test_navigation_move():
+    nitems = 10
+    pairs = OrderedDict()
+    items0 = np.random.permutation(nitems)
+    for item0 in items0:
+        pairs[item0] = np.random.permutation(nitems)
+        # Remove diagonal.
+        np.delete(pairs[item0], item0)
+    
+    # Initialize the navigator.
+    n = PairNavigator(pairs)
+    
+    # Get the next items.
+    item0, item1 = n.next1()
+    if item0 == item1:
+        item0, item1 = n.next1()
+    n.previous1()
+    
+    # Hide the next item1.
+    n.hide([item1])
+    
+    # Ensure the next item1 has been hidden.
+    item0bis, item1bis = n.next1()
+    assert item0bis == item0
+    assert item1bis != item1
+    
+    # Hide item0.
+    n.hide([item0])
+    
+    # Ensure all pairs with item0 are hidden.
+    assert n.next1() is None
+    
+    # Ensure item0 and item1 do not appear again.
+    for _ in xrange(nitems):
+        n.next0()
+        for _ in xrange(nitems):
+            pair = n.next1()
+            assert pair is None or (item0 not in pair and item1 not in pair)
+    
+    n.current()
     
     

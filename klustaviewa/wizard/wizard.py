@@ -38,7 +38,6 @@ class Wizard(object):
         self.correlograms = correlograms
         self.similarity_matrix = similarity_matrix
         
-        # self.renaming = {}
         self.best_clusters = []
         self.best_pairs = OrderedDict()
         self.navigator = PairNavigator()
@@ -115,16 +114,23 @@ class Wizard(object):
         """Called to signify the wizard that a split has happened."""
         pass
         
-    def target_deleted(self, cluster):
-        # Caller needs to recompute call set_data before, so that the best
-        # pairs are updated and the deleted target are discarded.
-        return self.next_target()
+    # def target_deleted(self, cluster):
+        # # Caller needs to recompute call set_data before, so that the best
+        # # pairs are updated and the deleted target are discarded.
+        # return self.next_target()
         
-    def candidate_deleted(self, cluster):
+    # def candidate_deleted(self, cluster):
+        # # Delete the cluster from the list of candidates in the navigator.
+        # # self.navigator.delete([cluster])
+        # # Go to the next candidate.
+        # return self.next()
+        
+    def moved(self, clusters, group):
         # Delete the cluster from the list of candidates in the navigator.
-        self.navigator.delete([cluster])
-        # Go to the next candidate.
-        return self.next()
+        if group <= 1:
+            self.navigator.hide(clusters)
+        else:
+            self.navigator.unhide(clusters)
     
         
     

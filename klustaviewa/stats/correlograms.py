@@ -101,6 +101,9 @@ except Exception as e:
                         else:
                             break
                         j -= 1
+            # Add the symmetric pairs.
+            correlograms.update({(cl1, cl0): correlograms[cl0, cl1][::-1]
+                for cl0 in clusters_to_update for cl1 in clusters_unique})
             return correlograms
             
 
