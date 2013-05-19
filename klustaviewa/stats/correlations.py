@@ -50,8 +50,16 @@ def compute_statistics(Fet1, Fet2, spikes_in_clusters, masks):
         # MyFet2 = y[MyPoints, :]
         MyFet2 = np.take(y, MyPoints, axis=0)
         # if len(MyPoints) > nDims:
-        LogProp = np.log(len(MyPoints) / float(nPoints)) # log of the proportion in cluster c
+        # LogProp = np.log(len(MyPoints) / float(nPoints)) # log of the proportion in cluster c
         Mean = np.mean(MyFet2, axis=0).reshape((1, -1))
+        
+        if len(MyPoints) <= 1:
+            CovMat = 1e-3*np.eye(nDims)
+            stats[c] = (Mean, CovMat, 1e3*np.eye(nDims), 
+                (1e-3)**nDims, len(MyPoints))
+            continue
+        
+        
         CovMat = np.cov(MyFet2, rowvar=0) # stats for cluster c
         
         # HACK: avoid instability issues, kind of works
