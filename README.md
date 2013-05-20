@@ -118,12 +118,11 @@ On Windows, you may need to add `C:\Python27\Scripts` in the PATH variable,
 as [described here](http://geekswithblogs.net/renso/archive/2009/10/21/how-to-set-the-windows-path-in-windows-7.aspx).
 
 
-Gallery
--------
+Screenshots
+-----------
 
-[![Screenshot 1](images/thumbnails/img0.png)](images/img0.png)
-[![Screenshot 2](images/thumbnails/img1.png)](images/img1.png)
-[![Screenshot 3](images/thumbnails/img2.png)](images/img2.png)
+[![Screenshot 1](images/img0.png)](images/img0.png)
+[![Screenshot 2](images/img1.png)](images/img1.png)
 
 
 Details
