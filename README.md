@@ -11,6 +11,17 @@ error-prone.
 
 This software was developed by Cyrille Rossant in the [Cortical Processing Laboratory](http://www.ucl.ac.uk/cortexlab) at UCL.
 
+
+
+
+Screenshots
+-----------
+
+[![Screenshot 1](images/thumbnails/img0.png)](images/img0.PNG)
+[![Screenshot 2](images/thumbnails/img1.png)](images/img1.PNG)
+
+
+
 Installation
 ------------
 
@@ -116,13 +127,6 @@ To run the software, execute `klustaviewa` in a system shell.
 
 On Windows, you may need to add `C:\Python27\Scripts` in the PATH variable,
 as [described here](http://geekswithblogs.net/renso/archive/2009/10/21/how-to-set-the-windows-path-in-windows-7.aspx).
-
-
-Screenshots
------------
-
-[![Screenshot 1](images/img0.png)](images/img0.png)
-[![Screenshot 2](images/img1.png)](images/img1.png)
 
 
 Details
