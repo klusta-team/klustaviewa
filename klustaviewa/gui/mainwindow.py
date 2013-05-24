@@ -827,8 +827,9 @@ class MainWindow(QtGui.QMainWindow):
         # Change background color.
         clusters = self.tasks.wizard_task.current(
             _sync=True)[2]['_result']
-        self.get_view('ClusterView').set_background(
-            {cluster: i + 1 for i, cluster in enumerate(clusters)})
+        if clusters is not None:
+            self.get_view('ClusterView').set_background(
+                {cluster: i + 1 for i, cluster in enumerate(clusters)})
     
     def reset_navigation_callback(self, checked=None):
         self.wizard_callback(self.tasks.wizard_task.reset_navigation)

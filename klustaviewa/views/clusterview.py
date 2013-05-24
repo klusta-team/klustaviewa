@@ -453,8 +453,14 @@ class ClusterViewModel(TreeModel):
             elif col == 1:
                 if role == QtCore.Qt.TextAlignmentRole:
                     return QtCore.Qt.AlignRight
-                if role == QtCore.Qt.DisplayRole:
+                elif role == QtCore.Qt.DisplayRole:
                     return "%.4f" % item.quality()
+                elif role == QtCore.Qt.BackgroundRole:
+                    if item.bgcolor is None:
+                        return
+                    else:
+                        color = np.array(COLORMAP[item.bgcolor]) * 255
+                        return QtGui.QColor(color[0], color[1], color[2], 125)
             # spkcount
             elif col == 2:
                 if role == QtCore.Qt.TextAlignmentRole:
@@ -538,10 +544,11 @@ class ClusterViewModel(TreeModel):
             group = self.get_group(groupidx)
             cluster = self.get_cluster(clusteridx)
             index = self.index(cluster.row(), 0, parent=group.index)
+            index1 = self.index(cluster.row(), 1, parent=group.index)
             if index.isValid():
                 item = index.internalPointer()
                 item.bgcolor = bgcolor
-                self.dataChanged.emit(index, index)
+                self.dataChanged.emit(index, index1)
     
     
     # Action methods
