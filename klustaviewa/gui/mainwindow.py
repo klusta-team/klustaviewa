@@ -187,19 +187,28 @@ class MainWindow(QtGui.QMainWindow):
     def create_wizard_actions(self):
         self.add_action('reset_navigation', '&Reset navigation')
             
-        self.add_action('next_candidate', '&Next candidate', 
-            shortcut='Space')
         self.add_action('previous_candidate', '&Previous candidate', 
-            shortcut='CTRL+Space')
-        self.add_action('delete_candidate', '&Delete candidate', 
-            shortcut='Backspace')
+            shortcut='SHIFT+Space')
+        self.add_action('next_candidate', '&Skip candidate', 
+            shortcut='Space')
+        self.add_action('delete_candidate', 'Move candidate to &MUA', 
+            shortcut='CTRL+M')
+        self.add_action('delete_candidate_noise', 'Move candidate to &noise', 
+            shortcut='CTRL+N')
             
-        self.add_action('next_target', '&Next target', 
-            shortcut='Return')
-        self.add_action('previous_target', '&Previous target', 
-            shortcut='CTRL+Return')
-        self.add_action('delete_target', '&Delete target', 
-            shortcut='SHIFT+Backspace')
+        # self.add_action('previous_target', '&Previous target', 
+            # shortcut='')
+        self.add_action('next_target', 'Move target to &good', 
+            shortcut='ALT+G')
+        self.add_action('delete_target', 'Move target to &MUA', 
+            shortcut='ALT+M')
+        self.add_action('delete_target_noise', 'Move target to &noise', 
+            shortcut='ALT+N')
+            
+        self.add_action('delete_target_candidate', 'Move &both to MUA', 
+            shortcut='CTRL+ALT+N')
+        self.add_action('delete_target_candidate_noise', 'Move both to noise', 
+            shortcut='CTRL+ALT+N')
         
     def create_help_actions(self):
         self.add_action('about', '&About')
@@ -253,13 +262,23 @@ class MainWindow(QtGui.QMainWindow):
         wizard_menu = self.menuBar().addMenu("&Wizard")
         wizard_menu.addAction(self.reset_navigation_action)
         wizard_menu.addSeparator()
-        wizard_menu.addAction(self.next_candidate_action)
+        # Previous/skip candidate.
         wizard_menu.addAction(self.previous_candidate_action)
-        wizard_menu.addAction(self.delete_candidate_action)
+        wizard_menu.addAction(self.next_candidate_action)
         wizard_menu.addSeparator()
+        # Good group.
         wizard_menu.addAction(self.next_target_action)
-        wizard_menu.addAction(self.previous_target_action)
+        wizard_menu.addSeparator()
+        # Delete.
+        wizard_menu.addAction(self.delete_candidate_action)
         wizard_menu.addAction(self.delete_target_action)
+        wizard_menu.addAction(self.delete_target_candidate_action)
+        wizard_menu.addSeparator()
+        # Delete noise.
+        wizard_menu.addAction(self.delete_candidate_noise_action)
+        wizard_menu.addAction(self.delete_target_noise_action)
+        wizard_menu.addAction(self.delete_target_candidate_noise_action)
+        wizard_menu.addSeparator()
         
         help_menu = self.menuBar().addMenu("&Help")
         help_menu.addAction(self.refresh_preferences_action)
@@ -794,33 +813,37 @@ class MainWindow(QtGui.QMainWindow):
             similarity_matrix=self.statscache.similarity_matrix,
             )
     
-    # def update_wizard(self, clusters, cluster_groups, similarity_matrix):
-        # self.tasks.wizard_task.set_data(
-            # clusters=clusters,
-            # cluster_groups=cluster_groups,#get_array(self.loader.get_cluster_groups('all')),
-            # similarity_matrix=similarity_matrix#self.statscache.similarity_matrix_normalized,
-            # )
-        
     def wizard_callback(self, f, *args, **kwargs):
         kwargs['_sync'] = True
         clusters = f(*args, **kwargs)[2]['_result']
         # log.info("The wizard proposes clusters {0:s}.".format(str(clusters)))
         if clusters is None or len(clusters) == 0:
+            # self.get_view('ClusterView').set_background({})
             return
         self.wizard_active = True
         self.get_view('ClusterView').select(clusters, external_call=True)
+        
+    def wizard_selection_changed(self):
+        # Change background color.
+        clusters = self.tasks.wizard_task.current(
+            _sync=True)[2]['_result']
+        self.get_view('ClusterView').set_background(
+            {cluster: i + 1 for i, cluster in enumerate(clusters)})
     
     def reset_navigation_callback(self, checked=None):
         self.wizard_callback(self.tasks.wizard_task.reset_navigation)
     
     def previous_candidate_callback(self, checked=None):
         self.wizard_callback(self.tasks.wizard_task.previous)
+        self.wizard_selection_changed()
         
     def next_candidate_callback(self, checked=None):
         self.wizard_callback(self.tasks.wizard_task.next)
+        self.wizard_selection_changed()
     
     def previous_target_callback(self, checked=None):
         self.wizard_callback(self.tasks.wizard_task.previous_target)
+        self.wizard_selection_changed()
         
     def next_target_callback(self, checked=None):
         # Get the current target and candidate.
@@ -830,28 +853,52 @@ class MainWindow(QtGui.QMainWindow):
         self.clusters_moved_callback([target], 2)
         # Go to the next target cluster.
         self.wizard_callback(self.tasks.wizard_task.next_target)
+        self.wizard_selection_changed()
+        
+    def delete_wizard_cluster(self, what, group):
+        # Get the current target and candidate.
+        r = self.tasks.wizard_task.current(_sync=True)[2]['_result']
+        if r is None:
+            return
+        target, candidate = r
+        if what == 'candidate':
+            cluster = [candidate]
+        elif what == 'target':
+            cluster = [target]
+        elif what == 'both':
+            cluster = [candidate, target]
+        # Delete the cluster, and update the wizard
+        self.clusters_moved_callback(cluster, group)
+        
+    def delete_candidate_noise_callback(self, checked=None):
+        self.delete_wizard_cluster('candidate', 0)
+        self.wizard_callback(self.tasks.wizard_task.next)
+        self.wizard_selection_changed()
         
     def delete_candidate_callback(self, checked=None):
-        # Get the current target and candidate.
-        target, candidate = self.tasks.wizard_task.current(
-            _sync=True)[2]['_result']
-        # Delete the cluster, and update the wizard
-        self.clusters_moved_callback([candidate], 1)
-        # Inform the wizard of the deletion.
-        # self.wizard_callback(self.tasks.wizard_task.candidate_deleted, candidate)
-        self.next_candidate_callback()
+        self.delete_wizard_cluster('candidate', 1)
+        self.wizard_callback(self.tasks.wizard_task.next)
+        self.wizard_selection_changed()
+        
+    def delete_target_noise_callback(self, checked=None):
+        self.delete_wizard_cluster('target', 0)
+        self.wizard_callback(self.tasks.wizard_task.next_target)
+        self.wizard_selection_changed()
         
     def delete_target_callback(self, checked=None):
-        # Get the current target and candidate.
-        target, candidate = self.tasks.wizard_task.current(
-            _sync=True)[2]['_result']
-        # Delete the cluster, and update the wizard.
-        self.clusters_moved_callback([target], 1)
-        # Inform the wizard of the deletion.
-        # self.wizard_callback(self.tasks.wizard_task.target_deleted, target)
-        # self.next_target_callback()
-        # Go to the next target cluster.
+        self.delete_wizard_cluster('target', 1)
         self.wizard_callback(self.tasks.wizard_task.next_target)
+        self.wizard_selection_changed()
+        
+    def delete_target_candidate_noise_callback(self, checked=None):
+        self.delete_wizard_cluster('both', 0)
+        self.wizard_callback(self.tasks.wizard_task.next_target)
+        self.wizard_selection_changed()
+        
+    def delete_target_candidate_callback(self, checked=None):
+        self.delete_wizard_cluster('both', 1)
+        self.wizard_callback(self.tasks.wizard_task.next_target)
+        self.wizard_selection_changed()
     
     
     # Threads.
@@ -1133,7 +1180,8 @@ class MainWindow(QtGui.QMainWindow):
             waveforms=self.loader.get_waveforms(),
             clusters=self.loader.get_clusters(),
             cluster_colors=self.loader.get_cluster_colors(
-                wizard=self.wizard_active),
+                # wizard=self.wizard_active
+                ),
             clusters_selected=self.loader.get_clusters_selected(),
             masks=self.loader.get_masks(),
             geometrical_positions=self.loader.get_probe(),
@@ -1148,7 +1196,8 @@ class MainWindow(QtGui.QMainWindow):
             clusters=self.loader.get_clusters(),
             clusters_selected=self.loader.get_clusters_selected(),
             cluster_colors=self.loader.get_cluster_colors(
-                wizard=self.wizard_active),
+                # wizard=self.wizard_active
+                ),
             nchannels=self.loader.nchannels,
             fetdim=self.loader.fetdim,
             nextrafet=self.loader.nextrafet,
@@ -1175,7 +1224,8 @@ class MainWindow(QtGui.QMainWindow):
             baselines=baselines,
             clusters_selected=clusters_selected,
             cluster_colors=self.loader.get_cluster_colors(
-                wizard=self.wizard_active),
+                # wizard=self.wizard_active
+                ),
             ncorrbins=self.loader.ncorrbins,
             corrbin=self.loader.corrbin,
         )

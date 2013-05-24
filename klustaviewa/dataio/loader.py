@@ -365,14 +365,15 @@ class Loader(QtCore.QObject):
     # Access to the data: clusters
     # ----------------------------
     def get_cluster_colors(self, clusters=None, can_override=True,
-            wizard=False):
+            # wizard=False,
+            ):
         if clusters is None:
             clusters = self.clusters_selected
-        if wizard:
-            # Specific colors for clusters selected by the wizard.
-            return pd.Series(generate_colors(len(clusters)), 
-                               index=clusters)
-        elif can_override and self.override_color:
+        # if wizard:
+            # # Specific colors for clusters selected by the wizard.
+            # return pd.Series(generate_colors(len(clusters)), 
+                               # index=clusters)
+        if can_override and self.override_color:
             group_colors = get_array(self.get_group_colors('all'))
             groups = get_array(self.get_cluster_groups('all'))
             colors = pd.Series(group_colors[groups], 

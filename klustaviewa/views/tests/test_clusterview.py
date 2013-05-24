@@ -31,6 +31,7 @@ def test_clusterview():
     kwargs = {k: data[k] for k in keys}
     
     kwargs['cluster_colors'] = data['cluster_colors_full']
+    # kwargs['background'] = {5: 1, 7: 2}
     
     clusters = get_indices(data['cluster_sizes'])
     quality = pd.Series(np.random.rand(len(clusters)), index=clusters)
@@ -38,14 +39,10 @@ def test_clusterview():
     kwargs['cluster_quality'] = quality
     
     kwargs['operators'] = [
-        # lambda self: self.view.select([2,4]),
-        # lambda self: self.view.add_group("MyGroup", [2,3,6]),
-        # lambda self: self.view.rename_group(3, "New group"),
-        # lambda self: self.view.change_group_color(3, 2),
-        # lambda self: self.view.change_cluster_color(3, 4),
-        # lambda self: self.view.move_to_noise(3),
-        # lambda self: self.view.unselect(),
         lambda self: self.view.set_quality(quality),
+        lambda self: self.view.set_background({5: 1, 7: 2}),
+        lambda self: self.view.set_background({6: 3}),
+        lambda self: self.view.set_background({}),
         lambda self: (self.close() 
             if USERPREF['test_auto_close'] != False else None),
     ]

@@ -1,7 +1,7 @@
 
 import os
 # from distutils.core import setup
-# from setuptools import *
+from setuptools import *
 
 # Try importing Cython.
 from distutils.core import setup

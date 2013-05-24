@@ -243,7 +243,7 @@ class TreeModel(QtCore.QAbstractItemModel):
 # Specific item classes
 # ---------------------
 class ClusterItem(TreeItem):
-    def __init__(self, parent=None, clusteridx=None, color=None, 
+    def __init__(self, parent=None, clusteridx=None, color=None, bgcolor=None,
             spkcount=None, quality=None):
         if color is None:
             color = 0
@@ -254,6 +254,8 @@ class ClusterItem(TreeItem):
         data['quality'] = quality
         data['spkcount'] = spkcount
         data['color'] = color
+        self.bgcolor = bgcolor
+        # data['bgcolor'] = bgcolor
         # the index is the last column
         data['clusteridx'] = clusteridx
         super(ClusterItem, self).__init__(parent=parent, data=data)
@@ -266,6 +268,9 @@ class ClusterItem(TreeItem):
 
     def color(self):
         return self.item_data['color']
+                
+    # def bgcolor(self):
+        # return self.item_data['bgcolor']
                 
     def clusteridx(self):
         return self.item_data['clusteridx']
@@ -319,6 +324,7 @@ class ClusterViewModel(TreeModel):
         
         """
         super(ClusterViewModel, self).__init__(self.headers)
+        self.background = {}
         self.load(**kwargs)
         
     
@@ -326,8 +332,12 @@ class ClusterViewModel(TreeModel):
     # -----------
     def load(self, cluster_colors=None, cluster_groups=None,
         group_colors=None, group_names=None, cluster_sizes=None,
-        cluster_quality=None):
-
+        cluster_quality=None, background={}):
+        
+        # A dictionary cluster index => color index for specifying the
+        # background color of some rows.
+        # self.background = background
+        
         # Create the tree.
         # go through all groups
         for groupidx, groupname in group_names.iteritems():
@@ -347,10 +357,12 @@ class ClusterViewModel(TreeModel):
             else:
                 quality = 0.
             # add cluster
+            bgcolor = background.get(clusteridx, None)
             clusteritem = self.add_cluster(
                 clusteridx=clusteridx,
                 # name=info.names[clusteridx],
                 color=color,
+                bgcolor=bgcolor,
                 quality=quality,
                 # spkcount=cluster_sizes[clusteridx],
                 spkcount=select(cluster_sizes, clusteridx),
@@ -396,8 +408,6 @@ class ClusterViewModel(TreeModel):
             return self.headers[section]
         
     def data(self, index, role):
-        """Return custom background color for the last column of cluster
-        items."""
         item = index.internalPointer()
         
         col = index.column()
@@ -433,6 +443,12 @@ class ClusterViewModel(TreeModel):
             if col == 0:
                 if role == QtCore.Qt.DisplayRole:
                     return str(item.clusteridx())
+                elif role == QtCore.Qt.BackgroundRole:
+                    if item.bgcolor is None:
+                        return
+                    else:
+                        color = np.array(COLORMAP[item.bgcolor]) * 255
+                        return QtGui.QColor(color[0], color[1], color[2], 125)
             # quality
             elif col == 1:
                 if role == QtCore.Qt.TextAlignmentRole:
@@ -470,6 +486,14 @@ class ClusterViewModel(TreeModel):
                 item.item_data['color'] = data
             self.dataChanged.emit(index, index)
             return True
+            
+    # def refresh(self, index, role=None):
+        # if role is None:
+            # role = QtCore.Qt.EditRole
+        # if index.isValid() and role == QtCore.Qt.EditRole:
+            # item = index.internalPointer()
+            # self.dataChanged.emit(index, index)
+            # return True
     
     def flags(self, index):
         if not index.isValid():
@@ -493,6 +517,31 @@ class ClusterViewModel(TreeModel):
             group = self.get_group(groupidx)
             cluster = self.get_cluster(clusteridx)
             self.setData(self.index(cluster.row(), 1, parent=group.index), value)
+    
+    def set_background(self, background):
+        """Set the background of some clusters. The argument is a dictionary
+        clusteridx ==> color index."""
+        # Record the changed clusters.
+        self.background.update(background)
+        # Get all clusters to update.
+        keys = self.background.keys()
+        # Reset the keys
+        if not background:
+            self.background = {}
+        for clusteridx in keys:
+            bgcolor = background.get(clusteridx, None)
+            # print clusteridx, bgcolor
+            groupidx = self.get_groupidx(clusteridx)
+            # If the cluster does not exist yet in the view, just discard it.
+            if groupidx is None:
+                continue
+            group = self.get_group(groupidx)
+            cluster = self.get_cluster(clusteridx)
+            index = self.index(cluster.row(), 0, parent=group.index)
+            if index.isValid():
+                item = index.internalPointer()
+                item.bgcolor = bgcolor
+                self.dataChanged.emit(index, index)
     
     
     # Action methods
@@ -842,6 +891,9 @@ class ClusterView(QtGui.QTreeView):
     
     def set_quality(self, quality):
         self.model.set_quality(quality)
+    
+    def set_background(self, background):
+        self.model.set_background(background)
     
     
     # Menu methods
