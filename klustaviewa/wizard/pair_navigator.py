@@ -174,7 +174,7 @@ class PairNavigator(object):
         item0, item1 = pair
         is_hidden = item0 in self.hidden or item1 in self.hidden
         return is_hidden
-            
+    
     
     
     # Update methods.
@@ -194,7 +194,7 @@ class PairNavigator(object):
         """Undo a renaming operation."""
         for item in keys:
             self.renaming.pop(item, None)
-        
+    
     def renamed(self, pair):
         """Rename filter called right before returning items, so that renaming
         can be reversed."""
@@ -217,7 +217,7 @@ class PairNavigator(object):
             items = [items]
         [self.hidden.remove(item) 
             for item in items if item in self.hidden]
-        
+    
     def update(self, pairs, renaming={}):
         """Happens when going to the next item0, if a modification happened."""
         # Mark the current item0 as visited.

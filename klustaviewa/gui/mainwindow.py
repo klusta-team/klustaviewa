@@ -539,8 +539,10 @@ class MainWindow(QtGui.QMainWindow):
             action, output = self.controller.move_clusters(clusters, group)
         self.action_processed(action, **output)
         # Update the wizard.
+        self.tasks.wizard_task.set_data(
+            cluster_groups=self.loader.get_cluster_groups('all'),
+            )
         self.tasks.wizard_task.moved(clusters, group)
-        
         
     def group_removed_callback(self, group):
         with LOCK:
@@ -847,7 +849,9 @@ class MainWindow(QtGui.QMainWindow):
         self.clusters_moved_callback([target], 1)
         # Inform the wizard of the deletion.
         # self.wizard_callback(self.tasks.wizard_task.target_deleted, target)
-        self.next_target_callback()
+        # self.next_target_callback()
+        # Go to the next target cluster.
+        self.wizard_callback(self.tasks.wizard_task.next_target)
     
     
     # Threads.

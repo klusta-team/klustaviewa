@@ -176,4 +176,15 @@ def test_navigation_move():
     
     n.current()
     
+# def test_navigation2():
+    # nitems = 10
+    # pairs = OrderedDict()
+    # for i in xrange(nitems):
+        # pairs[i] = range(nitems)
+    
+    # # Initialize the navigator.
+    # n = PairNavigator(pairs)
+    
+    # n.
+    
     

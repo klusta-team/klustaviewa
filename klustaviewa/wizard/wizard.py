@@ -97,7 +97,7 @@ class Wizard(object):
         for key, value in kwargs.iteritems():
             setattr(self, key, value)
         # Update the best pairs only if the clustering has changed.
-        if 'clusters' in kwargs:
+        if 'clusters' in kwargs or 'cluster_groups' in kwargs:
             self._compute_best_pairs()
             
     def merged(self, clusters_to_merge, cluster_new):
@@ -113,17 +113,6 @@ class Wizard(object):
     def split(self, clusters_old, clusters_new):
         """Called to signify the wizard that a split has happened."""
         pass
-        
-    # def target_deleted(self, cluster):
-        # # Caller needs to recompute call set_data before, so that the best
-        # # pairs are updated and the deleted target are discarded.
-        # return self.next_target()
-        
-    # def candidate_deleted(self, cluster):
-        # # Delete the cluster from the list of candidates in the navigator.
-        # # self.navigator.delete([cluster])
-        # # Go to the next candidate.
-        # return self.next()
         
     def moved(self, clusters, group):
         # Delete the cluster from the list of candidates in the navigator.

@@ -148,7 +148,6 @@ def test_wizard_move():
     # Get the best clusters.
     best_clusters = np.argsort(quality)[::-1]
     
-    
     # Initialize the wizard.
     w = Wizard()
     w.set_data(clusters=clusters, similarity_matrix=similarity_matrix,
@@ -166,5 +165,40 @@ def test_wizard_move():
         target, candidate = w.next()
         assert (target != best_cluster and candidate != best_cluster)
     
+def test_wizard2():
+    n = 10
+    w = Wizard()
+    w.best_clusters = range(n)
+    for i in xrange(n):
+        w.best_pairs[i] = sorted(set(range(n)) - set([i]))
+    
+    # First target.
+    for i in xrange(1, n):
+        assert w.next() == (0, i)
+    
+    # New target.
+    assert w.next() == (1, 0)
+    assert w.next() == (1, 2)
+    
+    # New target.
+    assert w.next_target() == (2, 0)
+    
+    # Merge.
+    w.merged([2, 0], 10)
+    assert w.next() == (10, 1)
+    
+    w.merged([10, 1], 12)
+    assert w.next() == (12, 3)
+    
+    # Move candidate.
+    w.moved(3, 1)
+    assert w.current() == (12, 4)
+    
+    
+    # Next target.
+    w.best_pairs.clear()
+    w.best_pairs[4] = range(5, 13)
+    w.next_target()
+    assert w.current() == (4, 5)
     
     
