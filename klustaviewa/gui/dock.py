@@ -44,7 +44,20 @@ class ViewDockWidget(QtGui.QDockWidget):
     def closeEvent(self, e):
         self.closed.emit(self)
         super(ViewDockWidget, self).closeEvent(e)
-
+    
+    def keyPressEvent(self, e):
+        super(ViewDockWidget, self).keyPressEvent(e)
+        # Notify the main window of the key events when the dock widget
+        # is floating.
+        self.parent().keyPressEvent(e)
+        
+    def keyReleaseEvent(self, e):
+        super(ViewDockWidget, self).keyReleaseEvent(e)
+        # Notify the main window of the key events when the dock widget
+        # is floating.
+        self.parent().keyReleaseEvent(e)
+    
+        
 
 # -----------------------------------------------------------------------------
 # Title bar for dock widgets

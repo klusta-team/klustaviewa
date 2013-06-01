@@ -12,7 +12,7 @@ from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
 from klustaviewa.stats.cache import IndexedMatrix
 from klustaviewa.dataio.tools import get_array
 from klustaviewa.utils.colors import COLORMAP
-from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
+from klustaviewa.views.common import HighlightManager, KlustaViewaBindings, KlustaView
 
 
 # -----------------------------------------------------------------------------
@@ -453,7 +453,7 @@ class CorrelogramsBindings(KlustaViewaBindings):
 # -----------------------------------------------------------------------------
 # Top-level widget
 # -----------------------------------------------------------------------------
-class CorrelogramsView(GalryWidget):
+class CorrelogramsView(KlustaView):
     def __init__(self, *args, **kwargs):
         # Activate antialiasing.
         format = QtOpenGL.QGLFormat()

@@ -69,3 +69,17 @@ class KlustaViewaBindings(PlotBindings):
         pass
     
     
+class KlustaView(GalryWidget):
+    pass
+    # def keyPressEvent(self, e):
+        # super(KlustaView, self).keyPressEvent(e)
+        # if getattr(e, 'transfer', True):
+            # self.parent().keyPressEvent(e)
+            
+    # def keyReleaseEvent(self, e):
+        # super(KlustaView, self).keyReleaseEvent(e)
+        # if getattr(e, 'transfer', True):
+            # self.parent().keyReleaseEvent(e)
+    
+    
+    

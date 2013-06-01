@@ -15,7 +15,7 @@ from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
     TextVisual)
 from klustaviewa.dataio.tools import get_array
 from klustaviewa.dataio.selection import get_spikes_in_clusters, select, get_indices
-from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
+from klustaviewa.views.common import HighlightManager, KlustaViewaBindings, KlustaView
 from klustaviewa.utils.colors import COLORMAP_TEXTURE, SHIFTLEN
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.settings import SETTINGS
@@ -1162,7 +1162,7 @@ class WaveformBindings(KlustaViewaBindings):
 # -----------------------------------------------------------------------------
 # Top-level widget
 # -----------------------------------------------------------------------------
-class WaveformView(GalryWidget):
+class WaveformView(KlustaView):
     # Signals
     # -------
     # Raise (cluster, channel) when a box is selected.

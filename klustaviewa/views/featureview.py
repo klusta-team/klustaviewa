@@ -18,7 +18,7 @@ from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
     
 from klustaviewa.dataio.selection import get_indices, select
 from klustaviewa.dataio.tools import get_array
-from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
+from klustaviewa.views.common import HighlightManager, KlustaViewaBindings, KlustaView
 from klustaviewa.utils.colors import COLORMAP_TEXTURE, SHIFTLEN
 # from klustaviewa.utils.userpref import USERPREF
 import klustaviewa.utils.logger as log
@@ -1124,7 +1124,7 @@ class FeatureBindings(KlustaViewaBindings):
 # -----------------------------------------------------------------------------
 # Top-level widget
 # -----------------------------------------------------------------------------
-class FeatureView(GalryWidget):
+class FeatureView(KlustaView):
     # Raise the list of highlighted spike absolute indices.
     spikesHighlighted = QtCore.pyqtSignal(np.ndarray)
     spikesSelected = QtCore.pyqtSignal(np.ndarray)

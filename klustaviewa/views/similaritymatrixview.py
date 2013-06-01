@@ -15,7 +15,7 @@ from klustaviewa.dataio.selection import get_indices
 from klustaviewa.dataio.tools import get_array
 from klustaviewa.utils.colors import COLORMAP
 import klustaviewa.utils.logger as log
-from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
+from klustaviewa.views.common import HighlightManager, KlustaViewaBindings, KlustaView
 
 
 # -----------------------------------------------------------------------------
@@ -314,7 +314,7 @@ class SimilarityMatrixBindings(KlustaViewaBindings):
 # -----------------------------------------------------------------------------
 # Top-level module
 # -----------------------------------------------------------------------------
-class SimilarityMatrixView(GalryWidget):
+class SimilarityMatrixView(KlustaView):
     
     # Raise the list of highlighted spike absolute indices.
     clustersSelected = QtCore.pyqtSignal(np.ndarray)
