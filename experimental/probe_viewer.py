@@ -2,16 +2,7 @@ import collections
 import numpy as np
 from matplotlib.pyplot import imread
 from galry import *
-from klustaviewa import *
-
-
-def generate_colors(n=None):
-    if n is None:
-        n = COLORS_COUNT
-    if n < COLORS_COUNT:
-        return COLORMAP[:n]
-    else:
-        return [COLORMAP[i % COLORS_COUNT] for i in xrange(n)]
+from klustaviewa.utils.colors import *
 
 """
 
@@ -123,7 +114,7 @@ class Probe(Manager):
         
     def get_colors(self):
         nshanks = self.get_nshanks()
-        colors = generate_colors(nshanks)
+        colors = COLORMAP[generate_colors(nshanks),...]
         colors = np.hstack((colors, .75 * np.ones((nshanks, 1))))
         return colors[self.shanks, :]
         
