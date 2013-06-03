@@ -19,7 +19,7 @@ from klustaviewa.dataio.tests.mock_data import (
 # Utility functions
 # -----------------------------------------------------------------------------
 def create_cluster_groups(nclusters):
-    return np.array(np.ones(nclusters) * 2, dtype=np.int32)
+    return np.array(np.ones(nclusters) * 3, dtype=np.int32)
     
 
 # -----------------------------------------------------------------------------

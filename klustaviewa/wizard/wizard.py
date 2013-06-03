@@ -69,7 +69,8 @@ class Wizard(object):
         # Relative indices.
         best_clusters_rel = np.argsort(quality)[-1::-1]
         # Remove hidden clusters.
-        best_clusters_rel = np.setdiff1d(best_clusters_rel, hidden_clusters_rel)
+        best_clusters_rel = np.array([x for x in best_clusters_rel 
+            if x not in hidden_clusters_rel], dtype=np.int32)
         # Absolute indices.
         self.best_clusters = self.clusters_unique[best_clusters_rel]
         
