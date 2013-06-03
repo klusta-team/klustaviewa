@@ -40,6 +40,9 @@ import rcicons
 # -----------------------------------------------------------------------------
 class ViewDockWidget(QtGui.QDockWidget):
     closed = QtCore.pyqtSignal(object)
+    def __init__(self, parent):
+        super(ViewDockWidget, self).__init__(parent)
+        self.setFocusPolicy(QtCore.Qt.WheelFocus)
     
     def closeEvent(self, e):
         self.closed.emit(self)
@@ -166,6 +169,10 @@ class DockTitleBar(QtGui.QWidget):
         
     def dock_callback(self, checked=None):
         self.parent().setFloating(not(self.parent().isFloating()))
+        # if self.parent().isFloating():
+            # self.parent().widget().setFocusPolicy(QtCore.Qt.WheelFocus)
+        # else:
+            # self.parent().widget().setFocusPolicy(QtCore.Qt.NoFocus)
         
     def maximize_callback(self, checked=None):
         if self.parent().isMaximized():
