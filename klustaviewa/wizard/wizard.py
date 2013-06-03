@@ -60,17 +60,16 @@ class Wizard(object):
         quality = np.diag(matrix)
         n = matrix.shape[0]
         
-        # Find hidden clusters (groups 0 or 1) so that they are not taken into
+        # Find hidden clusters (groups 0 to 2) so that they are not taken into
         # account by the wizard.
-        hidden_clusters_rel = np.nonzero(self.cluster_groups < 2)[0]
-    
+        hidden_clusters_rel = np.nonzero(self.cluster_groups <= 2)[0]
         self.best_pairs = OrderedDict()
         
         # Sort first clusters by decreasing quality.
         # Relative indices.
         best_clusters_rel = np.argsort(quality)[-1::-1]
         # Remove hidden clusters.
-        np.delete(best_clusters_rel, hidden_clusters_rel)
+        best_clusters_rel = np.setdiff1d(best_clusters_rel, hidden_clusters_rel)
         # Absolute indices.
         self.best_clusters = self.clusters_unique[best_clusters_rel]
         

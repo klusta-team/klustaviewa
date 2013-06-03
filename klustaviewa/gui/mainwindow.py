@@ -206,7 +206,7 @@ class MainWindow(QtGui.QMainWindow):
             shortcut='ALT+N')
             
         self.add_action('delete_target_candidate', 'Move &both to MUA', 
-            shortcut='CTRL+ALT+N')
+            shortcut='CTRL+ALT+M')
         self.add_action('delete_target_candidate_noise', 'Move both to noise', 
             shortcut='CTRL+ALT+N')
         
