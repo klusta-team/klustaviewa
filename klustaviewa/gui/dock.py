@@ -59,7 +59,8 @@ class ViewDockWidget(QtGui.QDockWidget):
         super(ViewDockWidget, self).keyReleaseEvent(e)
         # Notify the main window of the key events when the dock widget
         # is floating.
-        self.parent().keyReleaseEvent(e)
+        if self.isFloating():
+            self.parent().keyReleaseEvent(e)
     
         
 
@@ -170,10 +171,6 @@ class DockTitleBar(QtGui.QWidget):
         
     def dock_callback(self, checked=None):
         self.parent().setFloating(not(self.parent().isFloating()))
-        # if self.parent().isFloating():
-            # self.parent().widget().setFocusPolicy(QtCore.Qt.WheelFocus)
-        # else:
-            # self.parent().widget().setFocusPolicy(QtCore.Qt.NoFocus)
         
     def maximize_callback(self, checked=None):
         if self.parent().isMaximized():

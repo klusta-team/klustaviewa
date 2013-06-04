@@ -49,10 +49,12 @@ class Processor(object):
         for cluster in clusters_to_merge:
             self.loader.remove_cluster(cluster)
         self.loader.unselect()
-        return dict(to_select=cluster_merged,
-            to_invalidate=sorted(set(clusters_to_merge).union(
-                set([cluster_merged]))),
-            to_compute=cluster_merged)
+        # return dict(to_select=cluster_merged,
+            # to_invalidate=sorted(set(clusters_to_merge).union(
+                # set([cluster_merged]))),
+            # to_compute=cluster_merged)
+        return dict(clusters_to_merge=clusters_to_merge,
+                    cluster_merged=cluster_merged)
         
     def merge_clusters_undo(self, clusters_old, cluster_groups, 
         cluster_colors, cluster_merged):
@@ -68,10 +70,12 @@ class Processor(object):
         # Remove merged cluster.
         self.loader.remove_cluster(cluster_merged)
         self.loader.unselect()
-        return dict(to_select=clusters_to_merge,
-            to_invalidate=sorted(set(clusters_to_merge).union(
-                set([cluster_merged]))),
-            to_compute=clusters_to_merge)
+        # return dict(to_select=clusters_to_merge,
+            # to_invalidate=sorted(set(clusters_to_merge).union(
+                # set([cluster_merged]))),
+            # to_compute=clusters_to_merge)
+        return dict(clusters_to_merge=clusters_to_merge,
+                    cluster_merged=cluster_merged)
         
         
     # Split.
@@ -95,11 +99,14 @@ class Processor(object):
         self.loader.unselect()
         clusters_to_select = sorted(set(cluster_indices_old).union(
                 set(cluster_indices_new)) - set(clusters_empty))
-        return dict(
-            to_select=clusters_to_select,
-            to_invalidate=sorted(set(cluster_indices_old).union(
-                set(cluster_indices_new))),
-            to_compute=clusters_to_select)
+        # return dict(
+            # to_select=clusters_to_select,
+            # to_invalidate=sorted(set(cluster_indices_old).union(
+                # set(cluster_indices_new))),
+            # to_compute=clusters_to_select)
+        return dict(clusters_to_split=get_array(cluster_indices_old),
+                    clusters_split=get_array(cluster_indices_new),
+                    clusters_empty=clusters_empty)
         
     def split_clusters_undo(self, clusters_old, cluster_groups, 
         cluster_colors, clusters_new):
@@ -119,56 +126,54 @@ class Processor(object):
         # Remove empty clusters.
         clusters_empty = self.loader.remove_empty_clusters()
         self.loader.unselect()
-        clusters_to_select = cluster_indices_old
-        return dict(
-            to_select=clusters_to_select,
-            to_invalidate=sorted(set(cluster_indices_old).union(
-                set(cluster_indices_new))),
-            to_compute=clusters_to_select)
+        # clusters_to_select = cluster_indices_old
+        # return dict(
+            # to_select=clusters_to_select,
+            # to_invalidate=sorted(set(cluster_indices_old).union(
+                # set(cluster_indices_new))),
+            # to_compute=clusters_to_select)
+        return dict(clusters_to_split=get_array(cluster_indices_old),
+                    clusters_split=get_array(cluster_indices_new),
+                    # clusters_empty=clusters_empty
+                    )
         
         
     # Change cluster color.
     def change_cluster_color(self, cluster, color_old, color_new,
             clusters_selected):
         self.loader.set_cluster_colors(cluster, color_new)
-        return dict(to_select=clusters_selected)
+        return dict(clusters=clusters_selected)
         
     def change_cluster_color_undo(self, cluster, color_old, color_new,
             clusters_selected):
         self.loader.set_cluster_colors(cluster, color_old)
-        return dict(to_select=clusters_selected)
+        return dict(clusters=clusters_selected)
         
         
     # Move clusters.
     def move_clusters(self, clusters, groups_old, group_new):
         # Get next cluster to select.
-        next_cluster = self.loader.get_next_cluster(clusters[-1])
+        # next_cluster = self.loader.get_next_cluster(clusters[-1])
         self.loader.set_cluster_groups(clusters, group_new)
         # to_compute=[] to force refreshing the correlation matrix
-        return dict(to_select=[next_cluster], to_compute=[])
+        # return dict(to_select=[next_cluster], to_compute=[])
+        return dict(clusters=clusters)
         
     def move_clusters_undo(self, clusters, groups_old, group_new):
         self.loader.set_cluster_groups(clusters, groups_old)
         # to_compute=[] to force refreshing the correlation matrix
-        return dict(to_select=clusters, to_compute=[])
+        # return dict(to_select=clusters, to_compute=[])
+        return dict(clusters=clusters)
       
       
-    # Rename group.
-    def rename_group(self, group, name_old, name_new):
-        self.loader.set_group_names(group, name_new)
-        
-    def rename_group_undo(self, group, name_old, name_new):
-        self.loader.set_group_names(group, name_old)
-    
-    
     # Change group color.
     def change_group_color(self, group, color_old, color_new):
         self.loader.set_group_colors(group, color_new)
-        return dict(groups_to_select=[group])
+        return dict(groups=[group])
         
     def change_group_color_undo(self, group, color_old, color_new):
         self.loader.set_group_colors(group, color_old)
-        return dict(groups_to_select=[group])
+        return dict(groups=[group])
     
     
     # Add group.
@@ -177,6 +182,14 @@ class Processor(object):
         
     def add_group_undo(self, group, name, color):
         self.loader.remove_group(group)
+    
+    
+    # Rename group.
+    def rename_group(self, group, name_old, name_new):
+        self.loader.set_group_names(group, name_new)
+        
+    def rename_group_undo(self, group, name_old, name_new):
+        self.loader.set_group_names(group, name_old)
     
     
     # Remove group.

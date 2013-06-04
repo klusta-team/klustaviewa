@@ -315,6 +315,9 @@ class MainWindow(QtGui.QMainWindow):
         self.open_progress.setCancelButton(None)
         self.open_progress.setMinimumDuration(0)
         
+        
+    # Action enabled.
+    # ---------------
     def update_action_enabled(self):
         self.undo_action.setEnabled(self.can_undo())
         self.redo_action.setEnabled(self.can_redo())
@@ -734,131 +737,56 @@ class MainWindow(QtGui.QMainWindow):
         self.get_view('CorrelogramsView').change_normalization()
     
     
-    
-    
-    
-    
-    
-    
-    
-    
     # Actions callbacks.
     # ------------------
-    def update_cluster_selection(self, clusters, groups=[]):
-        self.update_action_enabled()
-        self.update_cluster_view()
-        self.get_view('ClusterView').select(clusters, 
-            groups=groups)
-    
-    def action_processed(self, action, to_select=[], to_invalidate=[],
-        to_compute=None, groups_to_select=None):
-        """Called after an action has been processed. Used to update the 
-        different views and launch tasks."""
-        if isinstance(to_select, (int, long, np.integer)):
-            to_select = [to_select]
-        if isinstance(to_invalidate, (int, long, np.integer)):
-            to_invalidate = [to_invalidate]
-        if isinstance(to_compute, (int, long, np.integer)):
-            to_compute = [to_compute]
-        # Select clusters to be selected.
-        if len(to_select) > 0:
-            self.update_cluster_selection(to_select, groups=groups_to_select)
-        elif len(groups_to_select) > 0:
-            self.update_cluster_selection([], groups=groups_to_select)
-        # Invalidate clusters.
-        if len(to_invalidate) > 0:
-            self.statscache.invalidate(to_invalidate)
-        # Compute the correlation matrix for the requested clusters.
-        if to_compute is not None:
-            self.start_compute_similarity_matrix(to_compute)
-            
-        self.need_save = True
-        
     def merge_callback(self, checked=None):
+        self.need_save = True
         cluster_view = self.get_view('ClusterView')
         clusters = cluster_view.selected_clusters()
-        if len(clusters) >= 2:
-            with LOCK:
-                action, output = self.controller.merge_clusters(clusters)
-            self.action_processed(action, **output)
-            # Inform the wizard.
-            cluster_merged = output['to_select']
-            clusters_to_merge = output['to_invalidate']
-            clusters_to_merge.remove(cluster_merged)
-            # self.tasks.wizard_task.merged(clusters_to_merge, cluster_merged)
-            
+        self.taskgraph.merge(clusters)
+        self.update_action_enabled()
+        
     def split_callback(self, checked=None):
+        self.need_save = True
         cluster_view = self.get_view('ClusterView')
         clusters = cluster_view.selected_clusters()
         spikes_selected = self.spikes_selected
-        if len(spikes_selected) >= 1:
-            with LOCK:
-                action, output = self.controller.split_clusters(
-                    clusters, spikes_selected)
-            self.action_processed(action, **output)
-            # Cancel the selection after the split.
-            self.spikes_selected = []
-            # Inform the wizard.
-            # TODO
-            
+        # Cancel the selection after the split.
+        self.spikes_selected = []
+        self.taskgraph.split(clusters, spikes_selected)
+        self.update_action_enabled()
+        
     def undo_callback(self, checked=None):
-        with LOCK:
-            action, output = self.controller.undo()
-        if output is None:
-            output = {}
-        self.action_processed(action, **output)
-        if action == 'merge_clusters_undo':
-            # Inform the wizard.
-            clusters_to_merge = list(output['to_select'])
-            # self.tasks.wizard_task.merged_undo(clusters_to_merge)
+        self.taskgraph.undo()
+        self.update_action_enabled()
         
     def redo_callback(self, checked=None):
-        with LOCK:
-            action, output = self.controller.redo()
-        if output is None:
-            output = {}
-        self.action_processed(action, **output)
+        self.taskgraph.redo()
+        self.update_action_enabled()
         
     def cluster_color_changed_callback(self, cluster, color):
-        with LOCK:
-            action, output = self.controller.change_cluster_color(cluster, color)
-        self.action_processed(action, **output)
+        self.taskgraph.cluster_color_changed(cluster, color)
+        self.update_action_enabled()
         
     def group_color_changed_callback(self, group, color):
-        with LOCK:
-            action, output = self.controller.change_group_color(group, color)
-        self.action_processed(action, **output)
+        self.taskgraph.group_color_changed(group, color)
+        self.update_action_enabled()
         
     def group_renamed_callback(self, group, name):
-        with LOCK:
-            action, output = self.controller.rename_group(group, name)
-        self.action_processed(action, **output)
+        self.taskgraph.group_renamed(group, name)
+        self.update_action_enabled()
         
     def clusters_moved_callback(self, clusters, group):
-        with LOCK:
-            action, output = self.controller.move_clusters(clusters, group)
-        self.action_processed(action, **output)
-        # Update the wizard.
-        # self.tasks.wizard_task.set_data(
-            # cluster_groups=self.loader.get_cluster_groups('all'),
-            # )
-        # self.tasks.wizard_task.moved(clusters, group)
+        self.taskgraph.clusters_moved(clusters, group)
+        self.update_action_enabled()
         
     def group_removed_callback(self, group):
-        with LOCK:
-            action, output = self.controller.remove_group(group)
-        self.action_processed(action, **output)
+        self.taskgraph.group_removed(group)
+        self.update_action_enabled()
         
     def group_added_callback(self, group, name, color):
-        with LOCK:
-            action, output = self.controller.add_group(group, name, color)
-        self.action_processed(action, **output)
-    
-    
-    
-    
-    
-    
+        self.taskgraph.group_added(group, name, color)
+        self.update_action_enabled()
     
     
     # Views callbacks.

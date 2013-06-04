@@ -72,6 +72,7 @@ class AbstractTaskGraph(QtCore.QObject):
         return lambda *args, **kwargs: self.run(('_' + name, args, kwargs))
         
 
+
 # -----------------------------------------------------------------------------
 # Specific task graph
 # -----------------------------------------------------------------------------
@@ -80,11 +81,7 @@ class TaskGraph(AbstractTaskGraph):
     
     def __init__(self, mainwindow):
         # Shortcuts for the main window.
-        self.mainwindow = mainwindow
-        self.get_view = self.mainwindow.get_view
-        self.get_views = self.mainwindow.get_views
-        self.loader = self.mainwindow.loader
-        self.statscache = self.mainwindow.statscache
+        self.set(mainwindow)
         # Create external threads/processes for long-lasting tasks.
         self.create_threads()
         
@@ -92,7 +89,9 @@ class TaskGraph(AbstractTaskGraph):
         # Shortcuts for the main window.
         self.mainwindow = mainwindow
         self.get_view = self.mainwindow.get_view
+        self.get_views = self.mainwindow.get_views
         self.loader = self.mainwindow.loader
+        self.controller = self.mainwindow.controller
         self.statscache = self.mainwindow.statscache
         
     def create_threads(self):
@@ -114,15 +113,16 @@ class TaskGraph(AbstractTaskGraph):
     def _select(self, clusters):
         self.loader.select(clusters=clusters)
         log.debug("Selected clusters {0:s}.".format(str(clusters)))
-        
-        self.mainwindow.update_action_enabled()
-        
+        # self.mainwindow.update_action_enabled()
         return [
                 ('_update_feature_view',),
                 ('_update_waveform_view',),
                 ('_show_selection_in_matrix', (clusters,)),
                 ('_compute_correlograms', (clusters,),),
                 ]
+    
+    def _select_in_cluster_view(self, clusters, groups=[]):
+        self.get_view('ClusterView').select(clusters, groups=groups)
     
     
     # Computations.
@@ -237,6 +237,9 @@ class TaskGraph(AbstractTaskGraph):
         # self.update_similarity_matrix_view()
         return ('_update_similarity_matrix_view',)
 
+    def _invalidate(self, clusters):
+        self.statscache.invalidate(clusters)
+        
 
     # View updates.
     # -------------
@@ -311,7 +314,7 @@ class TaskGraph(AbstractTaskGraph):
         )
         [view.set_data(**data) for view in self.get_views('WaveformView')]
         
-    def _update_cluster_view(self):
+    def _update_cluster_view(self, clusters=None):
         """Update the cluster view using the data stored in the loader
         object."""
         data = dict(
@@ -324,6 +327,8 @@ class TaskGraph(AbstractTaskGraph):
             cluster_quality=self.statscache.cluster_quality,
         )
         self.get_view('ClusterView').set_data(**data)
+        if clusters is not None:
+            return 
     
     def _update_projection_view(self):
         """Update the cluster view using the data stored in the loader
@@ -363,11 +368,155 @@ class TaskGraph(AbstractTaskGraph):
         return ('_compute_correlograms', (clusters,))
     
     
+    # Merge/split actions.
+    # --------------------
+    def _merge(self, clusters):
+        if len(clusters) >= 2:
+            action, output = self.controller.merge_clusters(clusters)
+            # self.mainwindow.update_action_enabled()
+            return after_merge(output)
+            
+    def _split(self, clusters, spikes_selected):
+        if len(spikes_selected) >= 1:
+            action, output = self.controller.split_clusters(clusters, 
+                spikes_selected)
+            # self.mainwindow.update_action_enabled()
+            return after_split(output)
+    
+    def _undo(self):
+        undo = self.controller.undo()
+        if undo is None:
+            return
+        action, output = undo
+        if action == 'merge_clusters_undo':
+            return after_merge_undo(output)
+        elif action == 'split_clusters_undo':
+            return after_split_undo(output)
+        elif action == 'change_cluster_color_undo':
+            return after_cluster_color_changed(output)
+        elif action == 'change_group_color_undo':
+            return after_group_color_changed(output)
+        elif action == 'move_clusters_undo':
+            return after_clusters_moved(output)
+        elif action == 'add_group_undo':
+            return after_group_added(output)
+        elif action == 'rename_group_undo':
+            return after_group_renamed(output)
+        elif action == 'remove_group_undo':
+            return after_group_removed(output)
+    
+    def _redo(self):
+        redo = self.controller.redo()
+        if redo is None:
+            return
+        action, output = redo
+        if action == 'merge_clusters':
+            return after_merge(output)
+        elif action == 'split_clusters':
+            return after_split(output)
+        elif action == 'change_cluster_color':
+            return after_cluster_color_changed(output)
+        elif action == 'change_group_color':
+            return after_group_color_changed(output)
+        elif action == 'move_clusters':
+            return after_clusters_moved(output)
+        elif action == 'add_group':
+            return after_group_added(output)
+        elif action == 'rename_group':
+            return after_group_renamed(output)
+        elif action == 'remove_group':
+            return after_group_removed(output)
     
     
+    # Other actions.
+    # --------------
+    def _cluster_color_changed(self, cluster, color):
+        action, output = self.controller.change_cluster_color(cluster, color)
+        return after_cluster_color_changed(output)
+        
+    def _group_color_changed(self, group, color):
+        action, output = self.controller.change_group_color(group, color)
+        return after_group_color_changed(output)
+        
+    def _group_renamed(self, group, name):
+        action, output = self.controller.rename_group(group, name)
+        return after_group_renamed(output)
+        
+    def _clusters_moved(self, clusters, group):
+        action, output = self.controller.move_clusters(clusters, group)
+        return after_clusters_moved(output)
+        
+    def _group_removed(self, group):
+        action, output = self.controller.remove_group(group)
+        return after_group_removed(output)
+        
+    def _group_added(self, group, name, color):
+        action, output = self.controller.add_group(group, name, color)
+        return after_group_added(output)
     
     
-    
-    
-    
-    
+# -----------------------------------------------------------------------------
+# Tasks after actions
+# -----------------------------------------------------------------------------
+def union(*clusters_list):
+    return sorted(set([item for sublist in clusters_list for item in sublist]))
+
+# Merge/split actions.
+def after_merge(output):
+    return [ ('_invalidate', (output['clusters_to_merge'],)),
+             ('_compute_similarity_matrix', ([output['cluster_merged']],)),
+             ('_update_cluster_view'),
+             ('_select_in_cluster_view', (output['cluster_merged'],)),
+            ]
+        
+def after_merge_undo(output):
+    clusters_to_invalidate = union(output['clusters_to_merge'], [output['cluster_merged']])
+    return [ ('_invalidate', (clusters_to_invalidate,)),
+             ('_compute_similarity_matrix', (output['clusters_to_merge'],)),
+             ('_update_cluster_view'),
+             ('_select_in_cluster_view', (output['clusters_to_merge'],)),
+            ]
+
+def after_split(output):
+    clusters_to_update = sorted(set(output['clusters_to_split']).union(set(
+        output['clusters_split'])) - set(output['clusters_empty']))
+    return [ ('_invalidate', (output['clusters_to_split'],)),
+             ('_compute_similarity_matrix', (clusters_to_update,)),
+             ('_update_cluster_view'),
+             ('_select_in_cluster_view', (clusters_to_update,)),
+            ]
+
+def after_split_undo(output):
+    clusters_to_invalidate = union(output['clusters_to_split'], output['clusters_split'])
+    return [ ('_invalidate', (clusters_to_invalidate,)),
+             ('_compute_similarity_matrix', (output['clusters_to_split'],)),
+             ('_update_cluster_view'),
+             ('_select_in_cluster_view', (output['clusters_to_split'],)),
+            ]
+
+
+# Other actions.
+def after_cluster_color_changed(output):
+    return [('_update_cluster_view'),
+            ('_select_in_cluster_view', (output['clusters'],)),]
+
+def after_group_color_changed(output):
+    return [('_update_cluster_view'),
+            ('_select_in_cluster_view', ([],), dict(groups=output['groups']),),]
+
+def after_clusters_moved(output):
+    return [('_update_cluster_view'),
+            ('_select_in_cluster_view', (output['clusters'],)),
+            ('_update_similarity_matrix_view')]
+
+def after_group_added(output):
+    return [('_update_cluster_view')]
+
+def after_group_renamed(output):
+    return [('_update_cluster_view')]
+
+def after_group_removed(output):
+    return [('_update_cluster_view')]
+
+
+

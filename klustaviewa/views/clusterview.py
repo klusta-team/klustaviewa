@@ -963,7 +963,7 @@ class ClusterView(QtGui.QTreeView):
         self.context_menu.addAction(self.rename_group_action)
         self.context_menu.addAction(self.remove_group_action)
         
-    def contextMenuEvent(self, event):
+    def update_actions(self):
         clusters = self.selected_clusters()
         groups = self.selected_groups()
         
@@ -989,7 +989,9 @@ class ClusterView(QtGui.QTreeView):
         else:
             self.move_to_noise_action.setEnabled(False)
             self.move_to_mua_action.setEnabled(False)
-            
+        
+        
+    def contextMenuEvent(self, event):
         action = self.context_menu.exec_(self.mapToGlobal(event.pos()))
     
     def currentChanged(self, index, previous):
@@ -1100,6 +1102,7 @@ class ClusterView(QtGui.QTreeView):
     
         self.external_call = False
         
+        self.update_actions()
     
     # Selected items
     # --------------

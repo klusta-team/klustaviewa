@@ -44,13 +44,12 @@ def test_controller_merge():
     
     # Merge these clusters.
     action, output = c.merge_clusters(clusters)
-    cluster_new = output['to_select']
+    cluster_new = output['cluster_merged']
     
     assert action == 'merge_clusters'
-    assert np.array_equal(output['to_select'], cluster_new)
-    assert np.array_equal(output['to_invalidate'], 
-        sorted(set(clusters).union(set([cluster_new]))))
-    assert np.array_equal(output['to_compute'], cluster_new)
+    assert np.array_equal(output['cluster_merged'], cluster_new)
+    assert np.array_equal(output['clusters_to_merge'], 
+        sorted(set(clusters)))
         
     assert np.array_equal(l.get_spikes(cluster_new), spikes)
     assert np.all(~np.in1d(clusters, get_indices(l.get_cluster_groups('all'))))
@@ -60,10 +59,9 @@ def test_controller_merge():
     action, output = c.undo()
     
     assert action == 'merge_clusters_undo'
-    assert np.array_equal(output['to_select'], clusters)
-    assert np.array_equal(output['to_invalidate'], 
-        sorted(set(clusters).union(set([cluster_new]))))
-    assert np.array_equal(output['to_compute'], clusters)
+    assert np.array_equal(output['cluster_merged'], cluster_new)
+    assert np.array_equal(output['clusters_to_merge'], 
+        sorted(set(clusters)))
     
     assert np.array_equal(l.get_spikes(cluster_new), [])
     assert np.all(np.in1d(clusters, get_indices(l.get_cluster_groups('all'))))
@@ -74,10 +72,9 @@ def test_controller_merge():
     action, output = c.redo()
     
     assert action == 'merge_clusters'
-    assert np.array_equal(output['to_select'], cluster_new)
-    assert np.array_equal(output['to_invalidate'], 
-        sorted(set(clusters).union(set([cluster_new]))))
-    assert np.array_equal(output['to_compute'], cluster_new)
+    assert np.array_equal(output['cluster_merged'], cluster_new)
+    assert np.array_equal(output['clusters_to_merge'], 
+        sorted(set(clusters)))
     
     assert np.array_equal(l.get_spikes(cluster_new), spikes)
     assert np.all(~np.in1d(clusters, get_indices(l.get_cluster_groups('all'))))
@@ -94,16 +91,17 @@ def test_controller_split():
     # Select half of the spikes in these clusters.
     spikes_sample = spikes[::2]
     action, output = c.merge_clusters(clusters)
-    cluster_new = output['to_select']
+    cluster_new = output['cluster_merged']
     
     # Split the newly created cluster into two clusters.
     action, output = c.split_clusters(cluster_new, spikes_sample)
-    cluster_split = sorted(set(output['to_select']) - set([cluster_new]))[0]
+    cluster_split = output['clusters_split'][0]
     
     assert action == 'split_clusters'
-    assert np.array_equal(output['to_select'], [cluster_new, cluster_split])
-    assert np.array_equal(output['to_invalidate'], [cluster_new, cluster_split])
-    assert np.array_equal(output['to_compute'], [cluster_new, cluster_split])
+    # print output['clusters_to_split']
+    assert np.array_equal(output['clusters_to_split'], [cluster_new])
+    assert np.array_equal(output['clusters_split'], [cluster_new + 1])
+    assert np.array_equal(output['clusters_empty'], [])
     
     assert np.array_equal(l.get_spikes(cluster_split), spikes_sample)
     
@@ -112,9 +110,8 @@ def test_controller_split():
     action, output = c.undo()
     
     assert action == 'split_clusters_undo'
-    assert np.array_equal(output['to_select'], [cluster_new])
-    assert np.array_equal(output['to_invalidate'], [cluster_new, cluster_split])
-    assert np.array_equal(output['to_compute'], [cluster_new])
+    assert np.array_equal(output['clusters_to_split'], [cluster_new])
+    assert np.array_equal(output['clusters_split'], [cluster_new + 1])
     
     assert np.array_equal(l.get_spikes(cluster_new), spikes)
     
@@ -122,9 +119,9 @@ def test_controller_split():
     action, output = c.redo()
     
     assert action == 'split_clusters'
-    assert np.array_equal(output['to_select'], [cluster_new, cluster_split])
-    assert np.array_equal(output['to_invalidate'], [cluster_new, cluster_split])
-    assert np.array_equal(output['to_compute'], [cluster_new, cluster_split])
+    assert np.array_equal(output['clusters_to_split'], [cluster_new])
+    assert np.array_equal(output['clusters_split'], [cluster_new + 1])
+    assert np.array_equal(output['clusters_empty'], [])
     
     assert np.array_equal(l.get_spikes(cluster_split), spikes_sample)
     
@@ -141,7 +138,7 @@ def test_controller_misc():
     
     # Merge these clusters.
     action, output = c.merge_clusters(clusters)
-    cluster_new = output['to_select']
+    cluster_new = output['cluster_merged']
     assert np.array_equal(l.get_spikes(cluster_new), spikes)
     assert np.all(~np.in1d(clusters, get_indices(l.get_cluster_groups('all'))))
     
@@ -157,7 +154,7 @@ def test_controller_misc():
     action, output = c.move_clusters(clusters, 0)
     
     assert action == 'move_clusters'
-    assert np.array_equal(output['to_select'], [7])
+    # assert np.array_equal(output['to_select'], [7])
     
     assert np.all(l.get_cluster_groups(clusters) == 0)
     
@@ -169,7 +166,7 @@ def test_controller_misc():
     action, output = c.undo()
     
     assert action == 'move_clusters_undo'
-    assert np.array_equal(output['to_select'], clusters)
+    # assert np.array_equal(output['to_select'], clusters)
     
     assert np.all(l.get_cluster_groups(clusters) == 3)
     
@@ -195,7 +192,7 @@ def test_controller_recolor_clusters():
     action, output = c.change_cluster_color(cluster, 12)
     
     assert action == 'change_cluster_color'
-    assert output['to_select'] is None
+    # assert output['to_select'] is None
     
     assert l.get_cluster_colors(cluster) == 12
     
@@ -205,7 +202,7 @@ def test_controller_recolor_clusters():
     assert l.get_cluster_colors(cluster) == color_old
     
     assert action == 'change_cluster_color_undo'
-    assert output['to_select'] is None
+    # assert output['to_select'] is None
     
     
     # Redo.
@@ -213,7 +210,7 @@ def test_controller_recolor_clusters():
     assert l.get_cluster_colors(cluster) == 12
     
     assert action == 'change_cluster_color'
-    assert output['to_select'] is None
+    # assert output['to_select'] is None
     
     l.close()
     
@@ -225,7 +222,7 @@ def test_controller_move_clusters():
     action, output = c.move_clusters(clusters, group)
     
     assert action == 'move_clusters'
-    assert np.array_equal(output['to_select'], [8])
+    # assert np.array_equal(output['to_select'], [8])
     
     assert np.all(l.get_cluster_groups(clusters) == 1)
     
@@ -234,7 +231,7 @@ def test_controller_move_clusters():
     action, output = c.undo()
     
     assert action == 'move_clusters_undo'
-    assert np.array_equal(output['to_select'], clusters)
+    # assert np.array_equal(output['to_select'], clusters)
     
     assert np.all(l.get_cluster_groups(clusters) == 3)
     
@@ -243,7 +240,7 @@ def test_controller_move_clusters():
     action, output = c.redo()
     
     assert action == 'move_clusters'
-    assert np.array_equal(output['to_select'], [8])
+    # assert np.array_equal(output['to_select'], [8])
     
     assert np.all(l.get_cluster_groups(clusters) == 1)
     
@@ -294,7 +291,7 @@ def test_controller_recolor_groups():
     action, output = c.undo()
     
     assert action == 'change_group_color_undo'
-    assert np.array_equal(output['groups_to_select'], [group])
+    # assert np.array_equal(output['groups_to_select'], [group])
     
     assert l.get_group_colors(group) == color
     
@@ -303,7 +300,7 @@ def test_controller_recolor_groups():
     action, output = c.redo()
     
     assert action == 'change_group_color'
-    assert np.array_equal(output['groups_to_select'], [group])
+    # assert np.array_equal(output['groups_to_select'], [group])
     
     assert l.get_group_colors(group) == 10
     

@@ -85,7 +85,7 @@ def test_recompute_correlation():
     
     # Merge these clusters.
     action, output = c.merge_clusters(clusters_selected)
-    cluster_new = output['to_select']
+    cluster_new = output['cluster_merged']
     
     # Compute the new matrix
     similarity_matrix.invalidate([2, 4, 6, cluster_new])
