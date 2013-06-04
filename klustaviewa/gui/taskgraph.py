@@ -168,7 +168,7 @@ class TaskGraph(AbstractTaskGraph):
             # self.update_correlograms_view()
             return '_update_correlograms_view'
     
-    def _compute_similarity_matrix(self, clusters_to_update=None):
+    def _compute_similarity_matrix(self):#, clusters_to_update=None):
         # Set wait cursor.
         # self.set_cursor(QtCore.Qt.BusyCursor)
         # Get the correlation matrix parameters.
@@ -178,9 +178,13 @@ class TaskGraph(AbstractTaskGraph):
         cluster_groups = get_array(self.loader.get_cluster_groups('all'))
         clusters_all = self.loader.get_clusters_unique()
         # Get cluster indices that need to be updated.
-        if clusters_to_update is None:
-            clusters_to_update = (self.statscache.similarity_matrix.
-                not_in_key_indices(clusters_all))
+        # if clusters_to_update is None:
+        # NOTE: not specifying explictely clusters_to_update ensures that
+        # all clusters that need to be updated are updated.
+        # Allows to fix a bug where the matrix is not updated correctly
+        # when multiple calls to this functions are called quickly.
+        clusters_to_update = (self.statscache.similarity_matrix.
+            not_in_key_indices(clusters_all))
         # If there are pairs that need to be updated, launch the task.
         if len(clusters_to_update) > 0:
             # Launch the task.
@@ -215,6 +219,8 @@ class TaskGraph(AbstractTaskGraph):
         
     def _similarity_matrix_computed(self, clusters_selected, matrix, clusters,
             cluster_groups):
+        if not np.array_equal(clusters, self.loader.get_clusters('all')):
+            return False
         self.statscache.similarity_matrix.update(clusters_selected, matrix)
         self.statscache.similarity_matrix_normalized = normalize(
             self.statscache.similarity_matrix.to_array(copy=True))
@@ -282,6 +288,9 @@ class TaskGraph(AbstractTaskGraph):
         )
         [view.set_data(**data) 
             for view in self.get_views('SimilarityMatrixView')]
+        # Show selected clusters when the matrix has been updated.
+        clusters = self.loader.get_clusters_selected()
+        return ('_show_selection_in_matrix', (clusters,))
         
     def _update_feature_view(self):
         data = dict(
@@ -464,7 +473,7 @@ def union(*clusters_list):
 # Merge/split actions.
 def after_merge(output):
     return [ ('_invalidate', (output['clusters_to_merge'],)),
-             ('_compute_similarity_matrix', ([output['cluster_merged']],)),
+             ('_compute_similarity_matrix'),#, ([output['cluster_merged']],)),
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (output['cluster_merged'],)),
             ]
@@ -472,7 +481,7 @@ def after_merge(output):
 def after_merge_undo(output):
     clusters_to_invalidate = union(output['clusters_to_merge'], [output['cluster_merged']])
     return [ ('_invalidate', (clusters_to_invalidate,)),
-             ('_compute_similarity_matrix', (output['clusters_to_merge'],)),
+             ('_compute_similarity_matrix'),#, (output['clusters_to_merge'],)),
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (output['clusters_to_merge'],)),
             ]
@@ -481,7 +490,7 @@ def after_split(output):
     clusters_to_update = sorted(set(output['clusters_to_split']).union(set(
         output['clusters_split'])) - set(output['clusters_empty']))
     return [ ('_invalidate', (output['clusters_to_split'],)),
-             ('_compute_similarity_matrix', (clusters_to_update,)),
+             ('_compute_similarity_matrix'),#, (clusters_to_update,)),
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (clusters_to_update,)),
             ]
@@ -489,7 +498,7 @@ def after_split(output):
 def after_split_undo(output):
     clusters_to_invalidate = union(output['clusters_to_split'], output['clusters_split'])
     return [ ('_invalidate', (clusters_to_invalidate,)),
-             ('_compute_similarity_matrix', (output['clusters_to_split'],)),
+             ('_compute_similarity_matrix'),#, (output['clusters_to_split'],)),
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (output['clusters_to_split'],)),
             ]
