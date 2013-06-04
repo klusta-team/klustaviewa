@@ -17,6 +17,7 @@ from tools import (find_filename, find_index, load_text, load_xml, normalize,
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices)
 from klustaviewa.utils.userpref import USERPREF
+from klustaviewa.utils.settings import SETTINGS
 from klustaviewa.utils.logger import (debug, info, warn, exception, FileLogger,
     register, unregister)
 from klustaviewa.utils.colors import COLORS_COUNT, generate_colors
@@ -681,8 +682,8 @@ class KlustersLoader(Loader):
         self.waveforms = pd.Panel(self.waveforms, dtype=np.float32)
     
     def read_stats(self):
-        self.ncorrbins = 100
-        self.corrbin = .001
+        self.ncorrbins = SETTINGS.get('correlograms.ncorrbins', 100)
+        self.corrbin = SETTINGS.get('correlograms.corrbin', .001)
 
         
     # Log file.
@@ -807,8 +808,8 @@ class MemoryLoader(Loader):
         self.waveforms = pd.Panel(self.waveforms, dtype=np.float32)
     
     def read_stats(self):
-        self.ncorrbins = 100
-        self.corrbin = .001
+        self.ncorrbins = SETTINGS.get('correlograms.ncorrbins', 100)
+        self.corrbin = SETTINGS.get('correlograms.corrbin', .001)
     
     
     # Public methods.

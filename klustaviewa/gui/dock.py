@@ -52,7 +52,8 @@ class ViewDockWidget(QtGui.QDockWidget):
         super(ViewDockWidget, self).keyPressEvent(e)
         # Notify the main window of the key events when the dock widget
         # is floating.
-        self.parent().keyPressEvent(e)
+        if self.isFloating():
+            self.parent().keyPressEvent(e)
         
     def keyReleaseEvent(self, e):
         super(ViewDockWidget, self).keyReleaseEvent(e)

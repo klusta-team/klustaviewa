@@ -33,6 +33,7 @@ from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.utils.settings import SETTINGS
 from klustaviewa.utils.globalpaths import APPNAME, ABOUT, get_global_path
 from klustaviewa.gui.threads import ThreadedTasks, LOCK
+from klustaviewa.gui.taskgraph import TaskGraph
 import rcicons
 
     
@@ -72,6 +73,7 @@ class MainWindow(QtGui.QMainWindow):
         self.spikes_selected = []
         self.wizard_active = False
         self.need_save = False
+        self.taskgraph = TaskGraph(self)
         # self.last_selection_time = time.clock()
         self.busy_cursor = QtGui.QCursor(QtCore.Qt.BusyCursor)
         self.normal_cursor = QtGui.QCursor(QtCore.Qt.ArrowCursor)
@@ -341,583 +343,6 @@ class MainWindow(QtGui.QMainWindow):
         return len(spikes_selected) >= 1
     
     
-    # File menu callbacks.
-    # --------------------
-    def open_callback(self, checked=None):
-        # HACK: Force release of Ctrl key.
-        self.force_key_release()
-        
-        folder = SETTINGS['main_window.last_data_dir']
-        path = QtGui.QFileDialog.getOpenFileName(self, 
-            "Open a file (.clu or other)", folder)[0]
-        # If a file has been selected, open it.
-        if path:
-            # Launch the loading task in the background asynchronously.
-            self.tasks.open_task.open(self.loader, path)
-            # Save the folder.
-            folder = os.path.dirname(path)
-            SETTINGS['main_window.last_data_dir'] = folder
-            SETTINGS['main_window.last_data_file'] = path
-            
-    def save_callback(self, checked=None):
-        folder = SETTINGS.get('main_window.last_data_file')
-        self.loader.save(renumber=self.renumber_action.isChecked())
-        self.need_save = False
-        
-        # # ask a new file name
-        # filename = QtGui.QFileDialog.getSaveFileName(self, "Save a CLU file",
-            # os.path.join(folder, default_filename))[0]
-        # if filename:
-            # # save the new file name
-            # self.save_filename = filename
-            # # save
-            # self.provider.save(filename)
-        
-            
-    def open_last_callback(self, checked=None):
-        path = SETTINGS['main_window.last_data_file']
-        if path:
-            self.tasks.open_task.open(self.loader, path)
-            
-    def quit_callback(self, checked=None):
-        self.close()
-    
-    
-    # Views menu callbacks.
-    # ---------------------
-    def add_feature_view_callback(self, checked=None):
-        self.add_feature_view()
-        
-    def add_waveform_view_callback(self, checked=None):
-        self.add_waveform_view()
-        
-    def add_similarity_matrix_view_callback(self, checked=None):
-        self.add_similarity_matrix_view()
-        
-    def add_correlograms_view_callback(self, checked=None):
-        self.add_correlograms_view()
-    
-    def add_ipython_view_callback(self, checked=None):
-        self.add_ipython_view()
-    
-    def override_color_callback(self, checked=None):
-        self.override_color = not self.override_color
-        self.loader.set_override_color(self.override_color)
-        # view = self.get_view('ClusterView')
-        # clusters = view.selected_clusters()
-        # groups = view.selected_groups()
-        # if groups:
-            # view.select_groups(groups)
-        # if clusters:
-            # view.select(clusters)
-        self.update_views()
-    
-    
-    # Correlograms callbacks.
-    # -----------------------
-    def change_correlograms_parameters(self, ncorrbins=None, corrbin=None):
-        # Update the correlograms parameters.
-        if ncorrbins is not None:
-            self.loader.ncorrbins = ncorrbins
-        if corrbin is not None:
-            self.loader.corrbin = corrbin
-        # Reset the cache.
-        self.statscache.reset(self.loader.ncorrbins)
-        # Update the correlograms.
-        clusters = self.loader.get_clusters_selected()
-        self.start_compute_correlograms(clusters)
-        
-    def change_ncorrbins_callback(self, checked=None):
-        if not self.loader:
-            return
-        corrbin = self.loader.corrbin
-        duration = self.loader.get_correlogram_window()
-        duration_new, ok = QtGui.QInputDialog.getDouble(self,
-            "Correlograms time window", "Half width (ms):", 
-            duration / 2 * 1000, 1, 1000, 1)
-        if ok:
-            duration_new = duration_new * .001 * 2
-            ncorrbins_new = 2 * int(np.ceil(.5 * duration_new / corrbin))
-            # ncorrbins_new = int(duration_new / corrbin * .001)
-            self.change_correlograms_parameters(ncorrbins=ncorrbins_new)
-    
-    def change_corrbin_callback(self, checked=None):
-        if not self.loader:
-            return
-        ncorrbins = self.loader.ncorrbins
-        corrbin = self.loader.corrbin
-        duration = self.loader.get_correlogram_window()
-        # duration = self.loader.get_correlogram_window() * 1000
-        corrbin_new, ok = QtGui.QInputDialog.getDouble(self,
-            "Correlograms bin size", "Bin size (ms):", 
-            corrbin * 1000, .1, 10, 2)
-        if ok:
-            corrbin_new = corrbin_new * .001
-            ncorrbins_new = 2 * int(np.ceil(.5 * duration/ corrbin_new))
-            self.change_correlograms_parameters(corrbin=corrbin_new,
-                ncorrbins=ncorrbins_new)
-    
-    def change_corr_normalization_callback(self, checked=None):
-        self.get_view('CorrelogramsView').change_normalization()
-    
-    
-    # Actions callbacks.
-    # ------------------
-    def update_cluster_selection(self, clusters, groups=[]):
-        self.update_action_enabled()
-        self.update_cluster_view()
-        self.get_view('ClusterView').select(clusters, 
-            groups=groups)
-    
-    def action_processed(self, action, to_select=[], to_invalidate=[],
-        to_compute=None, groups_to_select=None):
-        """Called after an action has been processed. Used to update the 
-        different views and launch tasks."""
-        if isinstance(to_select, (int, long, np.integer)):
-            to_select = [to_select]
-        if isinstance(to_invalidate, (int, long, np.integer)):
-            to_invalidate = [to_invalidate]
-        if isinstance(to_compute, (int, long, np.integer)):
-            to_compute = [to_compute]
-        # Select clusters to be selected.
-        if len(to_select) > 0:
-            self.update_cluster_selection(to_select, groups=groups_to_select)
-        elif len(groups_to_select) > 0:
-            self.update_cluster_selection([], groups=groups_to_select)
-        # Invalidate clusters.
-        if len(to_invalidate) > 0:
-            self.statscache.invalidate(to_invalidate)
-        # Compute the correlation matrix for the requested clusters.
-        if to_compute is not None:
-            self.start_compute_similarity_matrix(to_compute)
-            
-        self.need_save = True
-        
-    def merge_callback(self, checked=None):
-        cluster_view = self.get_view('ClusterView')
-        clusters = cluster_view.selected_clusters()
-        if len(clusters) >= 2:
-            with LOCK:
-                action, output = self.controller.merge_clusters(clusters)
-            self.action_processed(action, **output)
-            # Inform the wizard.
-            cluster_merged = output['to_select']
-            clusters_to_merge = output['to_invalidate']
-            clusters_to_merge.remove(cluster_merged)
-            self.tasks.wizard_task.merged(clusters_to_merge, cluster_merged)
-            
-    def split_callback(self, checked=None):
-        cluster_view = self.get_view('ClusterView')
-        clusters = cluster_view.selected_clusters()
-        spikes_selected = self.spikes_selected
-        if len(spikes_selected) >= 1:
-            with LOCK:
-                action, output = self.controller.split_clusters(
-                    clusters, spikes_selected)
-            self.action_processed(action, **output)
-            # Cancel the selection after the split.
-            self.spikes_selected = []
-            # Inform the wizard.
-            # TODO
-            
-    def undo_callback(self, checked=None):
-        with LOCK:
-            action, output = self.controller.undo()
-        if output is None:
-            output = {}
-        self.action_processed(action, **output)
-        if action == 'merge_clusters_undo':
-            # Inform the wizard.
-            clusters_to_merge = list(output['to_select'])
-            self.tasks.wizard_task.merged_undo(clusters_to_merge)
-        
-    def redo_callback(self, checked=None):
-        with LOCK:
-            action, output = self.controller.redo()
-        if output is None:
-            output = {}
-        self.action_processed(action, **output)
-        
-    def cluster_color_changed_callback(self, cluster, color):
-        with LOCK:
-            action, output = self.controller.change_cluster_color(cluster, color)
-        self.action_processed(action, **output)
-        
-    def group_color_changed_callback(self, group, color):
-        with LOCK:
-            action, output = self.controller.change_group_color(group, color)
-        self.action_processed(action, **output)
-        
-    def group_renamed_callback(self, group, name):
-        with LOCK:
-            action, output = self.controller.rename_group(group, name)
-        self.action_processed(action, **output)
-        
-    def clusters_moved_callback(self, clusters, group):
-        with LOCK:
-            action, output = self.controller.move_clusters(clusters, group)
-        self.action_processed(action, **output)
-        # Update the wizard.
-        self.tasks.wizard_task.set_data(
-            cluster_groups=self.loader.get_cluster_groups('all'),
-            )
-        self.tasks.wizard_task.moved(clusters, group)
-        
-    def group_removed_callback(self, group):
-        with LOCK:
-            action, output = self.controller.remove_group(group)
-        self.action_processed(action, **output)
-        
-    def group_added_callback(self, group, name, color):
-        with LOCK:
-            action, output = self.controller.add_group(group, name, color)
-        self.action_processed(action, **output)
-    
-    
-    # Help callbacks.
-    # ---------------
-    def about_callback(self, checked=None):
-        QtGui.QMessageBox.about(self, "KlustaViewa", ABOUT)
-    
-    def shortcuts_callback(self, checked=None):
-        e = QtGui.QKeyEvent(QtCore.QEvent.KeyPress, 
-                             QtCore.Qt.Key_H,
-                             QtCore.Qt.NoModifier,)
-        self.keyPressEvent(e)
-    
-    def refresh_preferences_callback(self, checked=None):
-        log.debug("Refreshing user preferences.")
-        USERPREF.refresh()
-        
-    
-    # Views callbacks.
-    # ----------------
-    def waveform_spikes_highlighted_callback(self, spikes):
-        self.spikes_highlighted = spikes
-        self.get_view('FeatureView').highlight_spikes(get_array(spikes))
-        
-    def features_spikes_highlighted_callback(self, spikes):
-        self.spikes_highlighted = spikes
-        self.get_view('WaveformView').highlight_spikes(get_array(spikes))
-        
-    def features_spikes_selected_callback(self, spikes):
-        self.spikes_selected = spikes
-        self.update_action_enabled()
-        self.get_view('WaveformView').highlight_spikes(get_array(spikes))
-        
-    def waveform_box_clicked_callback(self, coord, cluster, channel):
-        """Changed in waveform ==> change in feature"""
-        self.get_view('FeatureView').set_projection(coord, channel, -1)
-        
-    def projection_changed_callback(self, coord, channel, feature):
-        """Changed in projection ==> change in feature"""
-        self.get_view('FeatureView').set_projection(coord, channel, feature)
-        
-    def features_projection_changed_callback(self, coord, channel, feature):
-        """Changed in feature ==> change in projection"""
-        self.get_view('ProjectionView').set_projection(coord, channel, feature,
-            do_emit=False)
-        
-    
-    # Task methods.
-    # -------------
-    def open_done(self):
-        # Start the selection buffer.
-        self.buffer = Buffer(self, delay_timer=.1, delay_buffer=.2)
-        self.buffer.start()
-        self.buffer.accepted.connect(self.buffer_accepted_callback)
-        
-        # HACK: force release of Control key.
-        self.force_key_release()
-        clusters = self.get_view('ClusterView').selected_clusters()
-        if clusters:
-            self.get_view('ClusterView').unselect()
-        
-        # Create the Controller.
-        self.controller = Controller(self.loader)
-        # Create the cache for the cluster statistics that need to be
-        # computed in the background.
-        self.statscache = StatsCache(self.loader.ncorrbins)
-        # Update stats cache in IPython view.
-        ipython = self.get_view('IPythonView')
-        if ipython:
-            ipython.set_data(stats=self.statscache)
-        # Start computing the correlation matrix.
-        self.start_compute_similarity_matrix()
-        # Update the wizard.
-        self.initialize_wizard()
-        # Update the views.
-        self.update_cluster_view()
-        self.update_projection_view()
-        
-    def open_progress_reported(self, progress, progress_max):
-        self.open_progress.setMaximum(progress_max)
-        self.open_progress.setValue(progress)
-        
-    def start_compute_correlograms(self, clusters_selected):
-        # Get the correlograms parameters.
-        spiketimes = get_array(self.loader.get_spiketimes('all'))
-        # Make a copy of the array so that it does not change before the
-        # computation of the correlograms begins.
-        clusters = np.array(get_array(self.loader.get_clusters('all')))
-        corrbin = self.loader.corrbin
-        ncorrbins = self.loader.ncorrbins
-        
-        # Get cluster indices that need to be updated.
-        clusters_to_update = (self.statscache.correlograms.
-            not_in_key_indices(clusters_selected))
-            
-        # If there are pairs that need to be updated, launch the task.
-        if len(clusters_to_update) > 0:
-            # Set wait cursor.
-            self.set_busy_cursor()
-            # Launch the task.
-            self.tasks.correlograms_task.compute(spiketimes, clusters,
-                clusters_to_update=clusters_to_update, 
-                clusters_selected=clusters_selected,
-                ncorrbins=ncorrbins, corrbin=corrbin)    
-        # Otherwise, update directly the correlograms view without launching
-        # the task in the external process.
-        else:
-            self.update_correlograms_view()
-        
-    def start_compute_similarity_matrix(self, clusters_to_update=None):
-        # Set wait cursor.
-        # self.set_cursor(QtCore.Qt.BusyCursor)
-        # Get the correlation matrix parameters.
-        features = get_array(self.loader.get_features('all'))
-        masks = get_array(self.loader.get_masks('all', full=True))
-        clusters = get_array(self.loader.get_clusters('all'))
-        cluster_groups = get_array(self.loader.get_cluster_groups('all'))
-        clusters_all = self.loader.get_clusters_unique()
-        # Get cluster indices that need to be updated.
-        if clusters_to_update is None:
-            clusters_to_update = (self.statscache.similarity_matrix.
-                not_in_key_indices(clusters_all))
-        # If there are pairs that need to be updated, launch the task.
-        if len(clusters_to_update) > 0:
-            # Launch the task.
-            self.tasks.similarity_matrix_task.compute(features,
-                clusters, cluster_groups, masks, clusters_to_update)
-        # Otherwise, update directly the correlograms view without launching
-        # the task in the external process.
-        else:
-            self.update_similarity_matrix_view()
-        
-    def correlograms_computed(self, clusters, correlograms, ncorrbins, corrbin):
-        clusters_selected = self.loader.get_clusters_selected()
-        # Abort if the selection has changed during the computation of the
-        # correlograms.
-        # Reset the cursor.
-        self.set_normal_cursor()
-        if not np.array_equal(clusters, clusters_selected):
-            log.debug("Skip update correlograms with clusters selected={0:s}"
-            " and clusters updated={1:s}.".format(clusters_selected, clusters))
-            return
-        if self.statscache.ncorrbins != ncorrbins:
-            log.debug(("Skip updating correlograms because ncorrbins has "
-                "changed (from {0:d} to {1:d})".format(
-                ncorrbins, self.statscache.ncorrbins)))
-            return
-        # Put the computed correlograms in the cache.
-        self.statscache.correlograms.update(clusters, correlograms)
-        # Update the view.
-        self.update_correlograms_view()
-        
-    def similarity_matrix_computed(self, clusters_selected, matrix, clusters,
-            cluster_groups):
-        self.statscache.similarity_matrix.update(clusters_selected, matrix)
-        self.statscache.similarity_matrix_normalized = normalize(
-            self.statscache.similarity_matrix.to_array(copy=True))
-        # Update the cluster view with cluster quality.
-        quality = np.diag(self.statscache.similarity_matrix_normalized)
-        self.statscache.cluster_quality = pd.Series(
-            quality,
-            index=self.statscache.similarity_matrix.indices,
-            )
-        self.get_view('ClusterView').set_quality(
-            self.statscache.cluster_quality)
-        # Update the wizard.
-        # self.update_wizard(clusters_selected, clusters)
-        self.tasks.wizard_task.set_data(
-            clusters=clusters,
-            cluster_groups=cluster_groups,
-            similarity_matrix=self.statscache.similarity_matrix_normalized,
-            )
-        # Update the view.
-        self.update_similarity_matrix_view()
-        
-    
-    # Selection methods.
-    # ------------------
-    def buffer_accepted_callback(self, clusters):
-        # Highlight row and column of the selected cluster(s) in the
-        # Similarity Matrix View.
-        if clusters is not None and 1 <= len(clusters) <= 2:
-            self.get_view('SimilarityMatrixView').show_selection(
-                clusters[0], clusters[-1])
-        self.tasks.select_task.select(self.loader, clusters)
-        
-    def selection_done(self, clusters_selected):
-        """Called on the main thread once the clusters have been loaded 
-        in the main thread."""
-        if not np.array_equal(clusters_selected, 
-            self.loader.get_clusters_selected()):
-            log.debug(("Skip updating views with clusters_selected={0:s} and "
-                "actual selected clusters={1:s}").format(
-                    str(clusters_selected),
-                    str(self.loader.get_clusters_selected())))
-            return
-            
-        # Force refreshing the preference file.
-        # USERPREF.refresh()
-            
-        # Launch the computation of the correlograms.
-        self.start_compute_correlograms(clusters_selected)
-        
-        # Update the different views, with autozoom on if the selection has
-        # been made by the wizard.
-        with LOCK:
-            self.update_feature_view(autozoom=self.wizard_active)
-            self.update_waveform_view()#autozoom=self.wizard_active)
-            
-        # Update action enabled/disabled property.
-        self.update_action_enabled()
-        # self.wizard_active = False
-    
-    def clusters_selected_callback(self, clusters, external_call):
-        self.wizard_active = external_call
-        self.buffer.request(clusters)
-    
-    def cluster_pair_selected_callback(self, clusters):
-        """Callback when the user clicks on a pair in the
-        SimilarityMatrixView."""
-        self.wizard_active = False
-        self.get_view('ClusterView').select(clusters)
-    
-    
-    # Wizard.
-    # -------
-    def initialize_wizard(self):
-        self.tasks.wizard_task.reset()
-        self.tasks.wizard_task.set_data(
-            # Data.
-            features=self.loader.get_features('all'),
-            spiketimes=self.loader.get_spiketimes('all'),
-            masks=self.loader.get_masks('all'),
-            clusters=self.loader.get_clusters('all'),
-            # clusters_unique=self.loader.get_clusters_unique(),
-            cluster_groups=self.loader.get_cluster_groups('all'),
-            # Statistics.
-            correlograms=self.statscache.correlograms,
-            similarity_matrix=self.statscache.similarity_matrix,
-            )
-    
-    def wizard_callback(self, f, *args, **kwargs):
-        kwargs['_sync'] = True
-        clusters = f(*args, **kwargs)[2]['_result']
-        # log.info("The wizard proposes clusters {0:s}.".format(str(clusters)))
-        if clusters is None or len(clusters) == 0:
-            # self.get_view('ClusterView').set_background({})
-            return
-        self.wizard_active = True
-        self.get_view('ClusterView').select(clusters, external_call=True)
-        
-    def wizard_selection_changed(self):
-        # Change background color.
-        clusters = self.tasks.wizard_task.current(
-            _sync=True)[2]['_result']
-        if clusters is not None:
-            self.get_view('ClusterView').set_background(
-                {cluster: i + 1 for i, cluster in enumerate(clusters)})
-    
-    def reset_navigation_callback(self, checked=None):
-        self.wizard_callback(self.tasks.wizard_task.reset_navigation)
-    
-    def previous_candidate_callback(self, checked=None):
-        self.wizard_callback(self.tasks.wizard_task.previous)
-        self.wizard_selection_changed()
-        
-    def next_candidate_callback(self, checked=None):
-        self.wizard_callback(self.tasks.wizard_task.next)
-        self.wizard_selection_changed()
-    
-    def previous_target_callback(self, checked=None):
-        self.wizard_callback(self.tasks.wizard_task.previous_target)
-        self.wizard_selection_changed()
-        
-    def next_target_callback(self, checked=None):
-        # Get the current target and candidate.
-        target, candidate = self.tasks.wizard_task.current(
-            _sync=True)[2]['_result']
-        # Move the target cluster to the good group.
-        self.clusters_moved_callback([target], 2)
-        # Go to the next target cluster.
-        self.wizard_callback(self.tasks.wizard_task.next_target)
-        self.wizard_selection_changed()
-        
-    def delete_wizard_cluster(self, what, group):
-        # Get the current target and candidate.
-        r = self.tasks.wizard_task.current(_sync=True)[2]['_result']
-        if r is None:
-            return
-        target, candidate = r
-        if what == 'candidate':
-            cluster = [candidate]
-        elif what == 'target':
-            cluster = [target]
-        elif what == 'both':
-            cluster = [candidate, target]
-        # Delete the cluster, and update the wizard
-        self.clusters_moved_callback(cluster, group)
-        
-    def delete_candidate_noise_callback(self, checked=None):
-        self.delete_wizard_cluster('candidate', 0)
-        self.wizard_callback(self.tasks.wizard_task.next)
-        self.wizard_selection_changed()
-        
-    def delete_candidate_callback(self, checked=None):
-        self.delete_wizard_cluster('candidate', 1)
-        self.wizard_callback(self.tasks.wizard_task.next)
-        self.wizard_selection_changed()
-        
-    def delete_target_noise_callback(self, checked=None):
-        self.delete_wizard_cluster('target', 0)
-        self.wizard_callback(self.tasks.wizard_task.next_target)
-        self.wizard_selection_changed()
-        
-    def delete_target_callback(self, checked=None):
-        self.delete_wizard_cluster('target', 1)
-        self.wizard_callback(self.tasks.wizard_task.next_target)
-        self.wizard_selection_changed()
-        
-    def delete_target_candidate_noise_callback(self, checked=None):
-        self.delete_wizard_cluster('both', 0)
-        self.wizard_callback(self.tasks.wizard_task.next_target)
-        self.wizard_selection_changed()
-        
-    def delete_target_candidate_callback(self, checked=None):
-        self.delete_wizard_cluster('both', 1)
-        self.wizard_callback(self.tasks.wizard_task.next_target)
-        self.wizard_selection_changed()
-    
-    
-    # Threads.
-    # --------
-    def create_threads(self):
-        # Create the external threads.
-        self.tasks = ThreadedTasks()
-        self.tasks.open_task.dataOpened.connect(self.open_done)
-        self.tasks.select_task.clustersSelected.connect(self.selection_done)
-        self.tasks.correlograms_task.correlogramsComputed.connect(
-            self.correlograms_computed)
-        self.tasks.similarity_matrix_task.correlationMatrixComputed.connect(
-            self.similarity_matrix_computed)
-    
-    def join_threads(self):
-         self.tasks.join()
-    
-    
     # View methods.
     # -------------
     def create_view(self, view_class, position=None, 
@@ -1029,7 +454,7 @@ class MainWindow(QtGui.QMainWindow):
             position=QtCore.Qt.LeftDockWidgetArea,)
         view.clustersSelected.connect(self.cluster_pair_selected_callback)
         self.views['SimilarityMatrixView'].append(view)
-        self.update_similarity_matrix_view()
+        self.taskgraph.update_similarity_matrix_view()
     
     def add_waveform_view(self):
         view = self.create_view(vw.WaveformView,
@@ -1150,114 +575,336 @@ class MainWindow(QtGui.QMainWindow):
                     del self.views[key][i]
     
     
-    # Update view methods.
+    # Threads.
+    # --------
+    def create_threads(self):
+        # Create the external threads.
+        self.tasks = ThreadedTasks()
+        self.tasks.open_task.dataOpened.connect(self.open_done)
+    
+    def join_threads(self):
+         self.tasks.join()
+         self.taskgraph.join()
+    
+    
+    # File menu callbacks.
     # --------------------
-    def update_cluster_view(self):
-        """Update the cluster view using the data stored in the loader
-        object."""
-        data = dict(
-            cluster_colors=self.loader.get_cluster_colors('all',
-                can_override=False),
-            cluster_groups=self.loader.get_cluster_groups('all'),
-            group_colors=self.loader.get_group_colors('all'),
-            group_names=self.loader.get_group_names('all'),
-            cluster_sizes=self.loader.get_cluster_sizes('all'),
-            cluster_quality=self.statscache.cluster_quality,
-        )
-        self.get_view('ClusterView').set_data(**data)
-    
-    def update_projection_view(self):
-        """Update the cluster view using the data stored in the loader
-        object."""
-        data = dict(
-            nchannels=self.loader.nchannels,
-            fetdim=self.loader.fetdim,
-            nextrafet=self.loader.nextrafet,
-        )
-        self.get_view('ProjectionView').set_data(**data)
-    
-    def update_waveform_view(self, autozoom=None):
-        data = dict(
-            waveforms=self.loader.get_waveforms(),
-            clusters=self.loader.get_clusters(),
-            cluster_colors=self.loader.get_cluster_colors(
-                # wizard=self.wizard_active
-                ),
-            clusters_selected=self.loader.get_clusters_selected(),
-            masks=self.loader.get_masks(),
-            geometrical_positions=self.loader.get_probe(),
-            autozoom=autozoom,
-        )
-        [view.set_data(**data) for view in self.get_views('WaveformView')]
-    
-    def update_feature_view(self, autozoom=None):
-        data = dict(
-            features=self.loader.get_some_features(),
-            masks=self.loader.get_masks(),
-            clusters=self.loader.get_clusters(),
-            clusters_selected=self.loader.get_clusters_selected(),
-            cluster_colors=self.loader.get_cluster_colors(
-                # wizard=self.wizard_active
-                ),
-            nchannels=self.loader.nchannels,
-            fetdim=self.loader.fetdim,
-            nextrafet=self.loader.nextrafet,
-            freq=self.loader.freq,
-            autozoom=autozoom,
-            duration=self.loader.get_duration(),
-            alpha_selected=USERPREF.get('feature_selected_alpha', .75),
-            alpha_background=USERPREF.get('feature_background_alpha', .1),
-            time_unit=USERPREF['features_info_time_unit'] or 'second',
-        )
-        [view.set_data(**data) for view in self.get_views('FeatureView')]
+    def open_callback(self, checked=None):
+        # HACK: Force release of Ctrl key.
+        self.force_key_release()
         
-    def update_correlograms_view(self):
-        clusters_selected = self.loader.get_clusters_selected()
-        correlograms = self.statscache.correlograms.submatrix(
-            clusters_selected)
-        # Compute the baselines.
-        sizes = get_array(self.loader.get_cluster_sizes())
-        duration = self.loader.get_duration()
-        corrbin = self.loader.corrbin
-        baselines = get_baselines(sizes, duration, corrbin)
-        data = dict(
-            correlograms=correlograms,
-            baselines=baselines,
-            clusters_selected=clusters_selected,
-            cluster_colors=self.loader.get_cluster_colors(
-                # wizard=self.wizard_active
-                ),
-            ncorrbins=self.loader.ncorrbins,
-            corrbin=self.loader.corrbin,
-        )
-        [view.set_data(**data) for view in self.get_views('CorrelogramsView')]
+        folder = SETTINGS['main_window.last_data_dir']
+        path = QtGui.QFileDialog.getOpenFileName(self, 
+            "Open a file (.clu or other)", folder)[0]
+        # If a file has been selected, open it.
+        if path:
+            # Launch the loading task in the background asynchronously.
+            self.tasks.open_task.open(self.loader, path)
+            # Save the folder.
+            folder = os.path.dirname(path)
+            SETTINGS['main_window.last_data_dir'] = folder
+            SETTINGS['main_window.last_data_file'] = path
+            
+    def save_callback(self, checked=None):
+        folder = SETTINGS.get('main_window.last_data_file')
+        self.loader.save(renumber=self.renumber_action.isChecked())
+        self.need_save = False
+        
+    def open_last_callback(self, checked=None):
+        path = SETTINGS['main_window.last_data_file']
+        if path:
+            self.tasks.open_task.open(self.loader, path)
+            
+    def quit_callback(self, checked=None):
+        self.close()
     
-    def update_similarity_matrix_view(self):
-        if self.statscache is None:
+    
+    # Open callbacks.
+    # --------------
+    def open_done(self):
+        # Start the selection buffer.
+        self.buffer = Buffer(self, delay_timer=.1, delay_buffer=.2)
+        self.buffer.start()
+        self.buffer.accepted.connect(self.buffer_accepted_callback)
+        
+        # HACK: force release of Control key.
+        self.force_key_release()
+        clusters = self.get_view('ClusterView').selected_clusters()
+        if clusters:
+            self.get_view('ClusterView').unselect()
+        
+        # Create the Controller.
+        self.controller = Controller(self.loader)
+        # Create the cache for the cluster statistics that need to be
+        # computed in the background.
+        self.statscache = StatsCache(self.loader.ncorrbins)
+        # Update stats cache in IPython view.
+        ipython = self.get_view('IPythonView')
+        if ipython:
+            ipython.set_data(stats=self.statscache)
+            
+        # Update the task graph.
+        self.taskgraph.set(self)
+        self.taskgraph.update_cluster_view()
+        self.taskgraph.update_cluster_view()
+        self.taskgraph.compute_similarity_matrix()
+        # TODO
+        # self.taskgraph.initialize_wizard()
+        
+    def open_progress_reported(self, progress, progress_max):
+        self.open_progress.setMaximum(progress_max)
+        self.open_progress.setValue(progress)
+        
+    
+    # Selection methods.
+    # ------------------
+    def buffer_accepted_callback(self, clusters):
+        self.taskgraph.select(clusters)
+        
+    def clusters_selected_callback(self, clusters, external_call):
+        self.wizard_active = external_call
+        self.buffer.request(clusters)
+    
+    def cluster_pair_selected_callback(self, clusters):
+        """Callback when the user clicks on a pair in the
+        SimilarityMatrixView."""
+        self.wizard_active = False
+        self.get_view('ClusterView').select(clusters)
+    
+    
+    # Views menu callbacks.
+    # ---------------------
+    def add_feature_view_callback(self, checked=None):
+        self.add_feature_view()
+        
+    def add_waveform_view_callback(self, checked=None):
+        self.add_waveform_view()
+        
+    def add_similarity_matrix_view_callback(self, checked=None):
+        self.add_similarity_matrix_view()
+        
+    def add_correlograms_view_callback(self, checked=None):
+        self.add_correlograms_view()
+    
+    def add_ipython_view_callback(self, checked=None):
+        self.add_ipython_view()
+    
+    
+    # Override color callback.
+    # ------------------------
+    def override_color_callback(self, checked=None):
+        self.override_color = not self.override_color
+        self.taskgraph.override_color(self.override_color)
+    
+    
+    # Correlograms callbacks.
+    # -----------------------
+    def change_ncorrbins_callback(self, checked=None):
+        if not self.loader:
             return
-        # matrix = self.statscache.similarity_matrix
-        similarity_matrix = self.statscache.similarity_matrix_normalized
-        # Clusters in groups 0 or 1 to hide.
-        cluster_groups = self.loader.get_cluster_groups('all')
-        clusters_hidden = np.nonzero(np.in1d(cluster_groups, [0, 1]))[0]
-        # Cluster quality.
-        # similarity_matrix = normalize(matrix.to_array(copy=True))
-        # cluster_quality = np.diag(similarity_matrix)
-        data = dict(
-            # WARNING: copy the matrix here so that we don't modify the
-            # original matrix while normalizing it.
-            similarity_matrix=similarity_matrix,
-            cluster_colors_full=self.loader.get_cluster_colors('all'),
-            clusters_hidden=clusters_hidden,
-        )
-        [view.set_data(**data) 
-            for view in self.get_views('SimilarityMatrixView')]
+        corrbin = self.loader.corrbin
+        duration = self.loader.get_correlogram_window()
+        duration_new, ok = QtGui.QInputDialog.getDouble(self,
+            "Correlograms time window", "Half width (ms):", 
+            duration / 2 * 1000, 1, 1000, 1)
+        if ok:
+            duration_new = duration_new * .001 * 2
+            ncorrbins_new = 2 * int(np.ceil(.5 * duration_new / corrbin))
+            # ncorrbins_new = int(duration_new / corrbin * .001)
+            self.taskgraph.change_correlograms_parameters(ncorrbins=ncorrbins_new)
     
-    def update_views(self):
-        self.update_feature_view()
-        self.update_waveform_view()
-        self.update_correlograms_view()
+    def change_corrbin_callback(self, checked=None):
+        if not self.loader:
+            return
+        ncorrbins = self.loader.ncorrbins
+        corrbin = self.loader.corrbin
+        duration = self.loader.get_correlogram_window()
+        corrbin_new, ok = QtGui.QInputDialog.getDouble(self,
+            "Correlograms bin size", "Bin size (ms):", 
+            corrbin * 1000, .1, 10, 2)
+        if ok:
+            corrbin_new = corrbin_new * .001
+            ncorrbins_new = 2 * int(np.ceil(.5 * duration/ corrbin_new))
+            SETTINGS['correlograms.corrbin'] = corrbin_new
+            SETTINGS['correlograms.ncorrbins'] = ncorrbins_new
+            self.taskgraph.change_correlograms_parameters(corrbin=corrbin_new,
+                ncorrbins=ncorrbins_new)
     
+    def change_corr_normalization_callback(self, checked=None):
+        self.get_view('CorrelogramsView').change_normalization()
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    # Actions callbacks.
+    # ------------------
+    def update_cluster_selection(self, clusters, groups=[]):
+        self.update_action_enabled()
+        self.update_cluster_view()
+        self.get_view('ClusterView').select(clusters, 
+            groups=groups)
+    
+    def action_processed(self, action, to_select=[], to_invalidate=[],
+        to_compute=None, groups_to_select=None):
+        """Called after an action has been processed. Used to update the 
+        different views and launch tasks."""
+        if isinstance(to_select, (int, long, np.integer)):
+            to_select = [to_select]
+        if isinstance(to_invalidate, (int, long, np.integer)):
+            to_invalidate = [to_invalidate]
+        if isinstance(to_compute, (int, long, np.integer)):
+            to_compute = [to_compute]
+        # Select clusters to be selected.
+        if len(to_select) > 0:
+            self.update_cluster_selection(to_select, groups=groups_to_select)
+        elif len(groups_to_select) > 0:
+            self.update_cluster_selection([], groups=groups_to_select)
+        # Invalidate clusters.
+        if len(to_invalidate) > 0:
+            self.statscache.invalidate(to_invalidate)
+        # Compute the correlation matrix for the requested clusters.
+        if to_compute is not None:
+            self.start_compute_similarity_matrix(to_compute)
+            
+        self.need_save = True
+        
+    def merge_callback(self, checked=None):
+        cluster_view = self.get_view('ClusterView')
+        clusters = cluster_view.selected_clusters()
+        if len(clusters) >= 2:
+            with LOCK:
+                action, output = self.controller.merge_clusters(clusters)
+            self.action_processed(action, **output)
+            # Inform the wizard.
+            cluster_merged = output['to_select']
+            clusters_to_merge = output['to_invalidate']
+            clusters_to_merge.remove(cluster_merged)
+            # self.tasks.wizard_task.merged(clusters_to_merge, cluster_merged)
+            
+    def split_callback(self, checked=None):
+        cluster_view = self.get_view('ClusterView')
+        clusters = cluster_view.selected_clusters()
+        spikes_selected = self.spikes_selected
+        if len(spikes_selected) >= 1:
+            with LOCK:
+                action, output = self.controller.split_clusters(
+                    clusters, spikes_selected)
+            self.action_processed(action, **output)
+            # Cancel the selection after the split.
+            self.spikes_selected = []
+            # Inform the wizard.
+            # TODO
+            
+    def undo_callback(self, checked=None):
+        with LOCK:
+            action, output = self.controller.undo()
+        if output is None:
+            output = {}
+        self.action_processed(action, **output)
+        if action == 'merge_clusters_undo':
+            # Inform the wizard.
+            clusters_to_merge = list(output['to_select'])
+            # self.tasks.wizard_task.merged_undo(clusters_to_merge)
+        
+    def redo_callback(self, checked=None):
+        with LOCK:
+            action, output = self.controller.redo()
+        if output is None:
+            output = {}
+        self.action_processed(action, **output)
+        
+    def cluster_color_changed_callback(self, cluster, color):
+        with LOCK:
+            action, output = self.controller.change_cluster_color(cluster, color)
+        self.action_processed(action, **output)
+        
+    def group_color_changed_callback(self, group, color):
+        with LOCK:
+            action, output = self.controller.change_group_color(group, color)
+        self.action_processed(action, **output)
+        
+    def group_renamed_callback(self, group, name):
+        with LOCK:
+            action, output = self.controller.rename_group(group, name)
+        self.action_processed(action, **output)
+        
+    def clusters_moved_callback(self, clusters, group):
+        with LOCK:
+            action, output = self.controller.move_clusters(clusters, group)
+        self.action_processed(action, **output)
+        # Update the wizard.
+        # self.tasks.wizard_task.set_data(
+            # cluster_groups=self.loader.get_cluster_groups('all'),
+            # )
+        # self.tasks.wizard_task.moved(clusters, group)
+        
+    def group_removed_callback(self, group):
+        with LOCK:
+            action, output = self.controller.remove_group(group)
+        self.action_processed(action, **output)
+        
+    def group_added_callback(self, group, name, color):
+        with LOCK:
+            action, output = self.controller.add_group(group, name, color)
+        self.action_processed(action, **output)
+    
+    
+    
+    
+    
+    
+    
+    
+    # Views callbacks.
+    # ----------------
+    def waveform_spikes_highlighted_callback(self, spikes):
+        self.spikes_highlighted = spikes
+        self.get_view('FeatureView').highlight_spikes(get_array(spikes))
+        
+    def features_spikes_highlighted_callback(self, spikes):
+        self.spikes_highlighted = spikes
+        self.get_view('WaveformView').highlight_spikes(get_array(spikes))
+        
+    def features_spikes_selected_callback(self, spikes):
+        self.spikes_selected = spikes
+        self.update_action_enabled()
+        self.get_view('WaveformView').highlight_spikes(get_array(spikes))
+        
+    def waveform_box_clicked_callback(self, coord, cluster, channel):
+        """Changed in waveform ==> change in feature"""
+        self.get_view('FeatureView').set_projection(coord, channel, -1)
+        
+    def projection_changed_callback(self, coord, channel, feature):
+        """Changed in projection ==> change in feature"""
+        self.get_view('FeatureView').set_projection(coord, channel, feature)
+        
+    def features_projection_changed_callback(self, coord, channel, feature):
+        """Changed in feature ==> change in projection"""
+        self.get_view('ProjectionView').set_projection(coord, channel, feature,
+            do_emit=False)
+        
+    
+    # Help callbacks.
+    # ---------------
+    def about_callback(self, checked=None):
+        QtGui.QMessageBox.about(self, "KlustaViewa", ABOUT)
+    
+    def shortcuts_callback(self, checked=None):
+        e = QtGui.QKeyEvent(QtCore.QEvent.KeyPress, 
+                             QtCore.Qt.Key_H,
+                             QtCore.Qt.NoModifier,)
+        self.keyPressEvent(e)
+    
+    def refresh_preferences_callback(self, checked=None):
+        log.debug("Refreshing user preferences.")
+        USERPREF.refresh()
+        
     
     # Geometry.
     # ---------
@@ -1345,8 +992,6 @@ class MainWindow(QtGui.QMainWindow):
         
         # Close the main window.
         return super(MainWindow, self).closeEvent(e)
-            
-            
             
     def sizeHint(self):
         return QtCore.QSize(1200, 800)
