@@ -194,8 +194,9 @@ class TaskGraph(AbstractTaskGraph):
         # Otherwise, update directly the correlograms view without launching
         # the task in the external process.
         else:
-            # self.update_similarity_matrix_view()
-            return '_update_similarity_matrix_view'
+            return [('_wizard_update', (target_next,)),
+                    ('_update_similarity_matrix_view',),
+                    ]
     
     def _correlograms_computed(self, clusters, correlograms, ncorrbins, corrbin):
         clusters_selected = self.loader.get_clusters_selected()
