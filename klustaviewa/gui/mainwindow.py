@@ -19,6 +19,7 @@ from qtools import inprocess, inthread, QT_BINDING
 import klustaviewa.views as vw
 from klustaviewa.gui.icons import get_icon
 from klustaviewa.control.controller import Controller
+from klustaviewa.wizard.wizard import Wizard
 from klustaviewa.dataio.tools import get_array
 from klustaviewa.dataio.loader import KlustersLoader
 from klustaviewa.gui.buffer import Buffer
@@ -68,6 +69,7 @@ class MainWindow(QtGui.QMainWindow):
         self.statscache = None
         self.loader = KlustersLoader()
         self.loader.progressReported.connect(self.open_progress_reported)
+        self.wizard = None
         self.controller = None
         self.spikes_highlighted = []
         self.spikes_selected = []
@@ -207,9 +209,9 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('delete_target_noise', 'Move target to &noise', 
             shortcut='ALT+N')
             
-        self.add_action('delete_target_candidate', 'Move &both to MUA', 
+        self.add_action('delete_both', 'Move &both to MUA', 
             shortcut='CTRL+ALT+M')
-        self.add_action('delete_target_candidate_noise', 'Move both to noise', 
+        self.add_action('delete_both_noise', 'Move both to noise', 
             shortcut='CTRL+ALT+N')
         
     def create_help_actions(self):
@@ -274,12 +276,12 @@ class MainWindow(QtGui.QMainWindow):
         # Delete.
         wizard_menu.addAction(self.delete_candidate_action)
         wizard_menu.addAction(self.delete_target_action)
-        wizard_menu.addAction(self.delete_target_candidate_action)
+        wizard_menu.addAction(self.delete_both_action)
         wizard_menu.addSeparator()
         # Delete noise.
         wizard_menu.addAction(self.delete_candidate_noise_action)
         wizard_menu.addAction(self.delete_target_noise_action)
-        wizard_menu.addAction(self.delete_target_candidate_noise_action)
+        wizard_menu.addAction(self.delete_both_noise_action)
         wizard_menu.addSeparator()
         
         help_menu = self.menuBar().addMenu("&Help")
@@ -645,14 +647,24 @@ class MainWindow(QtGui.QMainWindow):
         ipython = self.get_view('IPythonView')
         if ipython:
             ipython.set_data(stats=self.statscache)
-            
+        
+        # Initialize the wizard.
+        self.wizard = Wizard()
+        self.wizard.set_data(
+            features=self.loader.get_features('all'),
+            spiketimes=self.loader.get_spiketimes('all'),
+            masks=self.loader.get_masks('all'),
+            clusters=self.loader.get_clusters('all'),
+            cluster_groups=self.loader.get_cluster_groups('all'),
+            correlograms=self.statscache.correlograms,
+            similarity_matrix=self.statscache.similarity_matrix,
+            )
+        
         # Update the task graph.
         self.taskgraph.set(self)
         self.taskgraph.update_cluster_view()
         self.taskgraph.update_cluster_view()
         self.taskgraph.compute_similarity_matrix()
-        # TODO
-        # self.taskgraph.initialize_wizard()
         
     def open_progress_reported(self, progress, progress_max):
         self.open_progress.setMaximum(progress_max)
@@ -787,6 +799,42 @@ class MainWindow(QtGui.QMainWindow):
     def group_added_callback(self, group, name, color):
         self.taskgraph.group_added(group, name, color)
         self.update_action_enabled()
+    
+    
+    # Wizard callbacks.
+    # -----------------
+    def reset_navigation_callback(self, checked=None):
+        self.taskgraph.wizard_reset()
+    
+    def previous_candidate_callback(self, checked=None):
+        # Previous candidate.
+        self.taskgraph.wizard_previous_candidate()
+        
+    def next_candidate_callback(self, checked=None):
+        # Skip candidate.
+        self.taskgraph.wizard_next_candidate()
+    
+    def next_target_callback(self, checked=None):
+        # Move target to Good group, and select next target.
+        self.taskgraph.wizard_move_and_next('target', 2)
+        
+    def delete_candidate_noise_callback(self, checked=None):
+        self.taskgraph.wizard_move_and_next('candidate', 0)
+        
+    def delete_candidate_callback(self, checked=None):
+        self.taskgraph.wizard_move_and_next('candidate', 1)
+        
+    def delete_target_noise_callback(self, checked=None):
+        self.taskgraph.wizard_move_and_next('target', 0)
+        
+    def delete_target_callback(self, checked=None):
+        self.taskgraph.wizard_move_and_next('target', 1)
+        
+    def delete_both_noise_callback(self, checked=None):
+        self.taskgraph.wizard_move_and_next('both', 0)
+        
+    def delete_both_callback(self, checked=None):
+        self.taskgraph.wizard_move_and_next('both', 1)
     
     
     # Views callbacks.

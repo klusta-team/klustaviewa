@@ -100,27 +100,36 @@ class Wizard(object):
         if 'clusters' in kwargs or 'cluster_groups' in kwargs:
             self._compute_best_pairs()
             
-    def merged(self, clusters_to_merge, cluster_new):
+    def merged(self, clusters_to_merge, cluster_merged):
         """Called to signify the wizard that a merge has happened.
         No data update happens here, rather, self.update needs to be called
         with the updated data."""
-        renaming = {cluster: cluster_new for cluster in clusters_to_merge}
+        renaming = {cluster: cluster_merged for cluster in clusters_to_merge}
         self.navigator.rename(renaming)
             
-    def merged_undo(self, clusters_to_merge):
+    def merged_undo(self, clusters_to_merge, cluster_merged):
         self.navigator.undo_rename(clusters_to_merge)
             
-    def split(self, clusters_old, clusters_new):
+    def split(self, clusters_to_split, clusters_split, clusters_empty):
         """Called to signify the wizard that a split has happened."""
+        # TODO
+        pass
+            
+    def split_undo(self, clusters_to_split, clusters_split):
+        """Called to signify the wizard that a split undo has happened."""
+        # TODO
         pass
         
-    def moved(self, clusters, group):
+    def moved(self, clusters, groups_old, group):
         # Delete the cluster from the list of candidates in the navigator.
         if group <= 1:
             self.navigator.hide(clusters)
         else:
             self.navigator.unhide(clusters)
     
+    def moved_undo(self, clusters, groups_old, group):
+        # TODO
+        pass
         
     
     # Navigation methods.

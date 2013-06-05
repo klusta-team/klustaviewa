@@ -159,7 +159,7 @@ def test_wizard_move():
     # Simulate a move.
     cluster_groups[best_cluster] = 1
     w.set_data(cluster_groups=cluster_groups)
-    w.moved([best_cluster], 1)
+    w.moved([best_cluster], [3], 1)
     
     for _ in xrange(nclusters):
         target, candidate = w.next()
@@ -191,7 +191,7 @@ def test_wizard2():
     assert w.next() == (12, 3)
     
     # Move candidate.
-    w.moved(3, 1)
+    w.moved(3, 3, 1)
     assert w.current() == (12, 4)
     
     

@@ -157,13 +157,13 @@ class Processor(object):
         self.loader.set_cluster_groups(clusters, group_new)
         # to_compute=[] to force refreshing the correlation matrix
         # return dict(to_select=[next_cluster], to_compute=[])
-        return dict(clusters=clusters)
+        return dict(clusters=clusters, groups_old=groups_old, group=group_new)
         
     def move_clusters_undo(self, clusters, groups_old, group_new):
         self.loader.set_cluster_groups(clusters, groups_old)
         # to_compute=[] to force refreshing the correlation matrix
         # return dict(to_select=clusters, to_compute=[])
-        return dict(clusters=clusters)
+        return dict(clusters=clusters, groups_old=groups_old, group=group_new)
       
       
     # Change group color.

@@ -91,6 +91,7 @@ class TaskGraph(AbstractTaskGraph):
         self.get_view = self.mainwindow.get_view
         self.get_views = self.mainwindow.get_views
         self.loader = self.mainwindow.loader
+        self.wizard = self.mainwindow.wizard
         self.controller = self.mainwindow.controller
         self.statscache = self.mainwindow.statscache
         
@@ -121,8 +122,9 @@ class TaskGraph(AbstractTaskGraph):
                 ('_compute_correlograms', (clusters,),),
                 ]
     
-    def _select_in_cluster_view(self, clusters, groups=[]):
-        self.get_view('ClusterView').select(clusters, groups=groups)
+    def _select_in_cluster_view(self, clusters, groups=[], external_call=False):
+        self.get_view('ClusterView').select(clusters, groups=groups,
+            external_call=external_call)
     
     
     # Computations.
@@ -232,16 +234,9 @@ class TaskGraph(AbstractTaskGraph):
             )
         self.get_view('ClusterView').set_quality(
             self.statscache.cluster_quality)
-        # Update the wizard.
-        # self.update_wizard(clusters_selected, clusters)
-        # self.tasks.wizard_task.set_data(
-            # clusters=clusters,
-            # cluster_groups=cluster_groups,
-            # similarity_matrix=self.statscache.similarity_matrix_normalized,
-            # )
-        # Update the view.
-        # self.update_similarity_matrix_view()
-        return ('_update_similarity_matrix_view',)
+        return [('_wizard_update',),
+                ('_update_similarity_matrix_view',),
+                ]
 
     def _invalidate(self, clusters):
         self.statscache.invalidate(clusters)
@@ -382,14 +377,14 @@ class TaskGraph(AbstractTaskGraph):
     def _merge(self, clusters):
         if len(clusters) >= 2:
             action, output = self.controller.merge_clusters(clusters)
-            # self.mainwindow.update_action_enabled()
+            self.wizard.merged(**output)
             return after_merge(output)
             
     def _split(self, clusters, spikes_selected):
         if len(spikes_selected) >= 1:
             action, output = self.controller.split_clusters(clusters, 
                 spikes_selected)
-            # self.mainwindow.update_action_enabled()
+            self.wizard.split(**output)
             return after_split(output)
     
     def _undo(self):
@@ -398,14 +393,17 @@ class TaskGraph(AbstractTaskGraph):
             return
         action, output = undo
         if action == 'merge_clusters_undo':
+            self.wizard.merged_undo(**output)
             return after_merge_undo(output)
         elif action == 'split_clusters_undo':
+            self.wizard.split_undo(**output)
             return after_split_undo(output)
         elif action == 'change_cluster_color_undo':
             return after_cluster_color_changed(output)
         elif action == 'change_group_color_undo':
             return after_group_color_changed(output)
         elif action == 'move_clusters_undo':
+            self.wizard.moved_undo(**output)
             return after_clusters_moved(output)
         elif action == 'add_group_undo':
             return after_group_added(output)
@@ -420,14 +418,17 @@ class TaskGraph(AbstractTaskGraph):
             return
         action, output = redo
         if action == 'merge_clusters':
+            self.wizard.merged(**output)
             return after_merge(output)
         elif action == 'split_clusters':
+            self.wizard.split(**output)
             return after_split(output)
         elif action == 'change_cluster_color':
             return after_cluster_color_changed(output)
         elif action == 'change_group_color':
             return after_group_color_changed(output)
         elif action == 'move_clusters':
+            self.wizard.moved(**output)
             return after_clusters_moved(output)
         elif action == 'add_group':
             return after_group_added(output)
@@ -451,9 +452,10 @@ class TaskGraph(AbstractTaskGraph):
         action, output = self.controller.rename_group(group, name)
         return after_group_renamed(output)
         
-    def _clusters_moved(self, clusters, group):
+    def _clusters_moved(self, clusters, group, do_select=True):
         action, output = self.controller.move_clusters(clusters, group)
-        return after_clusters_moved(output)
+        self.wizard.moved(**output)
+        return after_clusters_moved(output, do_select=do_select)
         
     def _group_removed(self, group):
         action, output = self.controller.remove_group(group)
@@ -462,6 +464,62 @@ class TaskGraph(AbstractTaskGraph):
     def _group_added(self, group, name, color):
         action, output = self.controller.add_group(group, name, color)
         return after_group_added(output)
+    
+    
+    # Wizard.
+    # -------
+    def _wizard_update(self):
+        self.wizard.set_data(
+            clusters=get_array(self.loader.get_clusters('all')),
+            cluster_groups=get_array(self.loader.get_cluster_groups('all')),
+            similarity_matrix=self.statscache.similarity_matrix_normalized,
+            )
+    
+    def _wizard_change_color(self, clusters):
+        if clusters is not None:
+            self.get_view('ClusterView').set_background(
+                {cluster: i + 1 for i, cluster in enumerate(clusters)})
+    
+    # Navigation.
+    def _wizard_reset(self):
+        clusters = self.wizard.reset()
+        
+    def _wizard_previous_candidate(self):
+        clusters = self.wizard.previous()
+        return after_wizard_selection(clusters)
+        
+    def _wizard_next_candidate(self):
+        clusters = self.wizard.next()
+        return after_wizard_selection(clusters)
+        
+    def _wizard_next_target(self):
+        clusters = self.wizard.next_target()
+        return after_wizard_selection(clusters)
+        
+    # Control.
+    def _wizard_move_and_next(self, what, group):
+        """Move target, candidate, or both, to a given group, and go to
+        the next proposition."""
+        # Current proposition.
+        clusters = self.wizard.current()
+        if clusters is None:
+            return
+        target, candidate = clusters
+        # Select appropriate clusters to move.
+        if what == 'candidate':
+            clusters = [candidate]
+            next = '_wizard_next_candidate'
+        elif what == 'target':
+            clusters = [target]
+            next = '_wizard_next_target'
+        elif what == 'both':
+            clusters = [candidate, target]
+            next = '_wizard_next_target'
+        # Move clusters, and select next proposition.
+        return [('_clusters_moved', (clusters, group, False)),
+                (next,),
+                ]
+    
     
     
 # -----------------------------------------------------------------------------
@@ -513,10 +571,14 @@ def after_group_color_changed(output):
     return [('_update_cluster_view'),
             ('_select_in_cluster_view', ([],), dict(groups=output['groups']),),]
 
-def after_clusters_moved(output):
-    return [('_update_cluster_view'),
-            ('_select_in_cluster_view', (output['clusters'],)),
-            ('_update_similarity_matrix_view')]
+def after_clusters_moved(output, do_select=True):
+    output = [('_update_cluster_view'),
+              ('_update_similarity_matrix_view'),
+              ]
+    if do_select:
+        output += [('_select_in_cluster_view', (output['clusters'],)),
+                   ]
+    return output
 
 def after_group_added(output):
     return [('_update_cluster_view')]
@@ -528,4 +590,16 @@ def after_group_removed(output):
     return [('_update_cluster_view')]
 
 
-
+# Wizard.
+def after_wizard_selection(clusters):
+    if clusters is None:
+        return None
+    else:
+        return [
+                ('_select_in_cluster_view', (clusters,), 
+                    dict(external_call=True)),
+                ('_wizard_change_color', (clusters,)),
+                ]
+                
+        
+        
