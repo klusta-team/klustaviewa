@@ -39,7 +39,7 @@ class Processor(object):
         # spikes = self.loader.get_spikes(clusters=clusters_to_merge)
         spikes = get_indices(clusters_old)
         clusters_to_merge = get_indices(cluster_groups)
-        group = get_array(cluster_groups)[0]
+        group = np.max(get_array(cluster_groups))
         color_old = get_array(cluster_groups)[0]
         color_new = next_color(color_old)
         self.loader.add_cluster(cluster_merged, group, color_new)
@@ -153,11 +153,12 @@ class Processor(object):
     # Move clusters.
     def move_clusters(self, clusters, groups_old, group_new):
         # Get next cluster to select.
-        # next_cluster = self.loader.get_next_cluster(clusters[-1])
+        next_cluster = self.loader.get_next_cluster(clusters[-1])
         self.loader.set_cluster_groups(clusters, group_new)
         # to_compute=[] to force refreshing the correlation matrix
         # return dict(to_select=[next_cluster], to_compute=[])
-        return dict(clusters=clusters, groups_old=groups_old, group=group_new)
+        return dict(clusters=clusters, groups_old=groups_old, group=group_new,
+            next_cluster=next_cluster)
         
     def move_clusters_undo(self, clusters, groups_old, group_new):
         self.loader.set_cluster_groups(clusters, groups_old)

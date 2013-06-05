@@ -3,7 +3,6 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-
 import numpy as np
 import pandas as pd
 
@@ -72,7 +71,6 @@ class AbstractTaskGraph(QtCore.QObject):
         return lambda *args, **kwargs: self.run(('_' + name, args, kwargs))
         
 
-
 # -----------------------------------------------------------------------------
 # Specific task graph
 # -----------------------------------------------------------------------------
@@ -136,11 +134,11 @@ class TaskGraph(AbstractTaskGraph):
         self.correlograms_computed(clusters, correlograms, ncorrbins, corrbin)
         
     def similarity_matrix_computed_callback(self, clusters_selected, matrix, 
-        clusters, cluster_groups):
+        clusters, cluster_groups, target_next=None):
         # Execute the callback function under the control of the task manager
         # (which handles the graph dependency).
         self.similarity_matrix_computed(clusters_selected, matrix, clusters,
-            cluster_groups)
+            cluster_groups, target_next=target_next)
             
     def _compute_correlograms(self, clusters_selected):
         # Get the correlograms parameters.
@@ -170,7 +168,7 @@ class TaskGraph(AbstractTaskGraph):
             # self.update_correlograms_view()
             return '_update_correlograms_view'
     
-    def _compute_similarity_matrix(self):#, clusters_to_update=None):
+    def _compute_similarity_matrix(self, target_next=None):#, clusters_to_update=None):
         # Set wait cursor.
         # self.set_cursor(QtCore.Qt.BusyCursor)
         # Get the correlation matrix parameters.
@@ -181,7 +179,7 @@ class TaskGraph(AbstractTaskGraph):
         clusters_all = self.loader.get_clusters_unique()
         # Get cluster indices that need to be updated.
         # if clusters_to_update is None:
-        # NOTE: not specifying explictely clusters_to_update ensures that
+        # NOTE: not specifying explicitely clusters_to_update ensures that
         # all clusters that need to be updated are updated.
         # Allows to fix a bug where the matrix is not updated correctly
         # when multiple calls to this functions are called quickly.
@@ -191,7 +189,8 @@ class TaskGraph(AbstractTaskGraph):
         if len(clusters_to_update) > 0:
             # Launch the task.
             self.tasks.similarity_matrix_task.compute(features,
-                clusters, cluster_groups, masks, clusters_to_update)
+                clusters, cluster_groups, masks, clusters_to_update,
+                target_next=target_next)
         # Otherwise, update directly the correlograms view without launching
         # the task in the external process.
         else:
@@ -220,7 +219,7 @@ class TaskGraph(AbstractTaskGraph):
         return '_update_correlograms_view'
         
     def _similarity_matrix_computed(self, clusters_selected, matrix, clusters,
-            cluster_groups):
+            cluster_groups, target_next=None):
         if not np.array_equal(clusters, self.loader.get_clusters('all')):
             return False
         self.statscache.similarity_matrix.update(clusters_selected, matrix)
@@ -234,7 +233,7 @@ class TaskGraph(AbstractTaskGraph):
             )
         self.get_view('ClusterView').set_quality(
             self.statscache.cluster_quality)
-        return [('_wizard_update',),
+        return [('_wizard_update', (target_next,)),
                 ('_update_similarity_matrix_view',),
                 ]
 
@@ -377,14 +376,14 @@ class TaskGraph(AbstractTaskGraph):
     def _merge(self, clusters):
         if len(clusters) >= 2:
             action, output = self.controller.merge_clusters(clusters)
-            self.wizard.merged(**output)
+            # self.wizard.merged(**output)
             return after_merge(output)
             
     def _split(self, clusters, spikes_selected):
         if len(spikes_selected) >= 1:
             action, output = self.controller.split_clusters(clusters, 
                 spikes_selected)
-            self.wizard.split(**output)
+            # self.wizard.split(**output)
             return after_split(output)
     
     def _undo(self):
@@ -393,17 +392,17 @@ class TaskGraph(AbstractTaskGraph):
             return
         action, output = undo
         if action == 'merge_clusters_undo':
-            self.wizard.merged_undo(**output)
+            # self.wizard.merged_undo(**output)
             return after_merge_undo(output)
         elif action == 'split_clusters_undo':
-            self.wizard.split_undo(**output)
+            # self.wizard.split_undo(**output)
             return after_split_undo(output)
         elif action == 'change_cluster_color_undo':
             return after_cluster_color_changed(output)
         elif action == 'change_group_color_undo':
             return after_group_color_changed(output)
         elif action == 'move_clusters_undo':
-            self.wizard.moved_undo(**output)
+            # self.wizard.moved_undo(**output)
             return after_clusters_moved(output)
         elif action == 'add_group_undo':
             return after_group_added(output)
@@ -418,17 +417,17 @@ class TaskGraph(AbstractTaskGraph):
             return
         action, output = redo
         if action == 'merge_clusters':
-            self.wizard.merged(**output)
+            # self.wizard.merged(**output)
             return after_merge(output)
         elif action == 'split_clusters':
-            self.wizard.split(**output)
+            # self.wizard.split(**output)
             return after_split(output)
         elif action == 'change_cluster_color':
             return after_cluster_color_changed(output)
         elif action == 'change_group_color':
             return after_group_color_changed(output)
         elif action == 'move_clusters':
-            self.wizard.moved(**output)
+            # self.wizard.moved(**output)
             return after_clusters_moved(output)
         elif action == 'add_group':
             return after_group_added(output)
@@ -452,10 +451,12 @@ class TaskGraph(AbstractTaskGraph):
         action, output = self.controller.rename_group(group, name)
         return after_group_renamed(output)
         
-    def _clusters_moved(self, clusters, group, do_select=True):
+    def _clusters_moved(self, clusters, group, do_select=True, 
+            do_update_wizard=True):
         action, output = self.controller.move_clusters(clusters, group)
-        self.wizard.moved(**output)
-        return after_clusters_moved(output, do_select=do_select)
+        # self.wizard.moved(**output)
+        return after_clusters_moved(output, do_select=do_select, 
+            do_update_wizard=do_update_wizard)
         
     def _group_removed(self, group):
         action, output = self.controller.remove_group(group)
@@ -468,12 +469,12 @@ class TaskGraph(AbstractTaskGraph):
     
     # Wizard.
     # -------
-    def _wizard_update(self):
+    def _wizard_update(self, target=None):
         self.wizard.set_data(
-            clusters=get_array(self.loader.get_clusters('all')),
-            cluster_groups=get_array(self.loader.get_cluster_groups('all')),
+            cluster_groups=self.loader.get_cluster_groups('all'),
             similarity_matrix=self.statscache.similarity_matrix_normalized,
             )
+        self.wizard.update_candidates(target)
     
     def _wizard_change_color(self, clusters):
         if clusters is not None:
@@ -483,43 +484,57 @@ class TaskGraph(AbstractTaskGraph):
     # Navigation.
     def _wizard_reset(self):
         clusters = self.wizard.reset()
+        return '_wizard_update'
         
     def _wizard_previous_candidate(self):
-        clusters = self.wizard.previous()
+        clusters = self.wizard.previous_pair()
+        return after_wizard_selection(clusters)
+        
+    def _wizard_current_candidate(self):
+        clusters = self.wizard.current_pair()
         return after_wizard_selection(clusters)
         
     def _wizard_next_candidate(self):
-        clusters = self.wizard.next()
+        clusters = self.wizard.next_pair()
         return after_wizard_selection(clusters)
         
-    def _wizard_next_target(self):
-        clusters = self.wizard.next_target()
-        return after_wizard_selection(clusters)
+    def _wizard_reset_skipped(self):
+        self.wizard.reset_skipped()
         
     # Control.
     def _wizard_move_and_next(self, what, group):
         """Move target, candidate, or both, to a given group, and go to
         the next proposition."""
         # Current proposition.
-        clusters = self.wizard.current()
+        clusters = self.wizard.current_pair()
         if clusters is None:
             return
         target, candidate = clusters
         # Select appropriate clusters to move.
         if what == 'candidate':
             clusters = [candidate]
-            next = '_wizard_next_candidate'
+            # Keep the current target.
+            target_next = target
+            reset_skipped = False
         elif what == 'target':
             clusters = [target]
-            next = '_wizard_next_target'
+            # Go to the next best target cluster.
+            target_next = None
+            reset_skipped = True
         elif what == 'both':
             clusters = [candidate, target]
-            next = '_wizard_next_target'
+            # Go to the next best target cluster.
+            target_next = True
+            reset_skipped = True
         # Move clusters, and select next proposition.
-        return [('_clusters_moved', (clusters, group, False)),
-                (next,),
-                ]
-    
+        r = [('_clusters_moved', (clusters, group, False, False)),
+            ]
+        if reset_skipped:
+            r += [('_wizard_reset_skipped',),]
+        r += [('_wizard_update', (target_next,)),
+              ('_wizard_next_candidate',),
+              ]
+        return r
     
     
 # -----------------------------------------------------------------------------
@@ -531,7 +546,7 @@ def union(*clusters_list):
 # Merge/split actions.
 def after_merge(output):
     return [ ('_invalidate', (output['clusters_to_merge'],)),
-             ('_compute_similarity_matrix'),#, ([output['cluster_merged']],)),
+             ('_compute_similarity_matrix', (output['cluster_merged'],)),
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (output['cluster_merged'],)),
             ]
@@ -539,7 +554,7 @@ def after_merge(output):
 def after_merge_undo(output):
     clusters_to_invalidate = union(output['clusters_to_merge'], [output['cluster_merged']])
     return [ ('_invalidate', (clusters_to_invalidate,)),
-             ('_compute_similarity_matrix'),#, (output['clusters_to_merge'],)),
+             ('_compute_similarity_matrix', ()),
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (output['clusters_to_merge'],)),
             ]
@@ -548,7 +563,7 @@ def after_split(output):
     clusters_to_update = sorted(set(output['clusters_to_split']).union(set(
         output['clusters_split'])) - set(output['clusters_empty']))
     return [ ('_invalidate', (output['clusters_to_split'],)),
-             ('_compute_similarity_matrix'),#, (clusters_to_update,)),
+             ('_compute_similarity_matrix', (True,)),
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (clusters_to_update,)),
             ]
@@ -556,7 +571,7 @@ def after_split(output):
 def after_split_undo(output):
     clusters_to_invalidate = union(output['clusters_to_split'], output['clusters_split'])
     return [ ('_invalidate', (clusters_to_invalidate,)),
-             ('_compute_similarity_matrix'),#, (output['clusters_to_split'],)),
+             ('_compute_similarity_matrix', (True,)),
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (output['clusters_to_split'],)),
             ]
@@ -571,14 +586,20 @@ def after_group_color_changed(output):
     return [('_update_cluster_view'),
             ('_select_in_cluster_view', ([],), dict(groups=output['groups']),),]
 
-def after_clusters_moved(output, do_select=True):
-    output = [('_update_cluster_view'),
-              ('_update_similarity_matrix_view'),
-              ]
+def after_clusters_moved(output, do_select=True, do_update_wizard=True):
+    r = [ ('_update_cluster_view'),
+          ('_update_similarity_matrix_view'),
+          ]
+    if do_update_wizard:
+        r += [('_wizard_update',),]
     if do_select:
-        output += [('_select_in_cluster_view', (output['clusters'],)),
-                   ]
-    return output
+        if 'next_cluster' in output:
+            clusters = [output['next_cluster']]
+        else:
+            clusters = output['clusters']
+        # When deleting clusters, selecting the next one in the same group.
+        r += [('_select_in_cluster_view', (clusters,)),]
+    return r
 
 def after_group_added(output):
     return [('_update_cluster_view')]

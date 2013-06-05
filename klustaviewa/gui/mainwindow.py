@@ -493,6 +493,7 @@ class MainWindow(QtGui.QMainWindow):
             select=self.get_view('ClusterView').select,
             loader=self.loader,
             stats=self.statscache,
+            wizard=self.wizard,
             )
         view.set_data(**namespace)
         # Load all .py files in the code directory.
@@ -650,15 +651,6 @@ class MainWindow(QtGui.QMainWindow):
         
         # Initialize the wizard.
         self.wizard = Wizard()
-        self.wizard.set_data(
-            features=self.loader.get_features('all'),
-            spiketimes=self.loader.get_spiketimes('all'),
-            masks=self.loader.get_masks('all'),
-            clusters=self.loader.get_clusters('all'),
-            cluster_groups=self.loader.get_cluster_groups('all'),
-            correlograms=self.statscache.correlograms,
-            similarity_matrix=self.statscache.similarity_matrix,
-            )
         
         # Update the task graph.
         self.taskgraph.set(self)

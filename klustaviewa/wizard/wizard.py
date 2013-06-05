@@ -7,7 +7,8 @@ from collections import Counter, OrderedDict
 
 import numpy as np
 
-from klustaviewa.wizard.pair_navigator import PairNavigator
+from klustaviewa.dataio.selection import get_indices
+from klustaviewa.dataio.tools import get_array
 
 
 # -----------------------------------------------------------------------------
@@ -26,140 +27,164 @@ def unique(seq):
 class Wizard(object):
     """Wizard object, takes the data parameters and returns propositions of
     clusters to select."""
-    def __init__(self, features=None, spiketimes=None, clusters=None, 
-        masks=None, cluster_groups=None, 
-        correlograms=None, similarity_matrix=None, 
-        ):
-        self.features = features
-        self.spiketimes = spiketimes
-        self.clusters = clusters
-        self.masks = masks
-        self.cluster_groups = cluster_groups
-        self.correlograms = correlograms
-        self.similarity_matrix = similarity_matrix
+    def __init__(self):
+        self.reset()
         
-        self.best_clusters = []
-        self.best_pairs = OrderedDict()
-        self.navigator = PairNavigator()
+    def reset(self):
+        self.target = None
+        self.candidates = []
+        # List of skipped candidates.
+        self.skipped = []
+        # Current position in the candidates list.
+        self.index = 0
+        # Size of the candidates list.
+        self.size = 0
         
-    
-    # Computation of the best pairs.
-    # ------------------------------
-    def _compute_best_pairs(self):
-        self.clusters_unique = np.unique(self.clusters)
         
-        if (self.similarity_matrix is None or 
-            self.similarity_matrix.size == 0):
-            return
-        
-        assert len(self.clusters_unique) == self.similarity_matrix.shape[0]
-        assert len(self.cluster_groups) == self.similarity_matrix.shape[0]
-        
-            
-        matrix = self.similarity_matrix
-        quality = np.diag(matrix)
-        n = matrix.shape[0]
-        
-        # Find hidden clusters (groups 0 to 2) so that they are not taken into
-        # account by the wizard.
-        hidden_clusters_rel = np.nonzero(self.cluster_groups <= 2)[0]
-        self.best_pairs = OrderedDict()
-        
-        # Sort first clusters by decreasing quality.
-        # Relative indices.
-        best_clusters_rel = np.argsort(quality)[-1::-1]
-        # Remove hidden clusters.
-        best_clusters_rel = np.array([x for x in best_clusters_rel 
-            if x not in hidden_clusters_rel], dtype=np.int32)
-        # Absolute indices.
-        self.best_clusters = self.clusters_unique[best_clusters_rel]
-        
-        for cluster_rel in best_clusters_rel:
-            # Absolute cluster index.
-            cluster = self.clusters_unique[cluster_rel]
-            # Sort all neighbor clusters.
-            clusters_rel = np.argsort(
-                np.hstack((matrix[cluster_rel, :],
-                           matrix[:, cluster_rel])))[::-1] % n
-            # Remove duplicates and preserve the order.
-            clusters_rel = unique(clusters_rel)
-            clusters_rel.remove(cluster_rel)
-            # Remove hidden clusters.
-            [clusters_rel.remove(cl) for cl in hidden_clusters_rel if cl in clusters_rel]
-            self.best_pairs[cluster] = self.clusters_unique[clusters_rel]
-            
-    
     # Data update methods.
     # --------------------
-    def set_data(self, **kwargs):
-        """Set the data at the beginning of the session."""
-        # Set the data.
-        for key, value in kwargs.iteritems():
-            setattr(self, key, value)
-        # Update the best pairs only if the clustering has changed.
-        if 'clusters' in kwargs or 'cluster_groups' in kwargs:
-            self._compute_best_pairs()
-            
-    def merged(self, clusters_to_merge, cluster_merged):
-        """Called to signify the wizard that a merge has happened.
-        No data update happens here, rather, self.update needs to be called
-        with the updated data."""
-        renaming = {cluster: cluster_merged for cluster in clusters_to_merge}
-        self.navigator.rename(renaming)
-            
-    def merged_undo(self, clusters_to_merge, cluster_merged):
-        self.navigator.undo_rename(clusters_to_merge)
-            
-    def split(self, clusters_to_split, clusters_split, clusters_empty):
-        """Called to signify the wizard that a split has happened."""
-        # TODO
-        pass
-            
-    def split_undo(self, clusters_to_split, clusters_split):
-        """Called to signify the wizard that a split undo has happened."""
-        # TODO
-        pass
+    def set_data(self, cluster_groups=None, similarity_matrix=None):
+        """Update the data."""
         
-    def moved(self, clusters, groups_old, group):
-        # Delete the cluster from the list of candidates in the navigator.
-        if group <= 1:
-            self.navigator.hide(clusters)
-        else:
-            self.navigator.unhide(clusters)
+        if cluster_groups is not None:
+            self.clusters_unique = get_array(get_indices(cluster_groups))
+            self.cluster_groups = get_array(cluster_groups)
+        
+        if (similarity_matrix is not None and similarity_matrix.size > 0):
+            self.matrix = similarity_matrix
+            self.quality = np.diag(self.matrix)
+        
+            assert len(self.cluster_groups) == self.matrix.shape[0]
+        
     
-    def moved_undo(self, clusters, groups_old, group):
-        # TODO
-        pass
+    # Core methods.
+    # -------------
+    def find_target(self):
+        # For the target, only consider the unsorted clusters.
+        kept = self.cluster_groups >= 3
+        quality_kept = self.quality[kept]
+        if len(quality_kept) == 0:
+            return None
+        quality_best = quality_kept.max()
+        target_rel = np.nonzero(kept & (self.quality == quality_best))[0][0]
+        target = self.clusters_unique[target_rel]
+        return target
+    
+    def find_candidates(self, target):
+        if target is None:
+            return []
+        
+        # Relative target.
+        try:
+        # if target not in self.clusters_unique:
+            # target = self.target
+            target_rel = np.nonzero(self.clusters_unique == target)[0][0]
+        except IndexError:
+            log.debug("Target cluster {0:d} does not exist.".format(target))
+            return []
+        
+        hidden = self.cluster_groups <= 1
+        
+        # Hide values in the matrix for hidden clusters.
+        matrix = self.matrix.copy()
+        matrix[hidden, :] = -1
+        matrix[:, hidden] = -1
+        n = matrix.shape[0]
+        
+        # Sort all neighbor clusters.
+        clusters_rel = np.argsort(
+            np.hstack((matrix[target_rel, :],
+                       matrix[:, target_rel])))[::-1] % n
+                       
+        # Remove duplicates and preserve the order.
+        clusters_rel = unique(clusters_rel)
+        clusters_rel.remove(target_rel)
+        
+        # Remove hidden clusters.
+        [clusters_rel.remove(cl) for cl in np.nonzero(hidden)[0] 
+            if cl in clusters_rel]
+        
+        candidates = self.clusters_unique[clusters_rel]
+        return candidates
+    
+    def update_candidates(self, target=None):
+        # Find the target if it is not specified.
+        if target is None:
+            target = self.find_target()
+        elif target is True:
+            target = self.current_target()
+        
+        # Find the ordered list of candidates for the specified target.
+        candidates = self.find_candidates(target)
+        
+        self.target = target
+        self.candidates = candidates
+        self.size = len(candidates)
+    
+        # Current position in the candidates list.
+        self.index = 0
+        # Skip all skipped candidates.
+        if self.size >= 1:
+            while self.candidates[self.index] in self.skipped:
+                self.index += 1
+                if self.index >= self.size - 1:
+                    break
+        
+    def reset_skipped(self):
+        self.skipped = []
         
     
     # Navigation methods.
     # -------------------
-    def current(self):
-        return self.navigator.current()
+    def mark_skipped(self):
+        candidate = self.current_candidate()
+        if candidate is None:
+            return
+        if candidate not in self.skipped:
+            self.skipped.append(candidate)
     
-    def previous(self):
-        pair = self.navigator.previous1()
-        # if pair is None:
-            # pair = self.previous_target()
-        return pair
-            
-    def next(self):
-        pair = self.navigator.next1()
-        if pair is None:
-            pair = self.next_target()
-        return pair
-
-    def previous_target(self):
-        return self.navigator.previous0()
-
-    def next_target(self):
-        # Update the navigator with the updated pairs.
-        pairs = self.best_pairs
-        self.navigator.update(pairs)
-        pair = self.navigator.next0()
-        return pair
+    def current_target(self):
+        if self.size == 0:
+            return None
+        return self.target
     
-    def reset_navigation(self):
-        self.navigator.reset()
+    def current_candidate(self):
+        if self.size == 0 or not(0 <= self.index <= self.size - 1):
+            return None
+        return self.candidates[self.index]
+    
+    def current_pair(self):
+        candidate = self.current_candidate()
+        if candidate is not None:
+            return self.current_target(), candidate
+    
+    def previous_candidate(self):
+        if self.size == 0 or self.index <= 0:
+            return self.current_candidate()
+        self.index -= 1
+        return self.current_candidate()
+    
+    def previous_pair(self):
+        candidate = self.previous_candidate()
+        if candidate is not None:
+            return self.current_target(), candidate
+
+    def next_candidate(self):
+        # Return the current candidate if it is the first call to this function.
+        if self.index == 0 and self.current_candidate() not in self.skipped:
+            self.mark_skipped()
+            return self.current_candidate()
+        self.mark_skipped()
+        if self.size == 0 or self.index >= self.size - 1:
+            return self.current_candidate()
+        self.index += 1
+        return self.current_candidate()
+
+    def next_pair(self):
+        candidate = self.next_candidate()
+        if candidate is not None:
+            return self.current_target(), candidate
+    
+    
     
     

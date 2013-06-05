@@ -64,13 +64,13 @@ class CorrelogramsTask(QtCore.QObject):
 
 class SimilarityMatrixTask(QtCore.QObject):
     correlationMatrixComputed = QtCore.pyqtSignal(np.ndarray, object,
-        np.ndarray, np.ndarray)
+        np.ndarray, np.ndarray, object)
     
     def __init__(self, parent=None):
         super(SimilarityMatrixTask, self).__init__(parent)
         
     def compute(self, features, clusters, 
-            cluster_groups, masks, clusters_selected):
+            cluster_groups, masks, clusters_selected, target_next=None):
         log.debug("Computing correlation for clusters {0:s}.".format(
             str(list(clusters_selected))))
         if len(clusters_selected) == 0:
@@ -80,13 +80,14 @@ class SimilarityMatrixTask(QtCore.QObject):
         return correlations
         
     def compute_done(self, features, clusters, 
-            cluster_groups, masks, clusters_selected,
+            cluster_groups, masks, clusters_selected, target_next=None,
         _result=None):
         correlations = _result
         self.correlationMatrixComputed.emit(np.array(clusters_selected),
             correlations, 
             get_array(clusters, copy=True), 
-            get_array(cluster_groups, copy=True))
+            get_array(cluster_groups, copy=True),
+            target_next)
             
 
 # -----------------------------------------------------------------------------
