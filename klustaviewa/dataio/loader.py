@@ -626,8 +626,7 @@ class KlustersLoader(Loader):
         except IOError:
             warn("The CLU file is missing.")
             # Default clusters if the CLU file is not available.
-            self.clusters = np.zeros(self.nspikes + 1, dtype=np.int32)
-            self.clusters[0] = 1
+            self.clusters = np.zeros(self.nspikes, dtype=np.int32)
         # Convert to Pandas.
         self.clusters = pd.Series(self.clusters, dtype=np.int32)
         
@@ -641,8 +640,9 @@ class KlustersLoader(Loader):
             info("The CLUINFO file is missing, generating a default one.")
             self.cluster_info = default_cluster_info(self.clusters_unique)
                 
-        assert np.array_equal(self.cluster_info.index, self.clusters_unique), \
-            "The CLUINFO file does not correspond to the loaded CLU file."
+        if not np.array_equal(self.cluster_info.index, self.clusters_unique):
+            info("The CLUINFO file does not correspond to the loaded CLU file.")
+            self.cluster_info = default_cluster_info(self.clusters_unique)
             
         self.cluster_colors = self.cluster_info['color'].astype(np.int32)
         self.cluster_groups = self.cluster_info['group'].astype(np.int32)
@@ -689,7 +689,7 @@ class KlustersLoader(Loader):
     # Log file.
     # ---------
     def initialize_logfile(self):
-        filename = self.filename_clu.replace('.clu.', '.kvwlg.')
+        filename = self.filename_fet.replace('.fet.', '.kvwlg.')
         self.logfile = FileLogger(filename, name='datafile', 
             level=USERPREF['loglevel_file'])
         # Register log file.

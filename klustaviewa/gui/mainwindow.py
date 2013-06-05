@@ -721,7 +721,7 @@ class MainWindow(QtGui.QMainWindow):
         duration = self.loader.get_correlogram_window()
         duration_new, ok = QtGui.QInputDialog.getDouble(self,
             "Correlograms time window", "Half width (ms):", 
-            duration / 2 * 1000, 1, 1000, 1)
+            duration / 2 * 1000, 1, 100000, 1)
         if ok:
             duration_new = duration_new * .001 * 2
             ncorrbins_new = 2 * int(np.ceil(.5 * duration_new / corrbin))
@@ -736,7 +736,7 @@ class MainWindow(QtGui.QMainWindow):
         duration = self.loader.get_correlogram_window()
         corrbin_new, ok = QtGui.QInputDialog.getDouble(self,
             "Correlograms bin size", "Bin size (ms):", 
-            corrbin * 1000, .1, 10, 2)
+            corrbin * 1000, .01, 1000, 2)
         if ok:
             corrbin_new = corrbin_new * .001
             ncorrbins_new = 2 * int(np.ceil(.5 * duration/ corrbin_new))

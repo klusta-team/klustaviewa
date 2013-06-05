@@ -231,6 +231,9 @@ class SimilarityMatrixInteractionManager(PlotInteractionManager):
         self.select_pair(parameter, True)
         
     def show_cluster(self, clu0, clu1):
+        if self.data_manager.nclusters <= 1:
+            return
+            
         n = self.data_manager.texture.shape[0]
         dx = 1 / float(n)
         i, j = np.digitize([clu0, clu1], self.data_manager.clusters_unique) - 1
@@ -239,6 +242,9 @@ class SimilarityMatrixInteractionManager(PlotInteractionManager):
         self.info_manager.show_closest_cluster((x0 + x1) / 2, (y0 + y1) / 2)
         
     def show_closest_cluster(self, parameter):
+        if self.data_manager.nclusters <= 1:
+            return
+            
         nclu = self.data_manager.nclusters
         
         if nclu == 0:
@@ -254,6 +260,9 @@ class SimilarityMatrixInteractionManager(PlotInteractionManager):
         self.info_manager.show_closest_cluster(xd, yd)
         
     def show_square(self, clu0, clu1):
+        if self.data_manager.nclusters <= 1:
+            return
+            
         n = self.data_manager.texture.shape[0]
         dx = 1 / float(n)
         i, j = np.digitize([clu0, clu1], self.data_manager.clusters_unique) - 1
@@ -266,7 +275,7 @@ class SimilarityMatrixInteractionManager(PlotInteractionManager):
             visual='square')
         
     def move_square(self, parameter):
-        if self.data_manager.nclusters == 0:
+        if self.data_manager.nclusters <= 1:
             return
         
         self.show_closest_cluster(parameter)
