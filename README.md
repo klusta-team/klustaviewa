@@ -11,7 +11,10 @@ error-prone.
 
 This software was developed by Cyrille Rossant in the [Cortical Processing Laboratory](http://www.ucl.ac.uk/cortexlab) at UCL.
 
+User guide
+----------
 
+  * [See the user guide](https://github.com/klusta-team/klustaviewa/blob/master/docs/manual.md).
 
 
 Screenshots
