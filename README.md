@@ -107,7 +107,7 @@ Then, in the software, you will be able to open an interactive IPython shell (wi
   Skip steps 3 and 4 and go directly to step 5.
   * Other configurations: [download KlustaViewa.](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip)
 
-Some portions of the code are accelerated using Cython, so you need a C compiler like gcc if you want to use the accelerated version. If you don't have one, a slower version will be automatically used.
+Some portions of the code are accelerated using Cython, so you need a C compiler like gcc if you want to use the accelerated version. If you don't have one, a slower version will be automatically used. If you use the Windows installer, you don't need a C compiler as the compiled code is directly installed.
 
 ### Step 3
 

@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     setup(
         name='klustaviewa',
-        version='0.1.0.dev',  # alpha pre-release
+        version='0.1.0.dev',
         author='Cyrille Rossant',
         author_email='rossant@github',
         packages=['klustaviewa',
