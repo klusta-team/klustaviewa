@@ -174,3 +174,9 @@ Use this if you want to be able to update with `git pull` (you need git).
         pip install -r requirements.txt
 
   
+Troubleshooting
+---------------
+
+If you have any trouble, bug, comment or suggestion, please send an e-mail to the author of the software: cyrille *dot* rossant *at* gmail *dot* com.
+
+
