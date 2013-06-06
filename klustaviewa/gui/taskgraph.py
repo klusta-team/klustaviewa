@@ -535,7 +535,6 @@ class TaskGraph(AbstractTaskGraph):
         r += [('_wizard_update', (target_next,)),
               ('_wizard_next_candidate',),
               ]
-        print r
         return r
     
     
