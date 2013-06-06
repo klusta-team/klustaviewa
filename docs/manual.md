@@ -46,7 +46,7 @@ The window contains several views:
   * ProjectionView: allows to change the projections in the FeatureView.
   * IPythonView (optional): an interactive IPython console that has access to the data.
 
-The views can be resized, moved, and floating outside from the main window. The buttons on the top right of each view allow respectively (from left to right) to:
+The views can be resized, moved, and set floating outside from the main window. The buttons on the top right of each view allow respectively (from left to right) to:
 
   * pin/unpin the view: when floating and pinned, the view is forced to stay floating even while it is moved on top of the main window,
   * maximize: only active when the view is floating,
@@ -58,7 +58,7 @@ Views can be created from the *Views* menu.
 
 ### Opening a data set
 
-For now, KlustaViewa can only open files in the Klusters/Neuroscope/NDManager format. A dataset consists of at least the following files:
+For now, KlustaViewa can only open files in the [Klusters/Neuroscope/NDManager format](http://klusters.sourceforge.net/UserManual/data-files.html). A dataset consists of at least the following files:
 
   * `.res.X` file: the spike times.
   * `.fet.X` file: the features.
@@ -81,7 +81,7 @@ Other files created and used by the software include:
 
 ### Cluster groups
 
-![KlustaViewa main window](images/open.PNG)
+![Opening a dataset](images/open.PNG)
 
 The clusters are contained in different **groups**. There are four groups by default:
 
@@ -99,7 +99,7 @@ New groups can be created by right-clicking in the ClusterView. Groups can also 
 
 One or multiple clusters can be selected in the ClusterView. The corresponding spikes are shown in the WaveformView and FeatureView, and the correlograms are shown in the CorrelogramsView.
 
-![KlustaViewa main window](images/twoclusters.PNG)
+![Selecting clusters](images/twoclusters.PNG)
 
 In the WaveformView, the probe geometry is shown if a `.probe` file is present in the dataset. The waveform colors depend on the spike masks: unmasked spikes are colored whereas masked spikes are gray.
 
@@ -117,11 +117,11 @@ You can also highlight spikes between the FeatureView and WaveformView, by movin
 
 ### Selecting projections
 
-The FeatureView can show any two projections in the X and Y axes. There are multiple ways of choosing the projections.
+The FeatureView can show any projection in the X and Y axes. There are multiple ways of choosing the projections.
 
   * In the ProjectionView, select the channel for the X axis (left) or Y axis (right), as well as the Principal Component.
-  * In the WaveformView, *CTRL + left click* on a channel to select its first component for the X axis.
-  * In the WaveformView, *CTRL + right click* on a channel to select its first component for the Y axis.
+  * In the WaveformView, *CTRL + left click* on a channel to select it for the X axis.
+  * In the WaveformView, *CTRL + right click* on a channel to select it for the Y axis.
   * In the FeatureView, press *CTRL while scrolling with the wheel* to cycle through all the channels in the X axis.
   * In the FeatureView, press *SHIFT while scrolling with the wheel* to cycle through all the channels in the Y axis.
 
@@ -135,7 +135,7 @@ You can merge and split clusters.
   
 You can undo/redo your last actions.
 
-![KlustaViewa main window](images/split.PNG)
+![Splitting a cluster](images/split.PNG)
 
   
 ### SimilarityMatrixView
@@ -145,11 +145,11 @@ The SimilarityMatrixView shows a similarity matrix of all pairs of clusters. A r
 
 ### Using the wizard
 
-The wizard guides you through the data to let you sort the clusters. The wizard proposes you two clusters: a **target cluster** (shown in red in the ClusterView) and a **candidate cluster** (shown in blue in the ClusterView). The target cluster has a high quality, whereas the candidate cluster is likely to be merged to the target cluster. The same target cluster is proposed at first with multiple candidates, by decreasing order of similarity between the target and candidate clusters. The target clusters are selected by decreasing order of quality. The quality value quantifies the separation between the cluster and all other clusters, weighted by the relative size of the cluster.
+The wizard guides you through the data to let you sort the clusters. The wizard proposes you two clusters: a **target cluster** (shown in red in the ClusterView) and a **candidate cluster** (shown in blue in the ClusterView). The target cluster has a high quality, whereas the candidate cluster is likely to be merged in the target cluster. The same target cluster is proposed at first with multiple candidates, by decreasing order of similarity between the target and candidate clusters. The target clusters are selected by decreasing order of quality. The quality value quantifies the separation between the cluster and all other clusters, weighted by the relative size of the cluster.
 
-![KlustaViewa main window](images/wizard.PNG)
+![Wizard](images/wizard.PNG)
 
-For each proposition, you have several options:
+Start the wizard by pressing SPACE. Then, for each proposition, you have several options:
 
   * Do nothing (press SPACE): skip the current candidate and select the next candidate, keeping the same target cluster.
   * Merge the candidate and target clusters (press *G*).
@@ -158,8 +158,8 @@ For each proposition, you have several options:
 Once you're done with the current target cluster (i.e. it shouldn't be merged with the remaining candidates), you can *sort* the target cluster and select the next target:
 
   * Move the target cluster to the *Good* group (press *ALT + G*).
-  * Delete the target cluster (*ALT + M* for MUA, *ALT + N* for noise).
-  * Delete both target and candidate clusters (*CTRL + ALT + M* for MUA, *CTRL + ALT + N* for noise).
+  * Delete the target cluster ( *ALT + M* for MUA, *ALT + N* for noise).
+  * Delete both target and candidate clusters ( *CTRL + ALT + M* for MUA, *CTRL + ALT + N* for noise).
 
 The next target cluster is then automatically selected.
 
@@ -179,7 +179,7 @@ A settings file is stored in `~/.klustaviewa/settings.dat`. It contains your use
 
 ### IPython console
 
-If IPython 1.0.dev is installed (which requires, for now, installing the development version from GitHub), you can open an IPythonView which gives you access to the data. You can even have custom Python modules automatically loaded by putting them in a directory specified in the `ipython_import_paths` variable of the preferences file.
+If IPython 1.0.dev is installed (which requires, for now, [installing the development version from GitHub](https://github.com/ipython/ipython)), you can open an IPythonView which gives you access to the data. You can even have custom Python modules automatically loaded by putting them in a directory specified in the `ipython_import_paths` variable of the preferences file.
 
 In the IPython console, the following variables are available:
 
@@ -191,6 +191,8 @@ In the IPython console, the following variables are available:
 You can use tab completion to find the available methods. For instance, `loader.get_features(clusters=3)` returns a Pandas DataFrame object containing the features of all spikes in cluster 3.
 
 You can perform custom computations interactively on the data and draw plots with Matplotlib.
+
+![IPython in KlustaViewa](images/ipython.PNG)
 
 
 
