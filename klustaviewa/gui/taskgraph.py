@@ -114,7 +114,6 @@ class TaskGraph(AbstractTaskGraph):
         log.debug("Selected clusters {0:s}.".format(str(clusters)))
         autozoom = wizard_active
         return [
-                ('_update_projection_view',),
                 ('_update_feature_view', (autozoom,)),
                 ('_update_waveform_view',),
                 ('_show_selection_in_matrix', (clusters,)),

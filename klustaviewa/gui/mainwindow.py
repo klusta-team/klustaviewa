@@ -667,7 +667,7 @@ class MainWindow(QtGui.QMainWindow):
         
         # Update the task graph.
         self.taskgraph.set(self)
-        self.taskgraph.update_cluster_view()
+        self.taskgraph.update_projection_view()
         self.taskgraph.update_cluster_view()
         self.taskgraph.compute_similarity_matrix()
         
