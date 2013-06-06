@@ -80,6 +80,8 @@ class MainWindow(QtGui.QMainWindow):
         self.busy_cursor = QtGui.QCursor(QtCore.Qt.BusyCursor)
         self.normal_cursor = QtGui.QCursor(QtCore.Qt.ArrowCursor)
         self.override_color = False
+        self.computing_correlograms = False
+        self.computing_matrix = False
         # self.do_renumber = False
         
         # Create the main window.
@@ -123,6 +125,17 @@ class MainWindow(QtGui.QMainWindow):
     def set_normal_cursor(self):
         # QtGui.QApplication.setOverrideCursor(self.normal_cursor)
         QtGui.QApplication.restoreOverrideCursor()
+    
+    def set_cursor(self, computing_correlograms=None, computing_matrix=None):
+        if computing_correlograms is not None:
+            self.computing_correlograms = computing_correlograms
+        if computing_matrix is not None:
+            self.computing_matrix = computing_matrix
+        busy = self.computing_correlograms or self.computing_matrix
+        if busy:
+            self.set_busy_cursor()
+        else:
+            self.set_normal_cursor()
     
     
     # Actions.
@@ -666,7 +679,7 @@ class MainWindow(QtGui.QMainWindow):
     # Selection methods.
     # ------------------
     def buffer_accepted_callback(self, clusters):
-        self.taskgraph.select(clusters)
+        self.taskgraph.select(clusters, self.wizard_active)
         
     def clusters_selected_callback(self, clusters, external_call):
         self.wizard_active = external_call

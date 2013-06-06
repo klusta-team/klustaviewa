@@ -109,12 +109,12 @@ class TaskGraph(AbstractTaskGraph):
 
     # Selection.
     # ----------
-    def _select(self, clusters):
+    def _select(self, clusters, wizard_active=False):
         self.loader.select(clusters=clusters)
         log.debug("Selected clusters {0:s}.".format(str(clusters)))
-        # self.mainwindow.update_action_enabled()
+        autozoom = wizard_active
         return [
-                ('_update_feature_view',),
+                ('_update_feature_view', (autozoom,)),
                 ('_update_waveform_view',),
                 ('_show_selection_in_matrix', (clusters,)),
                 ('_compute_correlograms', (clusters,),),
@@ -156,7 +156,7 @@ class TaskGraph(AbstractTaskGraph):
         # If there are pairs that need to be updated, launch the task.
         if len(clusters_to_update) > 0:
             # Set wait cursor.
-            self.mainwindow.set_busy_cursor()
+            self.mainwindow.set_cursor(computing_correlograms=True)
             # Launch the task.
             self.tasks.correlograms_task.compute(spiketimes, clusters,
                 clusters_to_update=clusters_to_update, 
@@ -168,9 +168,7 @@ class TaskGraph(AbstractTaskGraph):
             # self.update_correlograms_view()
             return '_update_correlograms_view'
     
-    def _compute_similarity_matrix(self, target_next=None):#, clusters_to_update=None):
-        # Set wait cursor.
-        # self.set_cursor(QtCore.Qt.BusyCursor)
+    def _compute_similarity_matrix(self, target_next=None):
         # Get the correlation matrix parameters.
         features = get_array(self.loader.get_features('all'))
         masks = get_array(self.loader.get_masks('all', full=True))
@@ -187,6 +185,7 @@ class TaskGraph(AbstractTaskGraph):
             not_in_key_indices(clusters_all))
         # If there are pairs that need to be updated, launch the task.
         if len(clusters_to_update) > 0:
+            self.mainwindow.set_cursor(computing_matrix=True)
             # Launch the task.
             self.tasks.similarity_matrix_task.compute(features,
                 clusters, cluster_groups, masks, clusters_to_update,
@@ -203,7 +202,7 @@ class TaskGraph(AbstractTaskGraph):
         # Abort if the selection has changed during the computation of the
         # correlograms.
         # Reset the cursor.
-        self.mainwindow.set_normal_cursor()
+        self.mainwindow.set_cursor(computing_correlograms=False)
         if not np.array_equal(clusters, clusters_selected):
             log.debug("Skip update correlograms with clusters selected={0:s}"
             " and clusters updated={1:s}.".format(clusters_selected, clusters))
@@ -221,6 +220,7 @@ class TaskGraph(AbstractTaskGraph):
         
     def _similarity_matrix_computed(self, clusters_selected, matrix, clusters,
             cluster_groups, target_next=None):
+        self.mainwindow.set_cursor(computing_matrix=False)
         if not np.array_equal(clusters, self.loader.get_clusters('all')):
             return False
         self.statscache.similarity_matrix.update(clusters_selected, matrix)
@@ -287,7 +287,7 @@ class TaskGraph(AbstractTaskGraph):
         clusters = self.loader.get_clusters_selected()
         return ('_show_selection_in_matrix', (clusters,))
         
-    def _update_feature_view(self):
+    def _update_feature_view(self, autozoom=False):
         data = dict(
             features=self.loader.get_some_features(),
             masks=self.loader.get_masks(),
@@ -298,7 +298,7 @@ class TaskGraph(AbstractTaskGraph):
             fetdim=self.loader.fetdim,
             nextrafet=self.loader.nextrafet,
             freq=self.loader.freq,
-            autozoom=False,  # TODO
+            autozoom=autozoom,
             duration=self.loader.get_duration(),
             alpha_selected=USERPREF.get('feature_selected_alpha', .75),
             alpha_background=USERPREF.get('feature_background_alpha', .1),
@@ -306,7 +306,7 @@ class TaskGraph(AbstractTaskGraph):
         )
         [view.set_data(**data) for view in self.get_views('FeatureView')]
         
-    def _update_waveform_view(self):
+    def _update_waveform_view(self, autozoom=False):
         data = dict(
             waveforms=self.loader.get_waveforms(),
             clusters=self.loader.get_clusters(),
@@ -314,7 +314,7 @@ class TaskGraph(AbstractTaskGraph):
             clusters_selected=self.loader.get_clusters_selected(),
             masks=self.loader.get_masks(),
             geometrical_positions=self.loader.get_probe(),
-            autozoom=False,  # TODO
+            autozoom=autozoom,
         )
         [view.set_data(**data) for view in self.get_views('WaveformView')]
         
