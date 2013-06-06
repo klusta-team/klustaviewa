@@ -69,7 +69,7 @@ class MainWindow(QtGui.QMainWindow):
         self.statscache = None
         self.loader = KlustersLoader()
         self.loader.progressReported.connect(self.open_progress_reported)
-        self.wizard = None
+        self.wizard = Wizard()
         self.controller = None
         self.spikes_highlighted = []
         self.spikes_selected = []

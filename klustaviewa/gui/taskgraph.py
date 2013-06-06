@@ -525,7 +525,7 @@ class TaskGraph(AbstractTaskGraph):
         elif what == 'both':
             clusters = [candidate, target]
             # Go to the next best target cluster.
-            target_next = True
+            target_next = None
             reset_skipped = True
         # Move clusters, and select next proposition.
         r = [('_clusters_moved', (clusters, group, False, False)),
@@ -535,6 +535,7 @@ class TaskGraph(AbstractTaskGraph):
         r += [('_wizard_update', (target_next,)),
               ('_wizard_next_candidate',),
               ]
+        print r
         return r
     
     
