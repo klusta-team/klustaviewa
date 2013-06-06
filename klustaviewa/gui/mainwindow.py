@@ -9,6 +9,7 @@ import os
 import inspect
 from collections import OrderedDict, Counter
 from functools import partial
+import webbrowser
 
 import pandas as pd
 import numpy as np
@@ -229,6 +230,7 @@ class MainWindow(QtGui.QMainWindow):
         
     def create_help_actions(self):
         self.add_action('about', '&About')
+        self.add_action('manual', 'Show &manual')
         self.add_action('shortcuts', 'Show &shortcuts')
         self.add_action('refresh_preferences', '&Refresh preferences',
             shortcut='CTRL+R')
@@ -301,6 +303,7 @@ class MainWindow(QtGui.QMainWindow):
         help_menu.addAction(self.refresh_preferences_action)
         help_menu.addSeparator()
         help_menu.addAction(self.shortcuts_action)
+        help_menu.addAction(self.manual_action)
         help_menu.addAction(self.about_action)
         
     def create_toolbar(self):
@@ -873,6 +876,10 @@ class MainWindow(QtGui.QMainWindow):
     
     # Help callbacks.
     # ---------------
+    def manual_callback(self, checked=None):
+        url = "https://github.com/klusta-team/klustaviewa/tree/master/docs/manual.md"
+        webbrowser.open(url)
+    
     def about_callback(self, checked=None):
         QtGui.QMessageBox.about(self, "KlustaViewa", ABOUT)
     
