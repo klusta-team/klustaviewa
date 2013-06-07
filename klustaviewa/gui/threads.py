@@ -36,7 +36,7 @@ class OpenTask(QtCore.QObject):
         loader.open(path)
         self.dataOpened.emit()
 
-        
+
 class CorrelogramsTask(QtCore.QObject):
     correlogramsComputed = QtCore.pyqtSignal(np.ndarray, object, int, float)
     
@@ -88,7 +88,7 @@ class SimilarityMatrixTask(QtCore.QObject):
             get_array(clusters, copy=True), 
             get_array(cluster_groups, copy=True),
             target_next)
-            
+
 
 # -----------------------------------------------------------------------------
 # Container

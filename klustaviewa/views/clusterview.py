@@ -334,10 +334,6 @@ class ClusterViewModel(TreeModel):
         group_colors=None, group_names=None, cluster_sizes=None,
         cluster_quality=None, background={}):
         
-        # A dictionary cluster index => color index for specifying the
-        # background color of some rows.
-        # self.background = background
-        
         # Create the tree.
         # go through all groups
         for groupidx, groupname in group_names.iteritems():
@@ -493,14 +489,6 @@ class ClusterViewModel(TreeModel):
             self.dataChanged.emit(index, index)
             return True
             
-    # def refresh(self, index, role=None):
-        # if role is None:
-            # role = QtCore.Qt.EditRole
-        # if index.isValid() and role == QtCore.Qt.EditRole:
-            # item = index.internalPointer()
-            # self.dataChanged.emit(index, index)
-            # return True
-    
     def flags(self, index):
         if not index.isValid():
             return QtCore.Qt.ItemIsEnabled
@@ -524,19 +512,23 @@ class ClusterViewModel(TreeModel):
             cluster = self.get_cluster(clusteridx)
             self.setData(self.index(cluster.row(), 1, parent=group.index), value)
     
-    def set_background(self, background):
+    def set_background(self, background=None):
         """Set the background of some clusters. The argument is a dictionary
         clusteridx ==> color index."""
-        # Record the changed clusters.
-        self.background.update(background)
-        # Get all clusters to update.
-        keys = self.background.keys()
-        # Reset the keys
-        if not background:
-            self.background = {}
+        if background is not None:
+            # Record the changed clusters.
+            self.background.update(background)
+            # Get all clusters to update.
+            keys = self.background.keys()
+            # Reset the keys
+            if not background:
+                self.background = {}
+        # If background is None, use the previous one.
+        else:
+            background = self.background
+            keys = self.background.keys()
         for clusteridx in keys:
             bgcolor = background.get(clusteridx, None)
-            # print clusteridx, bgcolor
             groupidx = self.get_groupidx(clusteridx)
             # If the cluster does not exist yet in the view, just discard it.
             if groupidx is None:
@@ -735,7 +727,8 @@ class ClusterView(QtGui.QTreeView):
         super(ClusterView, self).__init__(parent)
         # Current item.
         self.current_item = None
-        self.external_call = False
+        self.wizard = False
+        self.clusters_selected_previous = []
         
         # Focus policy.
         if getfocus:
@@ -759,6 +752,7 @@ class ClusterView(QtGui.QTreeView):
         self.create_context_menu()
         
         self.restore_geometry()
+    
     
     # Data methods
     # ------------
@@ -786,9 +780,9 @@ class ClusterView(QtGui.QTreeView):
     
     # Public methods
     # --------------
-    def select(self, clusters, groups=None, external_call=False):
+    def select(self, clusters, groups=None, wizard=False):
         """Select multiple clusters from their indices."""
-        self.external_call = external_call
+        self.wizard = wizard
         if clusters is None:
             clusters = []
         if groups is None:
@@ -899,7 +893,7 @@ class ClusterView(QtGui.QTreeView):
     def set_quality(self, quality):
         self.model.set_quality(quality)
     
-    def set_background(self, background):
+    def set_background(self, background=None):
         self.model.set_background(background)
     
     
@@ -1093,15 +1087,18 @@ class ClusterView(QtGui.QTreeView):
         # log.debug("Selected {0:d} clusters.".format(len(clusters)))
         # log.debug("Selected clusters {0:s}.".format(str(clusters)))
         self.clustersSelected.emit(np.array(clusters, dtype=np.int32),
-            self.external_call)
+            self.wizard)
         
         # if group_indices:
             # self.scrollTo(group_indices[-1].index)
-        if len(clusters) == 1:
-            self.scrollTo(self.model.get_cluster(clusters[0]).index)
+        if len(self.clusters_selected_previous) <= 1:
+            if len(clusters) == 1:
+                self.scrollTo(self.model.get_cluster(clusters[0]).index)
+            elif len(group_indices) == 1:
+                self.scrollTo(group_indices[0].index)
     
-        self.external_call = False
-        
+        self.wizard = False
+        self.clusters_selected_previous = clusters
         self.update_actions()
     
     # Selected items

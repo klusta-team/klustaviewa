@@ -104,8 +104,8 @@ class Controller(object):
             clusters_new[clusters_old == cluster_old] = cluster_new
         cluster_groups = self.loader.get_cluster_groups(cluster_indices_old)
         cluster_colors = self.loader.get_cluster_colors(cluster_indices_old)
-        return self._process('split_clusters', clusters_old, cluster_groups,
-            cluster_colors, clusters_new)
+        return self._process('split_clusters', clusters, 
+            clusters_old, cluster_groups, cluster_colors, clusters_new)
         
     def change_cluster_color(self, cluster, color):
         color_old = self.loader.get_cluster_colors(cluster)

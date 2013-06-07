@@ -7,6 +7,7 @@ from collections import Counter, OrderedDict
 
 import numpy as np
 
+import klustaviewa.utils.logger as log
 from klustaviewa.dataio.selection import get_indices
 from klustaviewa.dataio.tools import get_array
 
@@ -76,8 +77,6 @@ class Wizard(object):
         
         # Relative target.
         try:
-        # if target not in self.clusters_unique:
-            # target = self.target
             target_rel = np.nonzero(self.clusters_unique == target)[0][0]
         except IndexError:
             log.debug("Target cluster {0:d} does not exist.".format(target))

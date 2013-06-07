@@ -74,7 +74,8 @@ class MainWindow(QtGui.QMainWindow):
         self.controller = None
         self.spikes_highlighted = []
         self.spikes_selected = []
-        self.wizard_active = False
+        # self.wizard_active = False
+        self._wizard = False
         self.need_save = False
         self.taskgraph = TaskGraph(self)
         # self.last_selection_time = time.clock()
@@ -681,17 +682,16 @@ class MainWindow(QtGui.QMainWindow):
     
     # Selection methods.
     # ------------------
-    def buffer_accepted_callback(self, clusters):
-        self.taskgraph.select(clusters, self.wizard_active)
+    def buffer_accepted_callback(self, (clusters, wizard)):
+        self._wizard = wizard
+        self.taskgraph.select(clusters, wizard)
         
-    def clusters_selected_callback(self, clusters, external_call):
-        self.wizard_active = external_call
-        self.buffer.request(clusters)
+    def clusters_selected_callback(self, clusters, wizard=False):
+        self.buffer.request((clusters, wizard))
     
     def cluster_pair_selected_callback(self, clusters):
         """Callback when the user clicks on a pair in the
         SimilarityMatrixView."""
-        self.wizard_active = False
         self.get_view('ClusterView').select(clusters)
     
     
@@ -763,7 +763,7 @@ class MainWindow(QtGui.QMainWindow):
         self.need_save = True
         cluster_view = self.get_view('ClusterView')
         clusters = cluster_view.selected_clusters()
-        self.taskgraph.merge(clusters)
+        self.taskgraph.merge(clusters, self._wizard)
         self.update_action_enabled()
         
     def split_callback(self, checked=None):
@@ -773,15 +773,15 @@ class MainWindow(QtGui.QMainWindow):
         spikes_selected = self.spikes_selected
         # Cancel the selection after the split.
         self.spikes_selected = []
-        self.taskgraph.split(clusters, spikes_selected)
+        self.taskgraph.split(clusters, spikes_selected, self._wizard)
         self.update_action_enabled()
         
     def undo_callback(self, checked=None):
-        self.taskgraph.undo()
+        self.taskgraph.undo(self._wizard)
         self.update_action_enabled()
         
     def redo_callback(self, checked=None):
-        self.taskgraph.redo()
+        self.taskgraph.redo(self._wizard)
         self.update_action_enabled()
         
     def cluster_color_changed_callback(self, cluster, color):
@@ -922,6 +922,17 @@ class MainWindow(QtGui.QMainWindow):
         shortcut."""
         self.keyReleaseEvent(QtGui.QKeyEvent(QtCore.QEvent.KeyRelease,
             QtCore.Qt.Key_Control, QtCore.Qt.NoModifier))
+        self.keyReleaseEvent(QtGui.QKeyEvent(QtCore.QEvent.KeyRelease,
+            QtCore.Qt.Key_Shift, QtCore.Qt.NoModifier))
+        self.keyReleaseEvent(QtGui.QKeyEvent(QtCore.QEvent.KeyRelease,
+            QtCore.Qt.Key_Alt, QtCore.Qt.NoModifier))
+            
+    def event(self, e):
+        if e.type() == QtCore.QEvent.WindowActivate:
+            pass
+        elif e.type() == QtCore.QEvent.WindowDeactivate:
+            self.force_key_release()
+        return super(MainWindow, self).event(e)
     
     def contextMenuEvent(self, e):
         """Disable the context menu in the main window."""
@@ -983,8 +994,8 @@ class MainWindow(QtGui.QMainWindow):
             
     def sizeHint(self):
         return QtCore.QSize(1200, 800)
-        
-        
+    
+    
 # -----------------------------------------------------------------------------
 # File logger
 # -----------------------------------------------------------------------------

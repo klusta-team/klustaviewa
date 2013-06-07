@@ -99,6 +99,7 @@ def test_controller_split():
     
     assert action == 'split_clusters'
     # print output['clusters_to_split']
+    print output['clusters_to_split'], cluster_new
     assert np.array_equal(output['clusters_to_split'], [cluster_new])
     assert np.array_equal(output['clusters_split'], [cluster_new + 1])
     assert np.array_equal(output['clusters_empty'], [])

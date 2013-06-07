@@ -79,8 +79,10 @@ class Processor(object):
         
         
     # Split.
-    def split_clusters(self, clusters_old, cluster_groups, 
+    def split_clusters(self, clusters, clusters_old, cluster_groups, 
         cluster_colors, clusters_new):
+        if not hasattr(clusters, '__len__'):
+            clusters = [clusters]
         spikes = get_indices(clusters_old)
         # Find groups and colors of old clusters.
         cluster_indices_old = np.unique(clusters_old)
@@ -99,17 +101,14 @@ class Processor(object):
         self.loader.unselect()
         clusters_to_select = sorted(set(cluster_indices_old).union(
                 set(cluster_indices_new)) - set(clusters_empty))
-        # return dict(
-            # to_select=clusters_to_select,
-            # to_invalidate=sorted(set(cluster_indices_old).union(
-                # set(cluster_indices_new))),
-            # to_compute=clusters_to_select)
-        return dict(clusters_to_split=get_array(cluster_indices_old),
+        return dict(clusters_to_split=clusters,
                     clusters_split=get_array(cluster_indices_new),
                     clusters_empty=clusters_empty)
         
-    def split_clusters_undo(self, clusters_old, cluster_groups, 
+    def split_clusters_undo(self, clusters, clusters_old, cluster_groups, 
         cluster_colors, clusters_new):
+        if not hasattr(clusters, '__len__'):
+            clusters = [clusters]
         spikes = get_indices(clusters_old)
         # Find groups and colors of old clusters.
         cluster_indices_old = np.unique(clusters_old)
@@ -122,17 +121,10 @@ class Processor(object):
                 select(cluster_colors, cluster))
         # Set the new clusters to the corresponding spikes.
         self.loader.set_cluster(spikes, clusters_old)
-        # Remove clusters.
         # Remove empty clusters.
         clusters_empty = self.loader.remove_empty_clusters()
         self.loader.unselect()
-        # clusters_to_select = cluster_indices_old
-        # return dict(
-            # to_select=clusters_to_select,
-            # to_invalidate=sorted(set(cluster_indices_old).union(
-                # set(cluster_indices_new))),
-            # to_compute=clusters_to_select)
-        return dict(clusters_to_split=get_array(cluster_indices_old),
+        return dict(clusters_to_split=clusters,
                     clusters_split=get_array(cluster_indices_new),
                     # clusters_empty=clusters_empty
                     )
