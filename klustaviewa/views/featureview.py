@@ -344,10 +344,10 @@ class FeatureDataManager(Manager):
         
         # set initial projection
         self.projection_manager.set_data()
-        if not autozoom:
+        if autozoom is None:
             self.projection_manager.reset_projection()
         else:
-            self.projection_manager.auto_projection()
+            self.projection_manager.auto_projection(autozoom)
         
         # update the highlight manager
         self.highlight_manager.initialize()
@@ -828,9 +828,12 @@ class FeatureProjectionManager(Manager):
             self.set_projection(0, self.projection[0][0], self.projection[0][1], False)
             self.set_projection(1, self.projection[1][0], self.projection[1][1])
 
-    def auto_projection(self):
-        channels_best = np.argsort(self.data_manager.masks_array.sum(axis=0)
-            )[::-1]
+    def auto_projection(self, target):
+        fet = select(self.data_manager.features,
+            self.data_manager.clusters == target)
+        n = fet.shape[1]
+        fet = np.abs(fet.values[:,0:n-self.nextrafet:self.fetdim]).mean(axis=0)
+        channels_best = np.argsort(fet)[::-1]
         channel0 = channels_best[0]
         channel1 = channels_best[1]
         self.set_projection(0, channel0, 0)
