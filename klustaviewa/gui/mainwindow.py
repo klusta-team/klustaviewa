@@ -785,7 +785,7 @@ class MainWindow(QtGui.QMainWindow):
         self.update_action_enabled()
         
     def cluster_color_changed_callback(self, cluster, color):
-        self.taskgraph.cluster_color_changed(cluster, color)
+        self.taskgraph.cluster_color_changed(cluster, color, self._wizard)
         self.update_action_enabled()
         
     def group_color_changed_callback(self, group, color):
@@ -918,8 +918,7 @@ class MainWindow(QtGui.QMainWindow):
     # Event handlers.
     # ---------------
     def force_key_release(self):
-        """HACK: force release of Ctrl when opening a dialog with a keyboard
-        shortcut."""
+        """HACK: force release of Ctrl, Shift and Alt when focus out."""
         self.keyReleaseEvent(QtGui.QKeyEvent(QtCore.QEvent.KeyRelease,
             QtCore.Qt.Key_Control, QtCore.Qt.NoModifier))
         self.keyReleaseEvent(QtGui.QKeyEvent(QtCore.QEvent.KeyRelease,

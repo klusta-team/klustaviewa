@@ -19,7 +19,7 @@ from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
 from klustaviewa.dataio.selection import get_indices, select
 from klustaviewa.dataio.tools import get_array
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings, KlustaView
-from klustaviewa.utils.colors import COLORMAP_TEXTURE, SHIFTLEN
+from klustaviewa.utils.colors import COLORMAP_TEXTURE, SHIFTLEN, COLORMAP
 # from klustaviewa.utils.userpref import USERPREF
 import klustaviewa.utils.logger as log
 import klustaviewa
@@ -252,14 +252,14 @@ class FeatureDataManager(Manager):
                  fetdim=None,
                  nchannels=None,
                  nextrafet=None,
-                 autozoom=None,
+                 autozoom=None,  # None, or the target cluster
                  duration=None,
                  freq=None,
                  alpha_selected=.75,
                  alpha_background=.25,
                  time_unit=None,
                  ):
-        
+
         if features is None:
             features = np.zeros((0, 2))
             masks = np.zeros((0, 1))
@@ -344,6 +344,7 @@ class FeatureDataManager(Manager):
         
         # set initial projection
         self.projection_manager.set_data()
+        self.autozoom = autozoom
         if autozoom is None:
             self.projection_manager.reset_projection()
         else:
@@ -485,6 +486,7 @@ class FeaturePaintManager(PlotPaintManager):
             alpha=self.data_manager.alpha_background,
             )
         
+        # Projections.
         self.add_visual(TextVisual, name='projectioninfo_x',
             background_transparent=False,
             fontsize=16,
@@ -510,7 +512,6 @@ class FeaturePaintManager(PlotPaintManager):
         
         self.add_visual(TextVisual, text='0', name='clusterinfo', fontsize=16,
             background_transparent=False,
-            # posoffset=(20., -50.),
             coordinates=(1., 1.),
             posoffset=(-120., -30.),
             is_static=True,
@@ -518,9 +519,22 @@ class FeaturePaintManager(PlotPaintManager):
             letter_spacing=350.,
             depth=-1,
             visible=False)
-        
+            
+        # Wizard: target cluster
+        # text, color = self.wizard_target_text()
+        self.add_visual(TextVisual, name='wizard_target',
+            visible=False,
+            background_transparent=True,
+            fontsize=24,
+            is_static=True,
+            coordinates=(0., 1.),
+            color=(1.,) * 4,
+            posoffset=(0., -30.),
+            text='',
+            letter_spacing=500.,
+            depth=-1,)
+            
     def update(self):
-
         cluster = self.data_manager.clusters_rel
         cluster_colors = self.data_manager.cluster_colors
         cmap_index = cluster_colors[cluster]
@@ -542,6 +556,20 @@ class FeaturePaintManager(PlotPaintManager):
             position0=self.data_manager.data_background,
             alpha=self.data_manager.alpha_background,
             )
+            
+    def set_wizard_target(self, target=None, color=None):
+        if target is None or color is None:
+            self.set_data(visual='wizard_target',
+                visible=False)
+        else:
+            text = 'target: {0:d}'.format(target)
+            color = COLORMAP[color, :]
+            color = np.hstack((color, [1.]))
+            self.set_data(visual='wizard_target',
+                visible=True,
+                text=text,
+                color=color)
+            self.updateGL()
             
     def toggle_mask(self):
         self.toggle_mask_value = 1 - self.toggle_mask_value
@@ -1161,6 +1189,9 @@ class FeatureView(KlustaView):
     
     # Public methods
     # --------------
+    def set_wizard_target(self, target=None, color=None):
+        self.paint_manager.set_wizard_target(target, color)
+    
     def highlight_spikes(self, spikes):
         self.highlight_manager.highlight_spikes(spikes)
         self.updateGL()
@@ -1181,7 +1212,6 @@ class FeatureView(KlustaView):
         self.projectionChanged.emit(coord, channel, feature)
         self.paint_manager.update_points()
         self.paint_manager.updateGL()
-        
         
     def sizeHint(self):
         return QtCore.QSize(600, 600)

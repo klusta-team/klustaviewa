@@ -34,6 +34,7 @@ def test_featureview():
     
     kwargs['operators'] = [
         lambda self: self.view.toggle_mask(),
+        lambda self: self.view.set_wizard_target(2, 1),
         lambda self: (self.close() 
             if USERPREF['test_auto_close'] != False else None),
     ]

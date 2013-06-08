@@ -289,7 +289,7 @@ class TaskGraph(AbstractTaskGraph):
         clusters = self.loader.get_clusters_selected()
         return ('_show_selection_in_matrix', (clusters,))
         
-    def _update_feature_view(self, autozoom=False):
+    def _update_feature_view(self, autozoom=None):
         data = dict(
             features=self.loader.get_some_features(),
             masks=self.loader.get_masks(),
@@ -308,7 +308,7 @@ class TaskGraph(AbstractTaskGraph):
         )
         [view.set_data(**data) for view in self.get_views('FeatureView')]
         
-    def _update_waveform_view(self, autozoom=False):
+    def _update_waveform_view(self, autozoom=None):
         data = dict(
             waveforms=self.loader.get_waveforms(),
             clusters=self.loader.get_clusters(),
@@ -403,7 +403,7 @@ class TaskGraph(AbstractTaskGraph):
         elif action == 'split_clusters_undo':
             return after_split_undo(output)
         elif action == 'change_cluster_color_undo':
-            return after_cluster_color_changed(output)
+            return after_cluster_color_changed_undo(output)
         elif action == 'change_group_color_undo':
             return after_group_color_changed(output)
         elif action == 'move_clusters_undo':
@@ -441,8 +441,10 @@ class TaskGraph(AbstractTaskGraph):
     
     # Other actions.
     # --------------
-    def _cluster_color_changed(self, cluster, color):
+    def _cluster_color_changed(self, cluster, color, wizard=True):
         action, output = self.controller.change_cluster_color(cluster, color)
+        # if cluster == self.wizard.current_target():
+        output['wizard'] = wizard
         return after_cluster_color_changed(output)
         
     def _group_color_changed(self, group, color):
@@ -478,9 +480,24 @@ class TaskGraph(AbstractTaskGraph):
     
     def _wizard_change_color(self, clusters):
         if clusters is not None:
+            # Set the background color in the cluster view for the wizard
+            # target and candidate.
             self.get_view('ClusterView').set_background(
                 {cluster: i + 1 for i, cluster in enumerate(clusters[:2])})
-    
+            # Display the target number in the FeatureView.
+            if len(clusters) > 0:
+                cluster = clusters[0]
+            else:
+                cluster = None
+        
+    def _wizard_show_target(self, target=None, color=None):
+        # if self.mainwindow._wizard:
+        if target is None:
+            target = self.wizard.current_target()
+        if color is None:
+            color = self.loader.get_cluster_color(target)#s(clusters=[target]).values[0]
+        self.get_view('FeatureView').set_wizard_target(target, color)
+        
     # Navigation.
     def _wizard_reset(self):
         clusters = self.wizard.reset()
@@ -553,6 +570,8 @@ def after_merge(output):
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (output['cluster_merged'], [], True)),
              ('_wizard_change_color', ([output['cluster_merged']],)),
+             ('_wizard_show_target', (output['cluster_merged'], 
+                                      output['cluster_merged_color'])),
             ]
     else:
         r = [('_invalidate', (output['clusters_to_merge'],)),
@@ -561,7 +580,7 @@ def after_merge(output):
              ('_select_in_cluster_view', (output['cluster_merged'],)),
             ]
     return r
-        
+
 def after_merge_undo(output):
     clusters_to_invalidate = union(output['clusters_to_merge'], [output['cluster_merged']])
     if output.get('wizard', False):
@@ -570,6 +589,8 @@ def after_merge_undo(output):
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (output['clusters_to_merge'], [], True)),
              ('_wizard_change_color', (output['clusters_to_merge'],)),
+             ('_wizard_show_target', (output['clusters_to_merge'][0], 
+                                      output['cluster_to_merge_color'])),
             ]
     else:
         r = [('_invalidate', (clusters_to_invalidate,)),
@@ -617,8 +638,30 @@ def after_split_undo(output):
 
 # Other actions.
 def after_cluster_color_changed(output):
-    return [('_update_cluster_view'),
-            ('_select_in_cluster_view', (output['clusters'],)),]
+    if output.get('wizard', False):
+        return [('_update_cluster_view'),
+                ('_select_in_cluster_view', (output['clusters'], [], True)),
+                ('_wizard_change_color', (output['clusters'],)),
+                ('_wizard_show_target',),# (output['cluster'], 
+                                         # output['color_new'])),
+                ]
+    else:
+        return [('_update_cluster_view'),
+                ('_select_in_cluster_view', (output['clusters'],)),
+                ]
+        
+def after_cluster_color_changed_undo(output):
+    if output.get('wizard', False):
+        return [('_update_cluster_view'),
+                ('_select_in_cluster_view', (output['clusters'], [], True)),
+                ('_wizard_change_color', (output['clusters'],)),
+                ('_wizard_show_target',),# (output['cluster'], 
+                                        # output['color_old'])),
+                ]
+    else:
+        return [('_update_cluster_view'),
+                ('_select_in_cluster_view', (output['clusters'],)),
+                ]
 
 def after_group_color_changed(output):
     return [('_update_cluster_view'),
@@ -669,6 +712,7 @@ def after_wizard_selection(clusters):
         return [
                 ('_select_in_cluster_view', (clusters, (), True)), 
                 ('_wizard_change_color', (clusters,)),
+                ('_wizard_show_target',),
                 ]
                 
         

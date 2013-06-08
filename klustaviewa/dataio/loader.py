@@ -383,6 +383,9 @@ class Loader(QtCore.QObject):
             colors = self.cluster_colors
         return select(colors, clusters)
     
+    def get_cluster_color(self, cluster):
+        return select(self.cluster_colors, cluster)
+    
     def get_cluster_groups(self, clusters=None):
         if clusters is None:
             clusters = self.clusters_selected

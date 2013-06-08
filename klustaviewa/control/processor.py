@@ -49,12 +49,9 @@ class Processor(object):
         for cluster in clusters_to_merge:
             self.loader.remove_cluster(cluster)
         self.loader.unselect()
-        # return dict(to_select=cluster_merged,
-            # to_invalidate=sorted(set(clusters_to_merge).union(
-                # set([cluster_merged]))),
-            # to_compute=cluster_merged)
         return dict(clusters_to_merge=clusters_to_merge,
-                    cluster_merged=cluster_merged)
+                    cluster_merged=cluster_merged,
+                    cluster_merged_color=color_new,)
         
     def merge_clusters_undo(self, clusters_old, cluster_groups, 
         cluster_colors, cluster_merged):
@@ -70,12 +67,10 @@ class Processor(object):
         # Remove merged cluster.
         self.loader.remove_cluster(cluster_merged)
         self.loader.unselect()
-        # return dict(to_select=clusters_to_merge,
-            # to_invalidate=sorted(set(clusters_to_merge).union(
-                # set([cluster_merged]))),
-            # to_compute=clusters_to_merge)
+        color_old = self.loader.get_cluster_color(clusters_to_merge[0])
         return dict(clusters_to_merge=clusters_to_merge,
-                    cluster_merged=cluster_merged)
+                    cluster_merged=cluster_merged,
+                    cluster_to_merge_color=color_old)
         
         
     # Split.
@@ -134,12 +129,14 @@ class Processor(object):
     def change_cluster_color(self, cluster, color_old, color_new,
             clusters_selected):
         self.loader.set_cluster_colors(cluster, color_new)
-        return dict(clusters=clusters_selected)
+        return dict(clusters=clusters_selected, cluster=cluster,
+            color_old=color_old, color_new=color_new)
         
     def change_cluster_color_undo(self, cluster, color_old, color_new,
             clusters_selected):
         self.loader.set_cluster_colors(cluster, color_old)
-        return dict(clusters=clusters_selected)
+        return dict(clusters=clusters_selected, cluster=cluster,
+            color_old=color_old, color_new=color_new)
         
         
     # Move clusters.
