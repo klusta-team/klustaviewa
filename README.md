@@ -1,20 +1,15 @@
 KlustaViewa
 ===========
 
-*KlustaViewa* (previously *Spiky*) is a software for semi-automatic spike 
-sorting with high-channel count silicon probes.
-It is meant to be used after the automatic clustering stage.
-This interface automatically guides the user through the clustered data and 
-lets him or her refine the data. 
-The goal is to make the manual stage more reliable, quicker, and less
-error-prone.
+*KlustaViewa* is a software for semi-automatic spike sorting with high-channel count silicon probes. It streamlines the manual stage occurring after the automatic clustering stage by guiding the user through the clustered data, letting him or her refine the clusters. The goal is to make the manual stage more reliable, quicker, and less error-prone.
 
 This software was developed by Cyrille Rossant in the [Cortical Processing Laboratory](http://www.ucl.ac.uk/cortexlab) at UCL.
+
 
 User guide
 ----------
 
-  * [See the user guide](https://github.com/klusta-team/klustaviewa/blob/master/docs/manual.md).
+  * [See the user guide here](https://github.com/klusta-team/klustaviewa/blob/master/docs/manual.md).
 
 
 Screenshots
@@ -24,109 +19,70 @@ Screenshots
 [![Screenshot 2](images/thumbnails/img1.png)](images/img1.PNG)
 
 
-
 Installation
 ------------
 
-The software is still in development, but you can download an experimental
-version here.
+  * The software is in beta version at this time.
+  * The installation procedure depends on your operating system.
 
-### Step 1
+### Windows 7/8 64 bits
 
-You need Python 2.7 and a bunch of other common scientific packages.
+  * Step 1: if you don't already have a Python installation, [download this ZIP file (70MB)](http://klustaviewa.rossant.net/klustaviewa-dependencies.zip) containing a full Python distribution (required by KlustaViewa).
+  * Step 2: unzip the archive. You'll find several installers: execute them all one by one, in the right order.
+  * Step 3: download the [KlustaViewa Windows 64 bits installer (<1MB)](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.win-amd64-py2.7.exe) and execute it.
+  * Step 4: you can launch the software using the executable found in `C:\Python27\Scripts\klustaviewa.exe`. You can create a shortcut to this file on your desktop.
 
-  * Install [Python 2.7](http://python.org/download/) (available on Windows, OS X, or Linux),
-    64 bits (recommended) or 32 bits.
+Once the software is installed, you can update it when a new version is available by doing again **Step 3** only.
 
-For the external packages, the procedure depends on your system.
+### Ubuntu
 
-#### Windows
+  * Step 1: on Ubuntu >= 13.x, type in a shell:
 
-[Go on this webpage](http://www.lfd.uci.edu/~gohlke/pythonlibs/) and 
-download:
-    
-  * Numpy >= 1.7
-  * Pandas >= 0.10
-  * Matplotlib >= 1.1.1
-  * PyOpenGL >= 3.0.1
-  * PyQt4
-  * Distribute
-  * (optional) Pip (for installing Python packages easily)
-  * (optional) Nose (for unit tests)
-  
-For each package, be sure to choose the appropriate version (it should be
-`*.win-amd64-py2.7.exe` for Python 64 bits, or `*.win32-py2.7.exe`
-for Python 32 bits).
+        $ sudo apt-get install python2.7 python-numpy python-pandas python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose
 
-#### OS X
+    On Ubuntu < 13.x, type:
 
-Go on [HomeBrew](http://mxcl.github.io/homebrew/) and install the packages
-listed above.
-
-#### Ubuntu >= 13.x
-
-Type in a shell:
-
-    $ sudo apt-get install python2.7 python-numpy python-pandas python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose
-
-#### Ubuntu < 13.x
-
-Type in a shell:
-
-    $ sudo apt-get install python2.7 python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose
-    
-Then, you need to install NumPy >= 1.7 and Pandas >= 0.10, and they are only available for Ubuntu >= 13.x. To install them on Ubuntu < 13.x, you can do the following:
-
-  * Go [here](http://packages.ubuntu.com/raring/python/) and download:
+        $ sudo apt-get install python2.7 python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose
+        
+  * Step 2: **UBUNTU < 13.x ONLY**. Go [here](http://packages.ubuntu.com/raring/python/) and download:
   
       * python-numpy
       * python-pandas-lib
       * python-pandas
       
-  * Install them, in that order, with `dpgk -i python-numpy_1.7.1-1ubuntu1_amd64.deb` and so on, replacing the file name with the appropriate ones (`amd64` for Python 64 bits, `i386` for Python 32 bits).
+    Install them, in that order, with `dpgk -i python-numpy_1.7.1-1ubuntu1_amd64.deb` and so on, replacing the file name with the appropriate ones (`amd64` for Python 64 bits, `i386` for Python 32 bits).
 
-
-#### IPython 1.0.dev
-
-This step is optional and only useful to experienced users. If IPython 1.0.dev is installed, then you will have the possibility to open an IPython terminal in the context of the GUI. This lets you access all elements and data variables programatically. To install this version of IPython, do the following:
-
-  * Ensure that any version of IPython is uninstalled.
-  * Install pygments with `pip install pygments`
-  * Execute the following commands:
+  * Step 3: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
   
-        git clone https://github.com/ipython/ipython.git
-        cd ipython
-        python setupegg.py develop
+  * Step 4: open a system shell in the directory where you extracted the package, and execute the following command:
   
-Then, in the software, you will be able to open an interactive IPython shell (with pylab mode activated) in the Views menu. Type `%who` to see the list of available variables.
+        python setup.py install
 
+  * Step 5: to run KlustaViewa, type the following command in a system shell:
   
-### Step 2
-
-  * Windows & Python 64 bits: [download and install KlustaViewa.](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.win-amd64-py2.7.exe)
-  Skip steps 3 and 4 and go directly to step 5.
-  * Other configurations: [download KlustaViewa.](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip)
-
-Some portions of the code are accelerated using Cython, so you need a C compiler like gcc if you want to use the accelerated version. If you don't have one, a slower version will be automatically used. If you use the Windows installer, you don't need a C compiler as the compiled code is directly installed.
-
-### Step 3
-
-Extract this ZIP file in a temporary folder.
+        klustaviewa
 
 
-### Step 4
+### Mac OS X
 
-  * On Windows, double-click on `windows_install.bat`.
-  * On other systems, open a system shell in the temporary directory where
-    you extracted the package, and execute the following command:
-    `python setup.py install`.
+  * Step 1: go on [HomeBrew](http://mxcl.github.io/homebrew/) and install the following packages:
+  
+      * Python 2.7
+      * Numpy >= 1.7
+      * Pandas >= 0.10
+      * Matplotlib >= 1.1.1
+      * PyOpenGL >= 3.0.1
+      * PyQt4
 
-### Step 5
-
-To run the software, execute `klustaviewa` in a system shell.
-
-On Windows, you may need to add `C:\Python27\Scripts` in the PATH variable,
-as [described here](http://geekswithblogs.net/renso/archive/2009/10/21/how-to-set-the-windows-path-in-windows-7.aspx).
+  * Step 2: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
+  
+  * Step 3: open a system shell in the directory where you extracted the package, and execute the following command:
+  
+        python setup.py install
+  
+  * Step 4: to run KlustaViewa, type the following command in a system shell:
+  
+        klustaviewa
 
 
 Details
@@ -143,21 +99,15 @@ The following libraries are required:
   * PyOpenGL >= 3.0.1
   * either PyQt4 or PySide
 
-More generally, we also recommend [pip](https://pypi.python.org/pypi/pip) and 
-[IPython](http://ipython.org/) as they are commonly used for 
-scientific computing with Python.
-  
+
 ### OpenGL
   
-For KlustaView, you need OpenGL >= 2.1. To find out which version of OpenGL 
-you have:
+KlustaViewa requires OpenGL >= 2.1. To find out which version of OpenGL is available on your system:
 
   * Use [OpenGL Extensions Viewer](http://www.realtech-vr.com/glview/)
   * Alternatively, on Linux, run `glxinfo`.
 
-KlustaViewa works better with a good graphics card as it uses
-hardware-accelerated visualization. With a lower end graphics card, the
-software will work but somewhat slower.
+KlustaViewa works better with a good graphics card as it uses hardware-accelerated visualization. With a lower end graphics card, the software will work but somewhat slower.
 
 
 ### Development version
@@ -168,14 +118,35 @@ Use this if you want to be able to update with `git pull` (you need git).
   
         git clone https://github.com/rossant/klustaviewa.git
   
-  * Install KlustaViewa with `pip` so that external packages are automatically
-    updated (like `qtools` which contains some Qt-related utility functions):
+  * Install KlustaViewa with `pip` so that external packages are automatically updated (like `qtools` which contains some Qt-related utility functions):
   
         pip install -r requirements.txt
+        
+
+### IPython 1.0.dev
+
+If IPython 1.0.dev is installed, then you will have the possibility to open an IPython terminal in the context of the GUI. This lets you access all elements and data variables programatically. To install this version of IPython, do the following:
+
+  * Ensure that any version of IPython is uninstalled.
+  * Install pygments with `pip install pygments`
+  * Execute the following commands:
+  
+        git clone https://github.com/ipython/ipython.git
+        cd ipython
+        python setupegg.py develop
+  
+Then, in the software, you will be able to open an interactive IPython shell (with pylab mode activated) in the Views menu. Type `%who` to see the list of available variables.
 
   
 Troubleshooting
 ---------------
+
+### Common errors in Windows
+
+  * If you can't run `python` or `klustaviewa` in a console, you may need to add `C:\Python27\Scripts` in the PATH variable, as [described here](http://geekswithblogs.net/renso/archive/2009/10/21/how-to-set-the-windows-path-in-windows-7.aspx).
+
+
+### Contact
 
 If you have any trouble, bug, comment or suggestion, please send an e-mail to the author of the software: cyrille *dot* rossant *at* gmail *dot* com.
 
