@@ -471,11 +471,16 @@ class TaskGraph(AbstractTaskGraph):
     
     # Wizard.
     # -------
-    def _wizard_update(self, target=None):
-        self.wizard.set_data(
-            cluster_groups=self.loader.get_cluster_groups('all'),
-            similarity_matrix=self.statscache.similarity_matrix_normalized,
-            )
+    def _wizard_update(self, target=None, update_matrix=True):
+        if update_matrix:
+            self.wizard.set_data(
+                cluster_groups=self.loader.get_cluster_groups('all'),
+                similarity_matrix=self.statscache.similarity_matrix_normalized,
+                )
+        else:
+            self.wizard.set_data(
+                cluster_groups=self.loader.get_cluster_groups('all'),
+                )
         self.wizard.update_candidates(target)
     
     def _wizard_change_color(self, clusters):
@@ -491,11 +496,10 @@ class TaskGraph(AbstractTaskGraph):
                 cluster = None
         
     def _wizard_show_target(self, target=None, color=None):
-        # if self.mainwindow._wizard:
         if target is None:
             target = self.wizard.current_target()
         if color is None:
-            color = self.loader.get_cluster_color(target)#s(clusters=[target]).values[0]
+            color = self.loader.get_cluster_color(target)
         self.get_view('FeatureView').set_wizard_target(target, color)
         
     # Navigation.
@@ -567,6 +571,9 @@ def after_merge(output):
              # We specify here that the target in the wizard must be the
              # merged cluster.
              ('_compute_similarity_matrix', (output['cluster_merged'],)),
+             # Update the wizard, but not the similarity matrix yet which 
+             # is being computed in an external process.
+             # ('_wizard_update', (output['cluster_merged'], False)),
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (output['cluster_merged'], [], True)),
              ('_wizard_change_color', ([output['cluster_merged']],)),
@@ -586,6 +593,9 @@ def after_merge_undo(output):
     if output.get('wizard', False):
         r = [('_invalidate', (clusters_to_invalidate,)),
              ('_compute_similarity_matrix', ()),
+             # Update the wizard, but not the similarity matrix yet which 
+             # is being computed in an external process.
+             # ('_wizard_update', (None, False)),
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (output['clusters_to_merge'], [], True)),
              ('_wizard_change_color', (output['clusters_to_merge'],)),
@@ -606,6 +616,9 @@ def after_split(output):
     if output.get('wizard', False):
         r = [('_invalidate', (output['clusters_to_split'],)),
              ('_compute_similarity_matrix', (True,)),
+             # Update the wizard, but not the similarity matrix yet which 
+             # is being computed in an external process.
+             # ('_wizard_update', (True, False)),
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (clusters_to_update, [], True)),
              ('_wizard_change_color', (output['clusters_to_split'],)),
@@ -623,6 +636,9 @@ def after_split_undo(output):
     if output.get('wizard', False):
         r = [('_invalidate', (clusters_to_invalidate,)),
              ('_compute_similarity_matrix', (True,)),
+             # Update the wizard, but not the similarity matrix yet which 
+             # is being computed in an external process.
+             # ('_wizard_update', (True, False)),
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (output['clusters_to_split'], [], True)),
              ('_wizard_change_color', (output['clusters_to_split'],)),

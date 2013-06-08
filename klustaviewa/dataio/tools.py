@@ -149,6 +149,10 @@ def load_text(filepath, dtype, skiprows=0):
         raise IOError("The filepath is empty.")
     return np.loadtxt(filepath, dtype=dtype, skiprows=skiprows)
 
+def first_row(filepath):
+    with open(filepath, 'r') as f:
+        n = f.readline().strip()
+    return int(n)
 
 # Faster load_text version if Pandas is installed.
 if HAS_PANDAS:

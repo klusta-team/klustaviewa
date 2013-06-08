@@ -147,6 +147,7 @@ def get_some_spikes_in_clusters(clusters_selected, clusters, counter=None,
     for cluster in clusters_selected:
         # Find the spike indices in the current cluster.
         spikes_in_cluster = get_spikes_in_clusters([cluster], clusters)
+        spikes_in_cluster0 = spikes_in_cluster.copy()
         # Discard empty clusters.
         if not(np.any(spikes_in_cluster)):
             continue
@@ -171,9 +172,16 @@ def get_some_spikes_in_clusters(clusters_selected, clusters, counter=None,
             # of selected spikes in that cluster is approximately 
             # nspikes_in_cluster_requested.
             k = max(int(1. / p), 1)
-            s[:] = False
-            s[np.random.randint(low=0, high=k)::k] = True
-            spikes_in_cluster = spikes_in_cluster & s
+            for _ in xrange(10):
+                s[:] = False
+                s[np.random.randint(low=0, high=k)::k] = True
+                spikes_in_cluster = spikes_in_cluster0 & s
+                # Try to increase the number of spikes if there are no
+                # spikes in the current cluster.
+                if not any(spikes_in_cluster):
+                    k = max(1, k // 2)
+                else:
+                    break
         spikes = spikes | spikes_in_cluster
     
     # Return the sorted array of all selected spikes.

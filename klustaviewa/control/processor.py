@@ -40,7 +40,7 @@ class Processor(object):
         spikes = get_indices(clusters_old)
         clusters_to_merge = get_indices(cluster_groups)
         group = np.max(get_array(cluster_groups))
-        color_old = get_array(cluster_groups)[0]
+        color_old = get_array(cluster_colors)[0]
         color_new = next_color(color_old)
         self.loader.add_cluster(cluster_merged, group, color_new)
         # Set the new cluster to the corresponding spikes.

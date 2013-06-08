@@ -13,7 +13,8 @@ import pandas as pd
 from galry import QtGui, QtCore
 
 from tools import (find_filename, find_index, load_text, load_xml, normalize,
-    load_binary, load_pickle, save_text, get_array, find_any_filename)
+    load_binary, load_pickle, save_text, get_array, find_any_filename,
+    first_row)
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices)
 from klustaviewa.utils.userpref import USERPREF
@@ -42,45 +43,33 @@ def read_xml(filename_xml, fileindex):
     return metadata
 
 # Features.
-def process_features(features, fetdim, nchannels, freq):
+def process_features(features, fetdim, nchannels, freq, nfet=None):
     features = np.array(features, dtype=np.float32)
-    
-    # HACK: There are either 1 or 5 dimensions more than fetdim*nchannels
-    # we can't be sure so we first try 1, if it does not work we try 5.
-    for nextrafet in [1, 5]:
-        try:
-            features = features.reshape((-1,
-                                         fetdim * nchannels + nextrafet))
-            # if the features array could be reshape, directly break the loop
-            break
-        except ValueError:
-            features = None
-    if features is None:
-        raise ValueError("""The number of columns in the feature matrix
-        is not fetdim (%d) x nchannels (%d) + 1 or 5.""" % 
-            (fetdim, nchannels))
+    nspikes, ncol = features.shape
+    if nfet is not None:
+        nextrafet = nfet - fetdim * nchannels
+    else:
+        nextrafet = ncol - fetdim * nchannels
             
     # get the spiketimes
     spiketimes = features[:,-1].copy()
     spiketimes *= (1. / freq)
     
-    # count the number of extra features
-    nextrafet = features.shape[1] - nchannels * fetdim
-    
     # normalize normal features while keeping symmetry
-    features[:,:-nextrafet] = normalize(features[:,:-nextrafet],
+    features_normal = normalize(features[:,:fetdim * nchannels],
                                         symmetric=True)
     # normalize extra features without keeping symmetry
-    features[:,-nextrafet:] = normalize(features[:,-nextrafet:],
+    features_extra = normalize(features[:,-nextrafet:],
                                         symmetric=False)
-    
+    features = np.hstack((features_normal, features_extra))
     return features, spiketimes
     
 def read_features(filename_fet, nchannels, fetdim, freq):
     """Read a .fet file and return the normalize features array,
     as well as the spiketimes."""
     features = load_text(filename_fet, np.int32, skiprows=1)
-    return process_features(features, fetdim, nchannels, freq)
+    return process_features(features, fetdim, nchannels, freq, 
+        nfet=first_row(filename_fet))
     
 # Clusters.
 def process_clusters(clusters):
@@ -384,7 +373,10 @@ class Loader(QtCore.QObject):
         return select(colors, clusters)
     
     def get_cluster_color(self, cluster):
-        return select(self.cluster_colors, cluster)
+        try:
+            return select(self.cluster_colors, cluster)
+        except IndexError:
+            return 0
     
     def get_cluster_groups(self, clusters=None):
         if clusters is None:
