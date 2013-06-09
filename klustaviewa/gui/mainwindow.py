@@ -46,6 +46,15 @@ class MainWindow(QtGui.QMainWindow):
     
     def __init__(self, parent=None, dolog=True):
         super(MainWindow, self).__init__(parent)
+
+        # HACK: display the icon in Windows' taskbar.
+        if os.name == 'nt':
+            try:
+                import ctypes
+                myappid = 'klustateam.klustaviewa'
+                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+            except:
+                pass
         
         self.dolog = dolog
         if self.dolog:
@@ -64,6 +73,7 @@ class MainWindow(QtGui.QMainWindow):
         # Dock widgets options.
         self.setDockNestingEnabled(True)
         self.setAnimated(False)
+        self.setWindowIcon(get_icon('logo'))
         
         # Initialize some variables.
         self.statscache = None
