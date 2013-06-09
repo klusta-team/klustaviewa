@@ -34,7 +34,7 @@ from klustaviewa.utils.persistence import encode_bytearray, decode_bytearray
 from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.utils.settings import SETTINGS
 from klustaviewa.utils.globalpaths import APPNAME, ABOUT, get_global_path
-from klustaviewa.gui.threads import ThreadedTasks, LOCK
+from klustaviewa.gui.threads import ThreadedTasks, OpenTask
 from klustaviewa.gui.taskgraph import TaskGraph
 import rcicons
 
@@ -602,11 +602,11 @@ class MainWindow(QtGui.QMainWindow):
     # --------
     def create_threads(self):
         # Create the external threads.
-        self.tasks = ThreadedTasks()
-        self.tasks.open_task.dataOpened.connect(self.open_done)
+        self.open_task = inthread(OpenTask)()
+        self.open_task.dataOpened.connect(self.open_done)
     
     def join_threads(self):
-         self.tasks.join()
+         self.open_task.join()
          self.taskgraph.join()
     
     
@@ -622,7 +622,7 @@ class MainWindow(QtGui.QMainWindow):
         # If a file has been selected, open it.
         if path:
             # Launch the loading task in the background asynchronously.
-            self.tasks.open_task.open(self.loader, path)
+            self.open_task.open(self.loader, path)
             # Save the folder.
             folder = os.path.dirname(path)
             SETTINGS['main_window.last_data_dir'] = folder
@@ -636,7 +636,7 @@ class MainWindow(QtGui.QMainWindow):
     def open_last_callback(self, checked=None):
         path = SETTINGS['main_window.last_data_file']
         if path:
-            self.tasks.open_task.open(self.loader, path)
+            self.open_task.open(self.loader, path)
             
     def quit_callback(self, checked=None):
         self.close()

@@ -20,7 +20,7 @@ from klustaviewa.stats import compute_correlograms, compute_correlations
 # -----------------------------------------------------------------------------
 # Synchronisation
 # -----------------------------------------------------------------------------
-LOCK = Lock()
+# LOCK = Lock()
 
 
 # -----------------------------------------------------------------------------
@@ -97,7 +97,7 @@ class ThreadedTasks(QtCore.QObject):
     def __init__(self, parent=None):
         super(ThreadedTasks, self).__init__(parent)
         # In external threads.
-        self.open_task = inthread(OpenTask)()
+        # self.open_task = inthread(OpenTask)()
         # self.select_task = inthread(SelectTask)(impatient=True)
         # In external processes.
         self.correlograms_task = inprocess(CorrelogramsTask)(impatient=True)
@@ -106,7 +106,7 @@ class ThreadedTasks(QtCore.QObject):
         # self.wizard_task = inprocess(WizardTask)(impatient=False)
 
     def join(self):
-        self.open_task.join()
+        # self.open_task.join()
         # self.select_task.join()
         self.correlograms_task.join()
         self.similarity_matrix_task.join()

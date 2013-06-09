@@ -14,7 +14,7 @@ from klustaviewa.stats.correlations import normalize
 from klustaviewa.stats.correlograms import get_baselines
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.userpref import USERPREF
-from klustaviewa.gui.threads import ThreadedTasks, LOCK
+from klustaviewa.gui.threads import ThreadedTasks
 
 
 # -----------------------------------------------------------------------------
@@ -95,8 +95,6 @@ class TaskGraph(AbstractTaskGraph):
     def create_threads(self):
         # Create the external threads.
         self.tasks = ThreadedTasks()
-        # self.tasks.open_task.dataOpened.connect(self.open_done)
-        # self.tasks.select_task.clustersSelected.connect(self.selection_done)
         self.tasks.correlograms_task.correlogramsComputed.connect(
             self.correlograms_computed_callback)
         self.tasks.similarity_matrix_task.correlationMatrixComputed.connect(
