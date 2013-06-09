@@ -27,10 +27,10 @@ Installation
 
 ### Windows 7/8 64 bits
 
-  * Step 1: if you don't already have a Python installation, [download this ZIP file (70MB)](http://klustaviewa.rossant.net/klustaviewa-dependencies.zip) containing a full Python distribution (required by KlustaViewa).
+  * Step 1: if you don't already have a Python installation, [download this ZIP file (72MB)](http://klustaviewa.rossant.net/klustaviewa-dependencies.zip) containing a full Python distribution (required by KlustaViewa).
   * Step 2: unzip the archive. You'll find several installers: execute them all one by one, in the right order.
   * Step 3: download the [KlustaViewa Windows 64 bits installer (<1MB)](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.win-amd64-py2.7.exe) and execute it.
-  * Step 4: you can launch the software using the executable found in `C:\Python27\Scripts\klustaviewa.exe`. You can create a shortcut to this file on your desktop.
+  * Step 4: you can launch the software with the shortcut named *KlustaViewa* on your desktop and in the start menu.
 
 Once the software is installed, you can update it when a new version is available by doing again **Step 3** only.
 
