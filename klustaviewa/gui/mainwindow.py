@@ -337,9 +337,11 @@ class MainWindow(QtGui.QMainWindow):
         self.addToolBar(QtCore.Qt.LeftToolBarArea, self.toolbar)
         
     def create_open_progress_dialog(self):
-        self.open_progress = QtGui.QProgressDialog("Loading...", "Cancel", 0, 0, self)
+        self.open_progress = QtGui.QProgressDialog("Loading...", "Cancel", 
+            0, 0, self, QtCore.Qt.Popup)
         self.open_progress.setWindowModality(QtCore.Qt.WindowModal)
         self.open_progress.setValue(0)
+        self.open_progress.setWindowTitle('Loading')
         self.open_progress.setCancelButton(None)
         self.open_progress.setMinimumDuration(0)
         

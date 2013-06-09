@@ -70,13 +70,15 @@ if __name__ == '__main__':
                   ],
         
         # Scripts.
-        entry_points = {
+        entry_points={
             'console_scripts': [
                 'klustaviewa = klustaviewa.scripts.runklustaviewa:main' ]
         },
         
+        scripts=['postinstall.py'],
+        
         package_data={
-            'klustaviewa': ['icons/*.png', 'gui/*.css'],
+            'klustaviewa': ['icons/*.png', 'icons/*.ico', 'gui/*.css'],
             
             # INCLUDE GALRY
             'galry': ['cursors/*.png', 'icons/*.png'],

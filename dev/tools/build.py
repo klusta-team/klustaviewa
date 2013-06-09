@@ -61,7 +61,9 @@ copy('setup_dev.py', 'setup.py')
             
 # build the distribution
 call('python setup.py build_ext --inplace')
-call('python setup.py bdist_wininst sdist --formats=zip')
+call(('python setup.py bdist_wininst --install-script postinstall.py '
+      '--bitmap images/logo-installer.bmp --title KlustaViewa'))
+call('python setup.py sdist --formats=zip')
 
 # use the original setup.py
 copy('setup.bak', 'setup.py')
