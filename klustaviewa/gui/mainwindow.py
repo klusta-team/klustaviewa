@@ -60,7 +60,6 @@ class MainWindow(QtGui.QMainWindow):
         # Focus options.
         self.setFocusPolicy(QtCore.Qt.WheelFocus)
         self.setMouseTracking(True)
-        # self.installEventFilter(EventFilter(self))
         
         # Dock widgets options.
         self.setDockNestingEnabled(True)
@@ -74,17 +73,14 @@ class MainWindow(QtGui.QMainWindow):
         self.controller = None
         self.spikes_highlighted = []
         self.spikes_selected = []
-        # self.wizard_active = False
         self._wizard = False
         self.need_save = False
         self.taskgraph = TaskGraph(self)
-        # self.last_selection_time = time.clock()
         self.busy_cursor = QtGui.QCursor(QtCore.Qt.BusyCursor)
         self.normal_cursor = QtGui.QCursor(QtCore.Qt.ArrowCursor)
         self.override_color = False
         self.computing_correlograms = False
         self.computing_matrix = False
-        # self.do_renumber = False
         
         # Create the main window.
         self.create_views()
@@ -143,7 +139,7 @@ class MainWindow(QtGui.QMainWindow):
     # Actions.
     # --------
     def add_action(self, name, text, callback=None, shortcut=None,
-            checkable=False, icon=None):
+            checkable=False, checked=False, icon=None):
         action = QtGui.QAction(text, self)
         if callback is None:
             callback = getattr(self, name + '_callback', None)
@@ -154,6 +150,7 @@ class MainWindow(QtGui.QMainWindow):
         if icon:
             action.setIcon(get_icon(icon))
         action.setCheckable(checkable)
+        action.setChecked(checked)
         setattr(self, name + '_action', action)
         
     def create_file_actions(self):
@@ -205,6 +202,8 @@ class MainWindow(QtGui.QMainWindow):
         
     def create_wizard_actions(self):
         self.add_action('reset_navigation', '&Reset navigation')
+        self.add_action('automatic_projection', '&Automatic projection', 
+            checkable=True, checked=True)
             
         self.add_action('previous_candidate', '&Previous candidate', 
             shortcut='SHIFT+Space')
@@ -215,8 +214,6 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('delete_candidate_noise', 'Move candidate to &noise', 
             shortcut='CTRL+N')
             
-        # self.add_action('previous_target', '&Previous target', 
-            # shortcut='')
         self.add_action('next_target', 'Move target to &good', 
             shortcut='ALT+G')
         self.add_action('delete_target', 'Move target to &MUA', 
@@ -280,26 +277,28 @@ class MainWindow(QtGui.QMainWindow):
         
         # Wizard menu.
         wizard_menu = self.menuBar().addMenu("&Wizard")
-        wizard_menu.addAction(self.reset_navigation_action)
-        wizard_menu.addSeparator()
         # Previous/skip candidate.
-        wizard_menu.addAction(self.previous_candidate_action)
         wizard_menu.addAction(self.next_candidate_action)
+        wizard_menu.addAction(self.previous_candidate_action)
         wizard_menu.addSeparator()
         # Good group.
         wizard_menu.addAction(self.next_target_action)
         wizard_menu.addSeparator()
         # Delete.
         wizard_menu.addAction(self.delete_candidate_action)
-        wizard_menu.addAction(self.delete_target_action)
-        wizard_menu.addAction(self.delete_both_action)
-        wizard_menu.addSeparator()
-        # Delete noise.
         wizard_menu.addAction(self.delete_candidate_noise_action)
+        wizard_menu.addSeparator()
+        wizard_menu.addAction(self.delete_target_action)
         wizard_menu.addAction(self.delete_target_noise_action)
+        wizard_menu.addSeparator()
+        wizard_menu.addAction(self.delete_both_action)
         wizard_menu.addAction(self.delete_both_noise_action)
         wizard_menu.addSeparator()
+        # Misc.
+        wizard_menu.addAction(self.automatic_projection_action)
+        wizard_menu.addAction(self.reset_navigation_action)
         
+        # Help menu.
         help_menu = self.menuBar().addMenu("&Help")
         help_menu.addAction(self.refresh_preferences_action)
         help_menu.addSeparator()
@@ -684,7 +683,8 @@ class MainWindow(QtGui.QMainWindow):
     # ------------------
     def buffer_accepted_callback(self, (clusters, wizard)):
         self._wizard = wizard
-        self.taskgraph.select(clusters, wizard)
+        # The wizard boolean specifies whether the autozoom is activated or not.
+        self.taskgraph.select(clusters, wizard and self.automatic_projection_action.isChecked())
         
     def clusters_selected_callback(self, clusters, wizard=False):
         self.buffer.request((clusters, wizard))
