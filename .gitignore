@@ -3,4 +3,4 @@ dist
 galry
 qtools
 klustaviewa.egg-info
-dev\wininstaller\KlustaViewa"
+dev/wininstaller/KlustaViewa/*
