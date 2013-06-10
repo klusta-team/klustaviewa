@@ -27,9 +27,18 @@ Installation
 
 ### Windows 7/8 64 bits
 
+#### Method 1 (preferred: full installer)
+
+  * [Download the KlustaViewa Full Installer for Windows 64 bits (>200MB)](http://klustaviewa.rossant.net/klustaviewa-setup.exe).
+  * Execute the installer.
+  * Click on the *KlustaViewa* icon on your desktop or in the Start menu to launch the software.
+  * To update the software at any time, execute *Update KlustaViewa* in the Start menu (you need an active Internet connection).
+  
+#### Method 2 (manual method)
+
   * Step 1: if you don't already have a Python installation, [download this ZIP file (72MB)](http://klustaviewa.rossant.net/klustaviewa-dependencies.zip) containing a full Python distribution (required by KlustaViewa).
   * Step 2: unzip the archive. You'll find several installers: execute them all one by one, in the right order.
-  * Step 3: download the [KlustaViewa Windows 64 bits installer (<1MB)](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.win-amd64-py2.7.exe) and execute it.
+  * Step 3: download the [KlustaViewa Light Installer for Windows 64 bits (<1MB)](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.win-amd64-py2.7.exe) and execute it.
   * Step 4: you can launch the software with the shortcut named *KlustaViewa* on your desktop and in the start menu.
 
 Once the software is installed, you can update it when a new version is available by doing again **Step 3** only.
