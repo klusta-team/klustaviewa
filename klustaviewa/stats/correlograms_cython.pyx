@@ -77,9 +77,9 @@ def compute_correlograms_cython(
                 else:
                     break
                 j -= 1
-    dic = {(cl0, cl1): correlograms[(cluster_max + 1) * cl0 + cl1,:] 
+    dic = {(cl0, cl1): correlograms[(cluster_max + 1) * cl0 + cl1,:][::-1]
         for cl0 in clusters_to_update for cl1 in clusters_unique}
     # Add the symmetric pairs.
-    dic.update({(cl1, cl0): dic[cl0, cl1][::-1]
+    dic.update({(cl1, cl0): dic[cl0, cl1]
         for cl0 in clusters_to_update for cl1 in clusters_unique})
     return dic

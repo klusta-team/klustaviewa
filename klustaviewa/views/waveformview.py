@@ -709,7 +709,7 @@ class WaveformPaintManager(PlotPaintManager):
         self.add_visual(TextVisual, text='0', name='clusterinfo', fontsize=16,
             # posoffset=(30., -30.),
             coordinates=(1., -1.),
-            posoffset=(-100., 30.),
+            posoffset=(-180., 30.),
             is_static=True,
             color=(1., 1., 1., 1.),
             background_transparent=False,
@@ -935,7 +935,7 @@ class WaveformInfoManager(Manager):
             # self.data_manager.clusters_unique[cluster_rel],
             # channel,
             # )
-        text = "{0:d} on {1:d}".format(
+        text = "{0:d} on channel {1:d}".format(
             self.data_manager.clusters_unique[cluster_rel],
             channel,
             )

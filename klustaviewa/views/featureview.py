@@ -521,15 +521,25 @@ class FeaturePaintManager(PlotPaintManager):
             visible=False)
             
         # Wizard: target cluster
-        # text, color = self.wizard_target_text()
         self.add_visual(TextVisual, name='wizard_target',
             visible=False,
-            background_transparent=True,
-            fontsize=24,
+            background_transparent=False,
+            fontsize=18,
             is_static=True,
-            coordinates=(0., 1.),
+            coordinates=(-1., 1.),
             color=(1.,) * 4,
-            posoffset=(0., -30.),
+            posoffset=(200., -30.),
+            text='',
+            letter_spacing=500.,
+            depth=-1,)
+        self.add_visual(TextVisual, name='wizard_candidate',
+            visible=False,
+            background_transparent=False,
+            fontsize=18,
+            is_static=True,
+            coordinates=(-1., 1.),
+            color=(1.,) * 4,
+            posoffset=(200., -70.),
             text='',
             letter_spacing=500.,
             depth=-1,)
@@ -557,19 +567,34 @@ class FeaturePaintManager(PlotPaintManager):
             alpha=self.data_manager.alpha_background,
             )
             
-    def set_wizard_target(self, target=None, color=None):
-        if target is None or color is None:
+    def set_wizard_pair(self, target=None, candidate=None):
+        # Display target.
+        if target is None:
             self.set_data(visual='wizard_target',
                 visible=False)
         else:
-            text = 'best unsorted: {0:d}'.format(target)
-            color = COLORMAP[color, :]
+            text = 'best unsorted: {0:d}'.format(target[0])
+            color = COLORMAP[target[1], :]
             color = np.hstack((color, [1.]))
             self.set_data(visual='wizard_target',
                 visible=True,
                 text=text,
                 color=color)
-            self.updateGL()
+        
+        # Display candidate.
+        if candidate is None:
+            self.set_data(visual='wizard_candidate',
+                visible=False)
+        else:
+            text = 'closest match: {0:d}'.format(candidate[0])
+            color = COLORMAP[candidate[1], :]
+            color = np.hstack((color, [1.]))
+            self.set_data(visual='wizard_candidate',
+                visible=True,
+                text=text,
+                color=color)
+        
+        self.updateGL()
             
     def toggle_mask(self):
         self.toggle_mask_value = 1 - self.toggle_mask_value
@@ -1189,8 +1214,8 @@ class FeatureView(KlustaView):
     
     # Public methods
     # --------------
-    def set_wizard_target(self, target=None, color=None):
-        self.paint_manager.set_wizard_target(target, color)
+    def set_wizard_pair(self, target=None, color=None):
+        self.paint_manager.set_wizard_pair(target, color)
     
     def highlight_spikes(self, spikes):
         self.highlight_manager.highlight_spikes(spikes)

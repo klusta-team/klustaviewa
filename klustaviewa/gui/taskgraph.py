@@ -489,12 +489,14 @@ class TaskGraph(AbstractTaskGraph):
                 {cluster: {0: 'target', 1: 'candidate'}.get(i, None) 
                     for i, cluster in enumerate(clusters[:2])})
         
-    def _wizard_show_target(self, target=None, color=None):
+    def _wizard_show_pair(self, target=None, candidate=None):
         if target is None:
-            target = self.wizard.current_target()
-        if color is None:
-            color = self.loader.get_cluster_color(target)
-        self.get_view('FeatureView').set_wizard_target(target, color)
+            target = (self.wizard.current_target(), 
+                      self.loader.get_cluster_color(self.wizard.current_target()))
+        if candidate is None:
+            candidate = (self.wizard.current_candidate(), 
+                         self.loader.get_cluster_color(self.wizard.current_candidate()))
+        self.get_view('FeatureView').set_wizard_pair(target, candidate)
         
     # Navigation.
     def _wizard_reset(self):
@@ -571,8 +573,8 @@ def after_merge(output):
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (output['cluster_merged'], [], True)),
              ('_wizard_change_color', ([output['cluster_merged']],)),
-             ('_wizard_show_target', (output['cluster_merged'], 
-                                      output['cluster_merged_color'])),
+             ('_wizard_show_pair', ((output['cluster_merged'], 
+                                     output['cluster_merged_colors'][0]),)),
             ]
     else:
         r = [('_invalidate', (output['clusters_to_merge'],)),
@@ -593,8 +595,11 @@ def after_merge_undo(output):
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (output['clusters_to_merge'], [], True)),
              ('_wizard_change_color', (output['clusters_to_merge'],)),
-             ('_wizard_show_target', (output['clusters_to_merge'][0], 
-                                      output['cluster_to_merge_color'])),
+             ('_wizard_show_pair', ((output['clusters_to_merge'][0], 
+                                     output['cluster_to_merge_colors'][0]),
+                                    (output['clusters_to_merge'][1], 
+                                     output['cluster_to_merge_colors'][1])),
+                                     ),
             ]
     else:
         r = [('_invalidate', (clusters_to_invalidate,)),
@@ -652,7 +657,7 @@ def after_cluster_color_changed(output):
         return [('_update_cluster_view'),
                 ('_select_in_cluster_view', (output['clusters'], [], True)),
                 ('_wizard_change_color', (output['clusters'],)),
-                ('_wizard_show_target',),# (output['cluster'], 
+                ('_wizard_show_pair',),# (output['cluster'], 
                                          # output['color_new'])),
                 ]
     else:
@@ -665,7 +670,7 @@ def after_cluster_color_changed_undo(output):
         return [('_update_cluster_view'),
                 ('_select_in_cluster_view', (output['clusters'], [], True)),
                 ('_wizard_change_color', (output['clusters'],)),
-                ('_wizard_show_target',),# (output['cluster'], 
+                ('_wizard_show_pair',),# (output['cluster'], 
                                         # output['color_old'])),
                 ]
     else:
@@ -722,7 +727,7 @@ def after_wizard_selection(clusters):
         return [
                 ('_select_in_cluster_view', (clusters, (), True)), 
                 ('_wizard_change_color', (clusters,)),
-                ('_wizard_show_target',),
+                ('_wizard_show_pair',),
                 ]
                 
         

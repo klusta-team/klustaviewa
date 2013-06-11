@@ -51,7 +51,7 @@ class Processor(object):
         self.loader.unselect()
         return dict(clusters_to_merge=clusters_to_merge,
                     cluster_merged=cluster_merged,
-                    cluster_merged_color=color_new,)
+                    cluster_merged_colors=(color_new, color_new),)
         
     def merge_clusters_undo(self, clusters_old, cluster_groups, 
         cluster_colors, cluster_merged):
@@ -68,9 +68,11 @@ class Processor(object):
         self.loader.remove_cluster(cluster_merged)
         self.loader.unselect()
         color_old = self.loader.get_cluster_color(clusters_to_merge[0])
+        color_old2 = self.loader.get_cluster_color(clusters_to_merge[1])
         return dict(clusters_to_merge=clusters_to_merge,
                     cluster_merged=cluster_merged,
-                    cluster_to_merge_color=color_old)
+                    cluster_to_merge_colors=(color_old, color_old2),
+                    )
         
         
     # Split.
