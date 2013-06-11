@@ -765,6 +765,7 @@ class FeatureSelectionManager(Manager):
     def add_point(self, point):
         """Add a point in the selection polygon."""
         point = self.interaction_manager.get_processor('navigation').get_data_coordinates(*point)
+        # Initialize selection.
         if not self.is_selection_pending:
             self.points = np.tile(point, (100, 1))
             self.paint_manager.set_data(
@@ -1099,7 +1100,10 @@ class FeatureBindings(KlustaViewaBindings):
                                             p["mouse_press_position"][1],
                                             p["mouse_position"][0],
                                             p["mouse_position"][1]))
-                                            
+                         
+    def set_zooming_mouse(self):
+        pass
+                     
     def set_highlight(self):
         # highlight
         # self.set('MiddleClickMove',
