@@ -58,10 +58,15 @@ def process_features(features, fetdim, nchannels, freq, nfet=None):
     # normalize normal features while keeping symmetry
     features_normal = normalize(features[:,:fetdim * nchannels],
                                         symmetric=True)
-    # normalize extra features without keeping symmetry
-    features_extra = normalize(features[:,-nextrafet:],
+    features_time = normalize(features[:,[-1]],
                                         symmetric=False)
-    features = np.hstack((features_normal, features_extra))
+    # normalize extra features without keeping symmetry
+    if nextrafet > 1:
+        features_extra = normalize(features[:,-nextrafet:-1],
+                                            symmetric=False)
+        features = np.hstack((features_normal, features_extra, features_time))
+    else:
+        features = np.hstack((features_normal, features_time))
     return features, spiketimes
     
 def read_features(filename_fet, nchannels, fetdim, freq):

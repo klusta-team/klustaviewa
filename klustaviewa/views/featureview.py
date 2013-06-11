@@ -1100,10 +1100,10 @@ class FeatureBindings(KlustaViewaBindings):
                                             p["mouse_press_position"][1],
                                             p["mouse_position"][0],
                                             p["mouse_position"][1]))
-                         
-    def set_zooming_mouse(self):
-        pass
-                     
+    
+    # def set_zooming_mouse(self):
+        # pass
+    
     def set_highlight(self):
         # highlight
         # self.set('MiddleClickMove',
