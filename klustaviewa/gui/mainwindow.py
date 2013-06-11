@@ -195,7 +195,7 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('add_ipython_view', 'Add IPythonView')
         
         self.add_action('override_color', 'Override cluster &color',
-            icon='override_color', shortcut='C')
+            icon='override_color')#, shortcut='C')
     
     def create_control_actions(self):
         self.add_action('undo', '&Undo', shortcut='Ctrl+Z', icon='undo')
@@ -214,6 +214,9 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('reset_navigation', '&Reinitialize wizard')
         self.add_action('automatic_projection', '&Automatic projection', 
             checkable=True, checked=True)
+        self.add_action('change_candidate_color', 
+            'Change &color of the closest match',
+            shortcut='C')
             
         self.add_action('previous_candidate', '&Previous closest match', 
             shortcut='SHIFT+Space')
@@ -305,6 +308,7 @@ class MainWindow(QtGui.QMainWindow):
         wizard_menu.addAction(self.delete_both_noise_action)
         wizard_menu.addSeparator()
         # Misc.
+        wizard_menu.addAction(self.change_candidate_color_action)
         wizard_menu.addAction(self.automatic_projection_action)
         wizard_menu.addAction(self.reset_navigation_action)
         
@@ -331,8 +335,8 @@ class MainWindow(QtGui.QMainWindow):
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.undo_action)
         self.toolbar.addAction(self.redo_action)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.override_color_action)
+        # self.toolbar.addSeparator()
+        # self.toolbar.addAction(self.override_color_action)
         
         self.addToolBar(QtCore.Qt.LeftToolBarArea, self.toolbar)
         
@@ -855,6 +859,10 @@ class MainWindow(QtGui.QMainWindow):
         
     def delete_both_callback(self, checked=None):
         self.taskgraph.wizard_move_and_next('both', 1)
+    
+    def change_candidate_color_callback(self, checked=None):
+        self.taskgraph.wizard_change_candidate_color()
+        self.update_action_enabled()
     
     
     # Views callbacks.
