@@ -16,7 +16,7 @@ from klustaviewa.dataio.tests.mock_data import (setup, teardown,
                             nspikes, nclusters, nsamples, nchannels, fetdim)
 from klustaviewa.dataio.loader import (KlustersLoader, read_clusters, save_clusters,
     read_cluster_info, save_cluster_info, read_group_info, save_group_info,
-    renumber_clusters, reorder)
+    renumber_clusters, reorder, convert_to_clu)
 from klustaviewa.dataio.selection import select, get_indices
 from klustaviewa.dataio.tools import check_dtype, check_shape, get_array, load_text
 from klustaviewa.utils.userpref import USERPREF
@@ -27,8 +27,8 @@ from klustaviewa.utils.userpref import USERPREF
 # -----------------------------------------------------------------------------
 def test_clusters():
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
-    clufile = os.path.join(dir, 'test.clu.1')
-    clufile2 = os.path.join(dir, 'test.clu.1.saved')
+    clufile = os.path.join(dir, 'test.aclu.1')
+    clufile2 = os.path.join(dir, 'test.aclu.1.saved')
     clusters = read_clusters(clufile)
     
     assert clusters.dtype == np.int32
@@ -136,10 +136,33 @@ def test_renumber_clusters():
     assert np.all(select(cluster_info_renumbered, 2 * k + 1) == 
         select(cluster_info, c2next))
     
+def test_convert_to_clu():
+    clusters = np.random.randint(size=1000, low=10, high=100)
+    clusters0 = clusters == 10
+    clusters1 = clusters == 20
+    clusters[clusters0] = 0
+    clusters[clusters1] = 1
+    clusters_unique = np.unique(clusters)
+    n = len(clusters_unique)
+    
+    cluster_groups = np.random.randint(size=n, low=0, high=4)
+    noise = np.in1d(clusters, clusters_unique[np.nonzero(cluster_groups == 0)[0]])
+    mua = np.in1d(clusters, clusters_unique[np.nonzero(cluster_groups == 1)[0]])
+    cluster_info = pd.DataFrame({'group': cluster_groups,
+        'color': np.zeros(n, dtype=np.int32)}, 
+        index=clusters_unique,
+        dtype=np.int32)
+    
+    clusters_new = convert_to_clu(clusters, cluster_info)
+    
+    assert np.array_equal(clusters_new == 0, noise)
+    assert np.array_equal(clusters_new == 1, mua)
+    assert np.all(np.diff(np.unique(clusters_new)) <= 1)
+    
 def test_cluster_info():
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
-    clufile = os.path.join(dir, 'test.clu.1')
-    cluinfofile = os.path.join(dir, 'test.cluinfo.1')
+    clufile = os.path.join(dir, 'test.aclu.1')
+    cluinfofile = os.path.join(dir, 'test.acluinfo.1')
 
     clusters = read_clusters(clufile)
     
@@ -375,7 +398,7 @@ def test_klusters_save():
     l.remove_empty_clusters()
     l.save()
     
-    clusters = read_clusters(l.filename_clu_klustaviewa)
+    clusters = read_clusters(l.filename_aclu)
     cluster_info = read_cluster_info(l.filename_clusterinfo)
     
     assert np.all(clusters[::2] == 2)

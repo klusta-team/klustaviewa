@@ -211,7 +211,16 @@ def renumber_clusters(clusters, cluster_info):
     cluster_info_reordered = pd.DataFrame({'color': colors_reordered, 
         'group': groups_reordered}, dtype=np.int32)
     return clusters_renumbered, cluster_info_reordered
-    
+
+def convert_to_clu(clusters, cluster_info):
+    cluster_groups = cluster_info['group']
+    clusters_new = np.array(clusters, dtype=np.int32) + 2
+    for i in (0, 1):
+        clusters_new[cluster_groups.ix[clusters] == i] = i
+    clusters_unique = np.unique(set(clusters_new).union(set([0, 1])))
+    clusters_renumbered = reorder(clusters_new, clusters_unique)
+    return clusters_renumbered
+
 
 # -----------------------------------------------------------------------------
 # Generic Loader class
@@ -548,15 +557,16 @@ class KlustersLoader(Loader):
         dataset."""
         self.filename_xml = find_filename(self.filename, 'xml')
         self.filename_fet = find_filename(self.filename, 'fet')
-        self.filename_clu = find_filename(self.filename, 'clu')
-        self.filename_clu_klustaviewa = find_filename(self.filename, 'clu')
-        # self.filename_clu_klustaviewa = self.filename_clu.replace(
-            # '.clu.', '.clu_klustaviewa.')
+        self.filename_aclu = (find_filename(self.filename, 'aclu') or
+            self.filename_fet.replace('.fet.', '.aclu.'))
+        self.filename_clu = (find_filename(self.filename, 'clu') or
+            self.filename_fet.replace('.fet.', '.clu.'))
+        # TODO: improve this bad looking code
         self.filename_clusterinfo = find_filename(self.filename, 
-            'cluinfo') or self.filename_clu.replace(
-            '.clu.', '.cluinfo.')
+            'acluinfo') or self.filename_fet.replace(
+            '.fet.', '.acluinfo.')
         self.filename_groups = (find_filename(self.filename, 'groupinfo') or 
-            self.filename_clu.replace('.clu.', '.groupinfo.'))
+            self.filename_fet.replace('.fet.', '.groupinfo.'))
         # fmask or mask file
         self.filename_mask = find_filename(self.filename, 'fmask')
         if not self.filename_mask:
@@ -568,12 +578,20 @@ class KlustersLoader(Loader):
     def save_original_clufile(self):
         filename_clu_original = find_filename(self.filename, 'clu_original')
         if filename_clu_original is None:
-            # Save the original clu file if it does not exist yet.
-            with open(self.filename_clu, 'r') as f:
-                clu = f.read()
-            with open(self.filename_clu.replace('.clu.', 
-                '.clu_original.'), 'w') as f:
-                f.write(clu)
+            if os.path.exists(self.filename_clu):
+                # Save the original clu file if it does not exist yet.
+                with open(self.filename_clu, 'r') as f:
+                    clu = f.read()
+                with open(self.filename_clu.replace('.clu.', 
+                    '.clu_original.'), 'w') as f:
+                    f.write(clu)
+            if os.path.exists(self.filename_aclu):
+                # Save the original clu file if it does not exist yet.
+                with open(self.filename_aclu, 'r') as f:
+                    clu = f.read()
+                with open(self.filename_aclu.replace('.aclu.', 
+                    '.aclu_original.'), 'w') as f:
+                    f.write(clu)
     
     
     # Internal read methods.
@@ -622,7 +640,11 @@ class KlustersLoader(Loader):
     
     def read_clusters(self):
         try:
-            self.clusters = read_clusters(self.filename_clu)
+            # Try reading the ACLU file, or fallback on the CLU file.
+            if os.path.exists(self.filename_aclu):
+                self.clusters = read_clusters(self.filename_aclu)
+            else:
+                self.clusters = read_clusters(self.filename_clu)
         except IOError:
             warn("The CLU file is missing.")
             # Default clusters if the CLU file is not available.
@@ -729,7 +751,12 @@ class KlustersLoader(Loader):
             clusters = get_array(self.clusters)
             cluster_info = self.cluster_info
         
-        save_clusters(self.filename_clu_klustaviewa, clusters)
+        # Save both ACLU and CLU files.
+        save_clusters(self.filename_aclu, clusters)
+        save_clusters(self.filename_clu, 
+            convert_to_clu(clusters, cluster_info))
+        
+        # Save CLUINFO and GROUPINFO files.
         save_cluster_info(self.filename_clusterinfo, cluster_info)
         save_group_info(self.filename_groups, self.group_info)
     

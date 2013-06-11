@@ -30,10 +30,10 @@ def test_find_filename():
     dir = '/my/path/'
     extension_requested = 'spk'
     files = [
-        'blabla.clu.1',
-        'blabla_test.clu.1',
-        'blabla_test2.clu.1',
-        'blabla_test3.clu.3',
+        'blabla.aclu.1',
+        'blabla_test.aclu.1',
+        'blabla_test2.aclu.1',
+        'blabla_test3.aclu.3',
         'blabla.spk.1',
         'blabla_test.spk.1',
         'blabla_test.spk.1',
