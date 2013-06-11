@@ -126,7 +126,7 @@ class SimilarityMatrixPaintManager(PlotPaintManager):
         
         self.add_visual(TextVisual, text='0', name='clusterinfo', fontsize=16,
             background_transparent=False,
-            posoffset=(50., -60.),
+            posoffset=(150., -60.),
             color=(1., 1., 1., 1.),
             letter_spacing=350.,
             depth=-1,
@@ -173,9 +173,14 @@ class SimilarityMatrixInfoManager(Manager):
         
         text = "%d/%d:%.3f" % (cx, cy, val)
         
+        x, y = self.interaction_manager.get_processor('navigation').get_window_coordinates(xd, yd)
+        
+        posoffset=(-np.sign(x) * 140., -np.sign(y) * 40.)
+        
         self.paint_manager.set_data(coordinates=(xd, yd), 
             text=text,
             visible=True,
+            posoffset=posoffset,
             visual='clusterinfo')
         
     
