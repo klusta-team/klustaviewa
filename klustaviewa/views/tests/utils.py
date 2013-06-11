@@ -25,7 +25,7 @@ def get_data():
     l = md.LOADER
     
     # Get full data sets.
-    clusters_selected = [2, 4, 10]
+    clusters_selected = [4, 2, 10]
     l.select(clusters=clusters_selected)
     
     data = dict(

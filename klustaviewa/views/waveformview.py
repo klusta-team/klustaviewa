@@ -425,7 +425,7 @@ class WaveformDataManager(Manager):
         self.waveforms_array = get_array(waveforms)
         self.masks_array = get_array(masks)
         self.clusters_array = get_array(clusters)
-        self.cluster_colors_array = get_array(cluster_colors)
+        self.cluster_colors_array = get_array(cluster_colors)[np.argsort(clusters_selected)]
         
         # Relative indexing.
         if len(clusters_selected) > 0:
@@ -451,14 +451,14 @@ class WaveformDataManager(Manager):
         # Prepare GPU data.
         self.data = self.prepare_waveform_data()
         self.masks_full = np.repeat(self.masks_array.T.ravel(), self.nsamples)
-        self.clusters_full = np.tile(np.repeat(self.clusters_rel, self.nsamples), self.nchannels)
+        self.clusters_full = np.tile(np.repeat(self.clusters_rel_ordered, self.nsamples), self.nchannels)
         self.clusters_full_depth = np.tile(np.repeat(self.clusters_rel_ordered, self.nsamples), self.nchannels)
         self.channels_full = np.repeat(np.arange(self.nchannels, dtype=np.int32), self.nspikes * self.nsamples)
         
         # Compute average waveforms.
         self.data_avg = self.prepare_average_waveform_data()
         self.masks_full_avg = np.repeat(self.masks_avg.T.ravel(), self.nsamples_avg)
-        self.clusters_full_avg = np.tile(np.repeat(self.clusters_rel_avg, self.nsamples_avg), self.nchannels_avg)
+        self.clusters_full_avg = np.tile(np.repeat(self.clusters_rel_ordered_avg, self.nsamples_avg), self.nchannels_avg)
         self.clusters_full_depth_avg = np.tile(np.repeat(self.clusters_rel_ordered_avg, self.nsamples_avg), self.nchannels_avg)
         self.channels_full_avg = np.repeat(np.arange(self.nchannels_avg, dtype=np.int32), self.nspikes_avg * self.nsamples_avg)
         
@@ -783,6 +783,7 @@ class WaveformHighlightManager(HighlightManager):
         # self.get_data_position = self.data_manager.get_data_position
         self.masks_full = self.data_manager.masks_full
         self.clusters_rel = self.data_manager.clusters_rel
+        self.clusters_rel_ordered = self.data_manager.clusters_rel_ordered
         self.cluster_colors = self.data_manager.cluster_colors_array
         self.nchannels = data_manager.nchannels
         self.nclusters = data_manager.nclusters
@@ -808,9 +809,9 @@ class WaveformHighlightManager(HighlightManager):
             # Tx, Ty: Nchannels x Nclusters
             Tx, Ty = box_positions
             # to: Nspikes x Nsamples x Nchannels
-            Px = np.tile(Tx[:,self.clusters_rel].reshape((self.nchannels, self.nspikes, 1)), (1, 1, self.nsamples))
+            Px = np.tile(Tx[:,self.clusters_rel_ordered].reshape((self.nchannels, self.nspikes, 1)), (1, 1, self.nsamples))
             self.Px = Px.transpose([1, 2, 0])
-            Py = np.tile(Ty[:,self.clusters_rel].reshape((self.nchannels, self.nspikes, 1)), (1, 1, self.nsamples))
+            Py = np.tile(Ty[:,self.clusters_rel_ordered].reshape((self.nchannels, self.nspikes, 1)), (1, 1, self.nsamples))
             self.Py = Py.transpose([1, 2, 0])
             
             self.Wx = np.tile(np.linspace(-1., 1., self.nsamples).reshape((1, -1, 1)), (self.nspikes, 1, self.nchannels))
@@ -923,24 +924,13 @@ class WaveformHighlightManager(HighlightManager):
 
 class WaveformInfoManager(Manager):
     def show_closest_cluster(self, xd, yd):
-        
         channel, cluster_rel = self.position_manager.find_box(xd, yd)
-        # i = self.position_manager.nclusters * channel + cluster_rel
-        
-        # color = self.data_manager.cluster_colors_array[cluster_rel]
-        # r, g, b = COLORMAP[color,:]
-        # color = (r, g, b, .75)
-        
-        # text = "cluster {0:d}, channel {1:d}".format(
-            # self.data_manager.clusters_unique[cluster_rel],
-            # channel,
-            # )
         text = "{0:d} on channel {1:d}".format(
-            self.data_manager.clusters_unique[cluster_rel],
+            self.data_manager.clusters_selected[cluster_rel],
             channel,
             )
         
-        self.paint_manager.set_data(#coordinates=(xd, yd), #color=color,
+        self.paint_manager.set_data(
             text=text,
             visible=True,
             visual='clusterinfo')
