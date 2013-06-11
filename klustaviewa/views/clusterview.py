@@ -269,9 +269,6 @@ class ClusterItem(TreeItem):
     def color(self):
         return self.item_data['color']
                 
-    # def bgcolor(self):
-        # return self.item_data['bgcolor']
-                
     def clusteridx(self):
         return self.item_data['clusteridx']
 
@@ -442,27 +439,61 @@ class ClusterViewModel(TreeModel):
                 elif role == QtCore.Qt.BackgroundRole:
                     if item.bgcolor is None:
                         return
-                    else:
-                        color = np.array(COLORMAP[item.bgcolor]) * 255
-                        return QtGui.QColor(color[0], color[1], color[2], 125)
+                    elif item.bgcolor == 'candidate':
+                        color = np.array(COLORMAP[item.color()]) * 255
+                        return QtGui.QColor(color[0], color[1], color[2], 90)
+                    elif item.bgcolor == 'target':
+                        # return QtGui.QColor(177, 177, 177, 255)
+                        color = np.array(COLORMAP[item.color()]) * 255
+                        return QtGui.QColor(color[0], color[1], color[2], 255)
+                elif role == QtCore.Qt.ForegroundRole:
+                    if item.bgcolor is None:
+                        return QtGui.QColor(177, 177, 177, 255)
+                    elif item.bgcolor == 'target':
+                        return QtGui.QColor(0, 0, 0, 255)
             # quality
             elif col == 1:
                 if role == QtCore.Qt.TextAlignmentRole:
                     return QtCore.Qt.AlignRight
                 elif role == QtCore.Qt.DisplayRole:
-                    return "%.4f" % item.quality()
+                    return "%.3f" % item.quality()
                 elif role == QtCore.Qt.BackgroundRole:
                     if item.bgcolor is None:
                         return
-                    else:
-                        color = np.array(COLORMAP[item.bgcolor]) * 255
-                        return QtGui.QColor(color[0], color[1], color[2], 125)
+                    elif item.bgcolor == 'candidate':
+                        color = np.array(COLORMAP[item.color()]) * 255
+                        return QtGui.QColor(color[0], color[1], color[2], 90)
+                    elif item.bgcolor == 'target':
+                        color = np.array(COLORMAP[item.color()]) * 255
+                        return QtGui.QColor(color[0], color[1], color[2], 255)
+                        # return QtGui.QColor(177, 177, 177, 255)
+                elif role == QtCore.Qt.ForegroundRole:
+                    if item.bgcolor is None:
+                        return QtGui.QColor(177, 177, 177, 255)
+                    elif item.bgcolor == 'target':
+                        return QtGui.QColor(0, 0, 0, 255)
             # spkcount
             elif col == 2:
                 if role == QtCore.Qt.TextAlignmentRole:
                     return QtCore.Qt.AlignRight
                 if role == QtCore.Qt.DisplayRole:
                     return "%d" % item.spkcount()
+                elif role == QtCore.Qt.BackgroundRole:
+                    if item.bgcolor is None:
+                        return
+                    elif item.bgcolor == 'candidate':
+                        color = np.array(COLORMAP[item.color()]) * 255
+                        return QtGui.QColor(color[0], color[1], color[2], 90)
+                    elif item.bgcolor == 'target':
+                        # return QtGui.QColor(177, 177, 177, 255)
+                        color = np.array(COLORMAP[item.color()]) * 255
+                        return QtGui.QColor(color[0], color[1], color[2], 255)
+                elif role == QtCore.Qt.ForegroundRole:
+                    if item.bgcolor is None:
+                        return QtGui.QColor(177, 177, 177, 255)
+                    elif item.bgcolor == 'target':
+                        return QtGui.QColor(0, 0, 0, 255)
+                
             # color
             elif col == self.columnCount() - 1:
                 if role == QtCore.Qt.BackgroundRole:
@@ -472,6 +503,9 @@ class ClusterViewModel(TreeModel):
         # default
         if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
             return item.data(col)
+            
+        if role == QtCore.Qt.ForegroundRole:
+            return QtGui.QColor(177, 177, 177, 255)
           
     def setData(self, index, data, role=None):
         if role is None:
@@ -539,6 +573,9 @@ class ClusterViewModel(TreeModel):
             index1 = self.index(cluster.row(), 1, parent=group.index)
             if index.isValid():
                 item = index.internalPointer()
+                # bgcolor = True means using the same color
+                # if bgcolor is True:
+                    # bgcolor = item.color()
                 item.bgcolor = bgcolor
                 self.dataChanged.emit(index, index1)
     

@@ -211,24 +211,24 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('change_corr_normalization', 'Change &normalization')
         
     def create_wizard_actions(self):
-        self.add_action('reset_navigation', '&Reset navigation')
+        self.add_action('reset_navigation', '&Reinitialize wizard')
         self.add_action('automatic_projection', '&Automatic projection', 
             checkable=True, checked=True)
             
-        self.add_action('previous_candidate', '&Previous candidate', 
+        self.add_action('previous_candidate', '&Previous closest match', 
             shortcut='SHIFT+Space')
-        self.add_action('next_candidate', '&Skip candidate', 
+        self.add_action('next_candidate', '&Skip closest match', 
             shortcut='Space')
-        self.add_action('delete_candidate', 'Move candidate to &MUA', 
+        self.add_action('delete_candidate', 'Move closest match to &MUA', 
             shortcut='CTRL+M')
-        self.add_action('delete_candidate_noise', 'Move candidate to &noise', 
+        self.add_action('delete_candidate_noise', 'Move closest match to &noise', 
             shortcut='CTRL+N')
             
-        self.add_action('next_target', 'Move target to &good', 
+        self.add_action('next_target', 'Move best unsorted to &good', 
             shortcut='ALT+G')
-        self.add_action('delete_target', 'Move target to &MUA', 
+        self.add_action('delete_target', 'Move best unsorted to &MUA', 
             shortcut='ALT+M')
-        self.add_action('delete_target_noise', 'Move target to &noise', 
+        self.add_action('delete_target_noise', 'Move best unsorted to &noise', 
             shortcut='ALT+N')
             
         self.add_action('delete_both', 'Move &both to MUA', 

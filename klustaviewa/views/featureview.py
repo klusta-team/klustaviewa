@@ -562,7 +562,7 @@ class FeaturePaintManager(PlotPaintManager):
             self.set_data(visual='wizard_target',
                 visible=False)
         else:
-            text = 'target: {0:d}'.format(target)
+            text = 'best unsorted: {0:d}'.format(target)
             color = COLORMAP[color, :]
             color = np.hstack((color, [1.]))
             self.set_data(visual='wizard_target',

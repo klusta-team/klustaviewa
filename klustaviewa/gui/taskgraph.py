@@ -486,12 +486,8 @@ class TaskGraph(AbstractTaskGraph):
             # Set the background color in the cluster view for the wizard
             # target and candidate.
             self.get_view('ClusterView').set_background(
-                {cluster: i + 1 for i, cluster in enumerate(clusters[:2])})
-            # Display the target number in the FeatureView.
-            if len(clusters) > 0:
-                cluster = clusters[0]
-            else:
-                cluster = None
+                {cluster: {0: 'target', 1: 'candidate'}.get(i, None) 
+                    for i, cluster in enumerate(clusters[:2])})
         
     def _wizard_show_target(self, target=None, color=None):
         if target is None:

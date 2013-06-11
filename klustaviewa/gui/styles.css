@@ -36,7 +36,7 @@ QWidget:item:hover
 
 QWidget:item:selected
 {
-    background-color: %ACCENT2%; /*QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 %ACCENT3%, stop: 1 %ACCENT2%);*/
+    /*background-color: %ACCENT2%; /*QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 %ACCENT3%, stop: 1 %ACCENT2%);*/
 }
 
 
@@ -560,10 +560,10 @@ QStatusBar::item
 
 QTreeView {
     background-color: #000000;
-    color: #b1b1b1;
+    /*color: #b1b1b1;*/
 }
 QTreeView::item {
-    color: #b1b1b1;
+    /*color: #b1b1b1;*/
 }
 QTreeView::item:hover {
     background-color: #7a7a7a;
