@@ -133,7 +133,19 @@ def process_probe(probe):
     return normalize(probe)
 
 def read_probe(filename_probe):
-    return process_probe(load_text(filename_probe, np.float32))
+    if os.path.exists(filename_probe):
+        # Try the text-flavored probe file.
+        try:
+            probe = load_text(filename_probe, np.float32)
+        except:
+            # Or try the Python-flavored probe file (SpikeDetekt, with an
+            # extra field 'geometry').
+            ns = {}
+            execfile(filename_probe, ns)
+            probe = ns['geometry']
+            probe = np.array([probe[i] for i in sorted(probe.keys())],
+                                dtype=np.float32)
+        return process_probe(probe)
 
 
 # -----------------------------------------------------------------------------
