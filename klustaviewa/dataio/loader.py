@@ -130,10 +130,10 @@ def read_waveforms(filename_spk, nsamples, nchannels):
 
 # Probe.
 def process_probe(probe):
-    return normalize(np.array(probe, dtype=np.float32))
+    return normalize(probe)
 
 def read_probe(filename_probe):
-    return process_probe(load_text(filename_probe, np.int32))
+    return process_probe(load_text(filename_probe, np.float32))
 
 
 # -----------------------------------------------------------------------------
@@ -787,7 +787,12 @@ class MemoryLoader(Loader):
         self.freq = freq
         
     def read_probe(self, probe):
-        self.probe = process_probe(probe)
+        try:
+            self.probe = process_probe(probe)
+        except Exception as e:
+            info(("There was an error while loading the probe: "
+                      "'{0:s}'").format(e.message))
+            self.probe = None
     
     def read_features(self, features):
         self.features, self.spiketimes = process_features(features,
