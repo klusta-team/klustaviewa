@@ -1232,13 +1232,14 @@ class FeatureView(KlustaView):
         self.interaction_manager.toggle_mask()
         self.updateGL()
         
-    def set_projection(self, coord, channel, feature):
+    def set_projection(self, coord, channel, feature, do_emit=True):
         if feature == -1:
             feature = self.projection_manager.get_smart_feature(coord, channel)
         log.debug(("Set projection on channel {0:d}, feature {1:d} "
                    "on coord {2:s}".format(channel, feature, 'xy'[coord])))
         self.projection_manager.set_projection(coord, channel, feature)
-        self.projectionChanged.emit(coord, channel, feature)
+        if do_emit:
+            self.projectionChanged.emit(coord, channel, feature)
         self.paint_manager.update_points()
         self.paint_manager.updateGL()
         

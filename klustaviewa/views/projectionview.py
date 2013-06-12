@@ -47,6 +47,11 @@ class ProjectionView(QtGui.QWidget):
         
     # Public methods.
     # ---------------
+    def _has_changed(self, fetdim, nchannels, nextrafet):
+        return (fetdim != getattr(self, 'fetdim', None) or
+                nchannels != getattr(self, 'nchannels', None) or
+                nextrafet != getattr(self, 'nextrafet', None))
+    
     def set_data(self, fetdim=None, nchannels=None, nextrafet=None):
         if fetdim is None:
             fetdim = 3
@@ -54,6 +59,10 @@ class ProjectionView(QtGui.QWidget):
             nchannels = 1
         if nextrafet is None:
             nextrafet = 0
+        
+        # No need to update the widget if the data has not changed.
+        if not self._has_changed(fetdim, nchannels, nextrafet):
+            return
         
         self.fetdim = fetdim
         self.nchannels = nchannels
@@ -109,6 +118,10 @@ class ProjectionView(QtGui.QWidget):
     def create_widget(self):
         
         box = QtGui.QHBoxLayout()
+        if hasattr(box, 'setMargin'):
+            box.setContentsMargins(QtCore.QMargins(10, 2, 10, 2))
+        
+        # box.addSpacing(10)
         
         # coord => channel combo box
         self.channel_box = [None, None]
@@ -119,6 +132,8 @@ class ProjectionView(QtGui.QWidget):
         self.feature_widget1 = self.create_feature_widget(0)
         box.addLayout(self.feature_widget1)
         
+        box.addSpacing(30)
+        
         # Switch button.
         # button = QtGui.QPushButton('Flip', self)
         button = QtGui.QPushButton(self)
@@ -127,9 +142,13 @@ class ProjectionView(QtGui.QWidget):
         button.clicked.connect(self.flip_projections_callback)
         box.addWidget(button)
         
+        box.addSpacing(30)
+        
         # add feature widget
         self.feature_widget2 = self.create_feature_widget(1)
         box.addLayout(self.feature_widget2)
+        
+        # box.addSpacing(10)
         
         self.setTabOrder(self.channel_box[0], self.channel_box[1])
         
@@ -139,11 +158,11 @@ class ProjectionView(QtGui.QWidget):
         # coord => (channel, feature)
         self.projection = [(0, 0), (0, 1)]
         
-        gridLayout = QtGui.QGridLayout()
-        gridLayout.setSpacing(0)
+        hbox = QtGui.QHBoxLayout()
+        hbox.setSpacing(0)
         # HACK: pyside does not have this function
-        if hasattr(gridLayout, 'setMargin'):
-            gridLayout.setMargin(0)
+        if hasattr(hbox, 'setMargin'):
+            hbox.setMargin(0)
         
         # channel selection
         comboBox = QtGui.QComboBox(self)
@@ -154,11 +173,13 @@ class ProjectionView(QtGui.QWidget):
         comboBox.editTextChanged.connect(partial(self.select_channel, coord))
         # comboBox.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.channel_box[coord] = comboBox
-        gridLayout.addWidget(comboBox, 0, 0, 1, self.fetdim)
+        hbox.addWidget(comboBox)#, 0, 0, 1, self.fetdim)
         
         # create 3 buttons for selecting the feature
         widths = [30] * self.fetdim
         labels = ['PC%d' % i for i in xrange(1, self.fetdim + 1)]
+        
+        hbox.addSpacing(10)
         
         # ensure exclusivity of the group of buttons
         pushButtonGroup = QtGui.QButtonGroup(self)
@@ -172,9 +193,9 @@ class ProjectionView(QtGui.QWidget):
             pushButton.clicked.connect(partial(self.select_feature, coord, i))
             pushButtonGroup.addButton(pushButton, i)
             self.feature_buttons[coord][i] = pushButton
-            gridLayout.addWidget(pushButton, 1, i)
+            hbox.addWidget(pushButton)#, 1, i)
         
-        return gridLayout
+        return hbox
         
     def update_feature_widget(self):
         for coord in [0, 1]:
@@ -223,5 +244,5 @@ class ProjectionView(QtGui.QWidget):
         self.set_projection(1, c0, f0)
         
     def sizeHint(self):
-        return QtCore.QSize(400, 80)
+        return QtCore.QSize(400, 40)
         

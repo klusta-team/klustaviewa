@@ -335,20 +335,10 @@ class TaskGraph(AbstractTaskGraph):
         if clusters is not None:
             return 
     
-    def _update_projection_view(self):
-        """Update the cluster view using the data stored in the loader
-        object."""
-        data = dict(
-            nchannels=self.loader.nchannels,
-            fetdim=self.loader.fetdim,
-            nextrafet=self.loader.nextrafet,
-        )
-        self.get_view('ProjectionView').set_data(**data)
-        
     def _show_selection_in_matrix(self, clusters):
         if clusters is not None and 1 <= len(clusters) <= 2:
-            self.get_view('SimilarityMatrixView').show_selection(
-                clusters[0], clusters[-1])
+            [view.show_selection(clusters[0], clusters[-1]) 
+                for view in self.get_views('SimilarityMatrixView')]
         
             
     # Override colors.
@@ -503,7 +493,8 @@ class TaskGraph(AbstractTaskGraph):
         if candidate is None:
             candidate = (self.wizard.current_candidate(), 
                          self.loader.get_cluster_color(self.wizard.current_candidate()))
-        self.get_view('FeatureView').set_wizard_pair(target, candidate)
+        [view.set_wizard_pair(target, candidate) 
+            for view in self.get_views('FeatureView')]
         
     # Navigation.
     def _wizard_reset(self):

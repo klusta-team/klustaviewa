@@ -383,12 +383,11 @@ class MainWindow(QtGui.QMainWindow):
     # View methods.
     # -------------
     def create_view(self, view_class, position=None, 
-        closable=True, floatable=True, index=0, floating=None, **kwargs):
+        closable=True, floatable=True, index=0, floating=None, title=None,
+        **kwargs):
         """Add a widget to the main window."""
         view = view_class(self, getfocus=False)
         view.set_data(**kwargs)
-        # if not position:
-            # position = QtCore.Qt.LeftDockWidgetArea
             
         # Create the dock widget.
         name = view_class.__name__ + '_' + str(index)
@@ -411,7 +410,6 @@ class MainWindow(QtGui.QMainWindow):
             QtCore.Qt.RightDockWidgetArea |
             QtCore.Qt.TopDockWidgetArea |
             QtCore.Qt.BottomDockWidgetArea)
-        # dockwidget.setAttribute(QtCore.Qt.WA_DeleteOnClose )
         
         dockwidget.visibilityChanged.connect(partial(
             self.dock_visibility_changed_callback, view))
@@ -423,7 +421,9 @@ class MainWindow(QtGui.QMainWindow):
         if floating is not None:
             dockwidget.setFloating(floating)
         
-        dockwidget.setTitleBarWidget(DockTitleBar(dockwidget, view_class.__name__))
+        if title is None:
+            title = view_class.__name__
+        dockwidget.setTitleBarWidget(DockTitleBar(dockwidget, title))
             
         # Return the view widget.
         return view
@@ -447,19 +447,6 @@ class MainWindow(QtGui.QMainWindow):
         
         self.views['ClusterView'].append(view)
         
-    def add_projection_view(self):
-        view = self.create_view(vw.ProjectionView,
-            index=len(self.views['ProjectionView']),
-            position=QtCore.Qt.LeftDockWidgetArea, 
-            closable=False, 
-            # floatable=False
-            )
-            
-        # Connect callback functions.
-        view.projectionChanged.connect(self.projection_changed_callback)
-        
-        self.views['ProjectionView'].append(view)
-        
     def dock_visibility_changed_callback(self, view, visibility):
         # Register dock widget visibility.
         view.visibility = visibility
@@ -480,7 +467,7 @@ class MainWindow(QtGui.QMainWindow):
         else:
             return False
         
-    def add_similarity_matrix_view(self):
+    def add_similarity_matrix_view(self, new=None):
         # Try restoring the last view if it exists and it is hidden, and if
         # successfully restored, do nothing more. Otherwise, need to create 
         # a new view.
@@ -488,33 +475,40 @@ class MainWindow(QtGui.QMainWindow):
             return
         view = self.create_view(vw.SimilarityMatrixView,
             index=len(self.views['SimilarityMatrixView']),
-            position=QtCore.Qt.LeftDockWidgetArea,)
+            position=QtCore.Qt.LeftDockWidgetArea,
+            floating=new)
         view.clustersSelected.connect(self.cluster_pair_selected_callback)
         self.views['SimilarityMatrixView'].append(view)
-        self.taskgraph.update_similarity_matrix_view()
+        if new:
+            self.taskgraph.update_similarity_matrix_view()
     
-    def add_waveform_view(self):
+    def add_waveform_view(self, new=None):
         view = self.create_view(vw.WaveformView,
             index=len(self.views['WaveformView']),
-            position=QtCore.Qt.RightDockWidgetArea,)
+            position=QtCore.Qt.RightDockWidgetArea,
+            floating=new)
         view.spikesHighlighted.connect(
             self.waveform_spikes_highlighted_callback)
         view.boxClicked.connect(self.waveform_box_clicked_callback)
         self.views['WaveformView'].append(view)
+        if new:
+            self.taskgraph.update_waveform_view()
         
-    def add_feature_view(self):
-        view = self.create_view(vw.FeatureView,
+    def add_feature_view(self, new=None):
+        view = self.create_view(vw.FeatureProjectionView,
             index=len(self.views['FeatureView']),
-            position=QtCore.Qt.RightDockWidgetArea,)
+            position=QtCore.Qt.RightDockWidgetArea,
+            floating=new,
+            title='FeatureView')
         view.spikesHighlighted.connect(
             self.features_spikes_highlighted_callback)
         view.spikesSelected.connect(
             self.features_spikes_selected_callback)
-        view.projectionChanged.connect(
-            self.features_projection_changed_callback)
         self.views['FeatureView'].append(view)
+        if new:
+            self.taskgraph.update_feature_view()
             
-    def add_ipython_view(self):
+    def add_ipython_view(self, floating=None):
         view = self.create_view(vw.IPythonView,
             index=len(self.views['IPythonView']),
             position=QtCore.Qt.BottomDockWidgetArea,
@@ -541,11 +535,14 @@ class MainWindow(QtGui.QMainWindow):
                     view.run_file(os.path.join(path, file))
         self.views['IPythonView'].append(view)
         
-    def add_correlograms_view(self):
+    def add_correlograms_view(self, new=None):
         view = self.create_view(vw.CorrelogramsView,
             index=len(self.views['CorrelogramsView']),
-            position=QtCore.Qt.RightDockWidgetArea,)
+            position=QtCore.Qt.RightDockWidgetArea,
+            floating=new)
         self.views['CorrelogramsView'].append(view)
+        if new:
+            self.taskgraph.update_correlograms_view()
             
     def get_view(self, name, index=0):
         views = self.views[name] 
@@ -563,7 +560,7 @@ class MainWindow(QtGui.QMainWindow):
         # Create the default layout.
         self.views = dict(
             ClusterView=[],
-            ProjectionView=[],
+            # ProjectionView=[],
             SimilarityMatrixView=[],
             WaveformView=[],
             FeatureView=[],
@@ -571,15 +568,15 @@ class MainWindow(QtGui.QMainWindow):
             IPythonView=[],
             )
         
-        self.add_projection_view()
+        # self.add_projection_view()
         self.add_cluster_view()
         self.add_similarity_matrix_view()
             
-        self.splitDockWidget(
-            self.get_view('ProjectionView').parentWidget(), 
-            self.get_view('ClusterView').parentWidget(), 
-            QtCore.Qt.Vertical
-            )
+        # self.splitDockWidget(
+            # self.get_view('ProjectionView').parentWidget(), 
+            # self.get_view('ClusterView').parentWidget(), 
+            # QtCore.Qt.Vertical
+            # )
             
         self.splitDockWidget(
             self.get_view('ClusterView').parentWidget(), 
@@ -686,7 +683,7 @@ class MainWindow(QtGui.QMainWindow):
         
         # Update the task graph.
         self.taskgraph.set(self)
-        self.taskgraph.update_projection_view()
+        # self.taskgraph.update_projection_view()
         self.taskgraph.update_cluster_view()
         self.taskgraph.compute_similarity_matrix()
         
@@ -714,16 +711,16 @@ class MainWindow(QtGui.QMainWindow):
     # Views menu callbacks.
     # ---------------------
     def add_feature_view_callback(self, checked=None):
-        self.add_feature_view()
+        self.add_feature_view(new=True)
         
     def add_waveform_view_callback(self, checked=None):
-        self.add_waveform_view()
+        self.add_waveform_view(new=True)
         
     def add_similarity_matrix_view_callback(self, checked=None):
-        self.add_similarity_matrix_view()
+        self.add_similarity_matrix_view(new=True)
         
     def add_correlograms_view_callback(self, checked=None):
-        self.add_correlograms_view()
+        self.add_correlograms_view(new=True)
     
     def add_ipython_view_callback(self, checked=None):
         self.add_ipython_view()
@@ -770,7 +767,7 @@ class MainWindow(QtGui.QMainWindow):
                 ncorrbins=ncorrbins_new)
     
     def change_corr_normalization_callback(self, checked=None):
-        self.get_view('CorrelogramsView').change_normalization()
+        [view.change_normalization() for view in self.get_views('CorrelogramsView')]
     
     
     # Actions callbacks.
@@ -869,31 +866,22 @@ class MainWindow(QtGui.QMainWindow):
     # ----------------
     def waveform_spikes_highlighted_callback(self, spikes):
         self.spikes_highlighted = spikes
-        self.get_view('FeatureView').highlight_spikes(get_array(spikes))
+        [view.highlight_spikes(get_array(spikes)) for view in self.get_views('FeatureView')]
         
     def features_spikes_highlighted_callback(self, spikes):
         self.spikes_highlighted = spikes
-        self.get_view('WaveformView').highlight_spikes(get_array(spikes))
+        [view.highlight_spikes(get_array(spikes)) for view in self.get_views('WaveformView')]
         
     def features_spikes_selected_callback(self, spikes):
         self.spikes_selected = spikes
         self.update_action_enabled()
-        self.get_view('WaveformView').highlight_spikes(get_array(spikes))
+        [view.highlight_spikes(get_array(spikes)) for view in self.get_views('WaveformView')]
         
     def waveform_box_clicked_callback(self, coord, cluster, channel):
         """Changed in waveform ==> change in feature"""
-        self.get_view('FeatureView').set_projection(coord, channel, -1)
+        [view.set_projection(coord, channel, -1) for view in self.get_views('FeatureView')]
+
         
-    def projection_changed_callback(self, coord, channel, feature):
-        """Changed in projection ==> change in feature"""
-        self.get_view('FeatureView').set_projection(coord, channel, feature)
-        
-    def features_projection_changed_callback(self, coord, channel, feature):
-        """Changed in feature ==> change in projection"""
-        self.get_view('ProjectionView').set_projection(coord, channel, feature,
-            do_emit=False)
-        
-    
     # Help callbacks.
     # ---------------
     def manual_callback(self, checked=None):
