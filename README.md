@@ -157,6 +157,9 @@ Troubleshooting
 
 ### Contact
 
-If you have any trouble, bug, comment or suggestion, please send an e-mail to the author of the software: cyrille *dot* rossant *at* gmail *dot* com.
+If you have any trouble, bug, comment or suggestion:
+  
+  * You can [send a message on the Google group](https://groups.google.com/forum/?fromgroups#!forum/klustaviewas).
+  * You can send an e-mail to the author of the software: cyrille *dot* rossant *at* gmail *dot* com.
 
 
