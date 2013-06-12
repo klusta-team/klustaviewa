@@ -357,6 +357,6 @@ class SimilarityMatrixView(KlustaView):
         self.updateGL()
     
     
-    def sizeHint(self):
-        return QtCore.QSize(300, 400)
+    # def sizeHint(self):
+        # return QtCore.QSize(300, 400)
         

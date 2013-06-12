@@ -483,6 +483,3 @@ class CorrelogramsView(KlustaView):
     def change_normalization(self, normalization=None):
         self.interaction_manager.change_normalization(normalization)
             
-    def sizeHint(self):
-        return QtCore.QSize(400, 400)
-    

@@ -1200,9 +1200,6 @@ class WaveformView(KlustaView):
         self.interaction_manager.toggle_mask()
         self.updateGL()
         
-    def sizeHint(self):
-        return QtCore.QSize(800, 800)
-        
         
     # Save and restore geometry
     # -------------------------

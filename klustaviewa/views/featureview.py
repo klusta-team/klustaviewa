@@ -539,7 +539,7 @@ class FeaturePaintManager(PlotPaintManager):
             is_static=True,
             coordinates=(-1., 1.),
             color=(1.,) * 4,
-            posoffset=(200., -70.),
+            posoffset=(200., -80.),
             text='',
             letter_spacing=500.,
             depth=-1,)
@@ -1243,7 +1243,7 @@ class FeatureView(KlustaView):
         self.paint_manager.update_points()
         self.paint_manager.updateGL()
         
-    def sizeHint(self):
-        return QtCore.QSize(600, 600)
+    # def sizeHint(self):
+        # return QtCore.QSize(600, 600)
     
         

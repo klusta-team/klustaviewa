@@ -1174,8 +1174,8 @@ class ClusterView(QtGui.QTreeView):
         else:
             return super(ClusterView, self).keyPressEvent(e)
         
-    def sizeHint(self):
-        return QtCore.QSize(300, 600)
+    # def sizeHint(self):
+        # return QtCore.QSize(300, 600)
         
     
     # Save and restore geometry

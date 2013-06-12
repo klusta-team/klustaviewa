@@ -173,7 +173,7 @@ class ProjectionView(QtGui.QWidget):
         comboBox.editTextChanged.connect(partial(self.select_channel, coord))
         # comboBox.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.channel_box[coord] = comboBox
-        hbox.addWidget(comboBox)#, 0, 0, 1, self.fetdim)
+        hbox.addWidget(comboBox)
         
         # create 3 buttons for selecting the feature
         widths = [30] * self.fetdim
@@ -193,7 +193,7 @@ class ProjectionView(QtGui.QWidget):
             pushButton.clicked.connect(partial(self.select_feature, coord, i))
             pushButtonGroup.addButton(pushButton, i)
             self.feature_buttons[coord][i] = pushButton
-            hbox.addWidget(pushButton)#, 1, i)
+            hbox.addWidget(pushButton)
         
         return hbox
         
@@ -244,5 +244,5 @@ class ProjectionView(QtGui.QWidget):
         self.set_projection(1, c0, f0)
         
     def sizeHint(self):
-        return QtCore.QSize(400, 40)
+        return QtCore.QSize(300, 40)
         

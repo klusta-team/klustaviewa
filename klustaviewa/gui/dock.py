@@ -184,8 +184,8 @@ class DockTitleBar(QtGui.QWidget):
     
     # Size.
     # -----
-    def sizeHint(self):
-        return QtCore.QSize(200, 24)
+    # def sizeHint(self):
+        # return QtCore.QSize(200, 24)
         
     def minimumSizeHint(self):
         return QtCore.QSize(50, 24)
