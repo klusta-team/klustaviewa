@@ -60,7 +60,6 @@ Views can be created from the *Views* menu.
 
 For now, KlustaViewa can only open files in the [Klusters/Neuroscope/NDManager format](http://klusters.sourceforge.net/UserManual/data-files.html). A dataset consists of the following files:
 
-  * `.res.n` file: the spike times.
   * `.fet.n` file: the features.
   * `.spk.n` file: the spike waveforms.
   * `.clu.n` file: clusters for each spike.
