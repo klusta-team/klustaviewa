@@ -62,7 +62,7 @@ Once the software is installed, you can update it when a new version is availabl
 
 ### Mac OS X
 
-  * Step 1: [install ActivePython][http://downloads.activestate.com/ActivePython/releases/2.7.2.5/ActivePython-2.7.2.5-macosx10.5-i386-x86_64.dmg). [Here is the link to the main website for your reference](http://www.activestate.com/activepython).
+  * Step 1: [install ActivePython](http://downloads.activestate.com/ActivePython/releases/2.7.2.5/ActivePython-2.7.2.5-macosx10.5-i386-x86_64.dmg). [Here is the link to the main website for your reference](http://www.activestate.com/activepython).
   
   * Step 2: to install the required Python packages, type in a shell:
   
