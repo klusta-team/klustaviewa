@@ -97,8 +97,8 @@ if __name__ == '__main__':
         license='LICENSE.md',
         description='Spike sorting graphical interface.',
         long_description=LONG_DESCRIPTION,
-        install_requires=[
-            "numpy >= 1.7",
-            "matplotlib >= 1.1.1",
-        ],
+        # install_requires=[
+            # "numpy >= 1.7",
+            # "matplotlib >= 1.1.1",
+        # ],
     )

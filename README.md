@@ -45,29 +45,17 @@ Once the software is installed, you can update it when a new version is availabl
 
 ### Ubuntu
 
-  * Step 1: on Ubuntu >= 13.x, type in a shell:
+  * Step 1: on Ubuntu, type in a shell:
 
         $ sudo apt-get install python2.7 python-numpy python-pandas python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose
 
-    On Ubuntu < 13.x, type:
-
-        $ sudo apt-get install python2.7 python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose
-        
-  * Step 2: **UBUNTU < 13.x ONLY**. Go [here](http://packages.ubuntu.com/raring/python/) and download:
+  * Step 2: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
   
-      * python-numpy
-      * python-pandas-lib
-      * python-pandas
-      
-    Install them, in that order, with `dpgk -i python-numpy_1.7.1-1ubuntu1_amd64.deb` and so on, replacing the file name with the appropriate ones (`amd64` for Python 64 bits, `i386` for Python 32 bits).
-
-  * Step 3: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
-  
-  * Step 4: open a system shell in the directory where you extracted the package, and execute the following command:
+  * Step 3: open a system shell in the directory where you extracted the package, and execute the following command:
   
         python setup.py install
 
-  * Step 5: to run KlustaViewa, type the following command in a system shell:
+  * Step 4: to run KlustaViewa, type the following command in a system shell:
   
         klustaviewa
 
