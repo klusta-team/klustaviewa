@@ -62,22 +62,23 @@ Once the software is installed, you can update it when a new version is availabl
 
 ### Mac OS X
 
-  * Step 1: go on [HomeBrew](http://mxcl.github.io/homebrew/) and install the following packages:
+  * Step 1: [install ActivePython][http://downloads.activestate.com/ActivePython/releases/2.7.2.5/ActivePython-2.7.2.5-macosx10.5-i386-x86_64.dmg). [Here is the link to the main website for your reference](http://www.activestate.com/activepython).
   
-      * Python 2.7
-      * Numpy >= 1.7
-      * Pandas >= 0.10
-      * Matplotlib >= 1.1.1
-      * PyOpenGL >= 3.0.1
-      * PyQt4
+  * Step 2: to install the required Python packages, type in a shell:
+  
+        sudo pypm install numpy
+        sudo pypm install pandas
+        sudo pypm install matplotlib
+        sudo pypm install pyopengl
+        sudo pypm install pyqt4
 
-  * Step 2: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
+  * Step 3: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
   
-  * Step 3: open a system shell in the directory where you extracted the package, and execute the following command:
+  * Step 4: open a system shell in the directory where you extracted the package, and execute the following command:
   
         python setup.py install
   
-  * Step 4: to run KlustaViewa, type the following command in a system shell:
+  * Step 5: to run KlustaViewa, type the following command in a system shell:
   
         klustaviewa
 
