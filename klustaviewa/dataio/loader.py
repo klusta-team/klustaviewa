@@ -72,7 +72,10 @@ def process_features(features, fetdim, nchannels, freq, nfet=None):
 def read_features(filename_fet, nchannels, fetdim, freq):
     """Read a .fet file and return the normalize features array,
     as well as the spiketimes."""
-    features = load_text(filename_fet, np.int32, skiprows=1)
+    try:
+        features = load_text(filename_fet, np.int32, skiprows=1, delimiter=' ')
+    except ValueError:
+        features = load_text(filename_fet, np.float32, skiprows=1, delimiter='\t')
     return process_features(features, fetdim, nchannels, freq, 
         nfet=first_row(filename_fet))
     
@@ -126,6 +129,9 @@ def process_waveforms(waveforms, nsamples, nchannels):
 
 def read_waveforms(filename_spk, nsamples, nchannels):
     waveforms = np.array(load_binary(filename_spk), dtype=np.float32)
+    n = waveforms.size
+    if n % nsamples != 0 or n % nchannels != 0:
+        waveforms = load_text(filename_spk, np.float32)
     return process_waveforms(waveforms, nsamples, nchannels)
 
 # Probe.
