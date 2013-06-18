@@ -10,7 +10,6 @@ from functools import partial
 
 import numpy as np
 import numpy.random as rdn
-from matplotlib.path import Path
 
 from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
     GalryWidget, QtGui, QtCore, show_window, enforce_dtype, RectanglesVisual,

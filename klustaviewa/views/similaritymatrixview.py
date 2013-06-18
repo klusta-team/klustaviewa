@@ -9,7 +9,7 @@ from galry import (Manager, DefaultPaintManager, PlotInteractionManager,
     Visual, PlotPaintManager,
     GalryWidget, QtGui, QtCore, QtOpenGL, enforce_dtype, RectanglesVisual,
     TextVisual, TextureVisual)
-from matplotlib.colors import hsv_to_rgb
+from galry.tools import hsv_to_rgb
     
 from klustaviewa.dataio.selection import get_indices
 from klustaviewa.dataio.tools import get_array

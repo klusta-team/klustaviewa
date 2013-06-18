@@ -9,7 +9,6 @@ import time
 
 import numpy as np
 import numpy.random as rdn
-from matplotlib.path import Path
 
 from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
     GalryWidget, QtGui, QtCore, show_window, enforce_dtype, RectanglesVisual,
@@ -100,10 +99,11 @@ def polygon_contains_points(polygon, points):
         the inside of the polygon.
       
     """
-    p = Path(polygon)
-    if hasattr(p, 'contains_points'):
+    try:
+        from matplotlib.path import Path
+        p = Path(polygon)
         return p.contains_points(points)
-    else:
+    except:
         import matplotlib.nxutils
         return matplotlib.nxutils.points_inside_poly(points, polygon)
 
