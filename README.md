@@ -29,12 +29,14 @@ Installation
 
 #### Method 1 (preferred: full installer)
 
-  * [Download the KlustaViewa Full Installer for Windows 64 bits (>200MB)](http://klustaviewa.rossant.net/klustaviewa-setup.exe).
-  * Execute the installer.
-  * Click on the *KlustaViewa* icon on your desktop or in the Start menu to launch the software.
-  * To update the software at any time, execute *Update KlustaViewa* in the Start menu (you need an active Internet connection).
+  * Step 1: [download the KlustaViewa Full Installer for Windows 64 bits (>200MB)](http://klustaviewa.rossant.net/klustaviewa-setup.exe).
+  * Step 2: execute the installer.
+  * Step 3: click on the *KlustaViewa* icon on your desktop or in the Start menu to launch the software.
+  * Step 4: to update the software at any time, execute *Update KlustaViewa* in the Start menu (you need an active Internet connection).
   
 #### Method 2 (manual method)
+
+Use this only if you know what you're doing and you don't want to use the first method.
 
   * Step 1: if you don't already have a Python installation, [download this ZIP file (72MB)](http://klustaviewa.rossant.net/klustaviewa-dependencies.zip) containing a full Python distribution (required by KlustaViewa).
   * Step 2: unzip the archive. You'll find several installers: execute them all one by one, in the right order.
@@ -43,9 +45,9 @@ Installation
 
 Once the software is installed, you can update it when a new version is available by doing again **Step 3** only.
 
-### Ubuntu
+### Ubuntu >= 12.x
 
-  * Step 1: on Ubuntu, type in a shell:
+  * Step 1: type in a shell:
 
         $ sudo apt-get install python2.7 python-numpy python-pandas python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose
 
@@ -53,16 +55,15 @@ Once the software is installed, you can update it when a new version is availabl
   
   * Step 3: open a system shell in the directory where you extracted the package, and execute the following command:
   
-        python setup.py install
+        sudo python setup.py install
 
   * Step 4: to run KlustaViewa, type the following command in a system shell:
   
         klustaviewa
 
+### Ubuntu <= 11.x
 
-### Mac OS X
-
-  * Step 1: [install ActivePython](http://downloads.activestate.com/ActivePython/releases/2.7.2.5/ActivePython-2.7.2.5-macosx10.5-i386-x86_64.dmg). [Here is the link to the main website for your reference](http://www.activestate.com/activepython).
+  * Step 1: [install ActivePython](http://www.activestate.com/activepython/downloads/thank-you?dl=http://downloads.activestate.com/ActivePython/releases/2.7.2.5/ActivePython-2.7.2.5-linux-x86_64.tar.gz). [Here is the link to the main website for your reference](http://www.activestate.com/activepython/downloads).
   
   * Step 2: to install the required Python packages, type in a shell:
   
@@ -76,9 +77,40 @@ Once the software is installed, you can update it when a new version is availabl
   
   * Step 4: open a system shell in the directory where you extracted the package, and execute the following command:
   
-        python setup.py install
+        sudo python setup.py install
   
   * Step 5: to run KlustaViewa, type the following command in a system shell:
+  
+        klustaviewa
+
+
+### Mac OS X
+    
+  * Step 0 (you might not need this step depending on your OS X version): allow unsigned applications installation in your system preferences so that you can install the packages. [Here are the instructions for OS X 10.8](https://www.my-private-network.co.uk/knowledge-base/apple-related-questions/osx-unsigned-apps.html).
+
+  * Step 1: [install ActivePython](http://downloads.activestate.com/ActivePython/releases/2.7.2.5/ActivePython-2.7.2.5-macosx10.5-i386-x86_64.dmg). [Here is the link to the main website for your reference](http://www.activestate.com/activepython/downloads).
+  
+  * Step 2: to install the required Python packages, type in a shell:
+  
+        sudo pypm install numpy
+        sudo pypm install pandas
+        sudo pypm install matplotlib
+        sudo pypm install pyopengl
+        sudo pypm install pyqt4
+        
+  * Step 3: [install Apple Xcode](http://itunes.apple.com/us/app/xcode/id497799835?ls=1&mt=12).
+
+  * Step 4: [install the Xcode command line tools](http://stackoverflow.com/questions/9329243/xcode-4-4-command-line-tools?answertab=votes#tab-top).
+  
+  * Step 5: [install Qt 4.7](http://download.qt-project.org/archive/qt/4.7/qt-mac-opensource-4.7.4.dmg).
+  
+  * Step 6: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
+  
+  * Step 7: open a system shell in the directory where you extracted the package, and execute the following command:
+  
+        sudo python setup.py install
+  
+  * Step 8: to run KlustaViewa, type the following command in a system shell:
   
         klustaviewa
 
