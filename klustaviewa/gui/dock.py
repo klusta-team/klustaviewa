@@ -24,7 +24,6 @@ from klustaviewa.dataio.loader import KlustersLoader
 from klustaviewa.gui.buffer import Buffer
 from klustaviewa.stats.cache import StatsCache
 from klustaviewa.stats.correlations import normalize
-from klustaviewa.stats.correlograms import get_baselines
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.logger import FileLogger, register, unregister
 from klustaviewa.utils.persistence import encode_bytearray, decode_bytearray
