@@ -123,10 +123,10 @@ Details
 The following libraries are required:
   
   * Python 2.7
-  * Numpy >= 1.7
-  * Pandas >= 0.10
-  * Matplotlib >= 1.1.1
-  * PyOpenGL >= 3.0.1
+  * Numpy
+  * Pandas
+  * Matplotlib
+  * PyOpenGL
   * either PyQt4 or PySide
 
 
