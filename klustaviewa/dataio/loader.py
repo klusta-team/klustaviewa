@@ -617,7 +617,7 @@ class KlustersLoader(Loader):
     def read_metadata(self):
         try:
             self.metadata = read_xml(self.filename_xml, self.fileindex)
-        except IOError:
+        except:
             # Die if no XML file is available for this dataset, as it contains
             # critical metadata.
             raise IOError("The XML file is missing.")
