@@ -922,6 +922,11 @@ class ClusterView(QtGui.QTreeView):
             clusters = [clusters]
         self.move_clusters(clusters, 0)
     
+    def move_to_good(self, clusters):
+        if not hasattr(clusters, '__len__'):
+            clusters = [clusters]
+        self.move_clusters(clusters, 2)
+    
     def move_to_mua(self, clusters):
         if not hasattr(clusters, '__len__'):
             clusters = [clusters]
@@ -973,6 +978,10 @@ class ClusterView(QtGui.QTreeView):
         self.move_to_noise_action.setIcon(get_icon('noise'))
         self.move_to_noise_action.triggered.connect(self.move_to_noise_callback)
         
+        self.move_to_good_action = QtGui.QAction("Move to &good", self)
+        # self.move_to_good_action.setIcon(get_icon('noise'))
+        self.move_to_good_action.triggered.connect(self.move_to_good_callback)
+        
         # Add actions to the widget.
         self.addAction(self.change_color_action)
         self.addAction(self.add_group_action)
@@ -980,6 +989,7 @@ class ClusterView(QtGui.QTreeView):
         self.addAction(self.remove_group_action)
         self.addAction(self.move_to_noise_action)
         self.addAction(self.move_to_mua_action)
+        self.addAction(self.move_to_good_action)
         
     def create_context_menu(self):
         self.create_color_dialog()
@@ -989,6 +999,7 @@ class ClusterView(QtGui.QTreeView):
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.move_to_noise_action)
         self.context_menu.addAction(self.move_to_mua_action)
+        self.context_menu.addAction(self.move_to_good_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.add_group_action)
         self.context_menu.addAction(self.rename_group_action)
@@ -1017,9 +1028,11 @@ class ClusterView(QtGui.QTreeView):
         if len(clusters) > 0:
             self.move_to_noise_action.setEnabled(True)
             self.move_to_mua_action.setEnabled(True)
+            self.move_to_good_action.setEnabled(True)
         else:
             self.move_to_noise_action.setEnabled(False)
             self.move_to_mua_action.setEnabled(False)
+            self.move_to_good_action.setEnabled(False)
         
         
     def contextMenuEvent(self, event):
@@ -1084,6 +1097,10 @@ class ClusterView(QtGui.QTreeView):
     def move_to_mua_callback(self, checked=None):
         clusters = self.selected_clusters()
         self.move_to_mua(clusters)
+    
+    def move_to_good_callback(self, checked=None):
+        clusters = self.selected_clusters()
+        self.move_to_good(clusters)
     
     
     # Get methods
