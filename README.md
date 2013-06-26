@@ -96,21 +96,40 @@ Once the software is installed, you can update it when a new version is availabl
         sudo pypm install pandas
         sudo pypm install matplotlib
         sudo pypm install pyopengl
-        sudo pypm install pyqt4
         
   * Step 3: [install Apple Xcode](http://itunes.apple.com/us/app/xcode/id497799835?ls=1&mt=12).
 
   * Step 4: [install the Xcode command line tools](http://stackoverflow.com/questions/9329243/xcode-4-4-command-line-tools?answertab=votes#tab-top).
   
-  * Step 5: [install Qt 4.7](http://download.qt-project.org/archive/qt/4.7/qt-mac-opensource-4.7.4.dmg).
+  * Step 5: [install Qt 4.8.4](http://download.qt-project.org/official_releases/qt/4.8/4.8.4/qt-mac-opensource-4.8.4.dmg).
   
-  * Step 6: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
+  * Step 6: Install SIP 4.14.7:
   
-  * Step 7: open a system shell in the directory where you extracted the package, and execute the following command:
+      * Step 6.1: [download the source](http://sourceforge.net/projects/pyqt/files/sip/sip-4.14.7/sip-4.14.7.tar.gz).
+      * Step 6.2: extract the package.
+      * Step 6.3: type in the extracted directory:
+      
+            $ sudo python configure.py
+            $ sudo make
+            $ sudo make install
+            
+  * Step 7: install PyQt 4.10.2:
+  
+      * Step 7.1: [download the source](http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.10.2/PyQt-mac-gpl-4.10.2.tar.gz).
+      * Step 7.2: extract the package.
+      * Step 7.3: type in the extracted directory (these commands can take a while, grab a coffee):
+      
+            $ sudo python configure-ng.py --sip=/opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin/sip
+            $ sudo make
+            $ sudo make install
+            
+  * Step 8: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
+  
+  * Step 9: open a system shell in the directory where you extracted the package, and execute the following command:
   
         sudo python setup.py install
   
-  * Step 8: to run KlustaViewa, type the following command in a system shell:
+  * Step 10: to run KlustaViewa, type the following command in a system shell:
   
         klustaviewa
 
