@@ -96,26 +96,17 @@ class SimilarityMatrixTask(QtCore.QObject):
 class ThreadedTasks(QtCore.QObject):
     def __init__(self, parent=None):
         super(ThreadedTasks, self).__init__(parent)
-        # In external threads.
-        # self.open_task = inthread(OpenTask)()
-        # self.select_task = inthread(SelectTask)(impatient=True)
-        # In external processes.
-        self.correlograms_task = inprocess(CorrelogramsTask)(impatient=True)
+        self.correlograms_task = inprocess(CorrelogramsTask)(
+            impatient=True, use_master_thread=False)
         self.similarity_matrix_task = inprocess(SimilarityMatrixTask)(
-            impatient=True)
-        # self.wizard_task = inprocess(WizardTask)(impatient=False)
+            impatient=True, use_master_thread=False)
 
     def join(self):
-        # self.open_task.join()
-        # self.select_task.join()
         self.correlograms_task.join()
         self.similarity_matrix_task.join()
-        # self.wizard_task.join()
         
     def terminate(self):
         self.correlograms_task.terminate()
         self.similarity_matrix_task.terminate()
-        # self.wizard_task.terminate()
-    
     
         
