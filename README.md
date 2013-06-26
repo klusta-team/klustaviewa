@@ -86,7 +86,7 @@ Once the software is installed, you can update it when a new version is availabl
 
 ### Mac OS X
     
-  * Step 0 (you might not need this step depending on your OS X version): allow unsigned applications installation in your system preferences so that you can install the packages. [Here are the instructions for OS X 10.8](https://www.my-private-network.co.uk/knowledge-base/apple-related-questions/osx-unsigned-apps.html).
+  * Step 0 (only for OS X 10.8): allow unsigned applications installation in your system preferences so that you can install the packages. [Here are the instructions for OS X 10.8](https://www.my-private-network.co.uk/knowledge-base/apple-related-questions/osx-unsigned-apps.html).
 
   * Step 1: [install ActivePython](http://downloads.activestate.com/ActivePython/releases/2.7.2.5/ActivePython-2.7.2.5-macosx10.5-i386-x86_64.dmg). [Here is the link to the main website for your reference](http://www.activestate.com/activepython/downloads).
   
