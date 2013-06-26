@@ -109,7 +109,7 @@ One or multiple clusters can be selected in the ClusterView. The corresponding s
 
 ![Selecting clusters](images/twoclusters.PNG)
 
-In the WaveformView, the probe geometry is shown if a `.probe` file is present in the dataset. The waveform colors depend on the spike masks: unmasked spikes are colored whereas masked spikes are gray.
+In the WaveformView, the probe geometry is shown if a `.probe` file is present in the dataset (**you may need to press `P` to enable the probe geometry**). The waveform colors depend on the spike masks: unmasked spikes are colored whereas masked spikes are gray.
 
 In the FeatureView, the spikes belonging to the non-selected clusters are shown in the background in gray.
 
