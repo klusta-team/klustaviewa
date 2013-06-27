@@ -406,7 +406,8 @@ class WaveformDataManager(Manager):
                  ):
                  
         self.autozoom = autozoom
-                 
+        if clusters_selected is None:
+            clusters_selected = []
         if waveforms is None:
             waveforms = np.zeros((0, 1, 1))
             masks = np.zeros((0, 1))

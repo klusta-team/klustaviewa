@@ -303,6 +303,9 @@ class Loader(QtCore.QObject):
     def get_clusters_selected(self):
         return self.clusters_selected
         
+    def has_selection(self):
+        return self.clusters_selected is not None and len(self.clusters_selected) > 0
+        
     def get_clusters_unique(self):
         return self.clusters_unique
     

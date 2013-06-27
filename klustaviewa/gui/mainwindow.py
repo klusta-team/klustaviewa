@@ -83,6 +83,7 @@ class MainWindow(QtGui.QMainWindow):
         self.spikes_highlighted = []
         self.spikes_selected = []
         self._wizard = False
+        self.is_file_open = False
         self.need_save = False
         self.taskgraph = TaskGraph(self)
         self.busy_cursor = QtGui.QCursor(QtCore.Qt.BusyCursor)
@@ -189,12 +190,13 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('quit', '&Quit', shortcut='Ctrl+Q')
         
     def create_view_actions(self):
-        self.add_action('add_feature_view', 'Add FeatureView')
-        self.add_action('add_waveform_view', 'Add WaveformView')
+        self.add_action('add_feature_view', 'Add &FeatureView')
+        self.add_action('add_waveform_view', 'Add &WaveformView')
         self.add_action('add_similarity_matrix_view',
-            'Add SimilarityMatrixView')
-        self.add_action('add_correlograms_view', 'Add CorrelogramsView')
-        self.add_action('add_ipython_view', 'Add IPythonView')
+            'Add &SimilarityMatrixView')
+        self.add_action('add_correlograms_view', 'Add &CorrelogramsView')
+        self.add_action('add_ipython_view', 'Add &IPythonView')
+        self.add_action('reset_views', '&Reset views')
         
         self.add_action('override_color', 'Override cluster &color',
             icon='override_color')#, shortcut='C')
@@ -272,6 +274,8 @@ class MainWindow(QtGui.QMainWindow):
             views_menu.addAction(self.add_ipython_view_action)
             views_menu.addSeparator()
         views_menu.addAction(self.override_color_action)
+        views_menu.addSeparator()
+        views_menu.addAction(self.reset_views_action)
         
         # Correlograms menu.
         correlograms_menu = self.menuBar().addMenu("&Correlograms")
@@ -431,7 +435,7 @@ class MainWindow(QtGui.QMainWindow):
         # Return the view widget.
         return view
     
-    def add_cluster_view(self):
+    def add_cluster_view(self, do_update=None, floating=False):
         view = self.create_view(vw.ClusterView,
             position=QtCore.Qt.LeftDockWidgetArea,
             index=len(self.views['ClusterView']),
@@ -449,6 +453,9 @@ class MainWindow(QtGui.QMainWindow):
         view.groupRemoved.connect(self.group_removed_callback)
         
         self.views['ClusterView'].append(view)
+        
+        if do_update:
+            self.taskgraph.update_cluster_view()
         
     def dock_visibility_changed_callback(self, view, visibility):
         # Register dock widget visibility.
@@ -470,7 +477,7 @@ class MainWindow(QtGui.QMainWindow):
         else:
             return False
         
-    def add_similarity_matrix_view(self, new=None):
+    def add_similarity_matrix_view(self, do_update=None, floating=False):
         # Try restoring the last view if it exists and it is hidden, and if
         # successfully restored, do nothing more. Otherwise, need to create 
         # a new view.
@@ -479,36 +486,36 @@ class MainWindow(QtGui.QMainWindow):
         view = self.create_view(vw.SimilarityMatrixView,
             index=len(self.views['SimilarityMatrixView']),
             position=QtCore.Qt.LeftDockWidgetArea,
-            floating=new)
+            floating=floating)
         view.clustersSelected.connect(self.cluster_pair_selected_callback)
         self.views['SimilarityMatrixView'].append(view)
-        if new:
+        if do_update and self.is_file_open:
             self.taskgraph.update_similarity_matrix_view()
     
-    def add_waveform_view(self, new=None):
+    def add_waveform_view(self, do_update=None, floating=False):
         view = self.create_view(vw.WaveformView,
             index=len(self.views['WaveformView']),
             position=QtCore.Qt.RightDockWidgetArea,
-            floating=new)
+            floating=floating)
         view.spikesHighlighted.connect(
             self.waveform_spikes_highlighted_callback)
         view.boxClicked.connect(self.waveform_box_clicked_callback)
         self.views['WaveformView'].append(view)
-        if new:
+        if do_update and self.is_file_open and self.loader.has_selection():
             self.taskgraph.update_waveform_view()
         
-    def add_feature_view(self, new=None):
+    def add_feature_view(self, do_update=None, floating=False):
         view = self.create_view(vw.FeatureProjectionView,
             index=len(self.views['FeatureView']),
             position=QtCore.Qt.RightDockWidgetArea,
-            floating=new,
+            floating=floating,
             title='FeatureView')
         view.spikesHighlighted.connect(
             self.features_spikes_highlighted_callback)
         view.spikesSelected.connect(
             self.features_spikes_selected_callback)
         self.views['FeatureView'].append(view)
-        if new:
+        if do_update and self.is_file_open and self.loader.has_selection():
             self.taskgraph.update_feature_view()
             
     def add_ipython_view(self, floating=None):
@@ -538,13 +545,13 @@ class MainWindow(QtGui.QMainWindow):
                     view.run_file(os.path.join(path, file))
         self.views['IPythonView'].append(view)
         
-    def add_correlograms_view(self, new=None):
+    def add_correlograms_view(self, do_update=None, floating=False):
         view = self.create_view(vw.CorrelogramsView,
             index=len(self.views['CorrelogramsView']),
             position=QtCore.Qt.RightDockWidgetArea,
-            floating=new)
+            floating=floating)
         self.views['CorrelogramsView'].append(view)
-        if new:
+        if do_update and self.is_file_open and self.loader.has_selection():
             self.taskgraph.update_correlograms_view()
             
     def get_view(self, name, index=0):
@@ -563,7 +570,6 @@ class MainWindow(QtGui.QMainWindow):
         # Create the default layout.
         self.views = dict(
             ClusterView=[],
-            # ProjectionView=[],
             SimilarityMatrixView=[],
             WaveformView=[],
             FeatureView=[],
@@ -571,15 +577,15 @@ class MainWindow(QtGui.QMainWindow):
             IPythonView=[],
             )
         
-        # self.add_projection_view()
-        self.add_cluster_view()
-        self.add_similarity_matrix_view()
-            
-        # self.splitDockWidget(
-            # self.get_view('ProjectionView').parentWidget(), 
-            # self.get_view('ClusterView').parentWidget(), 
-            # QtCore.Qt.Vertical
-            # )
+        count = SETTINGS['main_window.views']
+        if count is None:
+            self.create_default_views()
+        else:
+            self.create_custom_views(count)
+    
+    def create_default_views(self, do_update=None, floating=False):
+        self.add_cluster_view(do_update=do_update, floating=floating)
+        self.add_similarity_matrix_view(do_update=do_update, floating=floating)
             
         self.splitDockWidget(
             self.get_view('ClusterView').parentWidget(), 
@@ -587,8 +593,8 @@ class MainWindow(QtGui.QMainWindow):
             QtCore.Qt.Vertical
             )
             
-        self.add_waveform_view()
-        self.add_feature_view()
+        self.add_waveform_view(do_update=do_update, floating=floating)
+        self.add_feature_view(do_update=do_update, floating=floating)
             
         self.splitDockWidget(
             self.get_view('WaveformView').parentWidget(), 
@@ -596,7 +602,7 @@ class MainWindow(QtGui.QMainWindow):
             QtCore.Qt.Horizontal
             )
             
-        self.add_correlograms_view()
+        self.add_correlograms_view(do_update=do_update, floating=floating)
             
         self.splitDockWidget(
             self.get_view('FeatureView').parentWidget(), 
@@ -604,13 +610,17 @@ class MainWindow(QtGui.QMainWindow):
             QtCore.Qt.Vertical
             )
     
+    def create_custom_views(self, count):
+        [self.add_cluster_view() for _ in xrange(count['ClusterView'])]
+        [self.add_similarity_matrix_view() for _ in xrange(count['SimilarityMatrixView'])]
+        [self.add_waveform_view() for _ in xrange(count['WaveformView'])]
+        [self.add_feature_view() for _ in xrange(count['FeatureView'])]
+        [self.add_ipython_view() for _ in xrange(count['IPythonView'])]
+        [self.add_correlograms_view() for _ in xrange(count['CorrelogramsView'])]
+    
     def dock_widget_closed(self, dock):
         for key in self.views.keys():
-            views = self.views[key]
-            for i in xrange(len(views)):
-                if views[i].parent() == dock:
-                    # self.views[view][i] = None
-                    del self.views[key][i]
+            self.views[key] = [view for view in self.views[key] if view.parent() != dock]
     
     
     # Threads.
@@ -660,6 +670,8 @@ class MainWindow(QtGui.QMainWindow):
     # Open callbacks.
     # --------------
     def open_done(self):
+        self.is_file_open = True
+        
         # Start the selection buffer.
         self.buffer = Buffer(self, delay_timer=.1, delay_buffer=.2)
         self.buffer.start()
@@ -714,20 +726,30 @@ class MainWindow(QtGui.QMainWindow):
     # Views menu callbacks.
     # ---------------------
     def add_feature_view_callback(self, checked=None):
-        self.add_feature_view(new=True)
+        self.add_feature_view(do_update=True, floating=True)
         
     def add_waveform_view_callback(self, checked=None):
-        self.add_waveform_view(new=True)
+        self.add_waveform_view(do_update=True, floating=True)
         
     def add_similarity_matrix_view_callback(self, checked=None):
-        self.add_similarity_matrix_view(new=True)
+        self.add_similarity_matrix_view(do_update=True, floating=True)
         
     def add_correlograms_view_callback(self, checked=None):
-        self.add_correlograms_view(new=True)
+        self.add_correlograms_view(do_update=True, floating=True)
     
     def add_ipython_view_callback(self, checked=None):
         self.add_ipython_view()
     
+    def reset_views_callback(self, checked=None):
+        # Delete all views.
+        for key, views in self.views.iteritems():
+            for view in views:
+                self.removeDockWidget(view.parent())
+            self.views[key] = []
+        # Re-create the default views.
+        self.create_default_views(do_update=self.is_file_open, floating=False)
+        
+        
     
     # Override color callback.
     # ------------------------
@@ -921,15 +943,14 @@ class MainWindow(QtGui.QMainWindow):
     # ---------
     def save_geometry(self):
         """Save the arrangement of the whole window."""
-        # SETTINGS['main_window.dockwidgets'] = {name: len(self.get_views(name))
-            # for name in self.views.keys()}
+        SETTINGS['main_window.views'] = {name: len(self.get_views(name))
+            for name in self.views.keys()}
         SETTINGS['main_window.geometry'] = encode_bytearray(
             self.saveGeometry())
         SETTINGS['main_window.state'] = encode_bytearray(self.saveState())
         
     def restore_geometry(self):
         """Restore the arrangement of the whole window."""
-        # count = SETTINGS['main_window.dockwidgets']
         g = SETTINGS['main_window.geometry']
         s = SETTINGS['main_window.state']
         if s:
