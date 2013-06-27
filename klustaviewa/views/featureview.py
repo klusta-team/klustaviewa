@@ -582,7 +582,7 @@ class FeaturePaintManager(PlotPaintManager):
                 color=color)
         
         # Display candidate.
-        if candidate is None:
+        if candidate is None or candidate[1] == 0:
             self.set_data(visual='wizard_candidate',
                 visible=False)
         else:

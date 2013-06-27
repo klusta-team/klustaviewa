@@ -150,7 +150,8 @@ class Wizard(object):
     def current_candidate(self):
         if self.size == 0 or not(0 <= self.index <= self.size - 1):
             return None
-        return self.candidates[self.index]
+        candidate = self.candidates[self.index]
+        return candidate
     
     def current_pair(self):
         candidate = self.current_candidate()

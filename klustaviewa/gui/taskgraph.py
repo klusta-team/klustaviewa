@@ -157,7 +157,7 @@ class TaskGraph(AbstractTaskGraph):
         # If there are pairs that need to be updated, launch the task.
         if len(clusters_to_update) > 0:
             # Set wait cursor.
-            self.mainwindow.set_cursor(computing_correlograms=True)
+            self.mainwindow.set_busy(computing_correlograms=True)
             # Launch the task.
             self.tasks.correlograms_task.compute(spiketimes, clusters,
                 clusters_to_update=clusters_to_update, 
@@ -186,7 +186,7 @@ class TaskGraph(AbstractTaskGraph):
             not_in_key_indices(clusters_all))
         # If there are pairs that need to be updated, launch the task.
         if len(clusters_to_update) > 0:
-            self.mainwindow.set_cursor(computing_matrix=True)
+            self.mainwindow.set_busy(computing_matrix=True)
             # Launch the task.
             self.tasks.similarity_matrix_task.compute(features,
                 clusters, cluster_groups, masks, clusters_to_update,
@@ -203,7 +203,7 @@ class TaskGraph(AbstractTaskGraph):
         # Abort if the selection has changed during the computation of the
         # correlograms.
         # Reset the cursor.
-        self.mainwindow.set_cursor(computing_correlograms=False)
+        self.mainwindow.set_busy(computing_correlograms=False)
         if not np.array_equal(clusters, clusters_selected):
             log.debug("Skip update correlograms with clusters selected={0:s}"
             " and clusters updated={1:s}.".format(clusters_selected, clusters))
@@ -221,7 +221,7 @@ class TaskGraph(AbstractTaskGraph):
         
     def _similarity_matrix_computed(self, clusters_selected, matrix, clusters,
             cluster_groups, target_next=None):
-        self.mainwindow.set_cursor(computing_matrix=False)
+        self.mainwindow.set_busy(computing_matrix=False)
         if not np.array_equal(clusters, self.loader.get_clusters('all')):
             return False
         self.statscache.similarity_matrix.update(clusters_selected, matrix)
@@ -499,7 +499,7 @@ class TaskGraph(AbstractTaskGraph):
     # Navigation.
     def _wizard_reset(self):
         clusters = self.wizard.reset()
-        return '_wizard_update'
+        return ['_wizard_update', '_wizard_current_candidate']
         
     def _wizard_previous_candidate(self):
         clusters = self.wizard.previous_pair()
@@ -565,9 +565,6 @@ def after_merge(output):
              # We specify here that the target in the wizard must be the
              # merged cluster.
              ('_compute_similarity_matrix', (output['cluster_merged'],)),
-             # Update the wizard, but not the similarity matrix yet which 
-             # is being computed in an external process.
-             # ('_wizard_update', (output['cluster_merged'], False)),
              ('_update_cluster_view'),
              ('_select_in_cluster_view', (output['cluster_merged'], [], True)),
              ('_wizard_change_color', ([output['cluster_merged']],)),

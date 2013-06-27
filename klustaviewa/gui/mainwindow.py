@@ -87,6 +87,7 @@ class MainWindow(QtGui.QMainWindow):
         self.taskgraph = TaskGraph(self)
         self.busy_cursor = QtGui.QCursor(QtCore.Qt.BusyCursor)
         self.normal_cursor = QtGui.QCursor(QtCore.Qt.ArrowCursor)
+        self.is_busy = False
         self.override_color = False
         self.computing_correlograms = False
         self.computing_matrix = False
@@ -133,7 +134,7 @@ class MainWindow(QtGui.QMainWindow):
         # QtGui.QApplication.setOverrideCursor(self.normal_cursor)
         QtGui.QApplication.restoreOverrideCursor()
     
-    def set_cursor(self, computing_correlograms=None, computing_matrix=None):
+    def set_busy(self, computing_correlograms=None, computing_matrix=None):
         if computing_correlograms is not None:
             self.computing_correlograms = computing_correlograms
         if computing_matrix is not None:
@@ -141,8 +142,10 @@ class MainWindow(QtGui.QMainWindow):
         busy = self.computing_correlograms or self.computing_matrix
         if busy:
             self.set_busy_cursor()
+            self.is_busy = True
         else:
             self.set_normal_cursor()
+            self.is_busy = False
     
     
     # Actions.
@@ -210,7 +213,8 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('change_corr_normalization', 'Change &normalization')
         
     def create_wizard_actions(self):
-        self.add_action('reset_navigation', '&Reinitialize wizard')
+        self.add_action('reset_navigation', '&Reinitialize wizard',
+            shortcut='CTRL+ALT+Space')
         self.add_action('automatic_projection', '&Automatic projection', 
             checkable=True, checked=True)
         self.add_action('change_candidate_color', 
@@ -772,6 +776,8 @@ class MainWindow(QtGui.QMainWindow):
     # Actions callbacks.
     # ------------------
     def merge_callback(self, checked=None):
+        if self.is_busy:
+            return
         self.need_save = True
         cluster_view = self.get_view('ClusterView')
         clusters = cluster_view.selected_clusters()
@@ -779,6 +785,8 @@ class MainWindow(QtGui.QMainWindow):
         self.update_action_enabled()
         
     def split_callback(self, checked=None):
+        if self.is_busy:
+            return
         self.need_save = True
         cluster_view = self.get_view('ClusterView')
         clusters = cluster_view.selected_clusters()
@@ -789,10 +797,14 @@ class MainWindow(QtGui.QMainWindow):
         self.update_action_enabled()
         
     def undo_callback(self, checked=None):
+        if self.is_busy:
+            return
         self.taskgraph.undo(self._wizard)
         self.update_action_enabled()
         
     def redo_callback(self, checked=None):
+        if self.is_busy:
+            return
         self.taskgraph.redo(self._wizard)
         self.update_action_enabled()
         
@@ -831,10 +843,14 @@ class MainWindow(QtGui.QMainWindow):
         self.taskgraph.wizard_previous_candidate()
         
     def next_candidate_callback(self, checked=None):
+        if self.is_busy:
+            return
         # Skip candidate.
         self.taskgraph.wizard_next_candidate()
     
     def next_target_callback(self, checked=None):
+        if self.is_busy:
+            return
         # Move target to Good group, and select next target.
         self.taskgraph.wizard_move_and_next('target', 2)
         
