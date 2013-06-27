@@ -63,21 +63,34 @@ Once the software is installed, you can update it when a new version is availabl
 
 ### Ubuntu <= 11.x
 
-  * Step 1: [install ActivePython](http://www.activestate.com/activepython/downloads/thank-you?dl=http://downloads.activestate.com/ActivePython/releases/2.7.2.5/ActivePython-2.7.2.5-linux-x86_64.tar.gz). [Here is the link to the main website for your reference](http://www.activestate.com/activepython/downloads).
+  * Step 1: install ActivePython.
+  
+      * Step 1.1: [download the package](http://www.activestate.com/activepython/downloads/thank-you?dl=http://downloads.activestate.com/ActivePython/releases/2.7.2.5/ActivePython-2.7.2.5-linux-x86_64.tar.gz). [Here is the link to the main website for your reference](http://www.activestate.com/activepython/downloads). 
+      
+      * Step 1.2: install it with:
+
+            tar xzf ActivePython-2.7.2.5-linux-x86_64.tar.gz
+            cd ActivePython-2.7.2.5-linux-x86_64
+            sudo ./install.sh
+            
+      * Step 1.3: put the following line in your `.bashrc`:
+      
+            export PATH=/opt/ActivePython-2.7/bin:$PATH
   
   * Step 2: to install the required Python packages, type in a shell:
   
-        sudo pypm install numpy
-        sudo pypm install pandas
-        sudo pypm install matplotlib
-        sudo pypm install pyopengl
-        sudo pypm install pyqt4
+        pypm install distribute
+        pypm install numpy
+        pypm install pandas
+        pypm install matplotlib
+        pypm install pyopengl
+        pypm install pyqt4
 
   * Step 3: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
   
   * Step 4: open a system shell in the directory where you extracted the package, and execute the following command:
   
-        sudo python setup.py install
+        python setup.py install
   
   * Step 5: to run KlustaViewa, type the following command in a system shell:
   
