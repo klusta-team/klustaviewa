@@ -29,6 +29,12 @@ def get_caller():
     caller = "{0:s}:{1:s}".format(module, line)
     return caller.ljust(24)
 
+def get_var_info(name, var):
+    return name + ": Type = " + str(type(var)) + ", Value = " + str(var)
+
+def debugvar(name, var):
+    debug(get_var_info(name, var))
+    
 
 # -----------------------------------------------------------------------------
 # Stream classes

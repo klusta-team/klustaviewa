@@ -4,6 +4,7 @@ data sets."""
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
+import os
 import os.path
 import re
 from collections import Counter
@@ -14,7 +15,7 @@ from galry import QtGui, QtCore
 
 from tools import (find_filename, find_index, load_text, load_xml, normalize,
     load_binary, load_pickle, save_text, get_array, find_any_filename,
-    first_row)
+    first_row, load_binary_memmap)
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices)
 from klustaviewa.utils.userpref import USERPREF
@@ -133,6 +134,12 @@ def read_waveforms(filename_spk, nsamples, nchannels):
     if n % nsamples != 0 or n % nchannels != 0:
         waveforms = load_text(filename_spk, np.float32)
     return process_waveforms(waveforms, nsamples, nchannels)
+    
+# DAT.
+def read_dat(filename_dat, nchannels):
+    nsamples = os.path.getsize(filename_dat) // nchannels
+    return load_binary_memmap(filename_dat, dtype=np.int16,
+                             shape=(nsamples, nchannels))
 
 # Probe.
 def process_probe(probe):
@@ -378,6 +385,9 @@ class Loader(QtCore.QObject):
                 spikes = self.spikes_selected
         return select(self.waveforms, spikes)
     
+    def get_dat(self):
+        return self.dat
+    
     def get_spikes(self, clusters=None):
         if clusters is None:
             clusters = self.clusters_selected
@@ -593,6 +603,7 @@ class KlustersLoader(Loader):
         if not self.filename_mask:
             self.filename_mask = find_filename(self.filename, 'mask')
         self.filename_spk = find_filename(self.filename, 'spk')
+        self.filename_dat = find_filename(self.filename, 'dat')
         self.filename_probe = (find_filename(self.filename, 'probe') or 
             find_any_filename(self.filename, 'probe'))
         
@@ -723,6 +734,18 @@ class KlustersLoader(Loader):
                 self.nchannels))
         # Convert to Pandas.
         self.waveforms = pd.Panel(self.waveforms, dtype=np.float32)
+    
+    def read_dat(self):
+        try:
+            self.dat = read_dat(self.filename_dat, self.nchannels)
+        except IOError:
+            warn("The DAT file is missing.")
+    
+    def read_fil(self):
+        try:
+            self.fil = read_dat(self.filename_fil, self.nchannels)
+        except IOError:
+            warn("The FIL file is missing.")
     
     def read_stats(self):
         self.ncorrbins = SETTINGS.get('correlograms.ncorrbins', 100)

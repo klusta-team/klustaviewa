@@ -250,6 +250,35 @@ def load_pickle(file):
     
 
 # -----------------------------------------------------------------------------
+# Memory mapping
+# -----------------------------------------------------------------------------
+def load_binary_memmap(file, dtype=None, shape=None):
+    return np.memmap(file, dtype=dtype, mode='r', shape=shape)
+
+def get_chunk(f, dtype, start, stop):
+    itemsize = np.dtype(dtype).itemsize
+    count = (stop - start)
+    f.seek(itemsize * start, os.SEEK_SET)
+    return np.fromfile(f, dtype=dtype, count=count)
+
+class MemMappedArray(object):
+    def __init__(self, filename, dtype):
+        self.filename = filename
+        self.dtype = dtype
+        self.itemsize = np.dtype(self.dtype).itemsize
+        self.f = open(filename, 'rb')
+        
+    def __getitem__(self, key):
+        if isinstance(key, (int, long)):
+            return get_chunk(self.f, self.dtype, key, key + 1)[0]
+        elif isinstance(key, slice):
+            return get_chunk(self.f, self.dtype, key.start, key.stop)
+        
+    def __del__(self):
+        self.f.close()
+    
+
+# -----------------------------------------------------------------------------
 # Preprocessing functions
 # -----------------------------------------------------------------------------
 def normalize(data, range=(-1., 1.), symmetric=False):
