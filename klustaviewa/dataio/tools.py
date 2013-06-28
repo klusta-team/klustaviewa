@@ -56,7 +56,7 @@ def find_filename(filename, extension_requested, dir='', files=[]):
             if len(r.groups()) >= 3:
                 fileindex = int(r.group(3))
             else:
-                fileindex = 1
+                fileindex = None
             break
     
     # get the full path
@@ -70,9 +70,22 @@ def find_filename(filename, extension_requested, dir='', files=[]):
         except (WindowsError, OSError, IOError):
             raise IOError("Error when accessing '{0:s}'.".format(dir))
     
+    # If the requested filename does not have a file index, then get the 
+    # smallest available fileindex in the files list.
+    if fileindex is None:
+        fileindex_set = set()
+        for file in files:
+            r = re.search(r"([^\n]+)\.([^\.]+)\.([0-9]+)$", file)
+            if r:
+                fileindex_set.add(int(r.group(3)))
+        if fileindex_set:
+            fileindex = sorted(fileindex_set)[0]
+            
     # try different suffixes
-    suffixes = ['.{0:s}'.format(extension_requested),
-                '.{0:s}.{1:d}'.format(extension_requested, fileindex)]
+    suffixes = [
+                '.{0:s}.{1:d}'.format(extension_requested, fileindex),
+                '.{0:s}'.format(extension_requested),
+                ]
     
     # find the real filename with the longest path that fits the requested
     # filename
@@ -94,7 +107,7 @@ def find_any_filename(filename, extension_requested, dir='', files=[]):
     # get the full path
     if not dir:
         dir = os.path.dirname(filename)
-    filename = os.path.basename(filename)
+    # filename = os.path.basename(filename)
     
     # try obtaining the list of all files in the directory
     if not files:

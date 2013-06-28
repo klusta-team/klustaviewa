@@ -648,6 +648,7 @@ class KlustersLoader(Loader):
         else:
             try:
                 self.probe = read_probe(self.filename_probe)
+                info("Successfully loaded {0:s}".format(self.filename_probe))
             except Exception as e:
                 info(("There was an error while loading the probe file "
                           "'{0:s}' : {1:s}").format(self.filename_probe,
@@ -658,6 +659,7 @@ class KlustersLoader(Loader):
         try:
             self.features, self.spiketimes = read_features(self.filename_fet,
                 self.nchannels, self.fetdim, self.freq)
+            info("Successfully loaded {0:s}".format(self.filename_fet))
         except IOError:
             raise IOError("The FET file is missing.")
         # Convert to Pandas.
@@ -675,8 +677,10 @@ class KlustersLoader(Loader):
             # Try reading the ACLU file, or fallback on the CLU file.
             if os.path.exists(self.filename_aclu):
                 self.clusters = read_clusters(self.filename_aclu)
+                info("Successfully loaded {0:s}".format(self.filename_aclu))
             else:
                 self.clusters = read_clusters(self.filename_clu)
+                info("Successfully loaded {0:s}".format(self.filename_clu))
         except IOError:
             warn("The CLU file is missing.")
             # Default clusters if the CLU file is not available.
@@ -690,6 +694,7 @@ class KlustersLoader(Loader):
     def read_cluster_info(self):
         try:
             self.cluster_info = read_cluster_info(self.filename_clusterinfo)
+            info("Successfully loaded {0:s}".format(self.filename_clusterinfo))
         except IOError:
             info("The CLUINFO file is missing, generating a default one.")
             self.cluster_info = default_cluster_info(self.clusters_unique)
@@ -704,6 +709,7 @@ class KlustersLoader(Loader):
     def read_group_info(self):
         try:
             self.group_info = read_group_info(self.filename_groups)
+            info("Successfully loaded {0:s}".format(self.filename_groups))
         except IOError:
             info("The GROUPINFO file is missing, generating a default one.")
             self.group_info = default_group_info()
@@ -716,6 +722,7 @@ class KlustersLoader(Loader):
         try:
             self.masks, self.masks_full = read_masks(self.filename_mask,
                                                      self.fetdim)
+            info("Successfully loaded {0:s}".format(self.filename_mask))
         except IOError:
             warn("The MASKS/FMASKS file is missing.")
             # Default masks if the MASK/FMASK file is not available.
@@ -728,6 +735,7 @@ class KlustersLoader(Loader):
         try:
             self.waveforms = read_waveforms(self.filename_spk, self.nsamples,
                                             self.nchannels)
+            info("Successfully loaded {0:s}".format(self.filename_spk))
         except IOError:
             warn("The SPK file is missing.")
             self.waveforms = np.zeros((self.nspikes, self.nsamples, 
