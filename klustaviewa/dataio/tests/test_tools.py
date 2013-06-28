@@ -58,6 +58,22 @@ def test_find_filename():
         files=files, dir=dir)
     assert spkfile == None
     
+def test_find_filename2():
+    dir = '/my/path/'
+    extension_requested = 'spk'
+    files = [
+        'blabla.aclu.2',
+        'blabla_test.aclu.2',
+        'blabla_test2.aclu.2',
+        'blabla_test3.aclu.3',
+        'blabla.spk.2',
+        'blabla_test.spk.2',
+        ]    
+    spkfile = find_filename('/my/path/blabla_test.xml', extension_requested,
+        files=files, dir=dir)
+    
+    assert spkfile == dir + 'blabla_test.spk.2'
+    
     
     
     
