@@ -88,6 +88,14 @@ def read_clusters(filename_clu):
     clusters = load_text(filename_clu, np.int32)
     return process_clusters(clusters)
 
+# RES file.
+def process_res(spiketimes, freq):
+    return spiketimes * 1. / freq
+
+def read_res(filename_res, freq):
+    res = load_text(filename_res, np.int32)
+    return process_res(res, freq)
+
 # Cluster info.
 def process_cluster_info(cluster_info):
     cluster_info = pd.DataFrame({'color': cluster_info[:, 1], 
@@ -350,7 +358,8 @@ class Loader(QtCore.QObject):
             spikes = get_spikes_in_clusters(clusters, self.clusters)
         if spikes is None:
             spikes = self.spikes_selected
-        return select(self.spiketimes, spikes)
+        spiketimes = getattr(self, 'spiketimes', getattr(self, 'spiketimes_res', None))
+        return select(spiketimes, spikes)
     
     def get_clusters(self, spikes=None, clusters=None):
         if clusters is not None:
@@ -588,16 +597,18 @@ class KlustersLoader(Loader):
         dataset."""
         self.filename_xml = find_filename(self.filename, 'xml')
         self.filename_fet = find_filename(self.filename, 'fet')
-        self.filename_aclu = (find_filename(self.filename, 'aclu') or
-            self.filename_fet.replace('.fet.', '.aclu.'))
         self.filename_clu = (find_filename(self.filename, 'clu') or
             self.filename_fet.replace('.fet.', '.clu.'))
+        filename = self.filename_fet or self.filename_clu.replace('.clu.', '.fet.')
+        self.filename_res = find_filename(self.filename, 'res')
+        self.filename_aclu = (find_filename(self.filename, 'aclu') or
+            filename.replace('.fet.', '.aclu.'))
         # TODO: improve this bad looking code
         self.filename_clusterinfo = find_filename(self.filename, 
-            'acluinfo') or self.filename_fet.replace(
+            'acluinfo') or filename.replace(
             '.fet.', '.acluinfo.')
         self.filename_groups = (find_filename(self.filename, 'groupinfo') or 
-            self.filename_fet.replace('.fet.', '.groupinfo.'))
+            filename.replace('.fet.', '.groupinfo.'))
         # fmask or mask file
         self.filename_mask = find_filename(self.filename, 'fmask')
         if not self.filename_mask:
@@ -671,6 +682,13 @@ class KlustersLoader(Loader):
         self.nspikes = self.features.shape[0]
         self.metadata['nspikes'] = self.nspikes
         self.nextrafet = self.features.shape[1] - self.nchannels * self.fetdim
+    
+    def read_res(self):
+        try:
+            self.spiketimes_res = read_res(self.filename_res, self.freq)
+            self.spiketimes_res = pd.Series(self.spiketimes_res, dtype=np.float32)
+        except IOError:
+            warn("The RES file is missing.")
     
     def read_clusters(self):
         try:
@@ -781,6 +799,7 @@ class KlustersLoader(Loader):
         self.report_progress(1, 5)
         self.read_features()
         self.report_progress(2, 5)
+        self.read_res()
         self.read_clusters()
         self.report_progress(3, 5)
         self.read_cluster_info()
