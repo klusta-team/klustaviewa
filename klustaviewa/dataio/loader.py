@@ -89,10 +89,13 @@ def read_clusters(filename_clu):
     return process_clusters(clusters)
 
 # RES file.
-def process_res(spiketimes, freq):
-    return spiketimes * 1. / freq
+def process_res(spiketimes, freq=None):
+    if freq is None:
+        return spiketimes
+    else:
+        return spiketimes * 1. / freq
 
-def read_res(filename_res, freq):
+def read_res(filename_res, freq=None):
     res = load_text(filename_res, np.int32)
     return process_res(res, freq)
 
