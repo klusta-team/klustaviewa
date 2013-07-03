@@ -130,9 +130,9 @@ Once the software is installed, you can update it when a new version is availabl
   
       * Step 7.1: [download the source](http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.10.2/PyQt-mac-gpl-4.10.2.tar.gz).
       * Step 7.2: extract the package.
-      * Step 7.3: type in the extracted directory (these commands can take a while, grab a coffee):
+      * Step 7.3: in the extracted directory, type the following commands thay may take a while (grab a coffee). Note that you need to specify the path to SIP, which is generally either `/opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin/sip` or `/System/Library/Frameworks/Python.framework/Versions/2.7/bin/sip`. You need to look further up the end of the output of the last command in step 6.3.
       
-            $ sudo python configure-ng.py --sip=/opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin/sip
+            $ sudo python configure-ng.py --sip=[SIP_PATH_THAT_YOU_NEED_TO_COPY_FROM_THE_OUTPUT_OF_STEP_6]
             $ sudo make
             $ sudo make install
             
