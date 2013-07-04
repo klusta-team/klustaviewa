@@ -59,8 +59,9 @@ def process_features(features, fetdim, nchannels, freq, nfet=None):
     # normalize normal features while keeping symmetry
     features_normal = normalize(features[:,:fetdim * nchannels],
                                         symmetric=True)
-    features_time = normalize(features[:,[-1]],
-                                        symmetric=False)
+    # features_time = normalize(features[:,[-1]],
+                                        # symmetric=False)
+    features_time = spiketimes.reshape((-1, 1)) * 1. / spiketimes[-1] * 2 - 1
     # normalize extra features without keeping symmetry
     if nextrafet > 1:
         features_extra = normalize(features[:,-nextrafet:-1],
