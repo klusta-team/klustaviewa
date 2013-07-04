@@ -116,7 +116,7 @@ class TaskGraph(AbstractTaskGraph):
         log.debug("Selected clusters {0:s}.".format(str(clusters)))
         return [
                 ('_update_feature_view', target),
-                ('_update_waveform_view',),
+                ('_update_waveform_view', (), dict(wizard=wizard)),
                 ('_show_selection_in_matrix', (clusters,)),
                 ('_compute_correlograms', (clusters,),),
                 ]
@@ -307,7 +307,7 @@ class TaskGraph(AbstractTaskGraph):
         )
         [view.set_data(**data) for view in self.get_views('FeatureView')]
         
-    def _update_waveform_view(self, autozoom=None):
+    def _update_waveform_view(self, autozoom=None, wizard=None):
         data = dict(
             waveforms=self.loader.get_waveforms(),
             clusters=self.loader.get_clusters(),
@@ -316,6 +316,7 @@ class TaskGraph(AbstractTaskGraph):
             masks=self.loader.get_masks(),
             geometrical_positions=self.loader.get_probe(),
             autozoom=autozoom,
+            keep_order=wizard,
         )
         [view.set_data(**data) for view in self.get_views('WaveformView')]
         

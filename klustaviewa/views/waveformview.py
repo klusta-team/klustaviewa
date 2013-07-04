@@ -83,11 +83,6 @@ FRAGMENT_SHADER_AVERAGE = """
 # Data manager
 # -----------------------------------------------------------------------------
 class WaveformPositionManager(Manager):
-    # Initialization methods
-    # ----------------------
-    # def initialize(self):
-        # self.arranged = False
-    
     def reset(self):
         # set parameters
         self.alpha = .02
@@ -101,7 +96,7 @@ class WaveformPositionManager(Manager):
         self.box_sizes.__setitem__('Linear', None)
         self.box_sizes.__setitem__('Geometrical', None)
         # self.T = None
-        self.spatial_arrangement = 'Linear'
+        self.spatial_arrangement = 'Geometrical'
         self.superposition = 'Separated'
         
         # channel positions
@@ -247,8 +242,6 @@ class WaveformPositionManager(Manager):
         self.box_positions = Tx, Ty
         self.box_size = (w, h)
         
-        # self.arranged = True
-                      
     def get_transformation(self):
         return self.box_positions, self.box_size
 
@@ -402,6 +395,7 @@ class WaveformDataManager(Manager):
                  clusters_selected=None,
                  cluster_colors=None,
                  geometrical_positions=None,
+                 keep_order=None,
                  autozoom=None,
                  ):
                  
@@ -414,7 +408,9 @@ class WaveformDataManager(Manager):
             clusters = np.zeros(0, dtype=np.int32)
             cluster_colors = np.zeros(0, dtype=np.int32)
             clusters_selected = []
-
+            
+        self.keep_order = keep_order
+        
         # Not all waveforms have been selected, so select the appropriate 
         # samples in clusters and masks.
         self.waveform_indices = get_indices(waveforms)
@@ -426,8 +422,6 @@ class WaveformDataManager(Manager):
         self.waveforms_array = get_array(waveforms)
         self.masks_array = get_array(masks)
         self.clusters_array = get_array(clusters)
-        self.cluster_colors_array = get_array(cluster_colors)[np.argsort(clusters_selected)]
-        
         # Relative indexing.
         if len(clusters_selected) > 0:
             self.clusters_rel = np.array(np.digitize(self.clusters_array, 
@@ -437,6 +431,13 @@ class WaveformDataManager(Manager):
         else:
             self.clusters_rel = np.zeros(0, dtype=np.int32)
             self.clusters_rel_ordered = np.zeros(0, dtype=np.int32)
+            
+        if self.keep_order:
+            self.clusters_rel_ordered2 = self.clusters_rel_ordered
+            self.cluster_colors_array = get_array(cluster_colors)[np.argsort(clusters_selected)]
+        else:
+            self.clusters_rel_ordered2 = self.clusters_rel
+            self.cluster_colors_array = get_array(cluster_colors)
             
         self.nspikes, self.nsamples, self.nchannels = self.waveforms_array.shape
         self.npoints = self.waveforms_array.size
@@ -452,14 +453,14 @@ class WaveformDataManager(Manager):
         # Prepare GPU data.
         self.data = self.prepare_waveform_data()
         self.masks_full = np.repeat(self.masks_array.T.ravel(), self.nsamples)
-        self.clusters_full = np.tile(np.repeat(self.clusters_rel_ordered, self.nsamples), self.nchannels)
+        self.clusters_full = np.tile(np.repeat(self.clusters_rel_ordered2, self.nsamples), self.nchannels)
         self.clusters_full_depth = np.tile(np.repeat(self.clusters_rel_ordered, self.nsamples), self.nchannels)
         self.channels_full = np.repeat(np.arange(self.nchannels, dtype=np.int32), self.nspikes * self.nsamples)
         
         # Compute average waveforms.
         self.data_avg = self.prepare_average_waveform_data()
         self.masks_full_avg = np.repeat(self.masks_avg.T.ravel(), self.nsamples_avg)
-        self.clusters_full_avg = np.tile(np.repeat(self.clusters_rel_ordered_avg, self.nsamples_avg), self.nchannels_avg)
+        self.clusters_full_avg = np.tile(np.repeat(self.clusters_rel_ordered_avg2, self.nsamples_avg), self.nchannels_avg)
         self.clusters_full_depth_avg = np.tile(np.repeat(self.clusters_rel_ordered_avg, self.nsamples_avg), self.nchannels_avg)
         self.channels_full_avg = np.repeat(np.arange(self.nchannels_avg, dtype=np.int32), self.nspikes_avg * self.nsamples_avg)
         
@@ -547,6 +548,10 @@ class WaveformDataManager(Manager):
         self.nchannels_avg = self.nchannels
         self.clusters_rel_avg = np.arange(self.nclusters, dtype=np.int32)
         self.clusters_rel_ordered_avg = np.argsort(self.clusters_selected)[self.clusters_rel_avg]
+        if self.keep_order:
+            self.clusters_rel_ordered_avg2 = self.clusters_rel_ordered_avg
+        else:
+            self.clusters_rel_ordered_avg2 = self.clusters_rel_avg
         
         return data_thickened
 
@@ -810,9 +815,9 @@ class WaveformHighlightManager(HighlightManager):
             # Tx, Ty: Nchannels x Nclusters
             Tx, Ty = box_positions
             # to: Nspikes x Nsamples x Nchannels
-            Px = np.tile(Tx[:,self.clusters_rel_ordered].reshape((self.nchannels, self.nspikes, 1)), (1, 1, self.nsamples))
+            Px = np.tile(Tx[:,self.clusters_rel_ordered2].reshape((self.nchannels, self.nspikes, 1)), (1, 1, self.nsamples))
             self.Px = Px.transpose([1, 2, 0])
-            Py = np.tile(Ty[:,self.clusters_rel_ordered].reshape((self.nchannels, self.nspikes, 1)), (1, 1, self.nsamples))
+            Py = np.tile(Ty[:,self.clusters_rel_ordered2].reshape((self.nchannels, self.nspikes, 1)), (1, 1, self.nsamples))
             self.Py = Py.transpose([1, 2, 0])
             
             self.Wx = np.tile(np.linspace(-1., 1., self.nsamples).reshape((1, -1, 1)), (self.nspikes, 1, self.nchannels))
@@ -1089,19 +1094,11 @@ class WaveformBindings(KlustaViewaBindings):
                  param_getter=lambda p: (-w, 0))
                  
     def set_probe_scaling(self):
-        # change probe scale: Shift + left mouse
         self.set('RightClickMove',
                  'ChangeProbeScale',
-                 description='vertical',
                  key_modifier='Control',
-                 param_getter=lambda p: (0,
-                                         p["mouse_position_diff"][1] * .5))
-        self.set('RightClickMove',
-                 'ChangeProbeScale',
-                 description='horizontal',
-                 key_modifier='Shift',
                  param_getter=lambda p: (p["mouse_position_diff"][0] * 1,
-                                         0))
+                                         p["mouse_position_diff"][1] * 1))
 
     def set_highlight(self):
         # highlight
