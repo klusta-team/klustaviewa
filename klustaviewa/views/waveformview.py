@@ -435,9 +435,11 @@ class WaveformDataManager(Manager):
         if self.keep_order:
             self.clusters_rel_ordered2 = self.clusters_rel_ordered
             self.cluster_colors_array = get_array(cluster_colors)[np.argsort(clusters_selected)]
+            self.clusters_selected2 = clusters_selected
         else:
             self.clusters_rel_ordered2 = self.clusters_rel
             self.cluster_colors_array = get_array(cluster_colors)
+            self.clusters_selected2 = sorted(clusters_selected)
             
         self.nspikes, self.nsamples, self.nchannels = self.waveforms_array.shape
         self.npoints = self.waveforms_array.size
@@ -932,7 +934,7 @@ class WaveformInfoManager(Manager):
     def show_closest_cluster(self, xd, yd):
         channel, cluster_rel = self.position_manager.find_box(xd, yd)
         text = "{0:d} on channel {1:d}".format(
-            self.data_manager.clusters_selected[cluster_rel],
+            self.data_manager.clusters_selected2[cluster_rel],
             channel,
             )
         
