@@ -792,6 +792,7 @@ class WaveformHighlightManager(HighlightManager):
         self.masks_full = self.data_manager.masks_full
         self.clusters_rel = self.data_manager.clusters_rel
         self.clusters_rel_ordered = self.data_manager.clusters_rel_ordered
+        self.clusters_rel_ordered2 = self.data_manager.clusters_rel_ordered2
         self.cluster_colors = self.data_manager.cluster_colors_array
         self.nchannels = data_manager.nchannels
         self.nclusters = data_manager.nclusters
