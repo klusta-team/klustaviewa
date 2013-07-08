@@ -420,7 +420,7 @@ class ClusterViewModel(TreeModel):
                 if role == QtCore.Qt.TextAlignmentRole:
                     return QtCore.Qt.AlignRight
                 if role == QtCore.Qt.DisplayRole:
-                    return "%d" % item.spkcount()
+                    return str(item.spkcount())
             # color
             elif col == self.columnCount() - 1:
                 if role == QtCore.Qt.BackgroundRole:

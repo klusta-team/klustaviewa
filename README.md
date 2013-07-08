@@ -45,25 +45,9 @@ Use this only if you know what you're doing and you don't want to use the first 
 
 Once the software is installed, you can update it when a new version is available by doing again **Step 3** only.
 
-### Ubuntu >= 12.x
+### Ubuntu
 
-  * Step 1: type in a shell:
-
-        $ sudo apt-get install python2.7 python-numpy python-pandas python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose
-
-  * Step 2: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
-  
-  * Step 3: open a system shell in the directory where you extracted the package, and execute the following command:
-  
-        sudo python setup.py install
-
-  * Step 4: to run KlustaViewa, type the following command in a system shell:
-  
-        klustaviewa
-
-### Ubuntu <= 11.x
-
-  * Step 1: install ActivePython.
+  * Step 1: install ActivePython-2.7.
   
       * Step 1.1: [download the package](http://www.activestate.com/activepython/downloads/thank-you?dl=http://downloads.activestate.com/ActivePython/releases/2.7.2.5/ActivePython-2.7.2.5-linux-x86_64.tar.gz). [Here is the link to the main website for your reference](http://www.activestate.com/activepython/downloads). 
       
@@ -73,26 +57,53 @@ Once the software is installed, you can update it when a new version is availabl
             cd ActivePython-2.7.2.5-linux-x86_64
             sudo ./install.sh
             
-      * Step 1.3: put the following line in your `.bashrc`:
+      * Step 1.3: put the following line in your `~/.bashrc`:
       
             export PATH=/opt/ActivePython-2.7/bin:$PATH
   
   * Step 2: to install the required Python packages, type in a shell:
   
-        pypm install distribute
-        pypm install numpy
-        pypm install pandas
-        pypm install matplotlib
-        pypm install pyopengl
-        pypm install pyqt4
+        pypm install distribute numpy pandas matplotlib pyopengl
 
-  * Step 3: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
+  * Step 3: Install Qt 4.8.4 and the Python headers:
   
-  * Step 4: open a system shell in the directory where you extracted the package, and execute the following command:
+        $ sudo apt-get install qt-sdk python-dev
+  
+  * Step 4: Install SIP 4.14.7:
+  
+      * Step 4.1: [download the source](http://sourceforge.net/projects/pyqt/files/sip/sip-4.14.7/sip-4.14.7.tar.gz).
+      * Step 4.2: extract the package.
+      
+            $ tar -xvf sip-4.14.7.tar.gz
+            
+      * Step 4.3: type in the extracted directory:
+      
+            $ cd sip-4.14.7
+            $ sudo /opt/ActivePython-2.7/bin/python configure.py
+            $ sudo make
+            $ sudo make install
+            
+  * Step 5: install PyQt 4.10.2:
+  
+      * Step 5.1: [download the source](http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.10.2/PyQt-x11-gpl-4.10.2.tar.gz/download).
+      * Step 5.2: extract the package:
+      
+            $ tar -xvf PyQt-x11-gpl-4.10.2.tar.gz
+      
+      * Step 5.3: in the extracted directory, type the following commands thay may take a while (grab a coffee). Note that you need to specify the path to SIP, which is generally `/opt/ActivePython-2.7/bin/sip`. You need to look further up the end of the output of the last command in step 4.3.
+      
+            $ sudo /opt/ActivePython-2.7/bin/python configure-ng.py --sip=/opt/ActivePython-2.7/bin/sip
+            $   yes
+            $ sudo make
+            $ sudo make install
+            
+  * Step 6: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
+  
+  * Step 7: open a system shell in the directory where you extracted the package, and execute the following command:
   
         python setup.py install
   
-  * Step 5: to run KlustaViewa, type the following command in a system shell:
+  * Step 8: to run KlustaViewa, type the following command in a system shell:
   
         klustaviewa
 
