@@ -45,7 +45,25 @@ Use this only if you know what you're doing and you don't want to use the first 
 
 Once the software is installed, you can update it when a new version is available by doing again **Step 3** only.
 
-### Ubuntu
+
+### Ubuntu >= 12.10
+
+  * Step 1: type in a shell:
+
+        $ sudo apt-get install python2.7 python-numpy python-pandas python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose
+
+  * Step 2: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
+  
+  * Step 3: open a system shell in the directory where you extracted the package, and execute the following command:
+  
+        sudo python setup.py install
+
+  * Step 4: to run KlustaViewa, type the following command in a system shell:
+  
+        klustaviewa
+
+
+### Ubuntu < 12.10
 
   * Step 1: install ActivePython-2.7.
   
