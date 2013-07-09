@@ -798,6 +798,8 @@ class KlustersLoader(Loader):
         self.initialize_logfile()
         # Load the similarity measure chosen by the user in the preferences
         # file: 'gaussian' or 'kl'.
+        # Refresh the preferences file when a new file is opened.
+        USERPREF.refresh()
         self.similarity_measure = USERPREF['similarity_measure'] or 'gaussian'
         info("Similarity measure: {0:s}.".format(self.similarity_measure))
         info("Opening {0:s}.".format(self.filename))

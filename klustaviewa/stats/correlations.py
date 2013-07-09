@@ -124,6 +124,10 @@ def compute_correlations_approximation(features, clusters, masks,
                 # KL divergence between the clusters
                 pij = .5 * (np.trace(np.dot(Cjinv, Ci)) + np.dot(np.dot(dmu.T, Cjinv), dmu) - logdeti + logdetj - nDims)
                 pji = .5 * (np.trace(np.dot(Ciinv, Cj)) + np.dot(np.dot(dmu.T, Ciinv), dmu) - logdetj + logdeti - nDims)
+                
+                C[ci, cj] = np.exp(pij)[0,0]
+                C[cj, ci] = np.exp(pji)[0,0]
+                
             else:
                 # pij is the probability that mui belongs to Cj:
                 #    $$p_{ij} = w_j * N(\mu_i | \mu_j; C_j)$$
@@ -132,12 +136,12 @@ def compute_correlations_approximation(features, clusters, masks,
                 pij = np.log(2*np.pi)*(-nDims/2.)+(-.5*logdetj)+(-.5) * np.dot(np.dot(dmu.T, Cjinv), dmu)
                 pji = np.log(2*np.pi)*(-nDims/2.)+(-.5*logdeti)+(-.5) * np.dot(np.dot(dmu.T, Ciinv), dmu)
                 
-            # nPoints is the total number of spikes.
-            wi = float(npointsi) / nPoints
-            wj = float(npointsj) / nPoints
-            
-            C[ci, cj] = wj * np.exp(pij)[0,0]
-            C[cj, ci] = wi * np.exp(pji)[0,0]
+                # nPoints is the total number of spikes.
+                wi = float(npointsi) / nPoints
+                wj = float(npointsj) / nPoints
+                
+                C[ci, cj] = wj * np.exp(pij)[0,0]
+                C[cj, ci] = wi * np.exp(pji)[0,0]
     
     return C
     
