@@ -108,6 +108,20 @@ except Exception as e:
             
 
 # -----------------------------------------------------------------------------
+# Computing one correlogram
+# -----------------------------------------------------------------------------
+def compute_one_correlogram(spikes0, spikes1, ncorrbins, corrbin):
+    clusters = np.hstack((np.zeros(len(spikes0), dtype=np.int32),
+                          np.ones(len(spikes1), dtype=np.int32)))
+    spikes = np.hstack((spikes0, spikes1))
+    # Indices sorting the union of spikes0 and spikes1.
+    indices = np.argsort(spikes)
+    C = compute_correlograms(spikes[indices], clusters[indices],
+        ncorrbins=ncorrbins, corrbin=corrbin)
+    return C[0, 1]
+
+
+# -----------------------------------------------------------------------------
 # Baselines
 # -----------------------------------------------------------------------------
 def get_baselines(sizes, duration, corrbin):
