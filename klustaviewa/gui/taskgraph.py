@@ -170,6 +170,7 @@ class TaskGraph(AbstractTaskGraph):
             return '_update_correlograms_view'
     
     def _compute_similarity_matrix(self, target_next=None):
+        similarity_measure = self.loader.similarity_measure
         # Get the correlation matrix parameters.
         features = get_array(self.loader.get_features('all'))
         masks = get_array(self.loader.get_masks('all', full=True))
@@ -190,7 +191,7 @@ class TaskGraph(AbstractTaskGraph):
             # Launch the task.
             self.tasks.similarity_matrix_task.compute(features,
                 clusters, cluster_groups, masks, clusters_to_update,
-                target_next=target_next)
+                target_next=target_next, similarity_measure=similarity_measure)
         # Otherwise, update directly the correlograms view without launching
         # the task in the external process.
         else:

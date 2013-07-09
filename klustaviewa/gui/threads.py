@@ -70,18 +70,19 @@ class SimilarityMatrixTask(QtCore.QObject):
         super(SimilarityMatrixTask, self).__init__(parent)
         
     def compute(self, features, clusters, 
-            cluster_groups, masks, clusters_selected, target_next=None):
+            cluster_groups, masks, clusters_selected, target_next=None,
+            similarity_measure=None):
         log.debug("Computing correlation for clusters {0:s}.".format(
             str(list(clusters_selected))))
         if len(clusters_selected) == 0:
             return {}
         correlations = compute_correlations(features, clusters, 
-            masks, clusters_selected)
+            masks, clusters_selected, similarity_measure=similarity_measure)
         return correlations
         
     def compute_done(self, features, clusters, 
             cluster_groups, masks, clusters_selected, target_next=None,
-        _result=None):
+            similarity_measure=None, _result=None):
         correlations = _result
         self.correlationMatrixComputed.emit(np.array(clusters_selected),
             correlations, 

@@ -83,7 +83,7 @@ def compute_statistics(Fet1, Fet2, spikes_in_clusters, masks):
     return stats
 
 def compute_correlations_approximation(features, clusters, masks,
-        clusters_to_update=None):
+        clusters_to_update=None, similarity_measure=None):
     """Compute the correlation matrix between every pair of clusters.
     
     Use an approximation of the original Klusters grouping assistant, with
@@ -120,13 +120,18 @@ def compute_correlations_approximation(features, clusters, masks,
             
             dmu = (muj - mui).reshape((-1, 1))
             
-            # pij is the probability that mui belongs to Cj:
-            #    $$p_{ij} = w_j * N(\mu_i | \mu_j; C_j)$$
-            # where wj is the relative size of cluster j
-            # pii is the probability that mui belongs to Ci a
-            pij = np.log(2*np.pi)*(-nDims/2.)+(-.5*logdetj)+(-.5) * np.dot(np.dot(dmu.T, Cjinv), dmu)
-            pji = np.log(2*np.pi)*(-nDims/2.)+(-.5*logdeti)+(-.5) * np.dot(np.dot(dmu.T, Ciinv), dmu)
-            
+            if similarity_measure == 'kl':
+                # KL divergence between the clusters
+                pij = .5 * (np.trace(np.dot(Cjinv, Ci)) + np.dot(np.dot(dmu.T, Cjinv), dmu) - logdeti + logdetj - nDims)
+                pji = .5 * (np.trace(np.dot(Ciinv, Cj)) + np.dot(np.dot(dmu.T, Ciinv), dmu) - logdetj + logdeti - nDims)
+            else:
+                # pij is the probability that mui belongs to Cj:
+                #    $$p_{ij} = w_j * N(\mu_i | \mu_j; C_j)$$
+                # where wj is the relative size of cluster j
+                # pii is the probability that mui belongs to Ci
+                pij = np.log(2*np.pi)*(-nDims/2.)+(-.5*logdetj)+(-.5) * np.dot(np.dot(dmu.T, Cjinv), dmu)
+                pji = np.log(2*np.pi)*(-nDims/2.)+(-.5*logdeti)+(-.5) * np.dot(np.dot(dmu.T, Ciinv), dmu)
+                
             # nPoints is the total number of spikes.
             wi = float(npointsi) / nPoints
             wj = float(npointsj) / nPoints

@@ -796,6 +796,10 @@ class KlustersLoader(Loader):
     # ---------------
     def read(self):
         self.initialize_logfile()
+        # Load the similarity measure chosen by the user in the preferences
+        # file: 'gaussian' or 'kl'.
+        self.similarity_measure = USERPREF['similarity_measure'] or 'gaussian'
+        info("Similarity measure: {0:s}.".format(self.similarity_measure))
         info("Opening {0:s}.".format(self.filename))
         self.report_progress(0, 5)
         self.read_metadata()
