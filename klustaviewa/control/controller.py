@@ -14,7 +14,6 @@ from klustaviewa.control.stack import Stack
 import klustaviewa.utils.logger as log
 from klustaviewa.dataio.selection import get_indices, select
 from klustaviewa.dataio.tools import get_array
-from klustaviewa.utils.colors import next_color
 
 
 # -----------------------------------------------------------------------------

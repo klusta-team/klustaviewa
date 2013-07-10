@@ -12,7 +12,7 @@ import pandas as pd
 import klustaviewa.utils.logger as log
 from klustaviewa.dataio.selection import get_indices, select
 from klustaviewa.dataio.tools import get_array
-from klustaviewa.utils.colors import next_color
+from klustaviewa.utils.colors import random_color
 
 
 # -----------------------------------------------------------------------------
@@ -40,8 +40,8 @@ class Processor(object):
         spikes = get_indices(clusters_old)
         clusters_to_merge = get_indices(cluster_groups)
         group = np.max(get_array(cluster_groups))
-        color_old = get_array(cluster_colors)[0]
-        color_new = next_color(color_old)
+        # color_old = get_array(cluster_colors)[0]
+        color_new = random_color()
         self.loader.add_cluster(cluster_merged, group, color_new)
         # Set the new cluster to the corresponding spikes.
         self.loader.set_cluster(spikes, cluster_merged)
@@ -86,11 +86,11 @@ class Processor(object):
         cluster_indices_new = np.unique(clusters_new)
         # Get group and color of the new clusters, from the old clusters.
         groups = self.loader.get_cluster_groups(cluster_indices_old)
-        colors = self.loader.get_cluster_colors(cluster_indices_old)
+        # colors = self.loader.get_cluster_colors(cluster_indices_old)
         # Add clusters.
-        for cluster_new, group, color in zip(cluster_indices_new, 
-                groups, colors):
-            self.loader.add_cluster(cluster_new, group, next_color(color))
+        for cluster_new, group in zip(cluster_indices_new, 
+                groups):
+            self.loader.add_cluster(cluster_new, group, random_color())
         # Set the new clusters to the corresponding spikes.
         self.loader.set_cluster(spikes, clusters_new)
         # Remove empty clusters.

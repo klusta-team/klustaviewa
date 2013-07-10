@@ -14,7 +14,7 @@ from galry import QtGui, QtCore
 
 from klustaviewa.dataio.selection import get_indices, select
 from klustaviewa.gui.icons import get_icon
-from klustaviewa.utils.colors import COLORMAP, next_color
+from klustaviewa.utils.colors import COLORMAP, random_color
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.settings import SETTINGS
 from klustaviewa.utils.persistence import encode_bytearray, decode_bytearray
@@ -876,8 +876,7 @@ class ClusterView(QtGui.QTreeView):
         self.clustersMoved.emit(np.array(clusters), groupidx)
     
     def add_group(self, name, clusters=[]):
-        color = next_color(max([group.color()
-            for group in self.model.get_groups()]))
+        color = random_color()
         group = self.model.add_group(name, color)
         groupidx = group.groupidx()
         # Signal.

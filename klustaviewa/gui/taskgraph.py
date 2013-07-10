@@ -14,7 +14,7 @@ from klustaviewa.stats.correlations import normalize
 from klustaviewa.stats.correlograms import get_baselines
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.userpref import USERPREF
-from klustaviewa.utils.colors import next_color
+from klustaviewa.utils.colors import random_color
 from klustaviewa.gui.threads import ThreadedTasks
 
 
@@ -485,8 +485,8 @@ class TaskGraph(AbstractTaskGraph):
     def _wizard_change_candidate_color(self):
         candidate = self.wizard.current_candidate()
         target = self.wizard.current_target()
-        color = self.loader.get_cluster_color(candidate)
-        return ('_cluster_color_changed', (candidate, next_color(color),))
+        # color = self.loader.get_cluster_color(candidate)
+        return ('_cluster_color_changed', (candidate, random_color(),))
         
     def _wizard_show_pair(self, target=None, candidate=None):
         if target is None:

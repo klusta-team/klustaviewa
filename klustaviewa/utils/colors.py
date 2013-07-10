@@ -79,6 +79,9 @@ for i in xrange(SHIFTLEN):
 def next_color(color):
     return np.mod(color, COLORS_COUNT) + 1
 
+def random_color():
+    return np.random.randint(low=1, high=COLORS_COUNT + 1)
+
 def generate_colors(n):
     return np.mod(np.arange(n, dtype=np.int32), COLORS_COUNT) + 1
     
