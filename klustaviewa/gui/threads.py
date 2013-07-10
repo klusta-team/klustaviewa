@@ -28,14 +28,18 @@ from klustaviewa.stats import compute_correlograms, compute_correlations
 # -----------------------------------------------------------------------------
 class OpenTask(QtCore.QObject):
     dataOpened = QtCore.pyqtSignal()
+    dataOpenFailed = QtCore.pyqtSignal(str)
     
     def __init__(self, parent=None):
         super(OpenTask, self).__init__(parent)
     
     def open(self, loader, path):
-        loader.open(path)
-        self.dataOpened.emit()
-
+        try:
+            loader.open(path)
+            self.dataOpened.emit()
+        except Exception as e:
+            self.dataOpenFailed.emit(e.message)
+            
 
 class CorrelogramsTask(QtCore.QObject):
     correlogramsComputed = QtCore.pyqtSignal(np.ndarray, object, int, float)

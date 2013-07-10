@@ -629,6 +629,7 @@ class MainWindow(QtGui.QMainWindow):
         # Create the external threads.
         self.open_task = inthread(OpenTask)()
         self.open_task.dataOpened.connect(self.open_done)
+        self.open_task.dataOpenFailed.connect(self.open_failed)
     
     def join_threads(self):
          self.open_task.join()
@@ -700,6 +701,12 @@ class MainWindow(QtGui.QMainWindow):
         # self.taskgraph.update_projection_view()
         self.taskgraph.update_cluster_view()
         self.taskgraph.compute_similarity_matrix()
+        
+    def open_failed(self, message):
+        self.open_progress.setValue(0)
+        QtGui.QMessageBox.warning(self, "Error while opening the file", 
+            "An error occurred: {0:s}".format(message), 
+            QtGui.QMessageBox.Ok, QtGui.QMessageBox.Ok)
         
     def open_progress_reported(self, progress, progress_max):
         self.open_progress.setMaximum(progress_max)
