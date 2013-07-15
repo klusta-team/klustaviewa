@@ -38,8 +38,6 @@ class ProjectionView(QtGui.QWidget):
             self.setFocusPolicy(QtCore.Qt.NoFocus)
             
         self.setWindowTitle('ProjectionView')
-        # self.setMaximumWidth(500)
-        self.setMaximumHeight(80)
             
         self.show()
         
@@ -131,7 +129,7 @@ class ProjectionView(QtGui.QWidget):
         self.feature_widget1 = self.create_feature_widget(0)
         box.addLayout(self.feature_widget1)
         
-        box.addSpacing(30)
+        box.addSpacing(10)
         
         # Switch button.
         # button = QtGui.QPushButton('Flip', self)
@@ -141,7 +139,7 @@ class ProjectionView(QtGui.QWidget):
         button.clicked.connect(self.flip_projections_callback)
         box.addWidget(button)
         
-        box.addSpacing(30)
+        box.addSpacing(10)
         
         # add feature widget
         self.feature_widget2 = self.create_feature_widget(1)
@@ -150,6 +148,10 @@ class ProjectionView(QtGui.QWidget):
         # box.addSpacing(10)
         
         self.setTabOrder(self.channel_box[0], self.channel_box[1])
+        
+        # self.setMaximumWidth(300)
+        # self.setMaximumHeight(80)
+        
         
         return box
     
@@ -166,6 +168,7 @@ class ProjectionView(QtGui.QWidget):
         # channel selection
         comboBox = QtGui.QComboBox(self)
         comboBox.setEditable(True)
+        comboBox.setMaximumWidth(100)
         comboBox.setInsertPolicy(QtGui.QComboBox.NoInsert)
         comboBox.addItems(["%d" % i for i in xrange(self.nchannels)])
         comboBox.addItems(["Extra %d" % i for i in xrange(self.nextrafet)])
@@ -242,6 +245,6 @@ class ProjectionView(QtGui.QWidget):
         self.set_projection(0, c1, f1)
         self.set_projection(1, c0, f0)
         
-    def sizeHint(self):
+    def maximumSize(self):
         return QtCore.QSize(300, 40)
         

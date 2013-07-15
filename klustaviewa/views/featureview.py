@@ -1243,7 +1243,10 @@ class FeatureView(KlustaView):
         self.paint_manager.update_points()
         self.paint_manager.updateGL()
         
-    # def sizeHint(self):
-        # return QtCore.QSize(600, 600)
+    def sizeHint(self):
+        return QtCore.QSize(400, 2000)
+        
+    def maximumSize(self):
+        return QtCore.QSize(2000, 2000)
     
         

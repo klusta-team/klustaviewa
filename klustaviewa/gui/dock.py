@@ -172,6 +172,16 @@ class DockTitleBar(QtGui.QWidget):
         self.parent().setFloating(not(self.parent().isFloating()))
         
     def maximize_callback(self, checked=None):
+        # Force floating.
+        if not self.parent().isFloating():
+            self.parent().setFloating(True)
+            self.forced_float = True
+        # and cancel floating for minimize if it was triggered by maximize
+        # button.
+        elif self.forced_float:
+            self.forced_float = False
+            self.parent().showNormal()
+            self.parent().setFloating(False)
         if self.parent().isMaximized():
             self.parent().showNormal()
         else:
