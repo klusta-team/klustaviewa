@@ -843,6 +843,8 @@ class FeatureProjectionManager(Manager):
         
     def set_projection(self, coord, channel, feature, do_update=True):
         """Set the projection axes."""
+        if channel < 0:
+            channel += (self.data_manager.nchannels + self.data_manager.nextrafet)
         if channel < self.nchannels:
             i = channel * self.fetdim + feature
             self.data_manager.masks_full = self.data_manager.masks_array[:,channel]
@@ -1061,7 +1063,10 @@ class FeatureInteractionManager(PlotInteractionManager):
             
     def select_projection(self, parameter):
         """Select a projection for the given coordinate."""
+        coord, _, _ = parameter
         self.projection_manager.set_projection(*parameter)  # coord, channel, feature
+        channel, feature = self.projection_manager.get_projection(coord)
+        self.parent.projectionChanged.emit(coord, channel, feature)
         self.paint_manager.update_points()
         self.paint_manager.updateGL()
     
@@ -1101,9 +1106,6 @@ class FeatureBindings(KlustaViewaBindings):
                                             p["mouse_position"][0],
                                             p["mouse_position"][1]))
     
-    # def set_zooming_mouse(self):
-        # pass
-    
     def set_highlight(self):
         # highlight
         # self.set('MiddleClickMove',
@@ -1142,6 +1144,16 @@ class FeatureBindings(KlustaViewaBindings):
                  key_modifier='Shift',
                  param_getter=lambda p: (1, -int(np.sign(p['wheel']))))
         
+    def set_time_channel(self):
+        self.set('KeyPress', 'SelectProjection',
+                    key='T', key_modifier='Control',
+                    description='Time on X',
+                    param_getter=(0, -1, 0))
+        self.set('KeyPress', 'SelectProjection',
+                    key='T', key_modifier='Shift',
+                    description='Time on Y',
+                    param_getter=(1, -1, 0))
+        
     def set_feature(self):
         # select projection feature for coordinate 0
         for feature in xrange(4):
@@ -1178,6 +1190,7 @@ class FeatureBindings(KlustaViewaBindings):
         self.set_toggle_background()
         self.set_neighbor_channel()
         self.set_feature()
+        self.set_time_channel()
         self.set_selection()
 
 
