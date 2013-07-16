@@ -30,7 +30,7 @@ from klustaviewa.stats.correlations import normalize
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.logger import FileLogger, register, unregister
 from klustaviewa.utils.persistence import encode_bytearray, decode_bytearray
-from klustaviewa.utils.userpref import USERPREF
+from klustaviewa.utils.userpref import USERPREF, FILENAME
 from klustaviewa.utils.settings import SETTINGS
 from klustaviewa.utils.globalpaths import APPNAME, ABOUT, get_global_path
 from klustaviewa.gui.threads import ThreadedTasks, OpenTask
@@ -248,6 +248,7 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('about', '&About')
         self.add_action('manual', 'Show &manual')
         self.add_action('shortcuts', 'Show &shortcuts')
+        self.add_action('open_preferences', '&Open preferences')
         self.add_action('refresh_preferences', '&Refresh preferences',
             shortcut='CTRL+R')
         
@@ -321,6 +322,7 @@ class MainWindow(QtGui.QMainWindow):
         
         # Help menu.
         help_menu = self.menuBar().addMenu("&Help")
+        help_menu.addAction(self.open_preferences_action)
         help_menu.addAction(self.refresh_preferences_action)
         help_menu.addSeparator()
         help_menu.addAction(self.shortcuts_action)
@@ -939,6 +941,11 @@ class MainWindow(QtGui.QMainWindow):
                              QtCore.Qt.Key_H,
                              QtCore.Qt.NoModifier,)
         self.keyPressEvent(e)
+    
+    def open_preferences_callback(self, checked=None):
+        url = USERPREF.filepath
+        log.debug("Opening preferences file at '{0:s}'".format(url))
+        QtGui.QDesktopServices.openUrl(QtCore.QUrl('file:///' + url))
     
     def refresh_preferences_callback(self, checked=None):
         log.debug("Refreshing user preferences.")
