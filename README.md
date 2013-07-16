@@ -23,18 +23,19 @@ Installation
 ------------
 
   * The software is in beta version at this time.
-  * The installation procedure depends on your operating system.
+  * Installing the software is easy on Windows, but more complicated *for now* on Mac OS X and Linux. **We're trying to make the installation easier on these systems.**
+  * This document contains all the instructions to install the software on all systems.
 
 ### Windows 7/8 64 bits
 
-#### Method 1 (preferred: full installer)
+#### Standard method
 
   * Step 1: [download the KlustaViewa Full Installer for Windows 64 bits (>200MB)](http://klustaviewa.rossant.net/klustaviewa-setup.exe).
   * Step 2: execute the installer.
   * Step 3: click on the *KlustaViewa* icon on your desktop or in the Start menu to launch the software.
   * Step 4: to update the software at any time, execute *Update KlustaViewa* in the Start menu (you need an active Internet connection).
   
-#### Method 2 (manual method)
+#### Alternative method (don't use it unless you're a Python developer)
 
 Use this only if you know what you're doing and you don't want to use the first method.
 
