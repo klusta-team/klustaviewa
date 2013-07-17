@@ -23,10 +23,10 @@ Installation
 ------------
 
   * The software is in beta version at this time.
-  * Installing the software is easy on Windows, but more complicated *for now* on Mac OS X and Linux. **We're trying to make the installation easier on these systems.**
+  * It can run on Windows, Mac OS X and Linux.
   * This document contains all the instructions to install the software on all systems.
 
-### Windows 7/8 64 bits
+### Windows 7 & 8 (64 bits)
 
 #### Standard method
 
@@ -47,132 +47,17 @@ Use this only if you know what you're doing and you don't want to use the first 
 Once the software is installed, you can update it when a new version is available by doing again **Step 3** only.
 
 
-### Ubuntu >= 12.10
+### Mac OS X and Linux
 
-  * Step 1: type in a shell:
+  * Step 1: [install Anaconda](http://continuum.io/downloads). Download the adequate version (64 bits if possible). If you're asked confirmation at some steps during installation, answer *yes*.
+  
+  * Step 2: execute the following commands:
 
-        $ sudo apt-get install python2.7 python-numpy python-pandas python-matplotlib python-opengl python-qt4 python-qt4-gl python-distribute python-pip python-nose
+        $ pip install pyopengl
+        $ conda install -c http://conda.binstar.org/asmeurer pyside
+        $ pip install klustaviewa
 
-  * Step 2: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
-  
-  * Step 3: open a system shell in the directory where you extracted the package, and execute the following command:
-  
-        sudo python setup.py install
-
-  * Step 4: to run KlustaViewa, type the following command in a system shell:
-  
-        klustaviewa
-
-
-### Ubuntu < 12.10
-
-  * Step 1: install ActivePython-2.7.
-  
-      * Step 1.1: [download the package](http://www.activestate.com/activepython/downloads/thank-you?dl=http://downloads.activestate.com/ActivePython/releases/2.7.2.5/ActivePython-2.7.2.5-linux-x86_64.tar.gz). [Here is the link to the main website for your reference](http://www.activestate.com/activepython/downloads). 
-      
-      * Step 1.2: install it with:
-
-            tar xzf ActivePython-2.7.2.5-linux-x86_64.tar.gz
-            cd ActivePython-2.7.2.5-linux-x86_64
-            sudo ./install.sh
-            
-      * Step 1.3: put the following line in your `~/.bashrc`:
-      
-            export PATH=/opt/ActivePython-2.7/bin:$PATH
-  
-  * Step 2: to install the required Python packages, type in a shell:
-  
-        pypm install distribute numpy pandas matplotlib pyopengl
-
-  * Step 3: Install Qt 4.8.4 and the Python headers:
-  
-        $ sudo apt-get install qt-sdk python-dev
-  
-  * Step 4: Install SIP 4.14.7:
-  
-      * Step 4.1: [download the source](http://sourceforge.net/projects/pyqt/files/sip/sip-4.14.7/sip-4.14.7.tar.gz).
-      * Step 4.2: extract the package.
-      
-            $ tar -xvf sip-4.14.7.tar.gz
-            
-      * Step 4.3: type in the extracted directory:
-      
-            $ cd sip-4.14.7
-            $ sudo /opt/ActivePython-2.7/bin/python configure.py
-            $ sudo make
-            $ sudo make install
-            
-  * Step 5: install PyQt 4.10.2:
-  
-      * Step 5.1: [download the source](http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.10.2/PyQt-x11-gpl-4.10.2.tar.gz/download).
-      * Step 5.2: extract the package:
-      
-            $ tar -xvf PyQt-x11-gpl-4.10.2.tar.gz
-      
-      * Step 5.3: in the extracted directory, type the following commands thay may take a while (grab a coffee). Note that you need to specify the path to SIP, which is generally `/opt/ActivePython-2.7/bin/sip`. You need to look further up the end of the output of the last command in step 4.3.
-      
-            $ sudo /opt/ActivePython-2.7/bin/python configure-ng.py --sip=/opt/ActivePython-2.7/bin/sip
-            $   yes
-            $ sudo make
-            $ sudo make install
-            
-  * Step 6: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
-  
-  * Step 7: open a system shell in the directory where you extracted the package, and execute the following command:
-  
-        python setup.py install
-  
-  * Step 8: to run KlustaViewa, type the following command in a system shell:
-  
-        klustaviewa
-
-
-### Mac OS X
-    
-  * Step 0 (only for OS X 10.8): allow unsigned applications installation in your system preferences so that you can install the packages. [Here are the instructions for OS X 10.8](https://www.my-private-network.co.uk/knowledge-base/apple-related-questions/osx-unsigned-apps.html).
-
-  * Step 1: [install ActivePython](http://downloads.activestate.com/ActivePython/releases/2.7.2.5/ActivePython-2.7.2.5-macosx10.5-i386-x86_64.dmg). [Here is the link to the main website for your reference](http://www.activestate.com/activepython/downloads).
-  
-  * Step 2: to install the required Python packages, type in a shell:
-  
-        sudo pypm install numpy
-        sudo pypm install pandas
-        sudo pypm install matplotlib
-        sudo pypm install pyopengl
-        
-  * Step 3: [install Apple Xcode](http://itunes.apple.com/us/app/xcode/id497799835?ls=1&mt=12).
-
-  * Step 4: [install the Xcode command line tools](http://stackoverflow.com/questions/9329243/xcode-4-4-command-line-tools?answertab=votes#tab-top).
-  
-  * Step 5: [install Qt 4.8.4](http://download.qt-project.org/official_releases/qt/4.8/4.8.4/qt-mac-opensource-4.8.4.dmg).
-  
-  * Step 6: Install SIP 4.14.7:
-  
-      * Step 6.1: [download the source](http://sourceforge.net/projects/pyqt/files/sip/sip-4.14.7/sip-4.14.7.tar.gz).
-      * Step 6.2: extract the package.
-      * Step 6.3: type in the extracted directory:
-      
-            $ sudo python configure.py
-            $ sudo make
-            $ sudo make install
-            
-  * Step 7: install PyQt 4.10.2:
-  
-      * Step 7.1: [download the source](http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.10.2/PyQt-mac-gpl-4.10.2.tar.gz).
-      * Step 7.2: extract the package.
-      * Step 7.3: in the extracted directory, type the following commands thay may take a while (grab a coffee). Note that you need to specify the path to SIP, which is generally either `/opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin/sip` or `/System/Library/Frameworks/Python.framework/Versions/2.7/bin/sip`. You need to look further up the end of the output of the last command in step 6.3.
-      
-            $ sudo python configure-ng.py --sip=[SIP_PATH_THAT_YOU_NEED_TO_COPY_FROM_THE_OUTPUT_OF_STEP_6]
-            $ sudo make
-            $ sudo make install
-            
-  * Step 8: [download KlustaViewa](http://klustaviewa.rossant.net/klustaviewa-0.1.0.dev.zip) and extract the package.
-  
-  * Step 9: open a system shell in the directory where you extracted the package, and execute the following command:
-  
-        sudo python setup.py install
-  
-  * Step 10: to run KlustaViewa, type the following command in a system shell:
+  * Step 3: to run KlustaViewa, type the following command in a system shell:
   
         klustaviewa
 
@@ -229,16 +114,9 @@ If IPython 1.0.dev is installed, then you will have the possibility to open an I
   
 Then, in the software, you will be able to open an interactive IPython shell (with pylab mode activated) in the Views menu. Type `%who` to see the list of available variables.
 
-  
-Troubleshooting
----------------
 
-### Common errors in Windows
-
-  * If you can't run `python` or `klustaviewa` in a console, you may need to add `C:\Python27\Scripts` in the PATH variable, as [described here](http://geekswithblogs.net/renso/archive/2009/10/21/how-to-set-the-windows-path-in-windows-7.aspx).
-
-
-### Contact
+Contact
+-------
 
 If you have any trouble, bug, comment or suggestion:
   
