@@ -8,8 +8,8 @@ import os
 import klustaviewa.utils.logger as log
 
 try:
-    from IPython.frontend.qt.console.rich_ipython_widget import RichIPythonWidget
-    from IPython.frontend.qt.inprocess import QtInProcessKernelManager
+    from IPython.qt.console.rich_ipython_widget import RichIPythonWidget
+    from IPython.qt.inprocess import QtInProcessKernelManager
     from IPython.lib import guisupport
     IPYTHON = True
 except Exception as e:

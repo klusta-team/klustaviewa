@@ -20,7 +20,7 @@ import klustaviewa.views as vw
 from klustaviewa.gui.icons import get_icon
 from klustaviewa.control.controller import Controller
 from klustaviewa.dataio.tools import get_array
-from klustaviewa.dataio.loader import KlustersLoader
+from klustaviewa.dataio import KlustersLoader
 from klustaviewa.gui.buffer import Buffer
 from klustaviewa.stats.cache import StatsCache
 from klustaviewa.stats.correlations import normalize

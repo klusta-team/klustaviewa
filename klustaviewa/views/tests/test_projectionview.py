@@ -9,7 +9,7 @@ import numpy as np
 import numpy.random as rnd
 import pandas as pd
 
-from klustaviewa.dataio.loader import KlustersLoader
+from klustaviewa.dataio import KlustersLoader
 from klustaviewa.dataio.selection import select
 from klustaviewa.dataio.tools import check_dtype, check_shape
 from klustaviewa.utils.userpref import USERPREF

@@ -12,7 +12,7 @@ import pandas as pd
 import shutil
 
 from klustaviewa.utils.colors import COLORS_COUNT
-from klustaviewa.dataio.loader import MemoryLoader
+from klustaviewa.dataio import MemoryLoader
 from klustaviewa.dataio.tools import normalize
 from klustaviewa.stats.cache import IndexedMatrix
 

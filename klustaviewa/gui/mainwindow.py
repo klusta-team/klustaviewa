@@ -22,7 +22,7 @@ from klustaviewa.gui.icons import get_icon
 from klustaviewa.control.controller import Controller
 from klustaviewa.wizard.wizard import Wizard
 from klustaviewa.dataio.tools import get_array
-from klustaviewa.dataio.loader import KlustersLoader
+from klustaviewa.dataio import KlustersLoader
 from klustaviewa.gui.buffer import Buffer
 from klustaviewa.gui.dock import ViewDockWidget, DockTitleBar
 from klustaviewa.stats.cache import StatsCache

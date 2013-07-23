@@ -4,7 +4,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 from mock_data import *
-from klustaviewa.dataio.loader import MemoryLoader
+from klustaviewa.dataio import MemoryLoader
 
 
 # -----------------------------------------------------------------------------

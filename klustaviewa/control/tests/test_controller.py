@@ -10,7 +10,7 @@ import numpy as np
 from klustaviewa.control.controller import Controller
 from klustaviewa.dataio.tests.mock_data import (setup, teardown,
                             nspikes, nclusters, nsamples, nchannels, fetdim)
-from klustaviewa.dataio.loader import KlustersLoader
+from klustaviewa.dataio import KlustersLoader
 from klustaviewa.dataio.selection import select, get_indices
 from klustaviewa.dataio.tools import check_dtype, check_shape, get_array
 

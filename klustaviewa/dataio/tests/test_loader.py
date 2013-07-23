@@ -14,7 +14,7 @@ from nose.tools import with_setup
 
 from klustaviewa.dataio.tests.mock_data import (setup, teardown,
                             nspikes, nclusters, nsamples, nchannels, fetdim)
-from klustaviewa.dataio.loader import (KlustersLoader, read_clusters, save_clusters,
+from klustaviewa.dataio import (KlustersLoader, read_clusters, save_clusters,
     read_cluster_info, save_cluster_info, read_group_info, save_group_info,
     renumber_clusters, reorder, convert_to_clu)
 from klustaviewa.dataio.selection import select, get_indices

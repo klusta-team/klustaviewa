@@ -11,7 +11,7 @@ import pandas as pd
 
 from klustaviewa.views.tests.mock_data import (setup, teardown, create_similarity_matrix,
         nspikes, nclusters, nsamples, nchannels, fetdim, ncorrbins)
-from klustaviewa.dataio.loader import KlustersLoader
+from klustaviewa.dataio import KlustersLoader
 from klustaviewa.dataio.selection import select
 from klustaviewa.dataio.tools import check_dtype, check_shape
 from klustaviewa.utils.userpref import USERPREF
