@@ -13,8 +13,8 @@ import numpy as np
 import pandas as pd
 from galry import QtGui, QtCore
 
-from tools import (find_filename, find_index, load_text, load_xml, normalize,
-    load_binary, load_pickle, save_text, get_array, find_any_filename,
+from tools import (load_text, load_xml, normalize,
+    load_binary, load_pickle, save_text, get_array, 
     first_row, load_binary_memmap)
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices)
@@ -23,7 +23,6 @@ from klustaviewa.utils.settings import SETTINGS
 from klustaviewa.utils.logger import (debug, info, warn, exception, FileLogger,
     register, unregister)
 from klustaviewa.utils.colors import COLORS_COUNT, generate_colors
-
 
 
 # -----------------------------------------------------------------------------

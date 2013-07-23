@@ -15,16 +15,65 @@ from nose.tools import with_setup
 from klustaviewa.dataio.tests.mock_data import (setup, teardown,
                             nspikes, nclusters, nsamples, nchannels, fetdim)
 from klustaviewa.dataio import (KlustersLoader, read_clusters, save_clusters,
+    find_filename,
     read_cluster_info, save_cluster_info, read_group_info, save_group_info,
-    renumber_clusters, reorder, convert_to_clu)
-from klustaviewa.dataio.selection import select, get_indices
-from klustaviewa.dataio.tools import check_dtype, check_shape, get_array, load_text
+    renumber_clusters, reorder, convert_to_clu, select, get_indices,
+    check_dtype, check_shape, get_array, load_text)
 from klustaviewa.utils.userpref import USERPREF
 
 
 # -----------------------------------------------------------------------------
 # Tests
 # -----------------------------------------------------------------------------
+
+def test_find_filename():
+    dir = '/my/path/'
+    extension_requested = 'spk'
+    files = [
+        'blabla.aclu.1',
+        'blabla_test.aclu.1',
+        'blabla_test2.aclu.1',
+        'blabla_test3.aclu.3',
+        'blabla.spk.1',
+        'blabla_test.spk.1',
+        'blabla_test.spk.1',
+        ]
+    spkfile = find_filename('/my/path/blabla.clu.1', extension_requested,
+        files=files, dir=dir)
+    assert spkfile == dir + 'blabla.spk.1'
+        
+    spkfile = find_filename('/my/path/blabla_test.clu.1', extension_requested,
+        files=files, dir=dir)
+    assert spkfile == dir + 'blabla_test.spk.1'
+        
+    spkfile = find_filename('/my/path/blabla_test2.clu.1', extension_requested,
+        files=files, dir=dir)
+    assert spkfile == dir + 'blabla_test.spk.1'
+        
+    spkfile = find_filename('/my/path/blabla_test3.clu.1', extension_requested,
+        files=files, dir=dir)
+    assert spkfile == dir + 'blabla_test.spk.1'
+        
+    spkfile = find_filename('/my/path/blabla_test3.clu.3', extension_requested,
+        files=files, dir=dir)
+    assert spkfile == None
+    
+def test_find_filename2():
+    dir = '/my/path/'
+    extension_requested = 'spk'
+    files = [
+        'blabla.aclu.2',
+        'blabla_test.aclu.2',
+        'blabla_test2.aclu.2',
+        'blabla_test3.aclu.3',
+        'blabla.spk.2',
+        'blabla_test.spk.2',
+        ]    
+    spkfile = find_filename('/my/path/blabla_test.xml', extension_requested,
+        files=files, dir=dir)
+    
+    assert spkfile == dir + 'blabla_test.spk.2'
+
 def test_clusters():
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
     clufile = os.path.join(dir, 'test.aclu.1')
@@ -140,8 +189,8 @@ def test_convert_to_clu():
     clusters = np.random.randint(size=1000, low=10, high=100)
     clusters0 = clusters == 10
     clusters1 = clusters == 20
-    clusters[clusters0] = 0
-    clusters[clusters1] = 1
+    clusters[clusters0] = 2
+    clusters[clusters1] = 3
     clusters_unique = np.unique(clusters)
     n = len(clusters_unique)
     
@@ -157,7 +206,6 @@ def test_convert_to_clu():
     
     assert np.array_equal(clusters_new == 0, noise)
     assert np.array_equal(clusters_new == 1, mua)
-    assert np.all(np.diff(np.unique(clusters_new)) <= 1)
     
 def test_cluster_info():
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
@@ -399,7 +447,7 @@ def test_klusters_save():
     l.save()
     
     clusters = read_clusters(l.filename_aclu)
-    cluster_info = read_cluster_info(l.filename_clusterinfo)
+    cluster_info = read_cluster_info(l.filename_acluinfo)
     
     assert np.all(clusters[::2] == 2)
     assert np.all(clusters[1::2] == 3)

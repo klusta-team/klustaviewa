@@ -15,8 +15,8 @@ from galry import QtGui, QtCore
 
 from loader import (Loader, default_group_info, reorder, renumber_clusters,
     default_cluster_info)
-from tools import (find_filename, find_index, load_text, load_xml, normalize,
-    load_binary, load_pickle, save_text, get_array, find_any_filename,
+from tools import (load_text, load_xml, normalize,
+    load_binary, load_pickle, save_text, get_array,
     first_row, load_binary_memmap)
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices)
@@ -25,6 +25,138 @@ from klustaviewa.utils.settings import SETTINGS
 from klustaviewa.utils.logger import (debug, info, warn, exception, FileLogger,
     register, unregister)
 from klustaviewa.utils.colors import COLORS_COUNT, generate_colors
+
+
+# -----------------------------------------------------------------------------
+# Utility functions
+# -----------------------------------------------------------------------------
+def find_index(filename):
+    """Search the file index of the filename, if any, or return None."""
+    r = re.search(r"([^\n]+)\.([^\.]+)\.([0-9]+)$", filename)
+    if r:
+        return int(r.group(3))
+    # If the filename has no index in it, and if the file does not actually
+    # exist, return the index of an existing filename.
+    if not os.path.exists(filename):
+        return find_index(find_filename(filename, 'fet'))
+
+def find_filename(filename, extension_requested, dir='', files=[]):
+    """Search the most plausible existing filename corresponding to the
+    requested approximate filename, which has the required file index and
+    extension.
+    
+    Arguments:
+    
+      * filename: the full filename of an existing file in a given dataset
+      * extension_requested: the extension of the file that is requested
+    
+    """
+    
+    # get the extension-free filename, extension, and file index
+    # template: FILENAME.xxx.0  => FILENAME (can contain points), 0 (index)
+    # try different patterns
+    patterns = [r"([^\n]+)\.([^\.]+)\.([0-9]+)$",
+                r"([^\n]+)\.([^\.]+)$"]
+    for pattern in patterns:
+        r = re.search(pattern, filename)
+        if r:
+            filename = r.group(1)
+            extension = r.group(2)
+            if len(r.groups()) >= 3:
+                fileindex = int(r.group(3))
+            else:
+                fileindex = None
+            break
+    
+    # get the full path
+    if not dir:
+        dir = os.path.dirname(filename)
+    filename = os.path.basename(filename)
+    # try obtaining the list of all files in the directory
+    if not files:
+        try:
+            files = os.listdir(dir)
+        except (WindowsError, OSError, IOError):
+            raise IOError("Error when accessing '{0:s}'.".format(dir))
+    
+    # If the requested filename does not have a file index, then get the 
+    # smallest available fileindex in the files list.
+    if fileindex is None:
+        fileindex_set = set()
+        for file in files:
+            r = re.search(r"([^\n]+)\.([^\.]+)\.([0-9]+)$", file)
+            if r:
+                fileindex_set.add(int(r.group(3)))
+        if fileindex_set:
+            fileindex = sorted(fileindex_set)[0]
+            
+    # try different suffixes
+    suffixes = [
+                '.{0:s}.{1:d}'.format(extension_requested, fileindex),
+                '.{0:s}'.format(extension_requested),
+                ]
+    
+    # find the real filename with the longest path that fits the requested
+    # filename
+    for suffix in suffixes:
+        filtered = []
+        prefix = filename
+        while prefix and not filtered:
+            filtered = filter(lambda file: (file.startswith(prefix) and 
+                file.endswith(suffix)), files)
+            prefix = prefix[:-1]
+        # order by increasing length and return the shortest
+        filtered = sorted(filtered, cmp=lambda k, v: len(k) - len(v))
+        if filtered:
+            return os.path.join(dir, filtered[0])
+    
+    return None
+
+def find_any_filename(filename, extension_requested, dir='', files=[]):
+    # get the full path
+    if not dir:
+        dir = os.path.dirname(filename)
+    
+    # try obtaining the list of all files in the directory
+    if not files:
+        try:
+            files = os.listdir(dir)
+        except (WindowsError, OSError, IOError):
+            raise IOError("Error when accessing '{0:s}'.".format(dir))
+    
+    filtered = filter(lambda f: f.endswith('.' + extension_requested), files)
+    if filtered:
+        return os.path.join(dir, filtered[0])
+    
+def find_filename_or_new(filename, extension_requested, dir='', files=[]):
+    """Find an existing filename with a requested extension, or create
+    a new filename based on an existing file."""
+    # Find the filename with the requested extension.
+    filename_found = find_filename(filename, extension_requested, dir=dir, files=files)
+    # If it does not exist, find a file that exists, and replace the extension 
+    # with the requested one.
+    if not filename_found:
+        filename_existing = find_filename(filename, 'fet', dir=dir, files=files)
+        filename_new = filename_existing.replace('.fet.', '.{0:s}.'.format(
+            extension_requested))
+        return filename_new
+    else:
+        return filename_found
+    
+def find_filenames(filename):
+    """Find the filenames of the different files for the current
+    dataset."""
+    filenames = {}
+    filenames['xml'] = find_filename(filename, 'xml')
+    filenames['fet'] = find_filename(filename, 'fet')
+    filenames['probe'] = (find_filename(filename, 'probe') or
+                          find_any_filename(filename, 'probe'))
+    filenames['mask'] = (find_filename_or_new(filename, 'fmask') or
+                         find_filename_or_new(filename, 'mask'))
+    for ext in ['clu', 'res', 'aclu', 'acluinfo', 'groupinfo', 'spk', 
+                'dat',]:
+        filenames[ext] = find_filename_or_new(filename, ext)
+    return filenames
 
 
 # -----------------------------------------------------------------------------
@@ -108,10 +240,10 @@ def process_cluster_info(cluster_info):
         'group': cluster_info[:, 2]}, dtype=np.int32, index=cluster_info[:, 0])
     return cluster_info
     
-def read_cluster_info(filename_clusterinfo):
+def read_cluster_info(filename_acluinfo):
     # For each cluster (absolute indexing): cluster index, color index, 
     # and group index
-    cluster_info = load_text(filename_clusterinfo, np.int32)
+    cluster_info = load_text(filename_acluinfo, np.int32)
     return process_cluster_info(cluster_info)
     
 # Group info.
@@ -121,9 +253,9 @@ def process_group_info(group_info):
          'name': group_info[:, 2]}, index=group_info[:, 0].astype(np.int32))
     return group_info
 
-def read_group_info(filename_groups):
+def read_group_info(filename_groupinfo):
     # For each group (absolute indexing): color index, and name
-    group_info = load_text(filename_groups, str, delimiter='\t')
+    group_info = load_text(filename_groupinfo, str, delimiter='\t')
     return process_group_info(group_info)
     
 # Masks.
@@ -160,6 +292,8 @@ def process_probe(probe):
     return normalize(probe)
 
 def read_probe(filename_probe):
+    if not filename_probe:
+        return
     if os.path.exists(filename_probe):
         # Try the text-flavored probe file.
         try:
@@ -193,12 +327,13 @@ def save_clusters(filename_clu, clusters):
 
 def convert_to_clu(clusters, cluster_info):
     cluster_groups = cluster_info['group']
-    clusters_new = np.array(clusters, dtype=np.int32) + 2
+    clusters_new = np.array(clusters, dtype=np.int32)
     for i in (0, 1):
         clusters_new[cluster_groups.ix[clusters] == i] = i
-    clusters_unique = np.unique(set(clusters_new).union(set([0, 1])))
-    clusters_renumbered = reorder(clusters_new, clusters_unique)
-    return clusters_renumbered
+    # clusters_unique = np.unique(set(clusters_new).union(set([0, 1])))
+    # clusters_renumbered = reorder(clusters_new, clusters_unique)
+    # return clusters_renumbered
+    return clusters_new
 
     
 # -----------------------------------------------------------------------------
@@ -215,30 +350,10 @@ class KlustersLoader(Loader):
         self.read()
         
     def find_filenames(self):
-        """Find the filenames of the different files for the current
-        dataset."""
-        self.filename_xml = find_filename(self.filename, 'xml')
-        self.filename_fet = find_filename(self.filename, 'fet')
-        self.filename_clu = (find_filename(self.filename, 'clu') or
-            self.filename_fet.replace('.fet.', '.clu.'))
-        filename = self.filename_fet or self.filename_clu.replace('.clu.', '.fet.')
-        self.filename_res = find_filename(self.filename, 'res')
-        self.filename_aclu = (find_filename(self.filename, 'aclu') or
-            filename.replace('.fet.', '.aclu.'))
-        # TODO: improve this bad looking code
-        self.filename_clusterinfo = find_filename(self.filename, 
-            'acluinfo') or filename.replace(
-            '.fet.', '.acluinfo.')
-        self.filename_groups = (find_filename(self.filename, 'groupinfo') or 
-            filename.replace('.fet.', '.groupinfo.'))
-        # fmask or mask file
-        self.filename_mask = find_filename(self.filename, 'fmask')
-        if not self.filename_mask:
-            self.filename_mask = find_filename(self.filename, 'mask')
-        self.filename_spk = find_filename(self.filename, 'spk')
-        self.filename_dat = find_filename(self.filename, 'dat')
-        self.filename_probe = (find_filename(self.filename, 'probe') or 
-            find_any_filename(self.filename, 'probe'))
+        # """Find the filenames of the different files for the current
+        # dataset."""
+        for ext, filename in find_filenames(self.filename).iteritems():
+            setattr(self, 'filename_' + ext, filename)
         
     def save_original_clufile(self):
         filename_clu_original = find_filename(self.filename, 'clu_original')
@@ -333,8 +448,8 @@ class KlustersLoader(Loader):
     
     def read_cluster_info(self):
         try:
-            self.cluster_info = read_cluster_info(self.filename_clusterinfo)
-            info("Successfully loaded {0:s}".format(self.filename_clusterinfo))
+            self.cluster_info = read_cluster_info(self.filename_acluinfo)
+            info("Successfully loaded {0:s}".format(self.filename_acluinfo))
         except IOError:
             info("The CLUINFO file is missing, generating a default one.")
             self.cluster_info = default_cluster_info(self.clusters_unique)
@@ -348,8 +463,8 @@ class KlustersLoader(Loader):
         
     def read_group_info(self):
         try:
-            self.group_info = read_group_info(self.filename_groups)
-            info("Successfully loaded {0:s}".format(self.filename_groups))
+            self.group_info = read_group_info(self.filename_groupinfo)
+            info("Successfully loaded {0:s}".format(self.filename_groupinfo))
         except IOError:
             info("The GROUPINFO file is missing, generating a default one.")
             self.group_info = default_group_info()
@@ -456,8 +571,8 @@ class KlustersLoader(Loader):
             convert_to_clu(clusters, cluster_info))
         
         # Save CLUINFO and GROUPINFO files.
-        save_cluster_info(self.filename_clusterinfo, cluster_info)
-        save_group_info(self.filename_groups, self.group_info)
+        save_cluster_info(self.filename_acluinfo, cluster_info)
+        save_group_info(self.filename_groupinfo, self.group_info)
     
     def close(self):
         if hasattr(self, 'logfile'):

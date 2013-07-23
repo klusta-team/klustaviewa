@@ -19,108 +19,7 @@ except (ImportError, AssertionError):
     log_warn("You should install Pandas v>=0.8.")
     HAS_PANDAS = False
 
-
-# -----------------------------------------------------------------------------
-# Utility functions
-# -----------------------------------------------------------------------------
-def find_index(filename):
-    """Search the file index of the filename, if any, or return None."""
-    r = re.search(r"([^\n]+)\.([^\.]+)\.([0-9]+)$", filename)
-    if r:
-        return int(r.group(3))
-    else:
-        return None
-
-def find_filename(filename, extension_requested, dir='', files=[]):
-    """Search the most plausible existing filename corresponding to the
-    requested approximate filename, which has the required file index and
-    extension.
-    
-    Arguments:
-    
-      * filename: the full filename of an existing file in a given dataset
-      * extension_requested: the extension of the file that is requested
-    
-    """
-    
-    # get the extension-free filename, extension, and file index
-    # template: FILENAME.xxx.0  => FILENAME (can contain points), 0 (index)
-    # try different patterns
-    patterns = [r"([^\n]+)\.([^\.]+)\.([0-9]+)$",
-                r"([^\n]+)\.([^\.]+)$"]
-    for pattern in patterns:
-        r = re.search(pattern, filename)
-        if r:
-            filename = r.group(1)
-            extension = r.group(2)
-            if len(r.groups()) >= 3:
-                fileindex = int(r.group(3))
-            else:
-                fileindex = None
-            break
-    
-    # get the full path
-    if not dir:
-        dir = os.path.dirname(filename)
-    filename = os.path.basename(filename)
-    # try obtaining the list of all files in the directory
-    if not files:
-        try:
-            files = os.listdir(dir)
-        except (WindowsError, OSError, IOError):
-            raise IOError("Error when accessing '{0:s}'.".format(dir))
-    
-    # If the requested filename does not have a file index, then get the 
-    # smallest available fileindex in the files list.
-    if fileindex is None:
-        fileindex_set = set()
-        for file in files:
-            r = re.search(r"([^\n]+)\.([^\.]+)\.([0-9]+)$", file)
-            if r:
-                fileindex_set.add(int(r.group(3)))
-        if fileindex_set:
-            fileindex = sorted(fileindex_set)[0]
-            
-    # try different suffixes
-    suffixes = [
-                '.{0:s}.{1:d}'.format(extension_requested, fileindex),
-                '.{0:s}'.format(extension_requested),
-                ]
-    
-    # find the real filename with the longest path that fits the requested
-    # filename
-    for suffix in suffixes:
-        filtered = []
-        prefix = filename
-        while prefix and not filtered:
-            filtered = filter(lambda file: (file.startswith(prefix) and 
-                file.endswith(suffix)), files)
-            prefix = prefix[:-1]
-        # order by increasing length and return the shortest
-        filtered = sorted(filtered, cmp=lambda k, v: len(k) - len(v))
-        if filtered:
-            return os.path.join(dir, filtered[0])
-    
-    return None
-
-def find_any_filename(filename, extension_requested, dir='', files=[]):
-    # get the full path
-    if not dir:
-        dir = os.path.dirname(filename)
-    # filename = os.path.basename(filename)
-    
-    # try obtaining the list of all files in the directory
-    if not files:
-        try:
-            files = os.listdir(dir)
-        except (WindowsError, OSError, IOError):
-            raise IOError("Error when accessing '{0:s}'.".format(dir))
-    
-    filtered = filter(lambda f: f.endswith('.' + extension_requested), files)
-    if filtered:
-        return os.path.join(dir, filtered[0])
-    
-    
+ 
 # -----------------------------------------------------------------------------
 # Utility data functions
 # -----------------------------------------------------------------------------
@@ -193,7 +92,6 @@ def save_text(filepath, data, header=None, fmt='%d', delimiter=' '):
             with open(filepath, 'w') as f:
                 f.write(contents_updated)
         
-
 
 # -----------------------------------------------------------------------------
 # XML functions
@@ -274,6 +172,9 @@ def get_chunk(f, dtype, start, stop):
     f.seek(itemsize * start, os.SEEK_SET)
     return np.fromfile(f, dtype=dtype, count=count)
 
+def get_chunk_line(f, dtype):
+    return np.fromstring(f.readline(), dtype=dtype, sep=' ')
+
 class MemMappedArray(object):
     def __init__(self, filename, dtype):
         self.filename = filename
@@ -286,6 +187,51 @@ class MemMappedArray(object):
             return get_chunk(self.f, self.dtype, key, key + 1)[0]
         elif isinstance(key, slice):
             return get_chunk(self.f, self.dtype, key.start, key.stop)
+        
+    def __del__(self):
+        self.f.close()
+        
+class MemMappedBinary(object):
+    def __init__(self, filename, dtype, rowsize=None):
+        self.filename = filename
+        self.dtype = dtype
+        
+        # Number of bytes of each item.
+        self.itemsize = np.dtype(self.dtype).itemsize
+        # Number of items in each row.
+        self.rowsize = rowsize
+        # Number of bytes in each row.
+        self.rowsize_bytes = self.rowsize * self.itemsize
+        # Current row.
+        self.row = 0
+        
+        # Open the file in binary mode, even for text files.
+        self.f = open(filename, 'rb')
+        
+    def next(self):
+        """Return the values in the next row."""
+        self.f.seek(self.rowsize_bytes * self.row, os.SEEK_SET)
+        values = np.fromfile(self.f, dtype=self.dtype, count=self.rowsize)
+        self.row += 1
+        return values
+        
+    def __del__(self):
+        self.f.close()
+    
+class MemMappedText(object):
+    def __init__(self, filename, dtype, skiprows=0):
+        self.filename = filename
+        self.dtype = dtype
+        
+        # Open the file in binary mode, even for text files.
+        self.f = open(filename, 'rb')
+        # Skip rows in non-binary mode.
+        for _ in xrange(skiprows):
+            self.f.readline()
+        
+    def next(self):
+        """Return the values in the next row."""
+        return np.fromstring(self.f.readline(), dtype=self.dtype, sep=' ')
         
     def __del__(self):
         self.f.close()
