@@ -57,6 +57,7 @@ def find_filename(filename, extension_requested, dir='', files=[]):
     # try different patterns
     patterns = [r"([^\n]+)\.([^\.]+)\.([0-9]+)$",
                 r"([^\n]+)\.([^\.]+)$"]
+    fileindex = None
     for pattern in patterns:
         r = re.search(pattern, filename)
         if r:
@@ -64,8 +65,8 @@ def find_filename(filename, extension_requested, dir='', files=[]):
             extension = r.group(2)
             if len(r.groups()) >= 3:
                 fileindex = int(r.group(3))
-            else:
-                fileindex = None
+            # else:
+                # fileindex = None
             break
     
     # get the full path
@@ -147,15 +148,14 @@ def find_filenames(filename):
     """Find the filenames of the different files for the current
     dataset."""
     filenames = {}
-    filenames['xml'] = find_filename(filename, 'xml')
-    filenames['fet'] = find_filename(filename, 'fet')
+    for ext in ['xml', 'fet', 'spk', 'res', 'dat',]:
+        filenames[ext] = find_filename(filename, ext) or ''
+    for ext in ['clu', 'aclu', 'acluinfo', 'groupinfo',]:
+        filenames[ext] = find_filename_or_new(filename, ext)
     filenames['probe'] = (find_filename(filename, 'probe') or
                           find_any_filename(filename, 'probe'))
-    filenames['mask'] = (find_filename_or_new(filename, 'fmask') or
-                         find_filename_or_new(filename, 'mask'))
-    for ext in ['clu', 'res', 'aclu', 'acluinfo', 'groupinfo', 'spk', 
-                'dat',]:
-        filenames[ext] = find_filename_or_new(filename, ext)
+    filenames['mask'] = (find_filename(filename, 'fmask') or
+                         find_filename(filename, 'mask'))
     return filenames
 
 

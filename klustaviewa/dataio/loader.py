@@ -30,16 +30,16 @@ from klustaviewa.utils.colors import COLORS_COUNT, generate_colors
 # -----------------------------------------------------------------------------
 def default_cluster_info(clusters_unique):
     n = len(clusters_unique)
-    cluster_info = np.zeros((n, 3), dtype=np.int32)
-    cluster_info[:, 0] = clusters_unique
-    cluster_info[:, 1] = generate_colors(n)
-    # First column: color index, second column: group index (3 by
-    # default)
-    cluster_info[:, 2] = 3 * np.ones(n)
     cluster_info = pd.DataFrame({
-        'color': cluster_info[:, 1],
-        'group': cluster_info[:, 2]},
-        dtype=np.int32, index=cluster_info[:, 0])
+        'color': generate_colors(n),
+        'group': 3 * np.ones(n)},
+        dtype=np.int32,
+        index=clusters_unique)
+    # Put cluster 0 in group 0 (=noise), cluster 1 in group 1 (=MUA)
+    if 0 in clusters_unique:
+        cluster_info['group'][0] = 0
+    if 1 in clusters_unique:
+        cluster_info['group'][1] = 1
     return cluster_info
 
 def default_group_info():
