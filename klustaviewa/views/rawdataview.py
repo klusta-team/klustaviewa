@@ -19,6 +19,8 @@ from klustaviewa.utils.settings import SETTINGS
 
 __all__ = ['RawDataView']
 
+CHANNEL_HEIGHT = 0.25
+
 # -----------------------------------------------------------------------------
 # Data manager
 # -----------------------------------------------------------------------------
@@ -45,6 +47,8 @@ class RawDataManager(Manager):
         self.position = position
         self.interaction_manager.get_processor('grid').update_viewbox()
         self.interaction_manager.activate_grid()
+        self.channel_height = 0.25
+        
         print shape
     
     def get_view(self, total_size, xlim, freq): 
@@ -104,7 +108,7 @@ class RawDataManager(Manager):
         bounds = np.arange(nchannels + 1) * nsamples
         size = bounds[-1]
         return M, bounds, size
-        
+            
 #    def update(self, data, xlimex, slice):
 #        samples, bounds, size = get_undersampled_data(data, xlimex, slice)
 #        nsamples = samples.shape[0]
@@ -120,19 +124,21 @@ class RawDataPaintManager(PlotPaintManager):
         self.add_visual(MultiChannelVisual,
             position=self.data_manager.position,
             name='rawdata_waveforms',
-            shape=self.data_manager.shape)
+            shape=self.data_manager.shape,
+            channel_height=self.data_manager.channel_height)
         
         self.add_visual(GridVisual, name='grid')
 
     def update(self):
         self.set_data(visual='rawdata_waveforms',
+            channel_height=self.data_manager.channel_height,
             position=self.data_manager.position)
             
 
 class MultiChannelVisual(Visual):
     def initialize(self, color=None, point_size=1.0,
             position=None, shape=None, nprimitives=None, index=None,
-            color_array_index=None, channel_height=0.25,
+            color_array_index=None, channel_height=None,
             options=None, autocolor=1):
         
         # register the size of the data
@@ -180,6 +186,7 @@ class MultiChannelVisual(Visual):
         self.add_varying('vindex', vartype='int', ndim=1)
         self.add_uniform('nchannels', vartype='float', ndim=1, data=float(nprimitives))
         self.add_uniform('channel_height', vartype='float', ndim=1, data=channel_height)
+        print channel_height
         
         self.add_vertex_main("""
         vec2 position = position0;
@@ -328,6 +335,13 @@ class GridEventProcessor(EventProcessor):
 # Interactivity
 # -----------------------------------------------------------------------------
 class RawDataInteractionManager(PlotInteractionManager):
+    def initialize(self):
+        self.constrain_navigation = True
+        self.xmin = -1
+        self.xmax = 2
+        
+        self.register('ChangeChannelHeight', self.change_channel_height)
+    
     def initialize_default(self, constrain_navigation=None,
         momentum=True,
         ):
@@ -346,10 +360,20 @@ class RawDataInteractionManager(PlotInteractionManager):
         if processor:
             processor.activate(True)
             processor.update_axes(None)
+            
+    def change_channel_height(self, parameter):
+        global CHANNEL_HEIGHT
+        CHANNEL_HEIGHT *= (1 + parameter)
+        self.parent.data_manager.channel_height=CHANNEL_HEIGHT
+        self.paint_manager.update()
     
 class RawDataBindings(KlustaViewaBindings):
-    pass
-
+    def set_channel_height(self):
+        self.set('Wheel', 'ChangeChannelHeight', key_modifier='Control',
+                   param_getter=lambda p: p['wheel'] * .001)
+                   
+    def initialize(self):
+       self.set_channel_height()
 # -----------------------------------------------------------------------------
 # Top-level widget
 # -----------------------------------------------------------------------------
