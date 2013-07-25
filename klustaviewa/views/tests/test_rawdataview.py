@@ -52,6 +52,7 @@ def test_rawdataview():
     
     kwargs = {}
     kwargs['rawdata'] = data
+    kwargs['freq'] = 2000000.
     kwargs['operators'] = [
         lambda self: (self.close() 
             if USERPREF['test_auto_close'] != False else None),
