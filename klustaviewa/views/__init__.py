@@ -6,4 +6,4 @@ from clusterview import *
 from projectionview import *
 from featureprojview import *
 from ipythonview import *
-
+from rawdataview import *
