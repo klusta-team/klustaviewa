@@ -27,29 +27,33 @@ CHANNEL_HEIGHT = 0.25
 
 class RawDataManager(Manager):
     info = {}
-    def set_data(self, rawdata=None, freq=None):
+    def set_data(self, rawdata=None, freq=None, channel_height=None):
         
         self.max_size = 500
+        self.duration_initial = 0.5
         
-        samples = rawdata[:5000, :]
+        if channel_height is None:
+            channel_height = 0.25
+        self.channel_height = channel_height
+        
+        samples = rawdata[:(self.duration_initial*freq), :]
         position, shape = process_coordinates(samples.T)
         xlim = 1., 20.
         
-        self.shape = shape
         self.freq = freq
         self.duration = samples.shape[0]/self.freq
+        self.position = position
+        self.shape = shape
         
         xlimex, slice = self.get_view(shape[0], xlim, freq)
         samples, bounds, size = self.get_undersampled_data(rawdata, xlimex, slice) 
+        position, shape = process_coordinates(samples.T)
         
         self.rawdata = rawdata
-        self.samples = samples
-        self.position = position
+        #self.samples = samples
         self.interaction_manager.get_processor('grid').update_viewbox()
+        self.interaction_manager.get_processor('dataslicer').update_viewbox()
         self.interaction_manager.activate_grid()
-        self.channel_height = 0.25
-        
-        print shape
     
     def get_view(self, total_size, xlim, freq): 
         """Return the slice of the data.
@@ -74,7 +78,6 @@ class RawDataManager(Manager):
         return (x0ex, x1ex), slice(i0, i1, step)
             
     def get_undersampled_data(self, data, xlim, slice):
-        duration_initial = 5
         """
         Arguments:
     
@@ -102,7 +105,7 @@ class RawDataManager(Manager):
         # Generate the x coordinates.
         x = np.arange(slice.start, slice.stop, slice.step) / float(total_size - 1)
         # [0, 1] -> [-1, 2*duration.duration_initial - 1]
-        x = x * 2 * self.duration / duration_initial - 1
+        x = x * 2 * self.duration / self.duration_initial - 1
         M[:, 0] = np.tile(x, nchannels)
         # Update the bounds.
         bounds = np.arange(nchannels + 1) * nsamples
@@ -133,6 +136,7 @@ class RawDataPaintManager(PlotPaintManager):
         self.set_data(visual='rawdata_waveforms',
             channel_height=self.data_manager.channel_height,
             position=self.data_manager.position)
+        print self.data_manager.position
             
 
 class MultiChannelVisual(Visual):
@@ -330,6 +334,35 @@ class GridEventProcessor(EventProcessor):
         self.set_data(visual='grid_text', text=text,
             coordinates=coordinates,
             axis=axis)
+            
+class DataSlicerEventProcessor(EventProcessor):
+    def initialize(self):
+        self.register('Initialize', self.slice_check)
+        self.register('Pan', self.slice_check)
+        self.register('Zoom', self.slice_check)
+        self.register('Reset', self.slice_check)
+        self.register('Animate', self.slice_check)
+        self.register(None, self.slice_check)
+    
+    def update_viewbox(self):
+        # normalization viewbox
+        self.normalizer = DataNormalizer()
+        self.normalizer.normalize(
+            (0, -1, self.parent.data_manager.duration, 1))
+        
+    def slice_check(self, parameter):
+        nav = self.get_processor('navigation')
+        if not nav:
+            return
+
+        viewbox = nav.get_viewbox()
+
+        x0, y0, x1, y1 = viewbox
+        x0 = self.normalizer.unnormalize_x(x0)
+        y0 = self.normalizer.unnormalize_y(y0)
+        x1 = self.normalizer.unnormalize_x(x1)
+        y1 = self.normalizer.unnormalize_y(y1)
+        viewbox = (x0, y0, x1, y1)
 
 # -----------------------------------------------------------------------------
 # Interactivity
@@ -339,7 +372,7 @@ class RawDataInteractionManager(PlotInteractionManager):
         self.constrain_navigation = True
         self.xmin = -1
         self.xmax = 2
-        
+        self.channel_height = 0.25
         self.register('ChangeChannelHeight', self.change_channel_height)
     
     def initialize_default(self, constrain_navigation=None,
@@ -352,6 +385,7 @@ class RawDataInteractionManager(PlotInteractionManager):
             momentum=momentum,
             name='navigation')
         self.add_processor(GridEventProcessor, name='grid')
+        self.add_processor(DataSlicerEventProcessor, name='dataslicer')
         
     def activate_grid(self):
         self.paint_manager.set_data(visual='grid_lines', 
@@ -362,9 +396,8 @@ class RawDataInteractionManager(PlotInteractionManager):
             processor.update_axes(None)
             
     def change_channel_height(self, parameter):
-        global CHANNEL_HEIGHT
-        CHANNEL_HEIGHT *= (1 + parameter)
-        self.parent.data_manager.channel_height=CHANNEL_HEIGHT
+        self.data_manager.channel_height *= (1 + parameter)
+        self.paint_manager.set_data(channel_height=self.data_manager.channel_height)
         self.paint_manager.update()
     
 class RawDataBindings(KlustaViewaBindings):
