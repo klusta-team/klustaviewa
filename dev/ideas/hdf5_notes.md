@@ -22,5 +22,7 @@ Decisions that need to be made
   
   * Which data type for the features? For now it is int16, except for the last column (time) which would need to be int64. That means that if we want to have the time in the features field, it needs to be int64. The other possibility is to get rid of the last column with time and keep int16.
   
+  * What about putting a version number in the HDF5 files metadata? The file format might evolve while we're working on it, and putting a version number will help us avoid incompatibilities later.
+  
   
   

@@ -78,11 +78,12 @@ if 'uspk' in data:
 
 spikes_table = hdf_main.createTable('/shanks/shank0', 'spikes', spikes_description)
 waves_table = hdf_waves.createTable('/shanks/shank0', 'waves', waves_description)
+hdf_main.createExternalLink('/shanks/shank0', 'waveforms', waves_table)
 
 for spike in xrange(nspikes):
     
-    # if spike >= 10:
-        # break
+    if spike >= 10:
+        break
         
     if spike % 1000 == 0:
         print "{0:.1f}%\r".format(spike / float(nspikes) * 100),
