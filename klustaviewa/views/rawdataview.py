@@ -36,6 +36,8 @@ class RawDataManager(Manager):
             channel_height = 0.25
         self.channel_height = channel_height
         
+        self.rawdata = rawdata
+        
         samples = rawdata[:(self.duration_initial*freq), :]
         position, shape = process_coordinates(samples.T)
         xlim = 1., 20.
@@ -44,15 +46,14 @@ class RawDataManager(Manager):
         self.duration = samples.shape[0]/self.freq
         self.position = position
         self.shape = shape
+        self.samples = samples
         
         xlimex, slice = self.get_view(shape[0], xlim, freq)
+        print "xlimex ", xlimex, ", xlim ", xlim
         samples, bounds, size = self.get_undersampled_data(rawdata, xlimex, slice) 
         position, shape = process_coordinates(samples.T)
         
-        self.rawdata = rawdata
-        #self.samples = samples
-        self.interaction_manager.get_processor('grid').update_viewbox()
-        self.interaction_manager.get_processor('dataslicer').update_viewbox()
+        self.interaction_manager.get_processor('viewport').update_viewbox()
         self.interaction_manager.activate_grid()
     
     def get_view(self, total_size, xlim, freq): 
@@ -276,37 +277,17 @@ def get_ticks_text(x0, y0, x1, y1):
 
 class GridEventProcessor(EventProcessor):
     def initialize(self):
-        self.register('Initialize', self.update_axes)
-        self.register('Pan', self.update_axes)
-        self.register('Zoom', self.update_axes)
-        self.register('Reset', self.update_axes)
-        self.register('Animate', self.update_axes)
-        self.register(None, self.update_axes)
+        pass
         
-    def update_viewbox(self):
-        # normalization viewbox
-        self.normalizer = DataNormalizer()
-        self.normalizer.normalize(
-            (0, -1, self.parent.data_manager.duration, 1))
-
     def update_axes(self, parameter):
-        nav = self.get_processor('navigation')
-        if not nav:
-            return
+        
+        viewbox = self.interaction_manager.get_processor('viewport').viewbox
 
-        viewbox = nav.get_viewbox()
-
-        x0, y0, x1, y1 = viewbox
-        x0 = self.normalizer.unnormalize_x(x0)
-        y0 = self.normalizer.unnormalize_y(y0)
-        x1 = self.normalizer.unnormalize_x(x1)
-        y1 = self.normalizer.unnormalize_y(y1)
-        viewbox = (x0, y0, x1, y1)
-
+        print (viewbox)
         text, coordinates, n = get_ticks_text(*viewbox)
 
-        coordinates[:,0] = self.normalizer.normalize_x(coordinates[:,0])
-        coordinates[:,1] = self.normalizer.normalize_y(coordinates[:,1])
+        coordinates[:,0] = self.interaction_manager.get_processor('viewport').normalizer.normalize_x(coordinates[:,0])
+        coordinates[:,1] = self.interaction_manager.get_processor('viewport').normalizer.normalize_y(coordinates[:,1])
 
         # here: coordinates contains positions centered on the static
         # xy=0 axes of the screen
@@ -335,35 +316,39 @@ class GridEventProcessor(EventProcessor):
             coordinates=coordinates,
             axis=axis)
             
-class DataSlicerEventProcessor(EventProcessor):
+class ViewportUpdateProcessor(EventProcessor):
     def initialize(self):
-        self.register('Initialize', self.slice_check)
-        self.register('Pan', self.slice_check)
-        self.register('Zoom', self.slice_check)
-        self.register('Reset', self.slice_check)
-        self.register('Animate', self.slice_check)
-        self.register(None, self.slice_check)
+        self.register('Initialize', self.update_viewport)
+        self.register('Pan', self.update_viewport)
+        self.register('Zoom', self.update_viewport)
+        self.register('Reset', self.update_viewport)
+        self.register('Animate', self.update_viewport)
+        self.register(None, self.update_viewport)
     
     def update_viewbox(self):
         # normalization viewbox
         self.normalizer = DataNormalizer()
         self.normalizer.normalize(
             (0, -1, self.parent.data_manager.duration, 1))
-        
-    def slice_check(self, parameter):
+            
         nav = self.get_processor('navigation')
         if not nav:
             return
 
-        viewbox = nav.get_viewbox()
+        self.viewbox = nav.get_viewbox()
+        print self.viewbox
 
-        x0, y0, x1, y1 = viewbox
+        x0, y0, x1, y1 = self.viewbox
         x0 = self.normalizer.unnormalize_x(x0)
         y0 = self.normalizer.unnormalize_y(y0)
         x1 = self.normalizer.unnormalize_x(x1)
         y1 = self.normalizer.unnormalize_y(y1)
-        viewbox = (x0, y0, x1, y1)
 
+        # now we know the viewport has been updated, update the grid
+        self.interaction_manager.get_processor('grid').update_axes
+        
+    def update_viewport(self, parameter):
+        self.update_viewbox()
 # -----------------------------------------------------------------------------
 # Interactivity
 # -----------------------------------------------------------------------------
@@ -384,8 +369,9 @@ class RawDataInteractionManager(PlotInteractionManager):
             constrain_navigation=constrain_navigation, 
             momentum=momentum,
             name='navigation')
+        
+        self.add_processor(ViewportUpdateProcessor, name='viewport')
         self.add_processor(GridEventProcessor, name='grid')
-        self.add_processor(DataSlicerEventProcessor, name='dataslicer')
         
     def activate_grid(self):
         self.paint_manager.set_data(visual='grid_lines', 

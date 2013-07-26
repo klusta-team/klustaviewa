@@ -4,3 +4,4 @@ galry
 qtools
 klustaviewa.egg-info
 dev/wininstaller/KlustaViewa/*
+*.pyc
