@@ -29,9 +29,9 @@ class RawDataManager(Manager):
     # Initialization
     def set_data(self, rawdata=None, freq=None, channel_height=None):
         
-        self.BIGSLICE = 0
+        self.slice_ref = (0, 0)
         self.max_size = 500
-        self.duration_initial = 0.5
+        self.duration_initial = 5
         
         if channel_height is None:
             channel_height = 0.25
@@ -43,7 +43,7 @@ class RawDataManager(Manager):
         self.nsamples, self.nchannels = self.rawdata.shape
         
         # first, load initial slice(s) (from 0 to duration_initial)
-        self.xlim = (0, self.duration_initial)
+        self.xlim = (0., self.duration_initial)
         self.load_correct_slices()
         
         self.interaction_manager.get_processor('viewport').update_viewbox()
@@ -54,27 +54,27 @@ class RawDataManager(Manager):
         
         x = np.tile(np.linspace(0., self.duration, self.nsamples // 500), (self.nchannels, 1))
         y = np.zeros_like(x)+ np.linspace(-.9, .9, self.nchannels).reshape((-1, 1))
-        self.position, self.shape = process_coordinates(x=x, y=y)
-        print "shape is ", self.shape
         
-        #self.position = (x, y)
+        self.position, self.shape = process_coordinates(x=x, y=y)
         
         # Find needed slice(s) of data
+        
+        xlim = ((0 + 1) / 2. * (self.duration_initial), (0.5 + 1) / 2. * (self.duration_initial))
         xlim_ext, slice = self.get_view()
-        print "xlim is ", self.xlim
-        print "xlim_ext is ", xlim_ext 
-        print "duration is ", self.duration
         
         dur = self.xlim[1] - self.xlim[0]
         index = int(np.floor(self.xlim[0] / dur))
         zoom_index = int(np.round(self.duration_initial / dur))
         i = (index, zoom_index)
         
-        if i != self.BIGSLICE:
-            
-            self.BIGSLICE = i
-            self.samples, bounds, size = self.get_undersampled_data(self.rawdata, xlim_ext, slice)
+        if i != self.slice_ref: # we need to load a new slice
+            self.slice_ref = i
+            self.samples, bounds, size = self.get_undersampled_data(xlim_ext, slice)
             color_array_index = np.repeat(np.arange(self.nchannels), self.nsamples / self.nchannels)
+            
+            self.nsamples = self.samples.shape[0]
+            self.position = self.samples
+            
             self.paint_manager.update()
     
     def get_view(self): 
@@ -89,7 +89,7 @@ class RawDataManager(Manager):
         x0, x1 = self.xlim
         d = x1 - x0
         dmax = self.duration
-        zoom = max(dmax / d, 1.)
+        zoom = max(dmax / d, 1)
         view_size = self.nsamples / zoom
         step = int(np.ceil(view_size / self.max_size))
         # Extended viewport for data.
@@ -99,20 +99,20 @@ class RawDataManager(Manager):
         i1 = np.clip(int(np.round(x1ex * self.freq)), 0, self.nsamples)
         return (x0ex, x1ex), slice(i0, i1, step)
             
-    def get_undersampled_data(self, data, xlim, slice):
+    def get_undersampled_data(self, xlim, slice):
         """
         Arguments:
     
           * data: a HDF5 dataset of size Nsamples x Nchannels.
-          * xlim: (x0, x1) of the current data view.
+          * xlim: (x0, x1) of the desired data view.
     
         """
-        total_size = data.shape[0]
+        total_size = self.rawdata.shape[0]
         # Get the view slice.
         # x0ex, x1ex = xlim
         # x0d, x1d = x0ex / (duration_initial) * 2 - 1, x1ex / (duration_initial) * 2 - 1
         # Extract the samples from the data (HDD access).
-        samples = data[slice, :]
+        samples = self.rawdata[slice, :]
         # Convert the data into floating points.
         samples = np.array(samples, dtype=np.float32)
         # Normalize the data.
@@ -130,9 +130,9 @@ class RawDataManager(Manager):
         x = x * 2 * self.duration / self.duration_initial - 1
         M[:, 0] = np.tile(x, nchannels)
         # Update the bounds.
-        bounds = np.arange(nchannels + 1) * nsamples
-        size = bounds[-1]
-        return M, bounds, size
+        self.bounds = np.arange(nchannels + 1) * nsamples
+        size = self.bounds[-1]
+        return M, self.bounds, size
             
 # -----------------------------------------------------------------------------
 # Visuals
@@ -150,7 +150,8 @@ class RawDataPaintManager(PlotPaintManager):
     def update(self):
         self.set_data(visual='rawdata_waveforms',
             channel_height=self.data_manager.channel_height,
-            position=self.data_manager.position)
+            position=self.data_manager.position,
+            shape=self.data_manager.shape)
             
 
 class MultiChannelVisual(Visual):
@@ -291,8 +292,7 @@ class GridEventProcessor(EventProcessor):
     def update_axes(self, parameter):
         
         viewbox = self.interaction_manager.get_processor('viewport').viewbox
-
-        print (viewbox)
+        
         text, coordinates, n = get_ticks_text(*viewbox)
 
         coordinates[:,0] = self.interaction_manager.get_processor('viewport').normalizer.normalize_x(coordinates[:,0])
@@ -345,14 +345,18 @@ class ViewportUpdateProcessor(EventProcessor):
             return
 
         self.viewbox = nav.get_viewbox()
-
+        nav.constrain_navigation = True
+        nav.xmin = -1
+        nav.xmax = 2 * self.parent.data_manager.duration / self.parent.data_manager.duration_initial
+        nav.sxmin = 1.
+        
         x0, y0, x1, y1 = self.viewbox
+        #nav.set_viewbox(self.normalizer.normalize_x(0.0), -1.0, self.normalizer.normalize_x(5.0), 1.0)
         x0 = self.normalizer.unnormalize_x(x0)
         y0 = self.normalizer.unnormalize_y(y0)
         x1 = self.normalizer.unnormalize_x(x1)
         y1 = self.normalizer.unnormalize_y(y1)
-        print "viewport update", x0, x1
-        self.parent.data_manager.xlim = (x0, x1)
+        self.parent.data_manager.xlim = (int(x0), int(x1))
 
         # now we know the viewport has been updated, update the grid 
         self.interaction_manager.get_processor('grid').update_axes(None)
@@ -367,9 +371,7 @@ class ViewportUpdateProcessor(EventProcessor):
 # -----------------------------------------------------------------------------
 class RawDataInteractionManager(PlotInteractionManager):
     def initialize(self):
-        self.constrain_navigation = True
-        self.xmin = -1
-        self.xmax = 2
+        
         self.channel_height = 0.25
         self.register('ChangeChannelHeight', self.change_channel_height)
     
