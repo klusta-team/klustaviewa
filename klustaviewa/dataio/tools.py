@@ -229,9 +229,12 @@ class MemMappedText(object):
         for _ in xrange(skiprows):
             self.f.readline()
         
+        
     def next(self):
         """Return the values in the next row."""
-        return np.fromstring(self.f.readline(), dtype=self.dtype, sep=' ')
+        # HACK: remove the double spaces.
+        values = np.fromstring(self.f.readline().replace('  ', ' '), dtype=self.dtype, sep=' ')
+        return values
         
     def __del__(self):
         self.f.close()

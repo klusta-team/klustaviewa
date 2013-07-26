@@ -148,7 +148,7 @@ def find_filenames(filename):
     """Find the filenames of the different files for the current
     dataset."""
     filenames = {}
-    for ext in ['xml', 'fet', 'spk', 'res', 'dat',]:
+    for ext in ['xml', 'fet', 'spk', 'uspk', 'res', 'dat',]:
         filenames[ext] = find_filename(filename, ext) or ''
     for ext in ['clu', 'aclu', 'acluinfo', 'groupinfo',]:
         filenames[ext] = find_filename_or_new(filename, ext)
@@ -209,7 +209,7 @@ def read_features(filename_fet, nchannels, fetdim, freq):
     """Read a .fet file and return the normalize features array,
     as well as the spiketimes."""
     try:
-        features = load_text(filename_fet, np.int32, skiprows=1, delimiter=' ')
+        features = load_text(filename_fet, np.int64, skiprows=1, delimiter=' ')
     except ValueError:
         features = load_text(filename_fet, np.float32, skiprows=1, delimiter='\t')
     return process_features(features, fetdim, nchannels, freq, 
