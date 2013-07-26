@@ -19,14 +19,14 @@ from klustaviewa.utils.settings import SETTINGS
 
 __all__ = ['RawDataView']
 
-CHANNEL_HEIGHT = 0.25
-
 # -----------------------------------------------------------------------------
 # Data manager
 # -----------------------------------------------------------------------------
 
 class RawDataManager(Manager):
     info = {}
+    
+    # Initialization
     def set_data(self, rawdata=None, freq=None, channel_height=None):
         
         self.max_size = 500
@@ -37,24 +37,22 @@ class RawDataManager(Manager):
         self.channel_height = channel_height
         
         self.rawdata = rawdata
-        
-        samples = rawdata[:(self.duration_initial*freq), :]
-        position, shape = process_coordinates(samples.T)
-        xlim = 1., 20.
-        
         self.freq = freq
-        self.duration = samples.shape[0]/self.freq
-        self.position = position
-        self.shape = shape
-        self.samples = samples
         
-        xlimex, slice = self.get_view(shape[0], xlim, freq)
-        print "xlimex ", xlimex, ", xlim ", xlim
+        # first, load initial slice(s) (from 0 to duration_initial)
+        self.xlim = (0, self.duration_initial)
+        self.load_correct_slices()
+        
+        xlimex, slice = self.get_view(self.shape[0], self.xlim, self.freq)
         samples, bounds, size = self.get_undersampled_data(rawdata, xlimex, slice) 
-        position, shape = process_coordinates(samples.T)
         
         self.interaction_manager.get_processor('viewport').update_viewbox()
         self.interaction_manager.activate_grid()
+        
+    def load_correct_slices(self):
+        self.samples = self.rawdata[:(self.duration_initial*self.freq), :]
+        self.position, self.shape = process_coordinates(self.samples.T)
+        self.duration = self.samples.shape[0]/self.freq
     
     def get_view(self, total_size, xlim, freq): 
         """Return the slice of the data.
@@ -191,7 +189,6 @@ class MultiChannelVisual(Visual):
         self.add_varying('vindex', vartype='int', ndim=1)
         self.add_uniform('nchannels', vartype='float', ndim=1, data=float(nprimitives))
         self.add_uniform('channel_height', vartype='float', ndim=1, data=channel_height)
-        print channel_height
         
         self.add_vertex_main("""
         vec2 position = position0;
@@ -276,9 +273,6 @@ def get_ticks_text(x0, y0, x1, y1):
     return text, coordinates, n
 
 class GridEventProcessor(EventProcessor):
-    def initialize(self):
-        pass
-        
     def update_axes(self, parameter):
         
         viewbox = self.interaction_manager.get_processor('viewport').viewbox
@@ -343,9 +337,13 @@ class ViewportUpdateProcessor(EventProcessor):
         y0 = self.normalizer.unnormalize_y(y0)
         x1 = self.normalizer.unnormalize_x(x1)
         y1 = self.normalizer.unnormalize_y(y1)
+        self.parent.data_manager.xlim = (x0, x1)
 
-        # now we know the viewport has been updated, update the grid
+        # now we know the viewport has been updated, update the grid 
         self.interaction_manager.get_processor('grid').update_axes
+        
+        # check if we need to load/unload any slices
+        self.parent.data_manager.load_correct_slices()
         
     def update_viewport(self, parameter):
         self.update_viewbox()
