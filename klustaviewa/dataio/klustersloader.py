@@ -37,8 +37,8 @@ def find_index(filename):
         return int(r.group(3))
     # If the filename has no index in it, and if the file does not actually
     # exist, return the index of an existing filename.
-    if not os.path.exists(filename):
-        return find_index(find_filename(filename, 'fet'))
+    # if not os.path.exists(filename):
+    return find_index(find_filename(filename, 'fet'))
 
 def find_filename(filename, extension_requested, dir='', files=[]):
     """Search the most plausible existing filename corresponding to the
@@ -129,7 +129,8 @@ def find_any_filename(filename, extension_requested, dir='', files=[]):
     if filtered:
         return os.path.join(dir, filtered[0])
     
-def find_filename_or_new(filename, extension_requested, dir='', files=[]):
+def find_filename_or_new(filename, extension_requested,
+        have_file_index=True, dir='', files=[]):
     """Find an existing filename with a requested extension, or create
     a new filename based on an existing file."""
     # Find the filename with the requested extension.
@@ -137,9 +138,14 @@ def find_filename_or_new(filename, extension_requested, dir='', files=[]):
     # If it does not exist, find a file that exists, and replace the extension 
     # with the requested one.
     if not filename_found:
-        filename_existing = find_filename(filename, 'fet', dir=dir, files=files)
-        filename_new = filename_existing.replace('.fet.', '.{0:s}.'.format(
-            extension_requested))
+        if have_file_index:
+            filename_existing = find_filename(filename, 'fet', dir=dir, files=files)
+            filename_new = filename_existing.replace('.fet.', '.{0:s}.'.format(
+                extension_requested))
+        else:
+            filename_existing = find_filename(filename, 'xml', dir=dir, files=files)
+            filename_new = filename_existing.replace('.xml', 
+                '.' + extension_requested)
         return filename_new
     else:
         return filename_found
@@ -156,6 +162,10 @@ def find_filenames(filename):
                           find_any_filename(filename, 'probe'))
     filenames['mask'] = (find_filename(filename, 'fmask') or
                          find_filename(filename, 'mask'))
+    # HDF5 file format
+    for key in ['main', 'wave', 'raw', 'low', 'high']:
+        filenames['hdf5_' + key] = find_filename_or_new(filename, key + '.h5',
+            have_file_index=False)
     return filenames
 
 
@@ -193,8 +203,6 @@ def process_features(features, fetdim, nchannels, freq, nfet=None):
     # normalize normal features while keeping symmetry
     features_normal = normalize(features[:,:fetdim * nchannels],
                                         symmetric=True)
-    # features_time = normalize(features[:,[-1]],
-                                        # symmetric=False)
     features_time = spiketimes.reshape((-1, 1)) * 1. / spiketimes[-1] * 2 - 1
     # normalize extra features without keeping symmetry
     if nextrafet > 1:
@@ -205,15 +213,18 @@ def process_features(features, fetdim, nchannels, freq, nfet=None):
         features = np.hstack((features_normal, features_time))
     return features, spiketimes
     
-def read_features(filename_fet, nchannels, fetdim, freq):
+def read_features(filename_fet, nchannels, fetdim, freq, do_process=True):
     """Read a .fet file and return the normalize features array,
     as well as the spiketimes."""
     try:
         features = load_text(filename_fet, np.int64, skiprows=1, delimiter=' ')
     except ValueError:
         features = load_text(filename_fet, np.float32, skiprows=1, delimiter='\t')
-    return process_features(features, fetdim, nchannels, freq, 
-        nfet=first_row(filename_fet))
+    if do_process:
+        return process_features(features, fetdim, nchannels, freq, 
+            nfet=first_row(filename_fet))
+    else:
+        return features
     
 # Clusters.
 def process_clusters(clusters):

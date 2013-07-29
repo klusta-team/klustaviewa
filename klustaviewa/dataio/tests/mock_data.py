@@ -161,7 +161,7 @@ def setup():
     save_text(os.path.join(dir, 'test.fet.1'), features,
         header=nchannels * fetdim + 1)
     save_text(os.path.join(dir, 'test.aclu.1'), clusters, header=nclusters)
-    # save_text(os.path.join(dir, 'test.clucol.1'), cluster_colors)
+    save_text(os.path.join(dir, 'test.clu.1'), clusters, header=nclusters)
     save_text(os.path.join(dir, 'test.fmask.1'), masks, header=nclusters,
         fmt='%.6f')
     save_text(os.path.join(dir, 'test.xml'), xml)

@@ -215,8 +215,11 @@ class MemMappedBinary(object):
         self.row += 1
         return values
         
-    def __del__(self):
+    def close(self):
         self.f.close()
+        
+    def __del__(self):
+        self.close()
     
 class MemMappedText(object):
     def __init__(self, filename, dtype, skiprows=0):
@@ -229,15 +232,17 @@ class MemMappedText(object):
         for _ in xrange(skiprows):
             self.f.readline()
         
-        
     def next(self):
         """Return the values in the next row."""
         # HACK: remove the double spaces.
         values = np.fromstring(self.f.readline().replace('  ', ' '), dtype=self.dtype, sep=' ')
         return values
         
-    def __del__(self):
+    def close(self):
         self.f.close()
+        
+    def __del__(self):
+        self.close()
     
 
 # -----------------------------------------------------------------------------
