@@ -57,6 +57,13 @@ def test_wizard():
     assert w.previous_candidate() == c0
     assert w.next_candidate() == c1
     
+    # Check skip target.
+    t0 = w.current_target()
+    w.skip_target()
+    w.update_candidates()
+    t1 = w.current_target()
+    assert t0 != t1
+    
 def test_wizard_merge():
     
     # Create mock data.

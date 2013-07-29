@@ -227,6 +227,9 @@ class MainWindow(QtGui.QMainWindow):
             shortcut='SHIFT+Space')
         self.add_action('next_candidate', '&Skip closest match', 
             shortcut='Space')
+        self.add_action('skip_target', '&Skip best unsorted', 
+            # shortcut='Space'
+            )
         self.add_action('delete_candidate', 'Move closest match to &MUA', 
             shortcut='CTRL+M')
         self.add_action('delete_candidate_noise', 'Move closest match to &noise', 
@@ -302,13 +305,15 @@ class MainWindow(QtGui.QMainWindow):
         wizard_menu.addAction(self.next_candidate_action)
         wizard_menu.addAction(self.previous_candidate_action)
         wizard_menu.addSeparator()
-        # Good group.
-        wizard_menu.addAction(self.next_target_action)
+        wizard_menu.addAction(self.skip_target_action)
         wizard_menu.addSeparator()
+        # Good group.
+        # wizard_menu.addSeparator()
         # Delete.
         wizard_menu.addAction(self.delete_candidate_action)
         wizard_menu.addAction(self.delete_candidate_noise_action)
         wizard_menu.addSeparator()
+        wizard_menu.addAction(self.next_target_action)
         wizard_menu.addAction(self.delete_target_action)
         wizard_menu.addAction(self.delete_target_noise_action)
         wizard_menu.addSeparator()
@@ -877,6 +882,12 @@ class MainWindow(QtGui.QMainWindow):
             return
         # Skip candidate.
         self.taskgraph.wizard_next_candidate()
+    
+    def skip_target_callback(self, checked=None):
+        if self.is_busy:
+            return
+        # Skip target.
+        self.taskgraph.wizard_skip_target()
     
     def next_target_callback(self, checked=None):
         if self.is_busy:

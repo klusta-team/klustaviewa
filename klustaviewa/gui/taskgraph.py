@@ -515,6 +515,12 @@ class TaskGraph(AbstractTaskGraph):
         clusters = self.wizard.next_pair()
         return after_wizard_selection(clusters)
         
+    def _wizard_skip_target(self):
+        # Skip the current target and go the next target.
+        self.wizard.skip_target()
+        return [('_wizard_update', ()),
+                ('_wizard_next_candidate',),]
+        
     def _wizard_reset_skipped(self):
         self.wizard.reset_skipped()
         

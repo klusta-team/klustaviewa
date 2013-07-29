@@ -36,6 +36,8 @@ class Wizard(object):
         self.candidates = []
         # List of skipped candidates.
         self.skipped = []
+        # List of skipped targets.
+        self.skipped_targets = []
         # Current position in the candidates list.
         self.index = 0
         # Size of the candidates list.
@@ -61,8 +63,10 @@ class Wizard(object):
     # Core methods.
     # -------------
     def find_target(self):
-        # For the target, only consider the unsorted clusters.
-        kept = self.cluster_groups >= 3
+        # For the target, only consider the unsorted clusters, and remove
+        # the skipped targets.
+        kept = ((self.cluster_groups >= 3) & 
+            (~np.in1d(self.clusters_unique, self.skipped_targets)))
         quality_kept = self.quality[kept]
         if len(quality_kept) == 0:
             return None
@@ -185,6 +189,7 @@ class Wizard(object):
         if candidate is not None:
             return self.current_target(), candidate
     
-    
+    def skip_target(self):
+        self.skipped_targets.append(self.current_target())
     
     
