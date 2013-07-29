@@ -31,7 +31,7 @@ class RawDataManager(Manager):
 
         self.paintinitialized = False
         self.slice_ref = (0, 0)
-        self.max_size = 500
+        self.max_size = 1000
         self.duration_initial = 5
         
         if channel_height is None:
@@ -44,15 +44,6 @@ class RawDataManager(Manager):
         self.totalsamples, self.nchannels = self.rawdata.shape
         
         self.shape = (self.nchannels, self.duration_initial*self.freq)
-        
-        # first, load initial slice(s) (from 0 to duration_initial)
-        
-        # self.xlim = (0., self.duration_initial)
-        # slice = self.get_viewslice(self.xlim)
-        # 
-        # self.samples, self.bounds, self.size = self.get_undersampled_data(self.xlim, slice)
-        # self.nsamples = self.samples.shape[0]
-        # self.color_array_index = np.repeat(np.arange(self.nchannels), self.nsamples / self.nchannels)
         self.samples = self.rawdata[:(self.duration_initial*self.freq), :]
         
         # self.load_correct_slices()
@@ -65,6 +56,7 @@ class RawDataManager(Manager):
         
     def load_correct_slices(self):
         
+        # dirty hack to make sure that we don't redraw the window until it's been drawn once, otherwise Galry automatically rescales
         if self.paintinitialized==False:
             return
         
@@ -77,13 +69,10 @@ class RawDataManager(Manager):
             # Find needed slice(s) of data       
             xlim_ext = self.get_buffered_viewlimits(self.xlim)
             slice = self.get_viewslice(xlim_ext)
-            
-            print "so I just gone and fetched a slice. the slice I'm loding is: ", slice
             self.slice_ref = i
             
             self.samples, self.bounds, self.size = self.get_undersampled_data(xlim_ext, slice)
-            self.nsamples = self.samples.shape[0]
-            self.color_array_index = np.repeat(np.arange(self.nchannels), self.nsamples / self.nchannels)
+            self.color_array_index = np.repeat(np.arange(self.nchannels), self.samples.shape[0] / self.nchannels)
             
             self.position = self.samples
             
@@ -100,7 +89,6 @@ class RawDataManager(Manager):
         d = self.xlim[1] - self.xlim[0]
         zoom = max(self.duration / d, 1)
         view_size = self.totalsamples / zoom
-        # print "my zoom is ", zoom, " and my view_size is ", view_size, " and my nsamples is ", self.nsamples
         step = int(np.ceil(view_size / self.max_size))
         
         i0 = np.clip(int(np.round(xlim[0] * self.freq)), 0, self.totalsamples)
@@ -306,9 +294,10 @@ class GridEventProcessor(EventProcessor):
         viewbox = self.interaction_manager.get_processor('viewport').viewbox
         
         text, coordinates, n = get_ticks_text(*viewbox)
+        coordinates[:,0] -= 1
 
-        # coordinates[:,0] = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(coordinates[:,0])
-        # coordinates[:,1] = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_y(coordinates[:,1])
+        #coordinates[:,0] = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(coordinates[:,0])
+        #coordinates[:,1] = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_y(coordinates[:,1])
 
         # here: coordinates contains positions centered on the static
         # xy=0 axes of the screen
