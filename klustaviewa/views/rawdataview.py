@@ -42,25 +42,30 @@ class RawDataManager(Manager):
         self.duration = (self.rawdata.shape[0] - 1) / self.freq
         self.nsamples, self.nchannels = self.rawdata.shape
         
+        x = np.tile(np.linspace(0., self.duration, self.nsamples // self.max_size), (self.nchannels, 1))
+        y = np.zeros_like(x)+ np.linspace(-.9, .9, self.nchannels).reshape((-1, 1))
+        # 
+        self.blobby, self.shape = process_coordinates(x=x, y=y)
+        
+        # load enough data for initial view
+        # self.samples = self.rawdata[:(self.duration_initial*self.freq), :]
+        # self.get_undersampled_data()
+        
         # first, load initial slice(s) (from 0 to duration_initial)
         self.xlim = (0., self.duration_initial)
-        self.load_correct_slices()
+        # self.xlim = ((0 + 1) / 2. * (self.duration_initial), (0.5 + 1) / 2. * (self.duration_initial))
+        print "oh my original xlim is ", self.xlim
         
         self.interaction_manager.get_processor('viewport').update_viewbox()
+        self.load_correct_slices()
         self.interaction_manager.activate_grid()
         
     def load_correct_slices(self):
-        self.samples = self.rawdata[:(self.duration_initial*self.freq), :]
-        
-        x = np.tile(np.linspace(0., self.duration, self.nsamples // 500), (self.nchannels, 1))
-        y = np.zeros_like(x)+ np.linspace(-.9, .9, self.nchannels).reshape((-1, 1))
-        
-        self.position, self.shape = process_coordinates(x=x, y=y)
         
         # Find needed slice(s) of data
         
-        xlim = ((0 + 1) / 2. * (self.duration_initial), (0.5 + 1) / 2. * (self.duration_initial))
         xlim_ext, slice = self.get_view()
+        print "xlim: ", self.xlim, " xlim_ext: ", xlim_ext
         
         dur = self.xlim[1] - self.xlim[0]
         index = int(np.floor(self.xlim[0] / dur))
@@ -69,10 +74,13 @@ class RawDataManager(Manager):
         
         if i != self.slice_ref: # we need to load a new slice
             self.slice_ref = i
-            self.samples, bounds, size = self.get_undersampled_data(xlim_ext, slice)
-            color_array_index = np.repeat(np.arange(self.nchannels), self.nsamples / self.nchannels)
             
+            print "timiojiojiojiojiojiojiois ", slice, " xlimex of ", xlim_ext
+            
+            self.samples, self.bounds, self.size = self.get_undersampled_data(xlim_ext, slice)
             self.nsamples = self.samples.shape[0]
+            self.color_array_index = np.repeat(np.arange(self.nchannels), self.nsamples / self.nchannels)
+            
             self.position = self.samples
             
             self.paint_manager.update()
@@ -150,8 +158,12 @@ class RawDataPaintManager(PlotPaintManager):
     def update(self):
         self.set_data(visual='rawdata_waveforms',
             channel_height=self.data_manager.channel_height,
-            position=self.data_manager.position,
-            shape=self.data_manager.shape)
+            position0=self.data_manager.position,
+            shape=self.data_manager.shape,
+            size=self.data_manager.size,
+            index=self.data_manager.color_array_index,
+            bounds=self.data_manager.bounds)
+        # print "shape is ", self.data_manager.shape
             
 
 class MultiChannelVisual(Visual):
@@ -196,6 +208,8 @@ class MultiChannelVisual(Visual):
         ncolors = color.shape[0]
         ncomponents = color.shape[1]
         color = color.reshape((1, ncolors, ncomponents))
+        
+        print "plotting with shape ", shape, "; color shape ", color.shape
         
         dx = 1. / ncolors
         offset = dx / 2.
@@ -351,12 +365,17 @@ class ViewportUpdateProcessor(EventProcessor):
         nav.sxmin = 1.
         
         x0, y0, x1, y1 = self.viewbox
+        
         #nav.set_viewbox(self.normalizer.normalize_x(0.0), -1.0, self.normalizer.normalize_x(5.0), 1.0)
         x0 = self.normalizer.unnormalize_x(x0)
         y0 = self.normalizer.unnormalize_y(y0)
         x1 = self.normalizer.unnormalize_x(x1)
         y1 = self.normalizer.unnormalize_y(y1)
-        self.parent.data_manager.xlim = (int(x0), int(x1))
+        
+        self.parent.data_manager.xlim = ((self.viewbox[0] + 1) / 2. * (self.parent.data_manager.duration_initial),\
+        (self.viewbox[2] + 1) / 2. * (self.parent.data_manager.duration_initial))
+        
+        print "viewbox is ", self.viewbox
 
         # now we know the viewport has been updated, update the grid 
         self.interaction_manager.get_processor('grid').update_axes(None)
