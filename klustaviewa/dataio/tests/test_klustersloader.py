@@ -12,10 +12,10 @@ import pandas as pd
 import shutil
 from nose.tools import with_setup
 
-from klustaviewa.dataio.tests.mock_data import (setup, teardown,
+from klustaviewa.dataio.tests.mock_data import (
                             nspikes, nclusters, nsamples, nchannels, fetdim)
 from klustaviewa.dataio import (KlustersLoader, read_clusters, save_clusters,
-    find_filename,
+    find_filename, find_indices, filename_to_triplet, triplet_to_filename,
     read_cluster_info, save_cluster_info, read_group_info, save_group_info,
     renumber_clusters, reorder, convert_to_clu, select, get_indices,
     check_dtype, check_shape, get_array, load_text)
@@ -25,7 +25,6 @@ from klustaviewa.utils.userpref import USERPREF
 # -----------------------------------------------------------------------------
 # Tests
 # -----------------------------------------------------------------------------
-
 def test_find_filename():
     dir = '/my/path/'
     extension_requested = 'spk'
@@ -74,6 +73,32 @@ def test_find_filename2():
     
     assert spkfile == dir + 'blabla_test.spk.2'
 
+def test_find_indices():
+    dir = '/my/path/'
+    files = [
+        'blabla.aclu.2',
+        'blabla_test.aclu.2',
+        'blabla_test.spk.4',
+        'blabla_test2.aclu.2',
+        'blabla.aclu.9',
+        'blabla_test3.aclu.3',
+        'blabla.spk.2',
+        'blabla_test.spk.2',
+        ]    
+    indices = find_indices('/my/path/blabla_test.xml', 
+        files=files, dir=dir)
+    
+    assert indices == [2, 4]
+
+def test_triplets():
+    filename = 'my/path/blabla.aclu.2'
+    triplet = filename_to_triplet(filename)
+    filename2 = triplet_to_filename(triplet)
+    
+    assert filename == filename2
+    assert triplet_to_filename(triplet[:2] + ('34',)) == \
+        'my/path/blabla.aclu.34'
+    
 def test_clusters():
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
     clufile = os.path.join(dir, 'test.aclu.1')

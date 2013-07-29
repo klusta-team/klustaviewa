@@ -4,6 +4,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 import os
+import time
 
 import numpy as np
 import numpy.random as rnd
@@ -115,6 +116,14 @@ def create_xml(nchannels, nsamples, fetdim):
             <peakSampleIndex>10</peakSampleIndex>
             <nFeatures>{3:d}</nFeatures>
           </group>
+          <group>
+            <channels>
+              {2:s}
+            </channels>
+            <nSamples>{1:d}</nSamples>
+            <peakSampleIndex>10</peakSampleIndex>
+            <nFeatures>{3:d}</nFeatures>
+          </group>
         </channelGroups>
       </spikeDetection>
     </parameters>
@@ -139,12 +148,10 @@ def setup():
     # Create mock directory if needed.
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
     if not os.path.exists(dir):
-        # import time
-        # time.sleep(1)
         os.mkdir(dir)
-    else:
-        # No need to recreate the files.
-        return
+    # else:
+        # # No need to recreate the files.
+        # return
         
     # Create mock data.
     waveforms = create_waveforms(nspikes, nsamples, nchannels)
@@ -172,6 +179,13 @@ def teardown():
     
     # Erase the temporary data directory.
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
-    if os.path.exists(dir):
-        shutil.rmtree(dir, ignore_errors=True)
-    
+    # if os.path.exists(dir):
+        # shutil.rmtree(dir, ignore_errors=True)
+    # Erase the contents instead, otherwise run into Access denied errors
+    # when trying to re-create the directory right after it has been deleted.
+    for the_file in os.listdir(dir):
+        file_path = os.path.join(dir, the_file)
+        os.unlink(file_path)
+        
+        
+        

@@ -40,6 +40,43 @@ def find_index(filename):
     # if not os.path.exists(filename):
     return find_index(find_filename(filename, 'fet'))
 
+def find_indices(filename, dir='', files=[]):
+    """Return the list of all indices for the given filename, present
+    in the filename's directory."""
+    # get the extension-free filename, extension, and file index
+    # template: FILENAME.xxx.0  => FILENAME (can contain points), 0 (index)
+    # try different patterns
+    patterns = [r"([^\n]+)\.([^\.]+)\.([0-9]+)$",
+                r"([^\n]+)\.([^\.]+)$"]
+    for pattern in patterns:
+        r = re.search(pattern, filename)
+        if r:
+            filename = r.group(1)
+            # extension = r.group(2)
+            break
+    
+    # get the full path
+    if not dir:
+        dir = os.path.dirname(filename)
+    filename = os.path.basename(filename)
+    # try obtaining the list of all files in the directory
+    if not files:
+        try:
+            files = os.listdir(dir)
+        except (WindowsError, OSError, IOError):
+            raise IOError("Error when accessing '{0:s}'.".format(dir))
+    
+    # If the requested filename does not have a file index, then get the 
+    # smallest available fileindex in the files list.
+    fileindex_set = set()
+    for file in files:
+        r = re.search(r"([^\n]+)\.([^\.]+)\.([0-9]+)$", file)
+        if r:
+            if r.group(1) == filename:
+                fileindex_set.add(int(r.group(3)))
+        
+    return sorted(fileindex_set)
+          
 def find_filename(filename, extension_requested, dir='', files=[]):
     """Search the most plausible existing filename corresponding to the
     requested approximate filename, which has the required file index and
@@ -90,12 +127,18 @@ def find_filename(filename, extension_requested, dir='', files=[]):
                 fileindex_set.add(int(r.group(3)))
         if fileindex_set:
             fileindex = sorted(fileindex_set)[0]
-            
+    
     # try different suffixes
-    suffixes = [
-                '.{0:s}.{1:d}'.format(extension_requested, fileindex),
-                '.{0:s}'.format(extension_requested),
-                ]
+    if fileindex is not None:
+        suffixes = [
+                    '.{0:s}.{1:d}'.format(extension_requested, fileindex),
+                    '.{0:s}'.format(extension_requested),
+                    ]
+    else:
+        suffixes = [
+                    # '.{0:s}.{1:d}'.format(extension_requested, fileindex),
+                    '.{0:s}'.format(extension_requested),
+                    ]
     
     # find the real filename with the longest path that fits the requested
     # filename
@@ -163,11 +206,32 @@ def find_filenames(filename):
     filenames['mask'] = (find_filename(filename, 'fmask') or
                          find_filename(filename, 'mask'))
     # HDF5 file format
+    filenames.update(find_hdf5_filenames(filename))
+    return filenames
+
+def filename_to_triplet(filename):
+    patterns = [r"([^\n]+)\.([^\.]+)\.([0-9]+)$",
+                r"([^\n]+)\.([^\.]+)$"]
+    fileindex = None
+    for pattern in patterns:
+        r = re.search(pattern, filename)
+        if r:
+            filename = r.group(1)
+            extension = r.group(2)
+            if len(r.groups()) >= 3:
+                fileindex = int(r.group(3))
+            return (filename, extension, fileindex)
+    return (filename, )
+    
+def triplet_to_filename(triplet):
+    return '.'.join(map(str, triplet))
+    
+def find_hdf5_filenames(filename):
+    filenames = {}
     for key in ['main', 'wave', 'raw', 'low', 'high']:
         filenames['hdf5_' + key] = find_filename_or_new(filename, key + '.h5',
             have_file_index=False)
     return filenames
-
 
 # -----------------------------------------------------------------------------
 # File reading functions
