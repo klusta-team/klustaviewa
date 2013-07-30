@@ -63,6 +63,10 @@ def test_hdf5_loader1():
     assert masks.values.dtype == np.uint8
     assert masks.shape[0] == nspikes
     
+    # Get waveforms.
+    waveforms = l.get_waveforms()
+    assert waveforms.shape == (nspikes, nchannels * nsamples)
+    
     l.close()
     
     

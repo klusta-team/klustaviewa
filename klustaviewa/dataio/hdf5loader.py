@@ -148,6 +148,9 @@ class HDF5Loader(Loader):
     def read_arrays(self):
         self.features = self.spike_table, 'features'
         self.masks = self.spike_table, 'mask'
+        # For the waveforms, need to dereference with __call__ as it
+        # is an external link.
+        self.waveforms = self.wave_table(), 'waveform'
         self.nextrafet = (self.spike_table.cols.features.shape[1] - 
             self.nchannels * self.fetdim)
         
@@ -157,6 +160,8 @@ class HDF5Loader(Loader):
     # ---------------
     def close(self):
         """Close the main HDF5 file."""
+        self.wave_table.umount()
+        self.main.flush()
         self.main.close()
        
     

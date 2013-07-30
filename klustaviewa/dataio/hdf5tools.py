@@ -32,9 +32,9 @@ def get_spikes_description(fetcol=None, has_mask=None):
     
 def get_waveforms_description(nsamples=None, nchannels=None, has_umask=None):
     waveforms_description = dict(
-        wave=tables.Float32Col(shape=(nsamples * nchannels)),)
+        waveform=tables.Float32Col(shape=(nsamples * nchannels)),)
     if has_umask:
-        waveforms_description['wave_unfiltered'] = tables.Float32Col(
+        waveforms_description['waveform_unfiltered'] = tables.Float32Col(
             shape=(nsamples * nchannels))
     return waveforms_description
     
@@ -257,7 +257,7 @@ class HDF5Writer(object):
         row_main.append()
         
         # Fill the wave row.
-        row_wave['wave'] = read['spk']# * 1e-5
+        row_wave['waveform'] = read['spk']# * 1e-5
         row_wave.append()
 
     def report_progress(self):
