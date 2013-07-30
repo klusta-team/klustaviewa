@@ -97,7 +97,6 @@ def test_select_some():
     
     assert len(spikes) == 10
     
-    
 def test_select_array():
     # All spikes in cluster 1.
     indices = [10, 20, 25]

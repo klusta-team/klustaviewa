@@ -35,9 +35,19 @@ def test_hdf5_loader1():
     filename = os.path.join(dir, 'test.main.h5')
     l = HDF5Loader(filename=filename)
     
-    print l.cluster_info
-    print l.group_info
+    # Select cluster.
+    cluster = 3
+    l.select(clusters=[cluster])
     
+    # Get features.
+    features = l.get_features()
+    clusters = l.get_clusters('all')
+    spikes = l.get_spikes()
+    # Assert the indices in the features Pandas object correspond to the
+    # spikes in the selected cluster.
+    assert np.array_equal(features.index, spikes)
+    # Assert the array has the right number of spikes.
+    assert features.shape[0] == np.sum(clusters == cluster)
     
     l.close()
     

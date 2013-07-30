@@ -55,6 +55,23 @@ def select_pandas(data, spikes, drop_empty_rows=True):
         data_selected = data_selected.dropna()
     return data_selected
 
+def select_pytables(data, spikes):
+    table, column = data
+    values = table[spikes][column]
+    # Get the spike indices.
+    if spikes.dtype == np.bool:
+        spike_indices = np.nonzero(spikes)[0]
+    else:
+        spike_indices = spikes
+    # Create the Pandas object with the spike indices.
+    if values.ndim == 1:
+        pd_arr = pd.Series(values, index=spike_indices)
+    elif values.ndim == 2:
+        pd_arr = pd.DataFrame(values, index=spike_indices)
+    elif values.ndim == 3:
+        pd_arr = pd.Panel(values, index=spike_indices)
+    return pd_arr
+    
 def select(data, indices=None):
     """Select portion of the data, with the only assumption that indices are
     along the first axis.
@@ -69,9 +86,6 @@ def select(data, indices=None):
     indices_argument = indices
     if not hasattr(indices, '__len__'):
         indices = [indices]
-        # is_single = True
-    # else:
-        # is_single = False
         
     # Ensure indices is an array of indices or boolean masks.
     if not isinstance(indices, np.ndarray):
@@ -91,11 +105,13 @@ def select(data, indices=None):
             else:
                 indices = np.array(indices)
     
-    # Use NumPy or Pandas version
+    # Use NumPy, PyTables (tuple) or Pandas version
     if type(data) == np.ndarray:
         if data.size == 0:
             return data
         return select_numpy(data, indices_argument)
+    elif type(data) == tuple:
+        return select_pytables(data, indices_argument)
     else:
         if data.values.size == 0:
             return data
@@ -201,7 +217,6 @@ def get_some_spikes(clusters,
     spikes_selected[np.random.randint(low=0, high=k)::k] = True
     return np.nonzero(spikes_selected)[0]
     
-
 def get_indices(data):
     if type(data) == np.ndarray:
         return np.arange(data.shape[0], dtype=np.int32)

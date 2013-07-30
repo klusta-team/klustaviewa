@@ -71,6 +71,7 @@ class HDF5Loader(Loader):
         self.read_clusters()
         self.read_cluster_info()
         self.read_group_info()
+        self.read_arrays()
         
     def get_shanks(self):
         """Return the list of shanks available in the file."""
@@ -133,6 +134,9 @@ class HDF5Loader(Loader):
             ), index=groups)
         self.group_colors = self.group_info['color'].astype(np.int32)
         self.group_names = self.group_info['name']
+    
+    def read_arrays(self):
+        self.features = self.spike_table, 'features'
     
     
     # Close function.
