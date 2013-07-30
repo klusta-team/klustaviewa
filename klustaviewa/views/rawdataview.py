@@ -26,27 +26,33 @@ __all__ = ['RawDataView']
 class RawDataManager(Manager):
     info = {}
     
-    # Initialization
-    def set_data(self, rawdata=None, freq=None, channel_height=None):
+    # initialization
+    def set_data(self, rawdata=None, freq=None, channel_height=None, channel_names=None):
 
-        # Default settings.
+        # default settings
         self.max_size = 1000
         self.duration_initial = 5
         self.default_channel_height = 0.25
+        
+        # load initial variables
+        self.rawdata = rawdata
+        self.freq = freq
+        self.totalduration= (self.rawdata.shape[0] - 1) / self.freq
+        self.totalsamples, self.nchannels = self.rawdata.shape
         
         if channel_height is None:
             channel_height = self.default_channel_height
         else:
             self.default_channel_height = channel_height
-
         self.channel_height = channel_height
+        
+        if channel_names is None:
+            channel_names = ['channel{0:d}'.format(i) for i in xrange(self.nchannels)]
+            # channel_names = ["10" for numeric_string in current_array]
+        self.channel_names = channel_names
         
         self.slice_ref = (0, 0)
         self.paintinitialized = False
-        self.rawdata = rawdata
-        self.freq = freq
-        self.duration = (self.rawdata.shape[0] - 1) / self.freq
-        self.totalsamples, self.nchannels = self.rawdata.shape
         
         self.shape = (self.nchannels, self.duration_initial*self.freq)
         self.samples = self.rawdata[:(self.duration_initial*self.freq), :]
@@ -86,13 +92,13 @@ class RawDataManager(Manager):
     def get_buffered_viewlimits(self, xlim):
         d = self.xlim[1] - self.xlim[0]
         
-        x0_ext = np.clip(self.xlim[0] - 3 * d, 0, self.duration)
-        x1_ext = np.clip(self.xlim[1] + 3 * d, 0, self.duration)
+        x0_ext = np.clip(self.xlim[0] - 3 * d, 0, self.totalduration)
+        x1_ext = np.clip(self.xlim[1] + 3 * d, 0, self.totalduration)
         return (x0_ext, x1_ext)
     
     def get_viewslice(self, xlim):
         d = self.xlim[1] - self.xlim[0]
-        zoom = max(self.duration / d, 1)
+        zoom = max(self.totalduration/ d, 1)
         view_size = self.totalsamples / zoom
         step = int(np.ceil(view_size / self.max_size))
         
@@ -126,10 +132,10 @@ class RawDataManager(Manager):
         M[:, 1] = samples.ravel()
         # Generate the x coordinates.
         x = np.arange(slice.start, slice.stop, slice.step) / float(total_size - 1)
-        # [0, 1] -> [-1, 2*duration.duration_initial - 1]
-        x = x * 2 * self.duration / self.duration_initial - 1
+        
+        x = x * 2 * self.totalduration/ self.duration_initial - 1
         M[:, 0] = np.tile(x, nchannels)
-        # Update the bounds.
+
         self.bounds = np.arange(nchannels + 1) * nsamples
         size = self.bounds[-1]
         return M, self.bounds, size
@@ -232,73 +238,13 @@ class MultiChannelVisual(Visual):
 # -----------------------------------------------------------------------------
 # Grid
 # -----------------------------------------------------------------------------
-def nicenum(x, round=False):
-    e = np.floor(np.log10(x))
-    f = x / 10 ** e
-    eps = 1e-6
-    if round:
-        if f < 1.5:
-            nf = 1.
-        elif f < 3:
-            nf = 2.
-        elif f < 7.:
-            nf = 5.
-        else:
-            nf = 10.
-    else:
-        if f < 1 - eps:
-            nf = 1.
-        elif f < 2 - eps:
-            nf = 2.
-        elif f < 5 - eps:
-            nf = 5.
-        else:
-            nf = 10.
-    return nf * 10 ** e
-
-def get_ticks(x0, x1):
-    nticks = 5
-    r = nicenum(x1 - x0, False)
-    d = nicenum(r / (nticks - 1), True)
-    g0 = np.floor(x0 / d) * d
-    g1 = np.ceil(x1 / d) * d
-    nfrac = int(max(-np.floor(np.log10(d)), 0))
-    return np.arange(g0, g1 + .5 * d, d), nfrac
-
-def format_number(x, nfrac=None):
-    if nfrac is None:
-        nfrac = 2
-
-    if np.abs(x) < 1e-15:
-        return "0"
-
-    elif np.abs(x) > 100.001:
-        return "%.3e" % x
-
-    if nfrac <= 2:
-        return "%.2f" % x
-    else:
-        nfrac = nfrac + int(np.log10(np.abs(x)))
-        return ("%." + str(nfrac) + "e") % x
-
-def get_ticks_text(x0, y0, x1, y1):
-    ticksx, nfracx = get_ticks(x0, x1)
-    ticksy, nfracy = get_ticks(y0, y1)
-    n = len(ticksx)
-    text = [format_number(x, nfracx) for x in ticksx]
-    text += [format_number(x, nfracy) for x in ticksy]
-    # position of the ticks
-    coordinates = np.zeros((len(text), 2))
-    coordinates[:n, 0] = ticksx
-    coordinates[n:, 1] = ticksy
-    return text, coordinates, n
 
 class GridEventProcessor(EventProcessor):
     def update_axes(self, parameter):
         
         viewbox = self.interaction_manager.get_processor('viewport').viewbox
         
-        text, coordinates, n = get_ticks_text(*viewbox)
+        text, coordinates, n = self.get_ticks_text(*viewbox)
         coordinates[:,0] -= 1
 
         #coordinates[:,0] = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(coordinates[:,0])
@@ -331,6 +277,69 @@ class GridEventProcessor(EventProcessor):
             coordinates=coordinates,
             axis=axis)
             
+    def nicenum(self, x, round=False):
+        e = np.floor(np.log10(x))
+        f = x / 10 ** e
+        eps = 1e-6
+        if round:
+            if f < 1.5:
+                nf = 1.
+            elif f < 3:
+                nf = 2.
+            elif f < 7.:
+                nf = 5.
+            else:
+                nf = 10.
+        else:
+            if f < 1 - eps:
+                nf = 1.
+            elif f < 2 - eps:
+                nf = 2.
+            elif f < 5 - eps:
+                nf = 5.
+            else:
+                nf = 10.
+        return nf * 10 ** e
+
+    def get_ticks(self, x0, x1):
+        nticks = 5
+        r = self.nicenum(x1 - x0, False)
+        d = self.nicenum(r / (nticks - 1), True)
+        g0 = np.floor(x0 / d) * d
+        g1 = np.ceil(x1 / d) * d
+        nfrac = int(max(-np.floor(np.log10(d)), 0))
+        return np.arange(g0, g1 + .5 * d, d), nfrac
+
+    def format_number(self, x, nfrac=None):
+        if nfrac is None:
+            nfrac = 2
+
+        if np.abs(x) < 1e-15:
+            return "0"
+
+        elif np.abs(x) > 100.001:
+            return "%.3e" % x
+
+        if nfrac <= 2:
+            return "%.2f" % x
+        else:
+            nfrac = nfrac + int(np.log10(np.abs(x)))
+            return ("%." + str(nfrac) + "e") % x
+
+    def get_ticks_text(self, x0, y0, x1, y1):
+        ticksx, nfracx = self.get_ticks(x0, x1)
+        # ticksy, nfracy = get_ticks(y0, y1)
+
+        ticksy = np.linspace(-0.9, 0.9, self.parent.data_manager.nchannels)
+        n = len(ticksx)
+        text = [self.format_number(x, nfracx) for x in ticksx]
+        text += [str(self.parent.data_manager.channel_names[y]) for y in reversed(range(self.parent.data_manager.nchannels))]    
+        # position of the ticks
+        coordinates = np.zeros((len(text), 2))
+        coordinates[:n, 0] = ticksx
+        coordinates[n:, 1] = ticksy
+        return text, coordinates, n
+        
 class ViewportUpdateProcessor(EventProcessor):
     def initialize(self):
         self.register('Initialize', self.update_viewport)
@@ -344,14 +353,14 @@ class ViewportUpdateProcessor(EventProcessor):
         # normalization viewbox
         self.normalizer = DataNormalizer()
         self.normalizer.normalize(
-            (0, -1, self.parent.data_manager.duration, 1))
+            (0, -1, self.parent.data_manager.totalduration, 1))
             
         nav = self.get_processor('navigation')
 
         self.viewbox = nav.get_viewbox()
         nav.constrain_navigation = True
         nav.xmin = -1
-        nav.xmax = 2 * self.parent.data_manager.duration / self.parent.data_manager.duration_initial
+        nav.xmax = 2 * self.parent.data_manager.totalduration / self.parent.data_manager.duration_initial
         nav.sxmin = 1.
         
         self.parent.data_manager.xlim = ((self.viewbox[0] + 1) / 2. * (self.parent.data_manager.duration_initial),\
@@ -398,7 +407,6 @@ class RawDataInteractionManager(PlotInteractionManager):
         # increase/decrease channel height between limits of 0.01 and 2
         if 0.01 <= self.data_manager.channel_height <= 2.:
             self.data_manager.channel_height *= (1 + parameter)
-            print self.data_manager.channel_height
             self.paint_manager.set_data(channel_height=self.data_manager.channel_height)
             
         # restore limits to ensure it never exceeds them
