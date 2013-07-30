@@ -72,6 +72,8 @@ def open_klusters(filename):
         for index, filename in filenames.iteritems()}
     return klusters_data
     
+# Table descriptions.
+# -------------------
 def get_spikes_description(fetcol=None, has_mask=None):
     spikes_description = dict(
         time=tables.UInt64Col(),
@@ -81,18 +83,37 @@ def get_spikes_description(fetcol=None, has_mask=None):
         spikes_description['mask'] = tables.UInt8Col(shape=(fetcol,))
     return spikes_description
     
-def get_waves_description(nsamples=None, nchannels=None, has_umask=None):
-    waves_description = dict(
+def get_waveforms_description(nsamples=None, nchannels=None, has_umask=None):
+    waveforms_description = dict(
         wave=tables.Float32Col(shape=(nsamples * nchannels)),)
     if has_umask:
-        waves_description['wave_unfiltered'] = tables.Float32Col(
+        waveforms_description['wave_unfiltered'] = tables.Float32Col(
             shape=(nsamples * nchannels))
-    return waves_description
+    return waveforms_description
+    
+def get_clusters_description():
+    clusters_description = dict(
+        cluster=tables.UInt32Col(),
+        color=tables.UInt8Col(),
+        group=tables.UInt8Col(),
+    )
+    return clusters_description
+    
+def get_groups_description():
+    groups_description = dict(
+        group=tables.UInt8Col(),
+        color=tables.UInt8Col(),
+        name=tables.StringCol(64),
+    )
+    return groups_description
     
 def create_hdf5_files(filename, klusters_data):
     hdf5 = {}
     
     hdf5_filenames = find_hdf5_filenames(filename)
+    
+    # Get the data corresponding to the first shank.
+    klusters_data_first = klusters_data.itervalues().next()
     
     # Create the HDF5 file.
     hdf5['main_file'] = tables.openFile(hdf5_filenames['hdf5_main'], mode='w')
@@ -101,31 +122,78 @@ def create_hdf5_files(filename, klusters_data):
     # Metadata.
     for file in [hdf5['main_file'], hdf5['wave_file']]:
         file.createGroup('/', 'shanks')
-        metadata_group = file.createGroup('/', 'metadata')
-        file.setNodeAttr(metadata_group, 'probe', '')#json.dumps(probe.probes))
+        file.createGroup('/', 'metadata')
+        file.setNodeAttr('/metadata', 'probe', '')#json.dumps(probe.probes))
+        file.setNodeAttr('/metadata', 'freq', klusters_data_first['freq'])
     
     # Create groups and tables for each shank.
     for shank, data in klusters_data.iteritems():
         
-        hdf5['main_file'].createGroup('/shanks', 'shank{0:d}'.format(shank)) 
-        hdf5['wave_file'].createGroup('/shanks', 'shank{0:d}'.format(shank)) 
-
+        shank_path = '/shanks/shank{0:d}'.format(shank)
+        
+        # Create the /shanks/shank<X> groups in each file.
+        for file in [hdf5['main_file'], hdf5['wave_file']]:
+            file.createGroup('/shanks', 'shank{0:d}'.format(shank))
+            file.createGroup(shank_path, 'metadata')
+            file.setNodeAttr(shank_path + '/metadata',
+                'nchannels', data['nchannels'],)
+            file.setNodeAttr(shank_path + '/metadata',
+                'nsamples', data['nsamples'],)
+        
+                
+        # Create the cluster table.
+        # -------------------------
+        hdf5['cluster_table', shank] = hdf5['main_file'].createTable(
+            shank_path, 'clusters', 
+            get_clusters_description())
+            
+        # Fill the table.
+        if 'acluinfo' in data:
+            for cluster, clusterinfo in data['acluinfo'].iterrows():
+                row = hdf5['cluster_table', shank].row
+                row['cluster'] = cluster
+                row['color'] = clusterinfo['color']
+                row['group'] = clusterinfo['group']
+                row.append()
+            
+            
+        # Create the group table.
+        # -----------------------
+        hdf5['group_table', shank] = hdf5['main_file'].createTable(
+            shank_path, 'groups', 
+            get_groups_description())
+            
+        # Fill the table.
+        if 'groupinfo' in data:
+            for group, groupinfo in data['groupinfo'].iterrows():
+                row = hdf5['group_table', shank].row
+                row['group'] = group
+                row['color'] = groupinfo['color']
+                row['name'] = groupinfo['name']
+                row.append()
+               
+               
+        # Create the spike table.
+        # -----------------------
         hdf5['spike_table', shank] = hdf5['main_file'].createTable(
-            '/shanks/shank{0:d}'.format(shank), 'spikes', 
+            shank_path, 'spikes', 
             get_spikes_description(
                 fetcol=data['fetcol'],
                 has_mask=('mask' in data)))
                 
+                
+        # Create the wave table.
+        # ----------------------
         hdf5['wave_table', shank] = hdf5['wave_file'].createTable(
-            '/shanks/shank{0:d}'.format(shank), 'waves', 
-            get_waves_description(
+            shank_path, 'waveforms', 
+            get_waveforms_description(
                 nsamples=data['nsamples'],
                 nchannels=data['nchannels'],
                 has_umask=('uspk' in data)))
-                
+        
+        # Create the link in the main file, to the wave table.
         hdf5['main_file'].createExternalLink(
-            '/shanks/shank{0:d}'.format(shank), 
-            'waveforms', 
+            shank_path, 'waveforms', 
             hdf5['wave_table', shank])
 
     return hdf5
@@ -159,7 +227,10 @@ class HDF5Writer(object):
             return {}
         data = self.klusters_data[self.shank]
         read = {}
-        read['cluster'] = data['clu'][self.spike]
+        if 'aclu' in data:
+            read['cluster'] = data['aclu'][self.spike]
+        else:
+            read['cluster'] = data['clu'][self.spike]
         read['fet'] = data['fet'].next()
         read['time'] = read['fet'][-1]
         read['spk'] = data['spk'].next()

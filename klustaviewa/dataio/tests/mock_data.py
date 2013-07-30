@@ -12,7 +12,8 @@ import pandas as pd
 import shutil
 
 from klustaviewa.utils.colors import COLORS_COUNT
-from klustaviewa.dataio.tools import save_binary, save_text, check_dtype, check_shape
+from klustaviewa.dataio import (save_binary, save_text, check_dtype, 
+    check_shape, save_cluster_info, save_group_info)
 from klustaviewa.stats.cache import IndexedMatrix
 import klustaviewa.utils.logger as log
 
@@ -23,6 +24,7 @@ import klustaviewa.utils.logger as log
 # Mock parameters.
 nspikes = 1000
 nclusters = 20
+ngroups = 4
 cluster_offset = 2
 nsamples = 20
 ncorrbins = 100
@@ -59,6 +61,12 @@ def create_clusters(nspikes, nclusters, cluster_offset=cluster_offset):
     
 def create_cluster_colors(nclusters):
     return np.mod(np.arange(nclusters, dtype=np.int32), COLORS_COUNT) + 1
+   
+def create_group_colors(ngroups):
+    return np.mod(np.arange(ngroups, dtype=np.int32), COLORS_COUNT) + 1
+    
+def create_group_names(ngroups):
+    return ["Group {0:d}".format(group) for group in xrange(ngroups)]
     
 def create_cluster_groups(nclusters):
     return np.array(np.random.randint(size=nclusters, low=0, high=4), 
@@ -157,7 +165,22 @@ def setup():
     waveforms = create_waveforms(nspikes, nsamples, nchannels)
     features = create_features(nspikes, nchannels, fetdim, duration, freq)
     clusters = create_clusters(nspikes, nclusters)
+    
     cluster_colors = create_cluster_colors(nclusters)
+    cluster_groups = create_cluster_groups(nclusters)
+    cluster_info = pd.DataFrame(
+            {'color': cluster_colors, 
+             'group': cluster_groups}, 
+         dtype=np.int32,
+         index=np.unique(clusters))
+         
+    group_colors = create_group_colors(ngroups)
+    group_names = create_group_names(ngroups)
+    group_info = pd.DataFrame(
+            {'color': group_colors, 
+             'name': group_names}, 
+         index=np.arange(ngroups))
+         
     masks = create_masks(nspikes, nchannels, fetdim)
     xml = create_xml(nchannels, nsamples, fetdim)
     probe = create_probe(nchannels)
@@ -168,6 +191,8 @@ def setup():
     save_text(os.path.join(dir, 'test.fet.1'), features,
         header=nchannels * fetdim + 1)
     save_text(os.path.join(dir, 'test.aclu.1'), clusters, header=nclusters)
+    # save_cluster_info(os.path.join(dir, 'test.acluinfo.1'), cluster_info)
+    # save_group_info(os.path.join(dir, 'test.groupinfo.1'), group_info)
     save_text(os.path.join(dir, 'test.clu.1'), clusters, header=nclusters)
     save_text(os.path.join(dir, 'test.fmask.1'), masks, header=nclusters,
         fmt='%.6f')
