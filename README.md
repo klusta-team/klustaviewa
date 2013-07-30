@@ -59,6 +59,7 @@ The following libraries are required:
   * Python 2.7
   * Numpy
   * Pandas
+  * PyTables
   * Matplotlib
   * PyOpenGL
   * either PyQt4 or PySide
