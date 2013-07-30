@@ -19,6 +19,42 @@ from klustersloader import (find_filenames, find_index, read_xml,
 from tools import MemMappedText, MemMappedBinary
 
 
+# Table descriptions.
+# -------------------
+def get_spikes_description(fetcol=None, has_mask=None):
+    spikes_description = dict(
+        time=tables.UInt64Col(),
+        features=tables.Float32Col(shape=(fetcol,)),
+        cluster=tables.UInt32Col(),)
+    if has_mask:
+        spikes_description['mask'] = tables.UInt8Col(shape=(fetcol,))
+    return spikes_description
+    
+def get_waveforms_description(nsamples=None, nchannels=None, has_umask=None):
+    waveforms_description = dict(
+        wave=tables.Float32Col(shape=(nsamples * nchannels)),)
+    if has_umask:
+        waveforms_description['wave_unfiltered'] = tables.Float32Col(
+            shape=(nsamples * nchannels))
+    return waveforms_description
+    
+def get_clusters_description():
+    clusters_description = dict(
+        cluster=tables.UInt32Col(),
+        color=tables.UInt8Col(),
+        group=tables.UInt8Col(),
+    )
+    return clusters_description
+    
+def get_groups_description():
+    groups_description = dict(
+        group=tables.UInt8Col(),
+        color=tables.UInt8Col(),
+        name=tables.StringCol(64),
+    )
+    return groups_description
+    
+
 # -----------------------------------------------------------------------------
 # HDF5 helper functions
 # -----------------------------------------------------------------------------
@@ -71,42 +107,7 @@ def open_klusters(filename):
     klusters_data = {index: open_klusters_oneshank(filename) 
         for index, filename in filenames.iteritems()}
     return klusters_data
-    
-# Table descriptions.
-# -------------------
-def get_spikes_description(fetcol=None, has_mask=None):
-    spikes_description = dict(
-        time=tables.UInt64Col(),
-        features=tables.Float32Col(shape=(fetcol,)),
-        cluster=tables.UInt32Col(),)
-    if has_mask:
-        spikes_description['mask'] = tables.UInt8Col(shape=(fetcol,))
-    return spikes_description
-    
-def get_waveforms_description(nsamples=None, nchannels=None, has_umask=None):
-    waveforms_description = dict(
-        wave=tables.Float32Col(shape=(nsamples * nchannels)),)
-    if has_umask:
-        waveforms_description['wave_unfiltered'] = tables.Float32Col(
-            shape=(nsamples * nchannels))
-    return waveforms_description
-    
-def get_clusters_description():
-    clusters_description = dict(
-        cluster=tables.UInt32Col(),
-        color=tables.UInt8Col(),
-        group=tables.UInt8Col(),
-    )
-    return clusters_description
-    
-def get_groups_description():
-    groups_description = dict(
-        group=tables.UInt8Col(),
-        color=tables.UInt8Col(),
-        name=tables.StringCol(64),
-    )
-    return groups_description
-    
+
 def create_hdf5_files(filename, klusters_data):
     hdf5 = {}
     
@@ -139,6 +140,8 @@ def create_hdf5_files(filename, klusters_data):
                 'nchannels', data['nchannels'],)
             file.setNodeAttr(shank_path + '/metadata',
                 'nsamples', data['nsamples'],)
+            file.setNodeAttr(shank_path + '/metadata',
+                'fetdim', data['fetdim'],)
         
                 
         # Create the cluster table.

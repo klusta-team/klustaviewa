@@ -46,9 +46,9 @@ class HDF5Loader(Loader):
         self.shanks = [int(re.match("shank([0-9]+)", 
             shank._v_name).group(1)[0])
                 for shank in self.main.listNodes('/shanks')]
+        self.read_metadata()
         # By default, read the first available shank.
         self.set_shank(self.shanks[0])
-        self.read_metadata()
         
     
     # Shank functions.
@@ -69,6 +69,7 @@ class HDF5Loader(Loader):
         # Get the contents.
         self.read_shank_metadata()
         self.read_clusters()
+        self.read_spiketimes()
         self.read_cluster_info()
         self.read_group_info()
         self.read_arrays()
@@ -95,6 +96,8 @@ class HDF5Loader(Loader):
         
     def read_shank_metadata(self):
         """Read the per-shank metadata in /shanks/shank<X>/metadata."""
+        self.fetdim = self.main.getNodeAttr(
+            self.shank_path + '/metadata', 'fetdim')
         self.nsamples = self.main.getNodeAttr(
             self.shank_path + '/metadata', 'nsamples')
         self.nchannels = self.main.getNodeAttr(
@@ -102,10 +105,17 @@ class HDF5Loader(Loader):
     
     def read_clusters(self):
         clusters = self.spike_table.col('cluster')
+        self.nspikes = clusters.shape[0]
         # Convert to Pandas.
         self.clusters = pd.Series(clusters, dtype=np.int32)
         # Count clusters.
         self._update_data()
+    
+    def read_spiketimes(self):
+        spiketimes = self.spike_table.col('time') * (1. / self.freq)
+        # Convert to Pandas.
+        self.spiketimes = pd.Series(spiketimes)
+        self.duration = spiketimes[-1]
     
     def read_cluster_info(self):
         # Read the cluster info.
@@ -137,7 +147,11 @@ class HDF5Loader(Loader):
     
     def read_arrays(self):
         self.features = self.spike_table, 'features'
-    
+        self.masks = self.spike_table, 'mask'
+        self.nextrafet = (self.spike_table.cols.features.shape[1] - 
+            self.nchannels * self.fetdim)
+        
+        
     
     # Close function.
     # ---------------

@@ -39,15 +39,29 @@ def test_hdf5_loader1():
     cluster = 3
     l.select(clusters=[cluster])
     
+    # Get clusters.
+    clusters = l.get_clusters('all')
+    nspikes = np.sum(clusters == cluster)
+    
+    # Get the spike times.
+    spiketimes = l.get_spiketimes()
+    assert np.all(spiketimes <= 60)
+    
     # Get features.
     features = l.get_features()
-    clusters = l.get_clusters('all')
     spikes = l.get_spikes()
     # Assert the indices in the features Pandas object correspond to the
     # spikes in the selected cluster.
     assert np.array_equal(features.index, spikes)
     # Assert the array has the right number of spikes.
-    assert features.shape[0] == np.sum(clusters == cluster)
+    assert features.shape[0] == nspikes
+    assert l.fetdim == fetdim
+    assert l.nextrafet == 1
+    
+    # Get masks.
+    masks = l.get_masks()
+    assert masks.values.dtype == np.uint8
+    assert masks.shape[0] == nspikes
     
     l.close()
     
