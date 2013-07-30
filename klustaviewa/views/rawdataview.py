@@ -29,15 +29,20 @@ class RawDataManager(Manager):
     # Initialization
     def set_data(self, rawdata=None, freq=None, channel_height=None):
 
-        self.paintinitialized = False
-        self.slice_ref = (0, 0)
+        # Default settings.
         self.max_size = 1000
         self.duration_initial = 5
+        self.default_channel_height = 0.25
         
         if channel_height is None:
-            channel_height = 0.25
+            channel_height = self.default_channel_height
+        else:
+            self.default_channel_height = channel_height
+
         self.channel_height = channel_height
         
+        self.slice_ref = (0, 0)
+        self.paintinitialized = False
         self.rawdata = rawdata
         self.freq = freq
         self.duration = (self.rawdata.shape[0] - 1) / self.freq
@@ -58,7 +63,7 @@ class RawDataManager(Manager):
         
         # dirty hack to make sure that we don't redraw the window until it's been drawn once, otherwise Galry automatically rescales
         if self.paintinitialized==False:
-            return
+             return
         
         dur = self.xlim[1] - self.xlim[0]
         index = int(np.floor(self.xlim[0] / dur))
@@ -342,21 +347,12 @@ class ViewportUpdateProcessor(EventProcessor):
             (0, -1, self.parent.data_manager.duration, 1))
             
         nav = self.get_processor('navigation')
-        if not nav:
-            return
 
         self.viewbox = nav.get_viewbox()
         nav.constrain_navigation = True
         nav.xmin = -1
         nav.xmax = 2 * self.parent.data_manager.duration / self.parent.data_manager.duration_initial
         nav.sxmin = 1.
-        
-        x0, y0, x1, y1 = self.viewbox
-        
-        x0 = self.normalizer.unnormalize_x(x0)
-        y0 = self.normalizer.unnormalize_y(y0)
-        x1 = self.normalizer.unnormalize_x(x1)
-        y1 = self.normalizer.unnormalize_y(y1)
         
         self.parent.data_manager.xlim = ((self.viewbox[0] + 1) / 2. * (self.parent.data_manager.duration_initial),\
         (self.viewbox[2] + 1) / 2. * (self.parent.data_manager.duration_initial))
@@ -374,9 +370,8 @@ class ViewportUpdateProcessor(EventProcessor):
 # -----------------------------------------------------------------------------
 class RawDataInteractionManager(PlotInteractionManager):
     def initialize(self):
-        
-        self.channel_height = 0.25
         self.register('ChangeChannelHeight', self.change_channel_height)
+        self.register('Reset', self.reset_channel_height)
     
     def initialize_default(self, constrain_navigation=None,
         momentum=True,
@@ -400,17 +395,28 @@ class RawDataInteractionManager(PlotInteractionManager):
             processor.update_axes(None)
             
     def change_channel_height(self, parameter):
-        self.data_manager.channel_height *= (1 + parameter)
-        self.paint_manager.set_data(channel_height=self.data_manager.channel_height)
+        # increase/decrease channel height between limits of 0.01 and 2
+        if 0.01 <= self.data_manager.channel_height <= 2.:
+            self.data_manager.channel_height *= (1 + parameter)
+            print self.data_manager.channel_height
+            self.paint_manager.set_data(channel_height=self.data_manager.channel_height)
+            
+        # restore limits to ensure it never exceeds them
+        if self.data_manager.channel_height > 2.:
+            self.data_manager.channel_height = 2.
+        elif self.data_manager.channel_height < 0.01:
+            self.data_manager.channel_height = 0.01
+            
+        self.paint_manager.update()
+        
+    def reset_channel_height(self, parameter):
+        self.data_manager.channel_height = self.data_manager.default_channel_height
         self.paint_manager.update()
     
-class RawDataBindings(KlustaViewaBindings):
-    def set_channel_height(self):
+class RawDataBindings(KlustaViewaBindings):      
+    def initialize(self):
         self.set('Wheel', 'ChangeChannelHeight', key_modifier='Control',
                    param_getter=lambda p: p['wheel'] * .001)
-                   
-    def initialize(self):
-       self.set_channel_height()
 # -----------------------------------------------------------------------------
 # Top-level widget
 # -----------------------------------------------------------------------------
