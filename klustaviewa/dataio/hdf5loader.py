@@ -154,7 +154,6 @@ class HDF5Loader(Loader):
         self.nextrafet = (self.spike_table.cols.features.shape[1] - 
             self.nchannels * self.fetdim)
         
-        
     
     # Close function.
     # ---------------
