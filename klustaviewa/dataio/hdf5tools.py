@@ -32,7 +32,7 @@ def get_spikes_description(fetcol=None, has_mask=None):
     
 def get_waveforms_description(nsamples=None, nchannels=None, has_umask=None):
     waveforms_description = dict(
-        waveform=tables.Float32Col(shape=(nsamples * nchannels)),)
+        waveform=tables.Int16Col(shape=(nsamples * nchannels)),)
     if has_umask:
         waveforms_description['waveform_unfiltered'] = tables.Float32Col(
             shape=(nsamples * nchannels))

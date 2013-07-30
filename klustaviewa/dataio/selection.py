@@ -190,7 +190,8 @@ def get_some_spikes_in_clusters(clusters_selected, clusters, counter=None,
             k = max(int(1. / p), 1)
             for _ in xrange(10):
                 s[:] = False
-                s[np.random.randint(low=0, high=k)::k] = True
+                # s[np.random.randint(low=0, high=k)::k] = True
+                s[0::k] = True
                 spikes_in_cluster = spikes_in_cluster0 & s
                 # Try to increase the number of spikes if there are no
                 # spikes in the current cluster.
@@ -214,7 +215,8 @@ def get_some_spikes(clusters,
     spikes_selected = np.zeros(len(spikes), dtype=np.bool)
     p = nspikes_max / float(len(spikes))
     k = max(int(1. / p), 1)
-    spikes_selected[np.random.randint(low=0, high=k)::k] = True
+    # spikes_selected[np.random.randint(low=0, high=k)::k] = True
+    spikes_selected[0::k] = True
     return np.nonzero(spikes_selected)[0]
     
 def get_indices(data):

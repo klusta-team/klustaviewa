@@ -376,11 +376,14 @@ def read_probe(filename_probe):
         except:
             # Or try the Python-flavored probe file (SpikeDetekt, with an
             # extra field 'geometry').
-            ns = {}
-            execfile(filename_probe, ns)
-            probe = ns['geometry']
-            probe = np.array([probe[i] for i in sorted(probe.keys())],
-                                dtype=np.float32)
+            try:
+                ns = {}
+                execfile(filename_probe, ns)
+                probe = ns['geometry']
+                probe = np.array([probe[i] for i in sorted(probe.keys())],
+                                    dtype=np.float32)
+            except:
+                return None
         return process_probe(probe)
 
 
