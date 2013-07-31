@@ -31,7 +31,7 @@ class RawDataManager(Manager):
 
         # default settings
         self.max_size = 1000
-        self.duration_initial = 5
+        self.duration_initial = 10
         self.default_channel_height = 0.25
         self.channel_height_limits = (0.01, 2.)
         self.nticks = 10
@@ -296,12 +296,14 @@ class GridEventProcessor(EventProcessor):
                 nf = 5.
             else:
                 nf = 10.
+
         return nf * 10 ** e
 
     def get_ticks(self, x0, x1):
         x0 = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(x0)
         x1 = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(x1)
-        r = self.nicenum(x1 - x0, False)
+        r = self.nicenum(x1 - x0 - 1e-6, False)
+        print "diff is ", (x1-x0), "r is ", r
         d = self.nicenum(r / (self.parent.data_manager.nticks - 1), True)
         g0 = np.floor(x0 / d) * d
         g1 = np.ceil(x1 / d) * d
@@ -315,14 +317,11 @@ class GridEventProcessor(EventProcessor):
         if np.abs(x) < 1e-15:
             return "0"
 
-        elif np.abs(x) > 100.001:
+        elif np.abs(x) > 1000.001:
             return "%.3e" % x
 
-        if nfrac <= 2:
-            return "%.2f" % x
-        else:
-            nfrac = nfrac + int(np.log10(np.abs(x)))
-            return ("%." + str(nfrac) + "e") % x
+        # regular decimal notation (scientific notation for < 0.001s is not going to be used frequently if at all)
+        return ("%." + str(nfrac) + "f") % x
 
     def get_ticks_text(self, x0, y0, x1, y1):
         
