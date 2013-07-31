@@ -41,6 +41,16 @@ class HDF5Loader(Loader):
        
     def read(self):
         """Open a HDF5 main file."""
+        
+        self.initialize_logfile()
+        # Load the similarity measure chosen by the user in the preferences
+        # file: 'gaussian' or 'kl'.
+        # Refresh the preferences file when a new file is opened.
+        USERPREF.refresh()
+        self.similarity_measure = USERPREF['similarity_measure'] or 'gaussian'
+        info("Similarity measure: {0:s}.".format(self.similarity_measure))
+        info("Opening {0:s}.".format(self.filename))
+        
         self.main = tb.openFile(self.filename)
         # Get the list of shanks.
         self.shanks = [int(re.match("shank([0-9]+)", 
@@ -93,6 +103,7 @@ class HDF5Loader(Loader):
     def read_metadata(self):
         """Read the metadata in /metadata."""
         self.freq = self.main.getNodeAttr('/metadata', 'freq')
+        self.probe = self.main.getNodeAttr('/metadata', 'probe') or None
         
     def read_shank_metadata(self):
         """Read the per-shank metadata in /shanks/shank<X>/metadata."""
@@ -114,7 +125,7 @@ class HDF5Loader(Loader):
     def read_spiketimes(self):
         spiketimes = self.spike_table.col('time') * (1. / self.freq)
         # Convert to Pandas.
-        self.spiketimes = pd.Series(spiketimes)
+        self.spiketimes = pd.Series(spiketimes, dtype=np.float32)
         self.duration = spiketimes[-1]
     
     def read_cluster_info(self):
@@ -145,22 +156,80 @@ class HDF5Loader(Loader):
         self.group_colors = self.group_info['color'].astype(np.int32)
         self.group_names = self.group_info['name']
     
+    
+    # Read and process arrays.
+    # ------------------------
+    def normalize(self, x):
+        mean = np.mean(x)
+        x -= mean
+        # m, M = np.min(x), np.max(x)
+        # return (x - m) * (1. / (M - m))
+        M = np.max(np.abs(x))
+        return x * (1. / M)
+    
+    def process_masks_full(self, masks_full):
+        return masks_full * .00392157  # 1. / 256
+    
+    def process_masks(self, masks_full):
+        return masks_full[:,:-1:self.fetdim] * .00392157  # 1. / 256
+    
+    def process_waveforms(self, waveforms):
+        return self.normalize(waveforms).reshape((-1, self.nsamples, self.nchannels))
+    
     def read_arrays(self):
-        self.features = self.spike_table, 'features'
-        self.masks = self.spike_table, 'mask'
+        self.features = self.spike_table, 'features', self.normalize
+        self.masks_full = self.spike_table, 'mask', self.process_masks_full
+        self.masks = self.spike_table, 'mask', self.process_masks
         # For the waveforms, need to dereference with __call__ as it
         # is an external link.
-        self.waveforms = self.wave_table(), 'waveform'
+        self.waveforms = self.wave_table(), 'waveform', self.process_waveforms
         self.nextrafet = (self.spike_table.cols.features.shape[1] - 
             self.nchannels * self.fetdim)
         
     
-    # Close function.
-    # ---------------
+    # Log file.
+    # ---------
+    def initialize_logfile(self):
+        filename = os.path.splitext(self.filename)[0] + '.kvwlg'
+        self.logfile = FileLogger(filename, name='datafile', 
+            level=USERPREF['loglevel_file'])
+        # Register log file.
+        register(self.logfile)
+        
+    
+    def save(self, renumber=False):
+        self.update_cluster_info()
+        self.update_group_info()
+        
+        if renumber:
+            self.renumber()
+            clusters = get_array(self.clusters_renumbered)
+            cluster_info = self.cluster_info_renumbered
+        else:
+            clusters = get_array(self.clusters)
+            cluster_info = self.cluster_info
+        
+        # TODO
+        # # Save both ACLU and CLU files.
+        # save_clusters(self.filename_aclu, clusters)
+        # save_clusters(self.filename_clu, 
+            # convert_to_clu(clusters, cluster_info))
+        
+        # # Save CLUINFO and GROUPINFO files.
+        # save_cluster_info(self.filename_acluinfo, cluster_info)
+        # save_group_info(self.filename_groupinfo, self.group_info)
+    
+    
+    # Close functions.
+    # ----------------
     def close(self):
         """Close the main HDF5 file."""
         self.wave_table.umount()
         self.main.flush()
         self.main.close()
+        if hasattr(self, 'logfile'):
+            unregister(self.logfile)
        
-    
+    # def __del__(self):
+        # self.close()
+        

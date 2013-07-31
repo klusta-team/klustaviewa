@@ -27,6 +27,9 @@ def test_hdf5_loader1():
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
     filename = os.path.join(dir, 'test.xml')
     
+    global nspikes
+    nspikes_total = nspikes
+    
     # Convert in HDF5.
     with HDF5Writer(filename) as writer:
         writer.convert()
@@ -58,14 +61,19 @@ def test_hdf5_loader1():
     assert l.fetdim == fetdim
     assert l.nextrafet == 1
     
+    # Get all features.
+    features = l.get_features('all')
+    assert type(features) == pd.DataFrame
+    assert features.shape[0] == nspikes_total
+    
     # Get masks.
     masks = l.get_masks()
-    assert masks.values.dtype == np.uint8
+    # assert masks.values.dtype == np.uint8
     assert masks.shape[0] == nspikes
     
     # Get waveforms.
     waveforms = l.get_waveforms()
-    assert waveforms.shape == (nspikes, nchannels * nsamples)
+    assert np.array_equal(waveforms.shape, (nspikes, nsamples, nchannels))
     
     l.close()
     

@@ -22,7 +22,7 @@ from klustaviewa.gui.icons import get_icon
 from klustaviewa.control.controller import Controller
 from klustaviewa.wizard.wizard import Wizard
 from klustaviewa.dataio.tools import get_array
-from klustaviewa.dataio import KlustersLoader
+from klustaviewa.dataio import KlustersLoader, HDF5Loader
 from klustaviewa.gui.buffer import Buffer
 from klustaviewa.gui.dock import ViewDockWidget, DockTitleBar
 from klustaviewa.stats.cache import StatsCache
@@ -76,7 +76,8 @@ class MainWindow(QtGui.QMainWindow):
         
         # Initialize some variables.
         self.statscache = None
-        self.loader = KlustersLoader()
+        # self.loader = KlustersLoader()
+        self.loader = HDF5Loader()
         self.loader.progressReported.connect(self.open_progress_reported)
         self.wizard = Wizard()
         self.controller = None

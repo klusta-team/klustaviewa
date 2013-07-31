@@ -56,8 +56,15 @@ def select_pandas(data, spikes, drop_empty_rows=True):
     return data_selected
 
 def select_pytables(data, spikes):
-    table, column = data
+    if len(data) == 2:
+        table, column = data
+        process_fun = None
+    elif len(data) == 3:
+        table, column, process_fun = data
     values = table[spikes][column]
+    # Process the NumPy array.
+    if process_fun:
+        values = process_fun(values)
     # Get the spike indices.
     if spikes.dtype == np.bool:
         spike_indices = np.nonzero(spikes)[0]
@@ -69,7 +76,7 @@ def select_pytables(data, spikes):
     elif values.ndim == 2:
         pd_arr = pd.DataFrame(values, index=spike_indices)
     elif values.ndim == 3:
-        pd_arr = pd.Panel(values, index=spike_indices)
+        pd_arr = pd.Panel(values, items=spike_indices)
     return pd_arr
     
 def select(data, indices=None):
@@ -81,7 +88,10 @@ def select(data, indices=None):
     """
     # indices=None or 'all' means select all.
     if indices is None or indices is 'all':
-        return data
+        if type(data) == tuple:
+            indices = np.ones(data[0].shape[0], dtype=np.bool)
+        else:
+            return data
         
     indices_argument = indices
     if not hasattr(indices, '__len__'):
