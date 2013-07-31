@@ -27,12 +27,14 @@ class RawDataManager(Manager):
     info = {}
     
     # initialization
-    def set_data(self, rawdata=None, freq=None, channel_height=None, channel_names=None):
+    def set_data(self, rawdata=None, freq=None, channel_height=None, channel_names=None, dead_channels=None):
 
         # default settings
         self.max_size = 1000
         self.duration_initial = 5
         self.default_channel_height = 0.25
+        self.channel_height_limits = (0.01, 2.)
+        self.nticks = 10
         
         # load initial variables
         self.rawdata = rawdata
@@ -47,20 +49,16 @@ class RawDataManager(Manager):
         self.channel_height = channel_height
         
         if channel_names is None:
-            channel_names = ['channel{0:d}'.format(i) for i in xrange(self.nchannels)]
-            # channel_names = ["10" for numeric_string in current_array]
+            channel_names = ['ch{0:d}'.format(i) for i in xrange(self.nchannels)]
         self.channel_names = channel_names
         
+        # these variables will be overwritten after initialization (used to check if init is complete)
         self.slice_ref = (0, 0)
         self.paintinitialized = False
         
+        # write initial data to memory of the right length - this will be overwritten by the data updater, but this serves to give Galry a window size/ratio
         self.shape = (self.nchannels, self.duration_initial*self.freq)
-        self.samples = self.rawdata[:(self.duration_initial*self.freq), :]
-        
-        # self.load_correct_slices()
-        self.position = self.samples
-        
-        # self.paint_manager.update()
+        self.position = self.rawdata[:(self.duration_initial*self.freq), :]
         
         self.interaction_manager.get_processor('viewport').update_viewbox()
         self.interaction_manager.activate_grid()
@@ -68,7 +66,7 @@ class RawDataManager(Manager):
     def load_correct_slices(self):
         
         # dirty hack to make sure that we don't redraw the window until it's been drawn once, otherwise Galry automatically rescales
-        if self.paintinitialized==False:
+        if not self.paintinitialized:
              return
         
         dur = self.xlim[1] - self.xlim[0]
@@ -77,7 +75,8 @@ class RawDataManager(Manager):
         i = (index, zoom_index)
         
         if i != self.slice_ref: # we need to load a new slice
-            # Find needed slice(s) of data       
+            # Find needed slice(s) of data
+            
             xlim_ext = self.get_buffered_viewlimits(self.xlim)
             slice = self.get_viewslice(xlim_ext)
             self.slice_ref = i
@@ -91,7 +90,6 @@ class RawDataManager(Manager):
             
     def get_buffered_viewlimits(self, xlim):
         d = self.xlim[1] - self.xlim[0]
-        
         x0_ext = np.clip(self.xlim[0] - 3 * d, 0, self.totalduration)
         x1_ext = np.clip(self.xlim[1] + 3 * d, 0, self.totalduration)
         return (x0_ext, x1_ext)
@@ -115,15 +113,15 @@ class RawDataManager(Manager):
     
         """
         total_size = self.rawdata.shape[0]
-        # Get the view slice.
-        # x0d, x1d = x0ex / (duration_initial) * 2 - 1, x1ex / (duration_initial) * 2 - 1
-        # Extract the samples from the data (HDD access).
+        
         samples = self.rawdata[slice, :]
+        
         # Convert the data into floating points.
         samples = np.array(samples, dtype=np.float32)
         
         # Normalize the data.
         samples *= (1. / 65535)
+        
         # Size of the slice.
         nsamples, nchannels = samples.shape
         # Create the data array for the plot visual.
@@ -245,10 +243,9 @@ class GridEventProcessor(EventProcessor):
         viewbox = self.interaction_manager.get_processor('viewport').viewbox
         
         text, coordinates, n = self.get_ticks_text(*viewbox)
-        coordinates[:,0] -= 1
-
-        #coordinates[:,0] = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(coordinates[:,0])
-        #coordinates[:,1] = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_y(coordinates[:,1])
+        
+        coordinates[:,0] = self.interaction_manager.get_processor('viewport').normalizer.normalize_x(coordinates[:,0])
+        coordinates[:,1] = self.interaction_manager.get_processor('viewport').normalizer.normalize_y(coordinates[:,1])
 
         # here: coordinates contains positions centered on the static
         # xy=0 axes of the screen
@@ -302,9 +299,10 @@ class GridEventProcessor(EventProcessor):
         return nf * 10 ** e
 
     def get_ticks(self, x0, x1):
-        nticks = 5
+        x0 = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(x0)
+        x1 = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(x1)
         r = self.nicenum(x1 - x0, False)
-        d = self.nicenum(r / (nticks - 1), True)
+        d = self.nicenum(r / (self.parent.data_manager.nticks - 1), True)
         g0 = np.floor(x0 / d) * d
         g1 = np.ceil(x1 / d) * d
         nfrac = int(max(-np.floor(np.log10(d)), 0))
@@ -327,13 +325,14 @@ class GridEventProcessor(EventProcessor):
             return ("%." + str(nfrac) + "e") % x
 
     def get_ticks_text(self, x0, y0, x1, y1):
+        
         ticksx, nfracx = self.get_ticks(x0, x1)
-        # ticksy, nfracy = get_ticks(y0, y1)
-
         ticksy = np.linspace(-0.9, 0.9, self.parent.data_manager.nchannels)
+        
         n = len(ticksx)
         text = [self.format_number(x, nfracx) for x in ticksx]
         text += [str(self.parent.data_manager.channel_names[y]) for y in reversed(range(self.parent.data_manager.nchannels))]    
+        
         # position of the ticks
         coordinates = np.zeros((len(text), 2))
         coordinates[:n, 0] = ticksx
@@ -350,14 +349,15 @@ class ViewportUpdateProcessor(EventProcessor):
         self.register(None, self.update_viewport)
     
     def update_viewbox(self):
+        
         # normalization viewbox
         self.normalizer = DataNormalizer()
-        self.normalizer.normalize(
-            (0, -1, self.parent.data_manager.totalduration, 1))
+        self.normalizer.normalize((0, -1, self.parent.data_manager.duration_initial, 1))
             
         nav = self.get_processor('navigation')
 
         self.viewbox = nav.get_viewbox()
+        
         nav.constrain_navigation = True
         nav.xmin = -1
         nav.xmax = 2 * self.parent.data_manager.totalduration / self.parent.data_manager.duration_initial
@@ -404,16 +404,19 @@ class RawDataInteractionManager(PlotInteractionManager):
             processor.update_axes(None)
             
     def change_channel_height(self, parameter):
-        # increase/decrease channel height between limits of 0.01 and 2
-        if 0.01 <= self.data_manager.channel_height <= 2.:
+        # get limits
+        ll, ul = self.data_manager.channel_height_limits
+        
+        # increase/decrease channel height between limits
+        if ll <= self.data_manager.channel_height <= ul:
             self.data_manager.channel_height *= (1 + parameter)
             self.paint_manager.set_data(channel_height=self.data_manager.channel_height)
             
         # restore limits to ensure it never exceeds them
-        if self.data_manager.channel_height > 2.:
-            self.data_manager.channel_height = 2.
-        elif self.data_manager.channel_height < 0.01:
-            self.data_manager.channel_height = 0.01
+        if self.data_manager.channel_height > ul:
+            self.data_manager.channel_height = ul
+        elif self.data_manager.channel_height < ll:
+            self.data_manager.channel_height = ll
             
         self.paint_manager.update()
         
