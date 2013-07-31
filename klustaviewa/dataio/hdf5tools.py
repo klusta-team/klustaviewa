@@ -103,8 +103,8 @@ def open_klusters_oneshank(filename):
     if 'uspk' in filenames and os.path.exists(filenames['uspk'] or ''):
         data['uspk'] = MemMappedBinary(filenames['uspk'], np.int16, 
             rowsize=metadata['nchannels'] * metadata['nsamples'])
-    if 'masks' in filenames and os.path.exists(filenames['masks'] or ''):
-        data['masks'] = MemMappedText(filenames['masks'], np.float32, skiprows=1)
+    if 'mask' in filenames and os.path.exists(filenames['mask'] or ''):
+        data['mask'] = MemMappedText(filenames['mask'], np.float32, skiprows=1)
 
     data.update(metadata)
     
@@ -267,17 +267,14 @@ class HDF5Writer(object):
             return {}
         data = self.klusters_data[self.shank]
         read = {}
-        # if 'aclu' in data:
         read['cluster'] = data['aclu'][self.spike]
-        # else:
-            # read['cluster'] = data['clu'][self.spike]
         read['fet'] = data['fet'].next()
         read['time'] = read['fet'][-1]
         read['spk'] = data['spk'].next()
-        if 'masks' in data:
-            read['masks'] = data['masks'].next()
+        if 'mask' in data:
+            read['mask'] = data['mask'].next()
         else:
-            read['masks'] = np.ones_like(read['fet'])
+            read['mask'] = np.ones_like(read['fet'])
         self.spike += 1
         return read
         
@@ -291,8 +288,8 @@ class HDF5Writer(object):
         row_main['cluster'] = read['cluster']
         row_main['features'] = read['fet']# * 1e-5
         row_main['time'] = read['time']
-        if 'masks' in read:
-            row_main['masks'] = (read['masks'] * 255).astype(np.uint8)
+        if 'mask' in read:
+            row_main['masks'] = (read['mask'] * 255).astype(np.uint8)
         row_main.append()
         
         # Fill the wave row.

@@ -186,18 +186,19 @@ class HDF5Loader(Loader):
     # Read and process arrays.
     # ------------------------
     def normalize(self, x):
-        mean = np.mean(x)
-        x -= mean
-        # m, M = np.min(x), np.max(x)
-        # return (x - m) * (1. / (M - m))
-        M = np.max(np.abs(x))
-        return x * (1. / M)
+        # mean = np.mean(x)
+        # x -= mean
+        # # m, M = np.min(x), np.max(x)
+        # # return (x - m) * (1. / (M - m))
+        # M = np.max(np.abs(x))
+        # return x * (1. / M)
+        return x * 1e-5#(1. / 65536.)
     
     def process_masks_full(self, masks_full):
-        return masks_full * .00392157  # 1. / 256
+        return masks_full * 1. / 255
     
     def process_masks(self, masks_full):
-        return masks_full[:,:-1:self.fetdim] * .00392157  # 1. / 256
+        return masks_full[:,:-1:self.fetdim] * 1. / 255
     
     # def get_masks(self, spikes=None, full=None, clusters=None):
         # if clusters is not None:

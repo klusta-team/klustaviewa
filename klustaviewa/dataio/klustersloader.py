@@ -267,7 +267,10 @@ def process_features(features, fetdim, nchannels, freq, nfet=None):
     # normalize normal features while keeping symmetry
     features_normal = normalize(features[:,:fetdim * nchannels],
                                         symmetric=True)
+    # TODO: put the following line in FeatureView: it is necessary for correct
+    # normalization of the times.
     features_time = spiketimes.reshape((-1, 1)) * 1. / spiketimes[-1] * 2 - 1
+    # features_time = spiketimes.reshape((-1, 1)) * 1. / spiketimes[-1]# * 2 - 1
     # normalize extra features without keeping symmetry
     if nextrafet > 1:
         features_extra = normalize(features[:,-nextrafet:-1],
