@@ -12,9 +12,10 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
+from probe import probe_to_json
 from klustersloader import (find_filenames, find_index, read_xml,
     filename_to_triplet, triplet_to_filename, find_indices,
-    find_hdf5_filenames,
+    find_hdf5_filenames, find_filename, find_any_filename,
     read_clusters, read_cluster_info, read_group_info, read_probe,)
 from tools import MemMappedText, MemMappedBinary
 
@@ -72,8 +73,8 @@ def open_klusters_oneshank(filename):
         data['acluinfo'] = read_cluster_info(filenames['acluinfo'])
     if 'groupinfo' in filenames and os.path.exists(filenames['groupinfo']):
         data['groupinfo'] = read_group_info(filenames['groupinfo'])
-    if 'probe' in filenames:
-        data['probe'] = read_probe(filenames['probe'])
+    # if 'probe' in filenames:
+        # data['probe'] = read_probe(filenames['probe'])
 
     # Find out the number of columns in the .fet file.
     with open(filenames['fet'], 'r') as f:
@@ -106,6 +107,15 @@ def open_klusters(filename):
         filenames[index] = triplet_to_filename(triplet[:2] + (index,))
     klusters_data = {index: open_klusters_oneshank(filename) 
         for index, filename in filenames.iteritems()}
+            
+    # Load probe file.
+    filename_probe = (find_filename(filename, 'probe') or
+                          find_any_filename(filename, 'probe'))
+    if filename_probe:
+        probe_ns = {}
+        execfile(filename_probe, {}, probe_ns)
+        klusters_data['probe'] = probe_ns
+    
     return klusters_data
 
 def create_hdf5_files(filename, klusters_data):
@@ -124,11 +134,15 @@ def create_hdf5_files(filename, klusters_data):
     for file in [hdf5['main_file'], hdf5['wave_file']]:
         file.createGroup('/', 'shanks')
         file.createGroup('/', 'metadata')
-        file.setNodeAttr('/metadata', 'probe', '')#json.dumps(probe.probes))
+        file.setNodeAttr('/metadata', 'probe', 
+            probe_to_json(klusters_data['probe']))
         file.setNodeAttr('/metadata', 'freq', klusters_data_first['freq'])
     
     # Create groups and tables for each shank.
-    for shank, data in klusters_data.iteritems():
+    shanks = sorted([key for key in klusters_data.keys() 
+        if isinstance(key, (int, long))])
+    for shank in shanks:
+        data = klusters_data[shank]
         
         shank_path = '/shanks/shank{0:d}'.format(shank)
         
@@ -200,6 +214,13 @@ def create_hdf5_files(filename, klusters_data):
             hdf5['wave_table', shank])
 
     return hdf5
+
+def klusters_to_hdf5(filename, progress_report=None):
+    with HDF5Writer(filename) as f:
+        # Callback function for progress report.
+        if progress_report is not None:
+            f.progress_report(progress_report)
+        f.convert()
     
    
 # -----------------------------------------------------------------------------
@@ -221,7 +242,8 @@ class HDF5Writer(object):
         self.klusters_data = open_klusters(self.filename)
         # self.filenames, self.klusters_data
         self.hdf5_data = create_hdf5_files(self.filename, self.klusters_data)
-        self.shanks = sorted(self.klusters_data.keys())
+        self.shanks = sorted([key for key in self.klusters_data.keys() 
+            if isinstance(key, (int, long))])
         self.shank = self.shanks[0]
         self.spike = 0
         

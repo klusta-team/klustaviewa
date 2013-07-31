@@ -140,11 +140,21 @@ def create_xml(nchannels, nsamples, fetdim):
 
 def create_probe(nchannels):
     # return np.random.randint(size=(nchannels, 2), low=0, high=10)
-    probe = np.zeros((nchannels, 2), dtype=np.int32)
-    probe[:, 0] = np.arange(nchannels)
-    probe[::2, 0] *= -1
-    probe[:, 1] = np.arange(nchannels)
-    return probe
+    geometry = np.zeros((nchannels, 2), dtype=np.int32)
+    geometry[:, 0] = np.arange(nchannels)
+    geometry[::2, 0] *= -1
+    geometry[:, 1] = np.arange(nchannels)
+    
+    graph = [(i, (i + 1) % nchannels) for i in xrange(nchannels)]
+    
+    probe = {'probes': {1: graph}, 
+             'geometry': {i: tuple(geometry[i, :]) for i in xrange(nchannels)}}
+    
+    probe_python = "probes = {0:s}\ngeometry = {1:s}\n".format(
+        str(probe['probes']),
+        str(probe['geometry']),
+    )
+    return probe_python
 
     
 # -----------------------------------------------------------------------------
@@ -210,7 +220,10 @@ def teardown():
     # when trying to re-create the directory right after it has been deleted.
     for the_file in os.listdir(dir):
         file_path = os.path.join(dir, the_file)
-        os.unlink(file_path)
+        try:
+            os.unlink(file_path)
+        except:
+            pass
         
         
         

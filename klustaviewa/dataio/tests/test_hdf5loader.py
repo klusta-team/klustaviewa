@@ -38,6 +38,12 @@ def test_hdf5_loader1():
     filename = os.path.join(dir, 'test.main.h5')
     l = HDF5Loader(filename=filename)
     
+    # Open probe.
+    probe = l.get_probe()
+    assert probe['nchannels'] == nchannels
+    assert probe['nchannels_alive'] == nchannels
+    assert np.array_equal(probe['channels'], np.arange(nchannels))
+    
     # Select cluster.
     cluster = 3
     l.select(clusters=[cluster])

@@ -16,9 +16,12 @@ from galry import QtGui, QtCore
 
 from loader import (Loader, default_group_info, reorder, renumber_clusters,
     default_cluster_info)
+from klustersloader import find_hdf5_filenames
+from hdf5tools import klusters_to_hdf5
 from tools import (load_text, load_xml, normalize,
     load_binary, load_pickle, save_text, get_array,
     first_row, load_binary_memmap)
+from probe import (load_probe_json)
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices)
 from klustaviewa.utils.userpref import USERPREF
@@ -36,8 +39,18 @@ class HDF5Loader(Loader):
     # ---------------
     def open(self, filename):
         """Open a file."""
-        self.filename = filename
+        filenames = find_hdf5_filenames(filename)
+        filename_main = filenames['hdf5_main']
+        # Conversion if the main HDF5 file does not exist.
+        if not os.path.exists(filename_main):
+            klusters_to_hdf5(filename, self.klusters_to_hdf5_progress_report)
+        self.filename = filename_main
         self.read()
+       
+    def klusters_to_hdf5_progress_report(self, spike, nspikes, shank, nshanks):
+        count = 100 * nshanks
+        index = int((shank + spike * 1. / nspikes) * 100)
+        self.report_progress(index, count)
        
     def read(self):
         """Open a HDF5 main file."""
@@ -103,7 +116,14 @@ class HDF5Loader(Loader):
     def read_metadata(self):
         """Read the metadata in /metadata."""
         self.freq = self.main.getNodeAttr('/metadata', 'freq')
-        self.probe = self.main.getNodeAttr('/metadata', 'probe') or None
+        probe_json = self.main.getNodeAttr('/metadata', 'probe') or None
+        if probe_json:
+            self.probe = load_probe_json(probe_json)
+        else:
+            self.probe = None
+        
+    def get_probe_geometry(self):
+        return self.probe[self.shank]['geometry_array']
         
     def read_shank_metadata(self):
         """Read the per-shank metadata in /shanks/shank<X>/metadata."""
@@ -224,9 +244,11 @@ class HDF5Loader(Loader):
     # ----------------
     def close(self):
         """Close the main HDF5 file."""
-        self.wave_table.umount()
-        self.main.flush()
-        self.main.close()
+        if hasattr(self, 'wave_table'):
+            self.wave_table.umount()
+        if hasattr(self, 'main'):
+            self.main.flush()
+            self.main.close()
         if hasattr(self, 'logfile'):
             unregister(self.logfile)
        

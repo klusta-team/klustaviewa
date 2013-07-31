@@ -281,6 +281,9 @@ class Loader(QtCore.QObject):
     def get_probe(self):
         return self.probe
     
+    def get_probe_geometry(self):
+        return self.probe
+    
     def get_new_clusters(self, n=1):
         return self.clusters.max() + np.arange(1, n + 1, dtype=np.int32)
     

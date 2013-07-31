@@ -4,6 +4,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 import time
+import traceback
 from threading import Lock
 
 import numpy as np
@@ -35,10 +36,11 @@ class OpenTask(QtCore.QObject):
     
     def open(self, loader, path):
         try:
+            loader.close()
             loader.open(path)
             self.dataOpened.emit()
         except Exception as e:
-            self.dataOpenFailed.emit(e.message)
+            self.dataOpenFailed.emit(traceback.format_exc())
             
 
 class CorrelogramsTask(QtCore.QObject):

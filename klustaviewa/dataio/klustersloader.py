@@ -229,8 +229,8 @@ def triplet_to_filename(triplet):
 def find_hdf5_filenames(filename):
     filenames = {}
     for key in ['main', 'wave', 'raw', 'low', 'high']:
-        filenames['hdf5_' + key] = find_filename_or_new(filename, key + '.h5',
-            have_file_index=False)
+        filenames['hdf5_' + key] = os.path.abspath(
+            find_filename_or_new(filename, key + '.h5', have_file_index=False))
     return filenames
 
 # -----------------------------------------------------------------------------

@@ -315,7 +315,7 @@ class TaskGraph(AbstractTaskGraph):
             cluster_colors=self.loader.get_cluster_colors(),
             clusters_selected=self.loader.get_clusters_selected(),
             masks=self.loader.get_masks(),
-            geometrical_positions=self.loader.get_probe(),
+            geometrical_positions=self.loader.get_probe_geometry(),
             autozoom=autozoom,
             keep_order=wizard,
         )
