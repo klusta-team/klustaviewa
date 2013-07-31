@@ -17,18 +17,19 @@ from klustersloader import (find_filenames, find_index, read_xml,
     filename_to_triplet, triplet_to_filename, find_indices,
     find_hdf5_filenames, find_filename, find_any_filename,
     read_clusters, read_cluster_info, read_group_info, read_probe,)
+from loader import (default_cluster_info, default_group_info)
 from tools import MemMappedText, MemMappedBinary
 
 
 # Table descriptions.
 # -------------------
-def get_spikes_description(fetcol=None, has_mask=None):
+def get_spikes_description(fetcol=None):#, has_mask=None):
     spikes_description = dict(
         time=tables.UInt64Col(),
         features=tables.Float32Col(shape=(fetcol,)),
         cluster=tables.UInt32Col(),)
-    if has_mask:
-        spikes_description['mask'] = tables.UInt8Col(shape=(fetcol,))
+    # if has_mask:
+    spikes_description['masks'] = tables.UInt8Col(shape=(fetcol,))
     return spikes_description
     
 def get_waveforms_description(nsamples=None, nchannels=None, has_umask=None):
@@ -67,15 +68,25 @@ def open_klusters_oneshank(filename):
     data = {}
     metadata = read_xml(filenames['xml'], fileindex)
     data['clu'] = read_clusters(filenames['clu'])
+    
+    # Read .aclu data.
     if 'aclu' in filenames and os.path.exists(filenames['aclu']):
         data['aclu'] = read_clusters(filenames['aclu'])
+    else:
+        data['aclu'] = data['clu']
+        
+    # Read .acluinfo data.
     if 'acluinfo' in filenames and os.path.exists(filenames['acluinfo']):
         data['acluinfo'] = read_cluster_info(filenames['acluinfo'])
+    else:
+        data['acluinfo'] = default_cluster_info(np.unique(data['aclu']))
+        
+    # Read group info.
     if 'groupinfo' in filenames and os.path.exists(filenames['groupinfo']):
         data['groupinfo'] = read_group_info(filenames['groupinfo'])
-    # if 'probe' in filenames:
-        # data['probe'] = read_probe(filenames['probe'])
-
+    else:
+        data['groupinfo'] = default_group_info()
+    
     # Find out the number of columns in the .fet file.
     with open(filenames['fet'], 'r') as f:
         f.readline()
@@ -92,8 +103,8 @@ def open_klusters_oneshank(filename):
     if 'uspk' in filenames and os.path.exists(filenames['uspk'] or ''):
         data['uspk'] = MemMappedBinary(filenames['uspk'], np.int16, 
             rowsize=metadata['nchannels'] * metadata['nsamples'])
-    if 'mask' in filenames and os.path.exists(filenames['mask'] or ''):
-        data['mask'] = MemMappedText(filenames['mask'], np.float32, skiprows=1)
+    if 'masks' in filenames and os.path.exists(filenames['masks'] or ''):
+        data['masks'] = MemMappedText(filenames['masks'], np.float32, skiprows=1)
 
     data.update(metadata)
     
@@ -134,8 +145,11 @@ def create_hdf5_files(filename, klusters_data):
     for file in [hdf5['main_file'], hdf5['wave_file']]:
         file.createGroup('/', 'shanks')
         file.createGroup('/', 'metadata')
-        file.setNodeAttr('/metadata', 'probe', 
-            probe_to_json(klusters_data['probe']))
+        if 'probe' in klusters_data:
+            probe_text = probe_to_json(klusters_data['probe'])
+        else:
+            probe_text = ''
+        file.setNodeAttr('/metadata', 'probe', probe_text)
         file.setNodeAttr('/metadata', 'freq', klusters_data_first['freq'])
     
     # Create groups and tables for each shank.
@@ -196,7 +210,8 @@ def create_hdf5_files(filename, klusters_data):
             shank_path, 'spikes', 
             get_spikes_description(
                 fetcol=data['fetcol'],
-                has_mask=('mask' in data)))
+                # has_mask=('masks' in data)
+                ))
                 
                 
         # Create the wave table.
@@ -252,15 +267,17 @@ class HDF5Writer(object):
             return {}
         data = self.klusters_data[self.shank]
         read = {}
-        if 'aclu' in data:
-            read['cluster'] = data['aclu'][self.spike]
-        else:
-            read['cluster'] = data['clu'][self.spike]
+        # if 'aclu' in data:
+        read['cluster'] = data['aclu'][self.spike]
+        # else:
+            # read['cluster'] = data['clu'][self.spike]
         read['fet'] = data['fet'].next()
         read['time'] = read['fet'][-1]
         read['spk'] = data['spk'].next()
-        if 'mask' in data:
-            read['mask'] = data['mask'].next()
+        if 'masks' in data:
+            read['masks'] = data['masks'].next()
+        else:
+            read['masks'] = np.ones_like(read['fet'])
         self.spike += 1
         return read
         
@@ -274,8 +291,8 @@ class HDF5Writer(object):
         row_main['cluster'] = read['cluster']
         row_main['features'] = read['fet']# * 1e-5
         row_main['time'] = read['time']
-        if 'mask' in read:
-            row_main['mask'] = (read['mask'] * 255).astype(np.uint8)
+        if 'masks' in read:
+            row_main['masks'] = (read['masks'] * 255).astype(np.uint8)
         row_main.append()
         
         # Fill the wave row.
@@ -309,10 +326,11 @@ class HDF5Writer(object):
         """Close all files."""
         
         # Close the memory-mapped Klusters files.
-        for shank in self.shanks:
-            for data in self.klusters_data[shank]:
-                if isinstance(data, (MemMappedBinary, MemMappedText)):
-                    data.close()
+        if hasattr(self, 'shanks'):
+            for shank in self.shanks:
+                for data in self.klusters_data[shank]:
+                    if isinstance(data, (MemMappedBinary, MemMappedText)):
+                        data.close()
         
         # Close the HDF5 files.
         if self.hdf5_data['main_file'].isopen:

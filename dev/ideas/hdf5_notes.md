@@ -14,6 +14,8 @@ Decisions that need to be made
 
   * Do we need 1 or 2 fields for "mask"? We decided "mask_binary" and "mask_float" but I'm not sure whether it's a good idea. It is redundant information as we can trivially (in Python or in any language) retrieve the binary value from the float value. 
   
+  * If there is no mask, should we remove the whole column, or should we fill it with a default value (which wastes disk space) ?
+  
   * Should we fix the data type of the fields, or should we let them be flexible? We could retrieve the actual data types when loading the files.
   
   * Which data type for the floating mask? I'd say uint8 (1 byte), from 0 to 255.

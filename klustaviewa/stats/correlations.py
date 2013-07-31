@@ -22,6 +22,10 @@ def compute_statistics(Fet1, Fet2, spikes_in_clusters, masks):
     # nclusters = Clu2.max() #max(Clu2)
     nclusters = len(spikes_in_clusters)
 
+    # Default masks.
+    if masks is None:
+        masks = np.ones((nPoints, nDims), dtype=np.float32)
+    
     # precompute the mean and variances of the masked points for each feature
     # contains 1 when the corresponding point is masked
     masked = np.zeros_like(masks)

@@ -35,6 +35,8 @@ def check_shape(data, shape):
 def get_array(data, copy=False):
     """Get a NumPy array from a NumPy array or a Pandas data object (Series,
     DataFrame or Panel)."""
+    if data is None:
+        return None
     if type(data) == np.ndarray:
         if data.dtype == np.int64:
             return data.astype(np.int32)

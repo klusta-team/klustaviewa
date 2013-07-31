@@ -56,7 +56,7 @@ class Wizard(object):
         if (similarity_matrix is not None and similarity_matrix.size > 0):
             self.matrix = similarity_matrix
             self.quality = np.diag(self.matrix)
-        
+            
             assert len(self.cluster_groups) == self.matrix.shape[0]
         
     

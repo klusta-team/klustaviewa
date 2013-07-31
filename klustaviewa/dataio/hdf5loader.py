@@ -16,7 +16,7 @@ from galry import QtGui, QtCore
 
 from loader import (Loader, default_group_info, reorder, renumber_clusters,
     default_cluster_info)
-from klustersloader import find_hdf5_filenames
+from klustersloader import find_filenames
 from hdf5tools import klusters_to_hdf5
 from tools import (load_text, load_xml, normalize,
     load_binary, load_pickle, save_text, get_array,
@@ -39,8 +39,9 @@ class HDF5Loader(Loader):
     # ---------------
     def open(self, filename):
         """Open a file."""
-        filenames = find_hdf5_filenames(filename)
+        filenames = find_filenames(filename)
         filename_main = filenames['hdf5_main']
+        self.filename_log = filenames['kvwlg']
         # Conversion if the main HDF5 file does not exist.
         if not os.path.exists(filename_main):
             klusters_to_hdf5(filename, self.klusters_to_hdf5_progress_report)
@@ -83,6 +84,8 @@ class HDF5Loader(Loader):
         # Get the tables.
         self.spike_table = self.main.getNode(
             self.shank_path + '/spikes')
+        # self.has_masks = 'mask' in self.spike_table.coldescrs
+        # self.fetcol = self.spike_table.coldescrs['features'].shape[0]
         self.wave_table = self.main.getNode(
             self.shank_path + '/waveforms')
         self.clusters_table = self.main.getNode(
@@ -123,7 +126,10 @@ class HDF5Loader(Loader):
             self.probe = None
         
     def get_probe_geometry(self):
-        return self.probe[self.shank]['geometry_array']
+        if self.probe:
+            return self.probe[self.shank]['geometry_array']
+        else:
+            return None
         
     def read_shank_metadata(self):
         """Read the per-shank metadata in /shanks/shank<X>/metadata."""
@@ -193,13 +199,38 @@ class HDF5Loader(Loader):
     def process_masks(self, masks_full):
         return masks_full[:,:-1:self.fetdim] * .00392157  # 1. / 256
     
+    # def get_masks(self, spikes=None, full=None, clusters=None):
+        # if clusters is not None:
+            # spikes = get_spikes_in_clusters(clusters, self.clusters)
+        # if spikes is None:
+            # spikes = self.spikes_selected
+        # # # Default masks 1.
+        # # if not self.has_masks:
+            # # if spikes == 'all':
+                # # nspikes = self.nspikes
+            # # else:
+                # # nspikes = len(spikes)
+            # # if not full:
+                # # return np.ones(
+                    # # (nspikes, (self.fetcol - 2) // self.fetdim), 
+                    # # dtype=np.float32)
+            # # else:
+                # # return np.ones((nspikes, self.fetcol), dtype=np.float32)
+        # # Select masks.
+        # # else:
+        # if not full:
+            # masks = self.masks
+        # else:
+            # masks = self.masks_full
+        # return select(masks, spikes)
+    
     def process_waveforms(self, waveforms):
         return self.normalize(waveforms).reshape((-1, self.nsamples, self.nchannels))
     
     def read_arrays(self):
         self.features = self.spike_table, 'features', self.normalize
-        self.masks_full = self.spike_table, 'mask', self.process_masks_full
-        self.masks = self.spike_table, 'mask', self.process_masks
+        self.masks_full = self.spike_table, 'masks', self.process_masks_full
+        self.masks = self.spike_table, 'masks', self.process_masks
         # For the waveforms, need to dereference with __call__ as it
         # is an external link.
         self.waveforms = self.wave_table(), 'waveform', self.process_waveforms
@@ -210,8 +241,8 @@ class HDF5Loader(Loader):
     # Log file.
     # ---------
     def initialize_logfile(self):
-        filename = os.path.splitext(self.filename)[0] + '.kvwlg'
-        self.logfile = FileLogger(filename, name='datafile', 
+        # filename = os.path.splitext(self.filename)[0] + '.kvwlg'
+        self.logfile = FileLogger(self.filename_log, name='datafile', 
             level=USERPREF['loglevel_file'])
         # Register log file.
         register(self.logfile)
