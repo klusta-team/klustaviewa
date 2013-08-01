@@ -56,32 +56,10 @@ class RawDataManager(Manager):
         self.slice_ref = (0, 0)
         self.paintinitialized = False
         
-        # write initial data to memory of the right length - this will be overwritten by the data updater, but this serves to give Galry a window size/ratio
-        self.shape = (self.nchannels, self.duration_initial*self.freq)
-        self.samples = self.rawdata[slice(0, (self.duration_initial*self.freq), 1), :]
-        # Convert the data into floating points.
-        self.samples = np.array(self.samples, dtype=np.float32)
+        x = np.tile(np.linspace(0., self.totalduration, self.totalsamples // self.max_size), (self.nchannels, 1))
+        y = np.zeros_like(x)+ np.linspace(-.9, .9, self.nchannels).reshape((-1, 1))
         
-        self.total_size = self.rawdata.shape[0]
-        # Normalize the data.
-        self.samples *= (1. / 65535)
-        self.position = self.samples
-        nsamples, nchannels = self.position.shape
-        
-        M = np.empty((nsamples * nchannels, 2))
-        self.samples = self.samples.T
-        M[:, 1] = self.samples.ravel()
-        # Generate the x coordinates.
-        x = np.arange(0, self.duration_initial*self.freq, 1) / float(self.total_size - 1)
-        
-        x = x * 2 * self.totalduration/ self.duration_initial - 1
-        M[:, 0] = np.tile(x, nchannels)
-
-        self.bounds = np.arange(nchannels + 1) * nsamples
-        self.size = self.bounds[-1]
-        
-        self.position = self.samples = M
-        self.color_array_index = np.repeat(np.arange(nchannels), nsamples / nchannels)
+        self.position, self.shape = process_coordinates(x=x, y=y)
         
         self.interaction_manager.get_processor('viewport').update_viewbox()
         self.interaction_manager.activate_grid()
