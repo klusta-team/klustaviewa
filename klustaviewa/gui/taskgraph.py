@@ -73,6 +73,13 @@ class AbstractTaskGraph(QtCore.QObject):
         return lambda *args, **kwargs: self.run(('_' + name, args, kwargs))
         
 
+def _get_similarity_matrix_slice(nspikes, nclusters):
+    """Get the subset of spikes for the computation of the similarity 
+    matrix."""
+    # We want ~1000 spikes per cluster.
+    k = max(1, int(nspikes / (1000. * nclusters)))
+    return slice(0, nspikes, k)
+        
 # -----------------------------------------------------------------------------
 # Specific task graph
 # -----------------------------------------------------------------------------
@@ -169,13 +176,21 @@ class TaskGraph(AbstractTaskGraph):
             # self.update_correlograms_view()
             return '_update_correlograms_view'
     
+    
     def _compute_similarity_matrix(self, target_next=None):
         similarity_measure = self.loader.similarity_measure
+        
+        
         # Get the correlation matrix parameters.
-        features = get_array(self.loader.get_features('all'))
-        masks = get_array(self.loader.get_masks('all', full=True))
-        clusters = get_array(self.loader.get_clusters('all'))
+        spikes_slice = _get_similarity_matrix_slice(self.loader.nspikes,    
+            len(self.loader.get_clusters_unique()))
+        features = get_array(self.loader.get_features(spikes=spikes_slice))
+        masks = get_array(self.loader.get_masks(spikes=spikes_slice, full=True))
+        clusters = get_array(self.loader.get_clusters(spikes=spikes_slice))
+        
         cluster_groups = get_array(self.loader.get_cluster_groups('all'))
+        
+        
         clusters_all = self.loader.get_clusters_unique()
         # Get cluster indices that need to be updated.
         # if clusters_to_update is None:
@@ -223,7 +238,11 @@ class TaskGraph(AbstractTaskGraph):
     def _similarity_matrix_computed(self, clusters_selected, matrix, clusters,
             cluster_groups, target_next=None):
         self.mainwindow.set_busy(computing_matrix=False)
-        if not np.array_equal(clusters, self.loader.get_clusters('all')):
+        spikes_slice = _get_similarity_matrix_slice(
+            self.loader.nspikes, 
+            len(self.loader.get_clusters_unique()))
+        clusters_now = self.loader.get_clusters(spikes=spikes_slice)
+        if not np.array_equal(clusters, clusters_now):
             return False
         self.statscache.similarity_matrix.update(clusters_selected, matrix)
         self.statscache.similarity_matrix_normalized = normalize(

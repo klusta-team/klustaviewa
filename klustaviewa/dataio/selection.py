@@ -65,11 +65,15 @@ def select_pytables(data, spikes):
     # Process the NumPy array.
     if process_fun:
         values = process_fun(values)
+    
     # Get the spike indices.
-    if spikes.dtype == np.bool:
+    if isinstance(spikes, slice):
+        spike_indices = np.arange(spikes.start, spikes.stop, spikes.step)
+    elif spikes.dtype == np.bool:
         spike_indices = np.nonzero(spikes)[0]
     else:
         spike_indices = spikes
+    
     # Create the Pandas object with the spike indices.
     if values.ndim == 1:
         pd_arr = pd.Series(values, index=spike_indices)
@@ -94,11 +98,11 @@ def select(data, indices=None):
             return data
         
     indices_argument = indices
-    if not hasattr(indices, '__len__'):
+    if not hasattr(indices, '__len__') and not isinstance(indices, slice):
         indices = [indices]
         
     # Ensure indices is an array of indices or boolean masks.
-    if not isinstance(indices, np.ndarray):
+    if not isinstance(indices, np.ndarray) and not isinstance(indices, slice):
         # Deal with empty indices.
         if not len(indices):
             if data.ndim == 1:
