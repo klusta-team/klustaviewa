@@ -58,7 +58,30 @@ class RawDataManager(Manager):
         
         # write initial data to memory of the right length - this will be overwritten by the data updater, but this serves to give Galry a window size/ratio
         self.shape = (self.nchannels, self.duration_initial*self.freq)
-        self.position = self.rawdata[:(self.duration_initial*self.freq), :]
+        self.samples = self.rawdata[slice(0, (self.duration_initial*self.freq), 1), :]
+        # Convert the data into floating points.
+        self.samples = np.array(self.samples, dtype=np.float32)
+        
+        self.total_size = self.rawdata.shape[0]
+        # Normalize the data.
+        self.samples *= (1. / 65535)
+        self.position = self.samples
+        nsamples, nchannels = self.position.shape
+        
+        M = np.empty((nsamples * nchannels, 2))
+        self.samples = self.samples.T
+        M[:, 1] = self.samples.ravel()
+        # Generate the x coordinates.
+        x = np.arange(0, self.duration_initial*self.freq, 1) / float(self.total_size - 1)
+        
+        x = x * 2 * self.totalduration/ self.duration_initial - 1
+        M[:, 0] = np.tile(x, nchannels)
+
+        self.bounds = np.arange(nchannels + 1) * nsamples
+        self.size = self.bounds[-1]
+        
+        self.position = self.samples = M
+        self.color_array_index = np.repeat(np.arange(nchannels), nsamples / nchannels)
         
         self.interaction_manager.get_processor('viewport').update_viewbox()
         self.interaction_manager.activate_grid()
@@ -303,7 +326,6 @@ class GridEventProcessor(EventProcessor):
         x0 = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(x0)
         x1 = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(x1)
         r = self.nicenum(x1 - x0 - 1e-6, False)
-        print "diff is ", (x1-x0), "r is ", r
         d = self.nicenum(r / (self.parent.data_manager.nticks - 1), True)
         g0 = np.floor(x0 / d) * d
         g1 = np.ceil(x1 / d) * d
