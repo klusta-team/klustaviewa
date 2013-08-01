@@ -31,7 +31,7 @@ class RawDataManager(Manager):
     def set_data(self, rawdata=None, freq=None, channel_height=None, channel_names=None, dead_channels=None):
 
         # default settings
-        self.max_size = 1000
+        self.max_size = 5000
         self.duration_initial = 10
         self.default_channel_height = 0.25
         self.channel_height_limits = (0.01, 2.)
@@ -61,8 +61,6 @@ class RawDataManager(Manager):
         y = np.zeros_like(x)+ np.linspace(-1, 1, self.nchannels).reshape((-1, 1))
         
         self.position, self.shape = process_coordinates(x=x, y=y)
-        
-        print self.shape
         
         # activate the grid
         self.interaction_manager.get_processor('viewport').update_viewbox()
@@ -143,7 +141,6 @@ class RawDataManager(Manager):
         return M, self.bounds, size
         
     def slice_loaded(self, samples, bounds, size):
-        print "slice is loaded!"
         self.samples = samples
         self.bounds = bounds
         self.size = size
