@@ -16,6 +16,7 @@ from galry import (Manager, PlotPaintManager, EventProcessor, PlotInteractionMan
 from klustaviewa.views.common import KlustaViewaBindings, KlustaView
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.settings import SETTINGS
+from qtools import inprocess, inthread, QT_BINDING
 
 __all__ = ['RawDataView']
 
@@ -60,8 +61,13 @@ class RawDataManager(Manager):
         self.shape = (self.nchannels, self.duration_initial*self.freq)
         self.position = self.rawdata[:(self.duration_initial*self.freq), :]
         
+        # activate the grid
         self.interaction_manager.get_processor('viewport').update_viewbox()
         self.interaction_manager.activate_grid()
+        
+        # register the updater threads
+        self.slice_retriever = inthread(SliceRetriever)()
+        self.slice_retriever.sliceLoaded.connect(self.slice_loaded)
         
     def load_correct_slices(self):
         
@@ -81,6 +87,8 @@ class RawDataManager(Manager):
             slice = self.get_viewslice(xlim_ext)
             self.slice_ref = i
             
+            self.slice_retriever.load_new_slice(self.rawdata, slice, xlim_ext, self.totalduration, self.duration_initial)
+            time.sleep(1)
             self.samples, self.bounds, self.size = self.get_undersampled_data(xlim_ext, slice)
             self.color_array_index = np.repeat(np.arange(self.nchannels), self.samples.shape[0] / self.nchannels)
             
@@ -110,7 +118,6 @@ class RawDataManager(Manager):
     
           * data: a HDF5 dataset of size Nsamples x Nchannels.
           * xlim: (x0, x1) of the desired data view.
-    
         """
         total_size = self.rawdata.shape[0]
         
@@ -126,7 +133,7 @@ class RawDataManager(Manager):
         nsamples, nchannels = samples.shape
         # Create the data array for the plot visual.
         M = np.empty((nsamples * nchannels, 2))
-        samples = samples.T# + np.linspace(-1., 1., nchannels).reshape((-1, 1))
+        samples = samples.T
         M[:, 1] = samples.ravel()
         # Generate the x coordinates.
         x = np.arange(slice.start, slice.stop, slice.step) / float(total_size - 1)
@@ -137,6 +144,55 @@ class RawDataManager(Manager):
         self.bounds = np.arange(nchannels + 1) * nsamples
         size = self.bounds[-1]
         return M, self.bounds, size
+        
+    def slice_loaded(self, samples, bounds, size):
+        print "slice is loaded!"
+        pass
+        # self.samples = samples
+        # self.bounds = bounds
+        # self.size = size
+        # 
+        # self.color_array_index = np.repeat(np.arange(self.nchannels), self.samples.shape[0] / self.nchannels)
+        # 
+        # self.position = self.samples
+        # 
+        # self.paint_manager.update()
+        
+class SliceRetriever(QtCore.QObject):
+    sliceLoaded = QtCore.pyqtSignal(object, object, long)
+
+    def __init__(self, parent=None):
+        super(SliceRetriever, self).__init__(parent)
+        
+    def load_new_slice(self, rawdata, slice, xlim, totalduration, duration_initial):
+        
+        total_size = rawdata.shape[0]
+        
+        samples = rawdata[slice, :]
+       
+        # Convert the data into floating points.
+        samples = np.array(samples, dtype=np.float32)
+
+        # Normalize the data.
+        samples *= (1. / 65535)
+
+        # Size of the slice.
+        nsamples, nchannels = samples.shape
+        # Create the data array for the plot visual.
+        M = np.empty((nsamples * nchannels, 2))
+        samples = samples.T
+        M[:, 1] = samples.ravel()
+        # Generate the x coordinates.
+        x = np.arange(slice.start, slice.stop, slice.step) / float(total_size - 1)
+
+        x = x * 2 * totalduration/ duration_initial - 1
+        M[:, 0] = np.tile(x, nchannels)
+
+        bounds = np.arange(nchannels + 1) * nsamples
+        size = bounds[-1]
+
+        self.sliceLoaded.emit(M, bounds, size)
+
             
 # -----------------------------------------------------------------------------
 # Visuals
@@ -303,7 +359,6 @@ class GridEventProcessor(EventProcessor):
         x0 = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(x0)
         x1 = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(x1)
         r = self.nicenum(x1 - x0 - 1e-6, False)
-        print "diff is ", (x1-x0), "r is ", r
         d = self.nicenum(r / (self.parent.data_manager.nticks - 1), True)
         g0 = np.floor(x0 / d) * d
         g1 = np.ceil(x1 / d) * d
@@ -417,11 +472,11 @@ class RawDataInteractionManager(PlotInteractionManager):
         elif self.data_manager.channel_height < ll:
             self.data_manager.channel_height = ll
             
-        self.paint_manager.update()
+        # self.paint_manager.update()
         
     def reset_channel_height(self, parameter):
         self.data_manager.channel_height = self.data_manager.default_channel_height
-        self.paint_manager.update()
+        # self.paint_manager.update()
     
 class RawDataBindings(KlustaViewaBindings):      
     def initialize(self):
@@ -444,10 +499,21 @@ class RawDataView(KlustaView):
     
     def set_data(self, *args, **kwargs):
         self.data_manager.set_data(*args, **kwargs)
+    
+    # Save and restore geometry
+    # -------------------------
+    def save_geometry(self):
+        pref = self.position_manager.get_geometry_preferences()
+        SETTINGS.set('waveform_view.geometry', pref)
 
-        # update?
-        if self.initialized:
-            self.paint_manager.update()
-            self.updateGL()
+    def restore_geometry(self):
+        """Return a dictionary with the user preferences regarding geometry
+        in the WaveformView."""
+        pref = SETTINGS.get('waveform_view.geometry')
+        self.position_manager.set_geometry_preferences(pref)
+
+    def closeEvent(self, e):
+        self.save_geometry()
+        super(WaveformView, self).closeEvent(e)
       
         
