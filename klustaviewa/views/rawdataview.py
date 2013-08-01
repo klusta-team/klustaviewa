@@ -57,9 +57,10 @@ class RawDataManager(Manager):
         self.slice_ref = (0, 0)
         self.paintinitialized = False
         
-        # write initial data to memory of the right length - this will be overwritten by the data updater, but this serves to give Galry a window size/ratio
-        self.shape = (self.nchannels, self.duration_initial*self.freq)
-        self.position = self.rawdata[:(self.duration_initial*self.freq), :]
+        x = np.tile(np.linspace(0., self.totalduration, self.totalsamples // self.max_size), (self.nchannels, 1))
+        y = np.zeros_like(x)+ np.linspace(-.9, .9, self.nchannels).reshape((-1, 1))
+        
+        self.position, self.shape = process_coordinates(x=x, y=y)
         
         # activate the grid
         self.interaction_manager.get_processor('viewport').update_viewbox()
