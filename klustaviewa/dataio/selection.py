@@ -55,17 +55,8 @@ def select_pandas(data, spikes, drop_empty_rows=True):
         data_selected = data_selected.dropna()
     return data_selected
 
-def select_pytables(data, spikes):
-    if len(data) == 2:
-        table, column = data
-        process_fun = None
-    elif len(data) == 3:
-        table, column, process_fun = data
-    values = table[spikes][column]
-    # Process the NumPy array.
-    if process_fun:
-        values = process_fun(values)
-    
+def pandaize(values, spikes):
+    """Convert a NumPy array to a Pandas object, with the spikes indices."""
     # Get the spike indices.
     if isinstance(spikes, slice):
         spike_indices = np.arange(spikes.start, spikes.stop, spikes.step)
@@ -82,6 +73,18 @@ def select_pytables(data, spikes):
     elif values.ndim == 3:
         pd_arr = pd.Panel(values, items=spike_indices)
     return pd_arr
+    
+def select_pytables(data, spikes):
+    if len(data) == 2:
+        table, column = data
+        process_fun = None
+    elif len(data) == 3:
+        table, column, process_fun = data
+    values = table[spikes][column]
+    # Process the NumPy array.
+    if process_fun:
+        values = process_fun(values)
+    return pandaize(values, spikes)
     
 def select(data, indices=None):
     """Select portion of the data, with the only assumption that indices are
@@ -168,7 +171,6 @@ def get_some_spikes_in_clusters(clusters_selected, clusters, counter=None,
     nspikes = len(clusters)
     spikes = np.zeros(nspikes, dtype=np.bool)
     # Number of spikes in all selected clusters.
-    # counter = Counter(clusters)
     nspikes_in_clusters_selected = np.sum(np.array([counter[cluster]
         for cluster in clusters_selected]))
     # Take a sample of the spikes in each cluster.
@@ -226,12 +228,9 @@ def get_some_spikes(clusters,
     if nspikes_max is None:
         nspikes_max = 10000
     spikes = get_indices(clusters)
-    spikes_selected = np.zeros(len(spikes), dtype=np.bool)
     p = nspikes_max / float(len(spikes))
     k = max(int(1. / p), 1)
-    # spikes_selected[np.random.randint(low=0, high=k)::k] = True
-    spikes_selected[0::k] = True
-    return np.nonzero(spikes_selected)[0]
+    return slice(0, len(spikes), k)
     
 def get_indices(data):
     if type(data) == np.ndarray:

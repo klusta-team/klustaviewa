@@ -23,7 +23,7 @@ from tools import (load_text, load_xml, normalize,
     first_row, load_binary_memmap)
 from probe import (load_probe_json)
 from selection import (select, select_pairs, get_spikes_in_clusters,
-    get_some_spikes_in_clusters, get_some_spikes, get_indices)
+    get_some_spikes_in_clusters, get_some_spikes, get_indices, pandaize)
 from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.utils.settings import SETTINGS
 from klustaviewa.utils.logger import (debug, info, warn, exception, FileLogger,
@@ -185,14 +185,12 @@ class HDF5Loader(Loader):
     
     # Read and process arrays.
     # ------------------------
-    def normalize(self, x):
-        # mean = np.mean(x)
-        # x -= mean
-        # # m, M = np.min(x), np.max(x)
-        # # return (x - m) * (1. / (M - m))
-        # M = np.max(np.abs(x))
-        # return x * (1. / M)
-        return x * 1e-5#(1. / 65536.)
+    def process_features(self, y):
+        x = y.copy()
+        x[:,:-1] *= self.background_features_normalization
+        x[:,-1] *= (1. / (self.duration * self.freq))
+        x[:,-1] = 2 * x[:,-1] - 1
+        return x
     
     def process_masks_full(self, masks_full):
         return masks_full * 1. / 255
@@ -200,44 +198,114 @@ class HDF5Loader(Loader):
     def process_masks(self, masks_full):
         return masks_full[:,:-1:self.fetdim] * 1. / 255
     
-    # def get_masks(self, spikes=None, full=None, clusters=None):
-        # if clusters is not None:
-            # spikes = get_spikes_in_clusters(clusters, self.clusters)
-        # if spikes is None:
-            # spikes = self.spikes_selected
-        # # # Default masks 1.
-        # # if not self.has_masks:
-            # # if spikes == 'all':
-                # # nspikes = self.nspikes
-            # # else:
-                # # nspikes = len(spikes)
-            # # if not full:
-                # # return np.ones(
-                    # # (nspikes, (self.fetcol - 2) // self.fetdim), 
-                    # # dtype=np.float32)
-            # # else:
-                # # return np.ones((nspikes, self.fetcol), dtype=np.float32)
-        # # Select masks.
-        # # else:
-        # if not full:
-            # masks = self.masks
-        # else:
-            # masks = self.masks_full
-        # return select(masks, spikes)
-    
     def process_waveforms(self, waveforms):
-        return self.normalize(waveforms).reshape((-1, self.nsamples, self.nchannels))
+        return (waveforms * 1e-5).reshape((-1, self.nsamples, self.nchannels))
     
     def read_arrays(self):
-        self.features = self.spike_table, 'features', self.normalize
+        self.nextrafet = (self.spike_table.cols.features.shape[1] - 
+            self.nchannels * self.fetdim)
+            
+        self.features = self.spike_table, 'features', self.process_features
         self.masks_full = self.spike_table, 'masks', self.process_masks_full
         self.masks = self.spike_table, 'masks', self.process_masks
         # For the waveforms, need to dereference with __call__ as it
         # is an external link.
         self.waveforms = self.wave_table(), 'waveform', self.process_waveforms
-        self.nextrafet = (self.spike_table.cols.features.shape[1] - 
-            self.nchannels * self.fetdim)
         
+        # Background spikes
+        # -----------------
+        # Used for:
+        #   * background feature view
+        #   * similarity matrix
+        # Load background spikes for FeatureView.
+        step = max(1, int(self.nspikes / (1000. * self.nclusters)))
+        self.background_spikes = slice(0, self.nspikes, step)
+        self.background_table = self.spike_table[self.background_spikes]
+        self.background_features = self.background_table['features']
+        # Find normalization factor for features.
+        self.background_features_normalization = 1. / np.abs(
+            self.background_features[:,:-1]).max()
+        self.background_features = self.process_features(
+            self.background_features)
+        self.background_features_pandas = pandaize(
+            self.background_features, self.background_spikes)
+        self.background_masks = self.process_masks_full(
+            self.background_table['masks'])
+        self.background_clusters = self.background_table['cluster']
+        
+
+    # Access to the data: spikes
+    # --------------------------
+    def select(self, spikes=None, clusters=None):
+        if clusters is not None:
+            spikes = get_spikes_in_clusters(clusters, self.clusters)    
+        self.spikes_selected = spikes
+        self.clusters_selected = clusters
+        # HDD access here: get the portion of the table with the requested 
+        # clusters (cache). It is very quick to access the different columns
+        # from this in-memory table later.
+        self.spikes_selected_table = self.spike_table[spikes]
+
+    def get_background_features(self):
+        return self.background_features_pandas
+    
+    def get_features(self, spikes=None, clusters=None):
+        # Special case: return the already-selected values from the cache.
+        if spikes is None and clusters is None:
+            features = self.spikes_selected_table['features']
+            values = self.process_features(features)
+            return pandaize(values, self.spikes_selected)
+        # Normal case.
+        if clusters is not None:
+            spikes = get_spikes_in_clusters(clusters, self.clusters)
+        if spikes is None:
+            spikes = self.spikes_selected
+        return select(self.features, spikes)
+    
+    def get_some_features(self):#, clusters=None):
+        """Return the features for a subset of all spikes: a large number
+        of spikes from any cluster, and a controlled subset of the selected 
+        clusters."""
+        # Merge background features and all features.
+        features_bg = self.get_background_features()
+        features = self.get_features()
+        return pd.concat([features, features_bg])
+        
+    def get_masks(self, spikes=None, full=None, clusters=None):
+        # Special case: return the already-selected values from the cache.
+        if spikes is None and clusters is None:
+            masks = self.spikes_selected_table['masks']
+            if full:
+                values = self.process_masks_full(masks)
+            else:
+                values = self.process_masks(masks)
+            return pandaize(values, self.spikes_selected)
+        # Normal case.
+        if clusters is not None:
+            spikes = get_spikes_in_clusters(clusters, self.clusters)
+        if spikes is None:
+            spikes = self.spikes_selected
+        if not full:
+            masks = self.masks
+        else:
+            masks = self.masks_full
+        return select(masks, spikes)
+    
+    def get_waveforms(self, spikes=None, clusters=None):
+        if spikes is not None:
+            return select(self.waveforms, spikes)
+        else:
+            if clusters is None:
+                clusters = self.clusters_selected
+            if clusters is not None:
+                spikes = get_some_spikes_in_clusters(clusters, self.clusters,
+                    counter=self.counter,
+                    nspikes_max_expected=USERPREF['waveforms_nspikes_max_expected'],
+                    nspikes_per_cluster_min=USERPREF['waveforms_nspikes_per_cluster_min'])
+            else:
+                spikes = self.spikes_selected
+        return select(self.waveforms, spikes)
+    
     
     # Log file.
     # ---------

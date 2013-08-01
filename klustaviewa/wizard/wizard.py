@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-from collections import Counter, OrderedDict
+from collections import OrderedDict
 
 import numpy as np
 

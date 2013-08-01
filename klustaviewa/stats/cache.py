@@ -4,7 +4,7 @@ second-order statistics in memory, and updating them when necessary."""
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-from collections import Counter, namedtuple
+from collections import namedtuple
 from itertools import product
 
 import numpy as np

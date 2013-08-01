@@ -73,13 +73,13 @@ class AbstractTaskGraph(QtCore.QObject):
         return lambda *args, **kwargs: self.run(('_' + name, args, kwargs))
         
 
-def _get_similarity_matrix_slice(nspikes, nclusters):
-    """Get the subset of spikes for the computation of the similarity 
-    matrix."""
-    # We want ~1000 spikes per cluster.
-    k = max(1, int(nspikes / (1000. * nclusters)))
-    return slice(0, nspikes, k)
-        
+# def _get_similarity_matrix_slice(nspikes, nclusters):
+    # """Get the subset of spikes for the computation of the similarity 
+    # matrix."""
+    # # We want ~1000 spikes per cluster.
+    # k = max(1, int(nspikes / (1000. * nclusters)))
+    # return slice(0, nspikes, k)
+
 # -----------------------------------------------------------------------------
 # Specific task graph
 # -----------------------------------------------------------------------------
@@ -176,17 +176,26 @@ class TaskGraph(AbstractTaskGraph):
             # self.update_correlograms_view()
             return '_update_correlograms_view'
     
-    
     def _compute_similarity_matrix(self, target_next=None):
         similarity_measure = self.loader.similarity_measure
         
         
         # Get the correlation matrix parameters.
-        spikes_slice = _get_similarity_matrix_slice(self.loader.nspikes,    
-            len(self.loader.get_clusters_unique()))
-        features = get_array(self.loader.get_features(spikes=spikes_slice))
-        masks = get_array(self.loader.get_masks(spikes=spikes_slice, full=True))
-        clusters = get_array(self.loader.get_clusters(spikes=spikes_slice))
+        # spikes_slice = _get_similarity_matrix_slice(self.loader.nspikes,    
+            # len(self.loader.get_clusters_unique()))
+        # features = get_array(self.loader.get_features(spikes=spikes_slice))
+        # masks = get_array(self.loader.get_masks(spikes=spikes_slice, full=True))
+        # clusters = get_array(self.loader.get_clusters(spikes=spikes_slice))
+        # features = self.loader.background_table['features']
+        features = self.loader.background_features
+        # masks = self.loader.background_table['masks']
+        masks = self.loader.background_masks
+        # clusters = self.loader.background_table['cluster']
+        clusters = self.loader.background_clusters
+        
+        # print features, features.shape
+        # print masks, masks.shape
+        # print clusters
         
         cluster_groups = get_array(self.loader.get_cluster_groups('all'))
         
@@ -238,10 +247,11 @@ class TaskGraph(AbstractTaskGraph):
     def _similarity_matrix_computed(self, clusters_selected, matrix, clusters,
             cluster_groups, target_next=None):
         self.mainwindow.set_busy(computing_matrix=False)
-        spikes_slice = _get_similarity_matrix_slice(
-            self.loader.nspikes, 
-            len(self.loader.get_clusters_unique()))
-        clusters_now = self.loader.get_clusters(spikes=spikes_slice)
+        # spikes_slice = _get_similarity_matrix_slice(
+            # self.loader.nspikes, 
+            # len(self.loader.get_clusters_unique()))
+        clusters_now = self.loader.get_clusters(
+            spikes=self.loader.background_spikes)
         if not np.array_equal(clusters, clusters_now):
             return False
         self.statscache.similarity_matrix.update(clusters_selected, matrix)
@@ -311,6 +321,7 @@ class TaskGraph(AbstractTaskGraph):
     def _update_feature_view(self, autozoom=None):
         data = dict(
             features=self.loader.get_some_features(),
+            spiketimes=self.loader.get_spiketimes(),
             masks=self.loader.get_masks(),
             clusters=self.loader.get_clusters(),
             clusters_selected=self.loader.get_clusters_selected(),

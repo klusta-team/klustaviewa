@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-from collections import Counter, namedtuple
+from collections import namedtuple
 from itertools import product
 
 import numpy as np

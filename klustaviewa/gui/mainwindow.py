@@ -7,7 +7,7 @@ import pprint
 import time
 import os
 import inspect
-from collections import OrderedDict, Counter
+from collections import OrderedDict
 from functools import partial
 import webbrowser
 

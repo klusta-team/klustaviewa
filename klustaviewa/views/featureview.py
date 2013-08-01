@@ -3,7 +3,6 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-from collections import Counter
 import operator
 import time
 
@@ -245,6 +244,7 @@ class FeatureDataManager(Manager):
     # ----------------------
     def set_data(self,
                  features=None,  # a subset of all spikes, disregarding cluster
+                 spiketimes=None,  # a subset of all spikes, disregarding cluster
                  masks=None,  # masks for all spikes in selected clusters
                  clusters=None,  # clusters for all spikes in selected clusters
                  clusters_selected=None,
@@ -273,6 +273,7 @@ class FeatureDataManager(Manager):
         assert fetdim is not None
         
         self.duration = duration
+        self.spiketimes = spiketimes
         self.freq = freq
         self.interaction_manager.get_processor('grid').update_viewbox()
         
@@ -944,8 +945,9 @@ class FeatureInfoManager(Manager):
         
         # Absolute spike index.
         ispk_abs = self.data_manager.feature_indices[ispk]
-        time = select(self.data_manager.features, ispk_abs)[-1]
-        time = (time + 1) * .5 * self.parent.data_manager.duration
+        # time = select(self.data_manager.features, ispk_abs)[-1]
+        # time = (time + 1) * .5 * self.parent.data_manager.duration
+        time = self.data_manager.spiketimes[ispk_abs]
         
         unit = self.data_manager.time_unit
         if unit == 'second':

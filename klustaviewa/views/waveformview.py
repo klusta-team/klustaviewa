@@ -6,7 +6,6 @@
 import numpy as np
 import numpy.random as rdn
 from numpy.lib.stride_tricks import as_strided
-from collections import Counter
 import operator
 import time
 

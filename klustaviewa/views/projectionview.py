@@ -3,7 +3,6 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-from collections import Counter
 import operator
 import time
 from functools import partial
