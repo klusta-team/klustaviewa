@@ -57,10 +57,12 @@ class RawDataManager(Manager):
         self.slice_ref = (0, 0)
         self.paintinitialized = False
         
-        x = np.tile(np.linspace(0., self.totalduration, self.totalsamples // self.max_size), (self.nchannels, 1))
-        y = np.zeros_like(x)+ np.linspace(-.9, .9, self.nchannels).reshape((-1, 1))
+        x = np.tile(np.linspace(0., self.totalduration, 2), (self.nchannels, 1))
+        y = np.zeros_like(x)+ np.linspace(-1, 1, self.nchannels).reshape((-1, 1))
         
         self.position, self.shape = process_coordinates(x=x, y=y)
+        
+        print self.shape
         
         # activate the grid
         self.interaction_manager.get_processor('viewport').update_viewbox()
@@ -82,20 +84,14 @@ class RawDataManager(Manager):
         i = (index, zoom_index)
         
         if i != self.slice_ref: # we need to load a new slice
+            self.slice_ref = i
             # Find needed slice(s) of data
-            
+        
             xlim_ext = self.get_buffered_viewlimits(self.xlim)
             slice = self.get_viewslice(xlim_ext)
-            self.slice_ref = i
             
+            # this executes in a new thread, and calls slice_loaded when done
             self.slice_retriever.load_new_slice(self.rawdata, slice, xlim_ext, self.totalduration, self.duration_initial)
-            time.sleep(1)
-            self.samples, self.bounds, self.size = self.get_undersampled_data(xlim_ext, slice)
-            self.color_array_index = np.repeat(np.arange(self.nchannels), self.samples.shape[0] / self.nchannels)
-            
-            self.position = self.samples
-            
-            self.paint_manager.update()
             
     def get_buffered_viewlimits(self, xlim):
         d = self.xlim[1] - self.xlim[0]
@@ -148,16 +144,15 @@ class RawDataManager(Manager):
         
     def slice_loaded(self, samples, bounds, size):
         print "slice is loaded!"
-        pass
-        # self.samples = samples
-        # self.bounds = bounds
-        # self.size = size
-        # 
-        # self.color_array_index = np.repeat(np.arange(self.nchannels), self.samples.shape[0] / self.nchannels)
-        # 
-        # self.position = self.samples
-        # 
-        # self.paint_manager.update()
+        self.samples = samples
+        self.bounds = bounds
+        self.size = size
+        
+        self.color_array_index = np.repeat(np.arange(self.nchannels), self.samples.shape[0] / self.nchannels)
+        self.position = self.samples
+        
+        self.paint_manager.update()
+        self.paint_manager.updateGL()
         
 class SliceRetriever(QtCore.QObject):
     sliceLoaded = QtCore.pyqtSignal(object, object, long)
@@ -168,7 +163,6 @@ class SliceRetriever(QtCore.QObject):
     def load_new_slice(self, rawdata, slice, xlim, totalduration, duration_initial):
         
         total_size = rawdata.shape[0]
-        
         samples = rawdata[slice, :]
        
         # Convert the data into floating points.
@@ -473,11 +467,11 @@ class RawDataInteractionManager(PlotInteractionManager):
         elif self.data_manager.channel_height < ll:
             self.data_manager.channel_height = ll
             
-        # self.paint_manager.update()
+        self.paint_manager.update()
         
     def reset_channel_height(self, parameter):
         self.data_manager.channel_height = self.data_manager.default_channel_height
-        # self.paint_manager.update()
+        self.paint_manager.update()
     
 class RawDataBindings(KlustaViewaBindings):      
     def initialize(self):
