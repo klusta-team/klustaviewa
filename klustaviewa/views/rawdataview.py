@@ -10,7 +10,6 @@ from galry import (Manager, PlotPaintManager, EventProcessor, PlotInteractionMan
     process_coordinates, get_next_color, get_color)
 from klustaviewa.views.common import KlustaViewaBindings, KlustaView
 import klustaviewa.utils.logger as log
-from klustaviewa.utils.settings import SETTINGS
 from qtools import inthread
 
 __all__ = ['RawDataView']
@@ -26,11 +25,13 @@ class RawDataManager(Manager):
     def set_data(self, rawdata=None, freq=None, channel_height=None, channel_names=None, dead_channels=None):
 
         # default settings
-        self.max_size = 1000
+        self.max_size = 10000
         self.duration_initial = 10
         self.default_channel_height = 0.25
         self.channel_height_limits = (0.01, 2.)
         self.nticks = 10
+        
+        self.dead_channels = np.arange(0,5,1)
         
         # load initial variables
         self.rawdata = rawdata
@@ -141,7 +142,12 @@ class RawDataManager(Manager):
         self.bounds = bounds
         self.size = size
         
-        self.color_array_index = np.repeat(np.arange(self.nchannels), self.samples.shape[0] / self.nchannels)
+        colors = np.arange(self.nchannels)
+        colors[self.dead_channels] = 4
+        channels = np.arange(self.nchannels)
+        
+        self.channel_index = np.repeat(channels, self.samples.shape[0] / self.nchannels)
+        self.color_index = np.repeat(colors, self.samples.shape[0] / self.nchannels)
         self.position = self.samples
         
         self.paint_manager.update()
@@ -204,13 +210,14 @@ class RawDataPaintManager(PlotPaintManager):
             position0=self.data_manager.position,
             shape=self.data_manager.shape,
             size=self.data_manager.size,
-            index=self.data_manager.color_array_index,
+            channel_index=self.data_manager.channel_index,
+            color_index=self.data_manager.color_index,
             bounds=self.data_manager.bounds)
 
 class MultiChannelVisual(Visual):
     def initialize(self, color=None, point_size=1.0,
-            position=None, shape=None, nprimitives=None, index=None,
-            color_array_index=None, channel_height=None,
+            position=None, shape=None, nprimitives=None,
+            color_index=None, channel_height=None,
             options=None, autocolor=1):
         
         # register the size of the data
@@ -238,14 +245,15 @@ class MultiChannelVisual(Visual):
             
         # set position attribute
         self.add_attribute("position0", ndim=2, data=position, autonormalizable=True)
-        
-        index = np.array(index)
-        self.add_index("index", data=index)
     
-        if color_array_index is None:
-            color_array_index = np.repeat(np.arange(nprimitives), nsamples)
-        color_array_index = np.array(color_array_index)
+        if color_index is None:
+            color_index = np.repeat(np.arange(nprimitives), nsamples)
+        color_index = np.array(color_index)
             
+        # if channel_index is None:
+        channel_index = np.repeat(np.arange(nprimitives), nsamples)
+        channel_index = np.array(channel_index)
+        
         ncolors = color.shape[0]
         ncomponents = color.shape[1]
         color = color.reshape((1, ncolors, ncomponents))
@@ -254,15 +262,16 @@ class MultiChannelVisual(Visual):
         offset = dx / 2.
         
         self.add_texture('colormap', ncomponents=ncomponents, ndim=1, data=color)
-        self.add_attribute('index', ndim=1, vartype='int', data=color_array_index)
+        self.add_attribute('color_index', ndim=1, vartype='int', data=color_index)
+        self.add_attribute('channel_index', ndim=1, vartype='int', data=channel_index)
         self.add_varying('vindex', vartype='int', ndim=1)
         self.add_uniform('nchannels', vartype='float', ndim=1, data=float(nprimitives))
         self.add_uniform('channel_height', vartype='float', ndim=1, data=channel_height)
         
         self.add_vertex_main("""
         vec2 position = position0;
-        position.y = channel_height * position.y + .9 * (2 * index - (nchannels - 1)) / (nchannels - 1);
-        vindex = index;
+        position.y = channel_height * position.y + .9 * (2 * channel_index - (nchannels - 1)) / (nchannels - 1);
+        vindex = color_index;
         """)
         
         self.add_fragment_main("""
@@ -347,6 +356,7 @@ class GridEventProcessor(EventProcessor):
         x0 = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(x0)
         x1 = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(x1)
         r = self.nicenum(x1 - x0 - 1e-6, False)
+        print r;
         d = self.nicenum(r / (self.parent.data_manager.nticks - 1), True)
         g0 = np.floor(x0 / d) * d
         g1 = np.ceil(x1 / d) * d
@@ -360,8 +370,8 @@ class GridEventProcessor(EventProcessor):
         if np.abs(x) < 1e-15:
             return "0"
 
-        elif np.abs(x) > 1000.001:
-            return "%.3e" % x
+        # elif np.abs(x) > 1000.001:
+        #     return "%.3e" % x
 
         # regular decimal notation (scientific notation for < 0.001s is not going to be used frequently if at all)
         return ("%." + str(nfrac) + "f") % x

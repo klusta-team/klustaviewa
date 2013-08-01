@@ -61,4 +61,7 @@ def test_rawdataview():
     # Show the view.
     show_view(RawDataView, **kwargs)
     
-    
+if __name__ == "__main__":
+    setup()
+    test_rawdataview()
+    teardown()
