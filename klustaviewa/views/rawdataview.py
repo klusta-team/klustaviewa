@@ -54,7 +54,7 @@ class RawDataManager(Manager):
         self.channel_names = channel_names
         
         # these variables will be overwritten after initialization (used to check if init is complete)
-        self.slice_ref = (0, 0)
+        self.slice_ref = (-1, -1)
         self.paintinitialized = False
         
         x = np.tile(np.linspace(0., self.totalduration, 2), (self.nchannels, 1))
@@ -76,9 +76,9 @@ class RawDataManager(Manager):
         if not self.paintinitialized:
              return
         
-        dur = self.xlim[1] - self.xlim[0]
-        index = int(np.floor(self.xlim[0] / dur))
-        zoom_index = int(np.round(self.duration_initial / dur))
+        dur = np.exp(np.ceil(np.log(self.xlim[1] - self.xlim[0])))
+        zoom_index = int(np.round(1 + np.log(self.duration_initial / dur)))
+        index = int(np.floor(self.xlim[0] / (dur)))
         i = (index, zoom_index)
         
         if i != self.slice_ref: # we need to load a new slice
@@ -89,6 +89,7 @@ class RawDataManager(Manager):
             slice = self.get_viewslice(xlim_ext)
             
             # this executes in a new thread, and calls slice_loaded when done
+            print i
             self.slice_retriever.load_new_slice(self.rawdata, slice, xlim_ext, self.totalduration, self.duration_initial)
             
     def get_buffered_viewlimits(self, xlim):
