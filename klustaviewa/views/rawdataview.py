@@ -4,19 +4,14 @@
 # Imports
 # -----------------------------------------------------------------------------
 import numpy as np
-import numpy.random as rdn
-from numpy.lib.stride_tricks import as_strided
-from collections import Counter
-import operator
-import time
 
 from galry import (Manager, PlotPaintManager, EventProcessor, PlotInteractionManager, Visual,
-    GalryWidget, QtGui, QtCore, show_window, enforce_dtype, NavigationEventProcessor, GridVisual, RectanglesVisual,
-    TextVisual, DataNormalizer, process_coordinates, get_next_color, get_color)
+    QtGui, QtCore, NavigationEventProcessor, GridVisual, TextVisual, DataNormalizer, 
+    process_coordinates, get_next_color, get_color)
 from klustaviewa.views.common import KlustaViewaBindings, KlustaView
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.settings import SETTINGS
-from qtools import inprocess, inthread, QT_BINDING
+from qtools import inthread
 
 __all__ = ['RawDataView']
 
@@ -31,7 +26,7 @@ class RawDataManager(Manager):
     def set_data(self, rawdata=None, freq=None, channel_height=None, channel_names=None, dead_channels=None):
 
         # default settings
-        self.max_size = 5000
+        self.max_size = 1000
         self.duration_initial = 10
         self.default_channel_height = 0.25
         self.channel_height_limits = (0.01, 2.)
@@ -76,7 +71,8 @@ class RawDataManager(Manager):
         if not self.paintinitialized:
              return
         
-        dur = np.exp(np.ceil(np.log(self.xlim[1] - self.xlim[0])))
+        # dur is a paged version of the duration (using e^round(log(duration))) to avoid loading slices for every integer change in zoom level
+        dur = np.exp(np.ceil(np.log(self.xlim[1] - self.xlim[0]))) 
         zoom_index = int(np.round(1 + np.log(self.duration_initial / dur)))
         index = int(np.floor(self.xlim[0] / (dur)))
         i = (index, zoom_index)
@@ -89,7 +85,6 @@ class RawDataManager(Manager):
             slice = self.get_viewslice(xlim_ext)
             
             # this executes in a new thread, and calls slice_loaded when done
-            print i
             self.slice_retriever.load_new_slice(self.rawdata, slice, xlim_ext, self.totalduration, self.duration_initial)
             
     def get_buffered_viewlimits(self, xlim):
