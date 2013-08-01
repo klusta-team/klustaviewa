@@ -243,7 +243,8 @@ class FeatureDataManager(Manager):
     # Initialization methods
     # ----------------------
     def set_data(self,
-                 features=None,  # a subset of all spikes, disregarding cluster
+                 features=None,
+                 features_background=None,
                  spiketimes=None,  # a subset of all spikes, disregarding cluster
                  masks=None,  # masks for all spikes in selected clusters
                  clusters=None,  # clusters for all spikes in selected clusters
@@ -262,6 +263,7 @@ class FeatureDataManager(Manager):
 
         if features is None:
             features = np.zeros((0, 2))
+            features_background = np.zeros((0, 2))
             masks = np.zeros((0, 1))
             clusters = np.zeros(0, dtype=np.int32)
             clusters_selected = []
@@ -284,29 +286,35 @@ class FeatureDataManager(Manager):
         # can be 'second' or 'samples'
         self.time_unit = time_unit
         
-        # Indices of all subset spikes.
-        indices_all = get_indices(features)
+        # # Indices of all subset spikes.
+        # indices_all = get_indices(features)
         
-        # Select only the clusters for subset of spikes.
-        clusters = select(clusters, indices_all)
+        # # Select only the clusters for subset of spikes.
+        # clusters = select(clusters, indices_all)
         
-        # Indices of subset spikes in selected clusters.
-        indices_selection = get_indices(clusters)
+        # # Indices of subset spikes in selected clusters.
+        # indices_selection = get_indices(clusters)
         
-        # Indices of subset spikes that are not in selected clusters.
-        indices_background = np.setdiff1d(indices_all, indices_selection, True)
+        # # Indices of subset spikes that are not in selected clusters.
+        # indices_background = np.setdiff1d(indices_all, indices_selection, True)
         
         # Extract the relevant spikes, but keep the other ones in features_full
         self.clusters = clusters
         self.clusters_array = get_array(self.clusters)
         
+        
         # self.features contains selected spikes.
-        self.features = select(features, indices_selection)
+        # self.features = select(features, indices_selection)
+        self.features = features
         self.features_array = get_array(self.features)
         
         # self.features_background contains all non-selected spikes
-        self.features_background = select(features, indices_background)
+        # self.features_background = select(features, indices_background)
+        self.features_background = features_background
         self.features_background_array = get_array(self.features_background)
+        
+        
+        
         
         # Background spikes are those which do not belong to the selected clusters
         self.npoints_background = self.features_background_array.shape[0]

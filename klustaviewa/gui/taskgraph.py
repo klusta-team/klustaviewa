@@ -73,13 +73,6 @@ class AbstractTaskGraph(QtCore.QObject):
         return lambda *args, **kwargs: self.run(('_' + name, args, kwargs))
         
 
-# def _get_similarity_matrix_slice(nspikes, nclusters):
-    # """Get the subset of spikes for the computation of the similarity 
-    # matrix."""
-    # # We want ~1000 spikes per cluster.
-    # k = max(1, int(nspikes / (1000. * nclusters)))
-    # return slice(0, nspikes, k)
-
 # -----------------------------------------------------------------------------
 # Specific task graph
 # -----------------------------------------------------------------------------
@@ -103,6 +96,9 @@ class TaskGraph(AbstractTaskGraph):
     def create_threads(self):
         # Create the external threads.
         self.tasks = ThreadedTasks()
+        self.tasks.selection_task.set_loader(self.loader)
+        self.tasks.selection_task.selectionDone.connect(
+            self.selection_done_callback)
         self.tasks.correlograms_task.correlogramsComputed.connect(
             self.correlograms_computed_callback)
         self.tasks.similarity_matrix_task.correlationMatrixComputed.connect(
@@ -115,11 +111,14 @@ class TaskGraph(AbstractTaskGraph):
     # Selection.
     # ----------
     def _select(self, clusters, wizard=False):
+        self.tasks.selection_task.select(clusters, wizard)
+    
+    def _select_done(self, clusters, wizard=False):
         if wizard:
             target = (self.wizard.current_target(),)
         else:
             target = ()
-        self.loader.select(clusters=clusters)
+        # self.loader.select(clusters=clusters)
         log.debug("Selected clusters {0:s}.".format(str(clusters)))
         return [
                 ('_update_feature_view', target),
@@ -133,8 +132,11 @@ class TaskGraph(AbstractTaskGraph):
             wizard=wizard)
     
     
-    # Computations.
-    # -------------
+    # Callbacks.
+    # ----------
+    def selection_done_callback(self, clusters, wizard):
+        self.select_done(clusters, wizard=wizard)
+    
     def correlograms_computed_callback(self, clusters, correlograms, ncorrbins, 
             corrbin):
         # Execute the callback function under the control of the task manager
@@ -148,6 +150,9 @@ class TaskGraph(AbstractTaskGraph):
         self.similarity_matrix_computed(clusters_selected, matrix, clusters,
             cluster_groups, target_next=target_next)
             
+        
+    # Computations.
+    # -------------
     def _compute_correlograms(self, clusters_selected):
         # Get the correlograms parameters.
         spiketimes = get_array(self.loader.get_spiketimes('all'))
@@ -320,7 +325,9 @@ class TaskGraph(AbstractTaskGraph):
         
     def _update_feature_view(self, autozoom=None):
         data = dict(
-            features=self.loader.get_some_features(),
+            # features=self.loader.get_some_features(),
+            features=self.loader.get_features(),
+            features_background=self.loader.get_features_background(),
             spiketimes=self.loader.get_spiketimes(),
             masks=self.loader.get_masks(),
             clusters=self.loader.get_clusters(),

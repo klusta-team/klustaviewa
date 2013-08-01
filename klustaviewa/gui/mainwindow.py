@@ -726,7 +726,8 @@ class MainWindow(QtGui.QMainWindow):
     def buffer_accepted_callback(self, (clusters, wizard)):
         self._wizard = wizard
         # The wizard boolean specifies whether the autozoom is activated or not.
-        self.taskgraph.select(clusters, wizard and self.automatic_projection_action.isChecked())
+        self.taskgraph.select(clusters, wizard and 
+            self.automatic_projection_action.isChecked())
         
     def clusters_selected_callback(self, clusters, wizard=False):
         self.buffer.request((clusters, wizard))

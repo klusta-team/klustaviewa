@@ -238,15 +238,15 @@ class HDF5Loader(Loader):
     # --------------------------
     def select(self, spikes=None, clusters=None):
         if clusters is not None:
-            spikes = get_spikes_in_clusters(clusters, self.clusters)    
-        self.spikes_selected = spikes
-        self.clusters_selected = clusters
+            spikes = get_spikes_in_clusters(clusters, self.clusters)
         # HDD access here: get the portion of the table with the requested 
         # clusters (cache). It is very quick to access the different columns
         # from this in-memory table later.
         self.spikes_selected_table = self.spike_table[spikes]
+        self.spikes_selected = spikes
+        self.clusters_selected = clusters
 
-    def get_background_features(self):
+    def get_features_background(self):
         return self.background_features_pandas
     
     def get_features(self, spikes=None, clusters=None):
@@ -262,14 +262,14 @@ class HDF5Loader(Loader):
             spikes = self.spikes_selected
         return select(self.features, spikes)
     
-    def get_some_features(self):#, clusters=None):
-        """Return the features for a subset of all spikes: a large number
-        of spikes from any cluster, and a controlled subset of the selected 
-        clusters."""
-        # Merge background features and all features.
-        features_bg = self.get_background_features()
-        features = self.get_features()
-        return pd.concat([features, features_bg])
+    # def get_some_features(self):#, clusters=None):
+        # """Return the features for a subset of all spikes: a large number
+        # of spikes from any cluster, and a controlled subset of the selected 
+        # clusters."""
+        # # Merge background features and all features.
+        # features_bg = self.get_background_features()
+        # features = self.get_features()
+        # return pd.concat([features, features_bg])
         
     def get_masks(self, spikes=None, full=None, clusters=None):
         # Special case: return the already-selected values from the cache.

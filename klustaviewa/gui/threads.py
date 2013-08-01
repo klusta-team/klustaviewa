@@ -19,20 +19,14 @@ from klustaviewa.stats import compute_correlograms, compute_correlations
 
 
 # -----------------------------------------------------------------------------
-# Synchronisation
-# -----------------------------------------------------------------------------
-# LOCK = Lock()
-
-
-# -----------------------------------------------------------------------------
 # Tasks
 # -----------------------------------------------------------------------------
 class OpenTask(QtCore.QObject):
     dataOpened = QtCore.pyqtSignal()
     dataOpenFailed = QtCore.pyqtSignal(str)
     
-    def __init__(self, parent=None):
-        super(OpenTask, self).__init__(parent)
+    # def __init__(self, parent=None):
+        # super(OpenTask, self).__init__(parent)
     
     def open(self, loader, path):
         try:
@@ -43,11 +37,24 @@ class OpenTask(QtCore.QObject):
             self.dataOpenFailed.emit(traceback.format_exc())
             
 
+class SelectionTask(QtCore.QObject):
+    selectionDone = QtCore.pyqtSignal(object, bool)
+    
+    def set_loader(self, loader):
+        self.loader = loader
+    
+    def select(self, clusters, wizard):
+        self.loader.select(clusters=clusters)
+        
+    def select_done(self, clusters, wizard, _result=None):
+        self.selectionDone.emit(clusters, wizard)
+
+
 class CorrelogramsTask(QtCore.QObject):
     correlogramsComputed = QtCore.pyqtSignal(np.ndarray, object, int, float)
     
-    def __init__(self, parent=None):
-        super(CorrelogramsTask, self).__init__(parent)
+    # def __init__(self, parent=None):
+        # super(CorrelogramsTask, self).__init__(parent)
     
     def compute(self, spiketimes, clusters, clusters_to_update=None,
             clusters_selected=None, ncorrbins=None, corrbin=None):
@@ -72,8 +79,8 @@ class SimilarityMatrixTask(QtCore.QObject):
     correlationMatrixComputed = QtCore.pyqtSignal(np.ndarray, object,
         np.ndarray, np.ndarray, object)
     
-    def __init__(self, parent=None):
-        super(SimilarityMatrixTask, self).__init__(parent)
+    # def __init__(self, parent=None):
+        # super(SimilarityMatrixTask, self).__init__(parent)
         
     def compute(self, features, clusters, 
             cluster_groups, masks, clusters_selected, target_next=None,
@@ -103,12 +110,15 @@ class SimilarityMatrixTask(QtCore.QObject):
 class ThreadedTasks(QtCore.QObject):
     def __init__(self, parent=None):
         super(ThreadedTasks, self).__init__(parent)
+        self.selection_task = inthread(SelectionTask)(
+            impatient=True)
         self.correlograms_task = inprocess(CorrelogramsTask)(
             impatient=True, use_master_thread=False)
         self.similarity_matrix_task = inprocess(SimilarityMatrixTask)(
             impatient=True, use_master_thread=False)
 
     def join(self):
+        self.selection_task.join()
         self.correlograms_task.join()
         self.similarity_matrix_task.join()
         

@@ -31,7 +31,8 @@ def get_data():
     data = dict(
         clusters_selected=clusters_selected,
         features=l.get_features(),
-        features_full=l.get_features('all'),
+        features_background=l.get_features_background(),
+        # features_full=l.get_features('all'),
         masks=l.get_masks(),
         waveforms=l.get_waveforms(),
         clusters=l.get_clusters(),

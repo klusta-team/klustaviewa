@@ -699,7 +699,7 @@ class MemoryLoader(Loader):
         # Count the number of spikes and save it in the metadata.
         self.nspikes = self.features.shape[0]
         self.nextrafet = self.features.shape[1] - self.nchannels * self.fetdim
-    
+        
     def read_clusters(self, clusters):
         self.clusters = process_clusters(clusters)
         # Convert to Pandas.
