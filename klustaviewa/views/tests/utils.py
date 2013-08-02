@@ -128,15 +128,17 @@ def show_view(view_class, **kwargs):
     window = show_window(TestWindow)
     return window
     
-def show_waveformview(loader, clusters):
+def show_waveformview(loader, clusters, **kwargs):
     loader.select(clusters=clusters)
     data = vd.get_waveformview_data(loader)
-    show_view(v.WaveformView, **data)
+    kwargs.update(data)
+    show_view(v.WaveformView, **kwargs)
     
-def show_featureview(loader, clusters):
+def show_featureview(loader, clusters, **kwargs):
     loader.select(clusters=clusters)
-    data = vd.get_featureview_data(loader, USERPREF)
-    show_view(v.FeatureView, **data)
+    data = vd.get_featureview_data(loader)
+    kwargs.update(data)
+    show_view(v.FeatureView, **kwargs)
     
     
     

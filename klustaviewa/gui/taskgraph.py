@@ -294,7 +294,7 @@ class TaskGraph(AbstractTaskGraph):
         return ('_show_selection_in_matrix', (clusters,))
         
     def _update_feature_view(self, autozoom=None):
-        data = vd.get_featureview_data(self.loader, USERPREF, 
+        data = vd.get_featureview_data(self.loader, 
             autozoom=autozoom)
         [view.set_data(**data) for view in self.get_views('FeatureView')]
         

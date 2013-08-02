@@ -81,7 +81,7 @@ def get_similaritymatrixview_data(loader, statscache):
     )
     return data
     
-def get_featureview_data(loader, USERPREF, autozoom=None):
+def get_featureview_data(loader, autozoom=None):
     data = dict(
         features=loader.get_features(),
         features_background=loader.get_features_background(),
