@@ -163,6 +163,8 @@ def get_some_spikes_in_clusters(clusters_selected, clusters, counter=None,
     clusters, with at least `nspikes_per_cluster_min` spikes per cluster,
     and an expected maximum number of spikes equal to `nspikes_max_expected`.
     """
+    if not hasattr(clusters_selected, '__len__'):
+        clusters_selected = [clusters_selected]
     if nspikes_max_expected is None:
         nspikes_max_expected = 100
     if nspikes_per_cluster_min is None:

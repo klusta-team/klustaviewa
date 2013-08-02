@@ -232,12 +232,15 @@ class HDF5Loader(Loader):
         self.background_masks = self.process_masks_full(
             self.background_table['masks'])
         self.background_clusters = self.background_table['cluster']
+        self.spikes_selected_table = None
         
 
     # Access to the data: spikes
     # --------------------------
     def select(self, spikes=None, clusters=None):
         if clusters is not None:
+            if not hasattr(clusters, '__len__'):
+                clusters = [clusters]
             spikes = get_spikes_in_clusters(clusters, self.clusters)
         # HDD access here: get the portion of the table with the requested 
         # clusters (cache). It is very quick to access the different columns
@@ -254,6 +257,8 @@ class HDF5Loader(Loader):
         return pandaize(self.background_features, self.background_spikes)
     
     def get_features(self, spikes=None, clusters=None):
+        if self.spikes_selected_table is None:
+            return None
         # Special case: return the already-selected values from the cache.
         if spikes is None and clusters is None:
             features = self.spikes_selected_table['features']
@@ -276,6 +281,8 @@ class HDF5Loader(Loader):
         # return pd.concat([features, features_bg])
         
     def get_masks(self, spikes=None, full=None, clusters=None):
+        if self.spikes_selected_table is None:
+            return None
         # Special case: return the already-selected values from the cache.
         if spikes is None and clusters is None:
             masks = self.spikes_selected_table['masks']
@@ -296,6 +303,8 @@ class HDF5Loader(Loader):
         return select(masks, spikes)
     
     def get_waveforms(self, spikes=None, clusters=None):
+        if self.spikes_selected_table is None:
+            return None
         if spikes is not None:
             return select(self.waveforms, spikes)
         else:
