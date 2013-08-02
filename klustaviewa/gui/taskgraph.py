@@ -16,6 +16,7 @@ import klustaviewa.utils.logger as log
 from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.utils.colors import random_color
 from klustaviewa.gui.threads import ThreadedTasks
+import klustaviewa.gui.viewdata as vd
 
 
 # -----------------------------------------------------------------------------
@@ -281,42 +282,11 @@ class TaskGraph(AbstractTaskGraph):
     # View updates.
     # -------------
     def _update_correlograms_view(self):
-        clusters_selected = self.loader.get_clusters_selected()
-        correlograms = self.statscache.correlograms.submatrix(
-            clusters_selected)
-        # Compute the baselines.
-        sizes = get_array(self.loader.get_cluster_sizes())
-        duration = self.loader.get_duration()
-        corrbin = self.loader.corrbin
-        baselines = get_baselines(sizes, duration, corrbin)
-        data = dict(
-            correlograms=correlograms,
-            baselines=baselines,
-            clusters_selected=clusters_selected,
-            cluster_colors=self.loader.get_cluster_colors(),
-            ncorrbins=self.loader.ncorrbins,
-            corrbin=self.loader.corrbin,
-        )
+        data = vd.get_correlogramsview_data(self.loader, self.statscache)
         [view.set_data(**data) for view in self.get_views('CorrelogramsView')]
         
     def _update_similarity_matrix_view(self):
-        if self.statscache is None:
-            return
-        # matrix = self.statscache.similarity_matrix
-        similarity_matrix = self.statscache.similarity_matrix_normalized
-        # Clusters in groups 0 or 1 to hide.
-        cluster_groups = self.loader.get_cluster_groups('all')
-        clusters_hidden = np.nonzero(np.in1d(cluster_groups, [0, 1]))[0]
-        # Cluster quality.
-        # similarity_matrix = normalize(matrix.to_array(copy=True))
-        # cluster_quality = np.diag(similarity_matrix)
-        data = dict(
-            # WARNING: copy the matrix here so that we don't modify the
-            # original matrix while normalizing it.
-            similarity_matrix=similarity_matrix,
-            cluster_colors_full=self.loader.get_cluster_colors('all'),
-            clusters_hidden=clusters_hidden,
-        )
+        data = vd.get_similaritymatrixview_data(self.loader, self.statscache)
         [view.set_data(**data) 
             for view in self.get_views('SimilarityMatrixView')]
         # Show selected clusters when the matrix has been updated.
@@ -324,55 +294,23 @@ class TaskGraph(AbstractTaskGraph):
         return ('_show_selection_in_matrix', (clusters,))
         
     def _update_feature_view(self, autozoom=None):
-        data = dict(
-            # features=self.loader.get_some_features(),
-            features=self.loader.get_features(),
-            features_background=self.loader.get_features_background(),
-            spiketimes=self.loader.get_spiketimes(),
-            masks=self.loader.get_masks(),
-            clusters=self.loader.get_clusters(),
-            clusters_selected=self.loader.get_clusters_selected(),
-            cluster_colors=self.loader.get_cluster_colors(),
-            nchannels=self.loader.nchannels,
-            fetdim=self.loader.fetdim,
-            nextrafet=self.loader.nextrafet,
-            freq=self.loader.freq,
-            autozoom=autozoom,
-            duration=self.loader.get_duration(),
-            alpha_selected=USERPREF.get('feature_selected_alpha', .75),
-            alpha_background=USERPREF.get('feature_background_alpha', .1),
-            time_unit=USERPREF['features_info_time_unit'] or 'second',
-        )
+        data = vd.get_featureview_data(self.loader, USERPREF, 
+            autozoom=autozoom)
         [view.set_data(**data) for view in self.get_views('FeatureView')]
         
     def _update_waveform_view(self, autozoom=None, wizard=None):
-        data = dict(
-            waveforms=self.loader.get_waveforms(),
-            clusters=self.loader.get_clusters(),
-            cluster_colors=self.loader.get_cluster_colors(),
-            clusters_selected=self.loader.get_clusters_selected(),
-            masks=self.loader.get_masks(),
-            geometrical_positions=self.loader.get_probe_geometry(),
-            autozoom=autozoom,
-            keep_order=wizard,
-        )
+        data = vd.get_waveformview_data(self.loader, autozoom=autozoom, 
+            wizard=wizard)
         [view.set_data(**data) for view in self.get_views('WaveformView')]
         
     def _update_cluster_view(self, clusters=None):
         """Update the cluster view using the data stored in the loader
         object."""
-        data = dict(
-            cluster_colors=self.loader.get_cluster_colors('all',
-                can_override=False),
-            cluster_groups=self.loader.get_cluster_groups('all'),
-            group_colors=self.loader.get_group_colors('all'),
-            group_names=self.loader.get_group_names('all'),
-            cluster_sizes=self.loader.get_cluster_sizes('all'),
-            cluster_quality=self.statscache.cluster_quality,
-        )
+        data = vd.get_clusterview_data(self.loader, self.statscache, 
+            clusters=clusters)
         self.get_view('ClusterView').set_data(**data)
         if clusters is not None:
-            return 
+            return
     
     def _show_selection_in_matrix(self, clusters):
         if clusters is not None and 1 <= len(clusters) <= 2:
