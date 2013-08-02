@@ -242,7 +242,10 @@ class HDF5Loader(Loader):
         # HDD access here: get the portion of the table with the requested 
         # clusters (cache). It is very quick to access the different columns
         # from this in-memory table later.
-        self.spikes_selected_table = self.spike_table[spikes]
+        if spikes is not None:
+            self.spikes_selected_table = self.spike_table[spikes]
+        else:
+            self.spikes_selected_table = None
         self.spikes_selected = spikes
         self.clusters_selected = clusters
 
