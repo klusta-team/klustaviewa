@@ -193,13 +193,13 @@ class HDF5Loader(Loader):
         return x
     
     def process_masks_full(self, masks_full):
-        return masks_full * 1. / 255
+        return (masks_full * 1. / 255).astype(np.float32)
     
     def process_masks(self, masks_full):
-        return masks_full[:,:-1:self.fetdim] * 1. / 255
+        return (masks_full[:,:-1:self.fetdim] * 1. / 255).astype(np.float32)
     
     def process_waveforms(self, waveforms):
-        return (waveforms * 1e-5).reshape((-1, self.nsamples, self.nchannels))
+        return (waveforms * 1e-5).astype(np.float32).reshape((-1, self.nsamples, self.nchannels))
     
     def read_arrays(self):
         self.nextrafet = (self.spike_table.cols.features.shape[1] - 
@@ -227,8 +227,8 @@ class HDF5Loader(Loader):
             self.background_features[:,:-1]).max()
         self.background_features = self.process_features(
             self.background_features)
-        self.background_features_pandas = pandaize(
-            self.background_features, self.background_spikes)
+        # self.background_features_pandas = pandaize(
+            # self.background_features, self.background_spikes)
         self.background_masks = self.process_masks_full(
             self.background_table['masks'])
         self.background_clusters = self.background_table['cluster']
@@ -247,7 +247,8 @@ class HDF5Loader(Loader):
         self.clusters_selected = clusters
 
     def get_features_background(self):
-        return self.background_features_pandas
+        # return self.background_features_pandas
+        return pandaize(self.background_features, self.background_spikes)
     
     def get_features(self, spikes=None, clusters=None):
         # Special case: return the already-selected values from the cache.
