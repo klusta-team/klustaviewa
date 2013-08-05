@@ -561,7 +561,7 @@ class MainWindow(QtGui.QMainWindow):
     def add_rawdata_view(self, do_update=None, floating=False):
         print "raw data view adding"
         view = self.create_view(vw.RawDataView,
-            index=len(self.views['RawDataView']),
+            # TODO
             position=QtCore.Qt.RightDockWidgetArea,
             floating=floating)
         self.views['RawDataView'].append(view)
@@ -769,7 +769,7 @@ class MainWindow(QtGui.QMainWindow):
     def add_correlograms_view_callback(self, checked=None):
         self.add_correlograms_view(do_update=True, floating=True)
     
-    def add_rawdata_view(self, checked=None):
+    def add_rawdata_view_callback(self, checked=None):
             self.add_rawdata_view(do_update=True, floating=True)
     
     def add_ipython_view_callback(self, checked=None):
