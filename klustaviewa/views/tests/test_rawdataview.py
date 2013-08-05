@@ -39,16 +39,7 @@ def test_rawdataview():
     except:
         data = f.root.raw_data
 
-    nsamples, nchannels = data.shape
-    total_size = nsamples
     freq = 20000.
-    dt = 1. / freq
-    duration = (data.shape[0] - 1) * dt
-
-    duration_initial = 5.
-
-    x = np.tile(np.linspace(0., duration, nsamples // 500), (nchannels, 1))
-    y = np.zeros_like(x)+ np.linspace(-.9, .9, nchannels).reshape((-1, 1))
     
     kwargs = {}
     kwargs['rawdata'] = data

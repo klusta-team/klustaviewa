@@ -196,6 +196,7 @@ class MainWindow(QtGui.QMainWindow):
             'Add &SimilarityMatrixView')
         self.add_action('add_correlograms_view', 'Add &CorrelogramsView')
         self.add_action('add_ipython_view', 'Add &IPythonView')
+        self.add_action('add_rawdata_view', 'Add &RawDataView')
         self.add_action('reset_views', '&Reset views')
         
         self.add_action('override_color', 'Override cluster &color',
@@ -270,6 +271,7 @@ class MainWindow(QtGui.QMainWindow):
         views_menu.addAction(self.add_waveform_view_action)
         views_menu.addAction(self.add_correlograms_view_action)
         views_menu.addAction(self.add_similarity_matrix_view_action)
+        views_menu.addAction(self.add_rawdata_view_action)
         views_menu.addSeparator()
         if vw.IPYTHON:
             views_menu.addAction(self.add_ipython_view_action)
@@ -556,6 +558,26 @@ class MainWindow(QtGui.QMainWindow):
         if do_update and self.is_file_open and self.loader.has_selection():
             self.taskgraph.update_correlograms_view()
             
+    def add_rawdata_view(self, do_update=None, floating=False):
+        print "raw data view adding"
+        view = self.create_view(vw.RawDataView,
+            index=len(self.views['RawDataView']),
+            position=QtCore.Qt.RightDockWidgetArea,
+            floating=floating)
+        self.views['RawDataView'].append(view)
+        
+        # data = dict(
+        #     rawdata=self.,
+        #     freq=self.freq
+        #     )
+        # view.set_data(**data)
+        
+        if do_update and self.is_file_open and self.loader.has_selection():
+            self.taskgraph.update_rawdata_view()
+            
+            # kwargs['rawdata'] = data
+            #  kwargs['freq'] = freq
+            
     def get_view(self, name, index=0):
         views = self.views[name] 
         if not views:
@@ -577,6 +599,7 @@ class MainWindow(QtGui.QMainWindow):
             FeatureView=[],
             CorrelogramsView=[],
             IPythonView=[],
+            RawDataView=[],
             )
         
         count = SETTINGS['main_window.views']
@@ -619,6 +642,7 @@ class MainWindow(QtGui.QMainWindow):
         [self.add_feature_view() for _ in xrange(count['FeatureView'])]
         [self.add_ipython_view() for _ in xrange(count['IPythonView'])]
         [self.add_correlograms_view() for _ in xrange(count['CorrelogramsView'])]
+        [self.add_rawdata_view() for _ in xrange(count['RawDataView'])]
     
     def dock_widget_closed(self, dock):
         for key in self.views.keys():
@@ -744,6 +768,9 @@ class MainWindow(QtGui.QMainWindow):
         
     def add_correlograms_view_callback(self, checked=None):
         self.add_correlograms_view(do_update=True, floating=True)
+    
+    def add_rawdata_view(self, checked=None):
+            self.add_rawdata_view(do_update=True, floating=True)
     
     def add_ipython_view_callback(self, checked=None):
         self.add_ipython_view()

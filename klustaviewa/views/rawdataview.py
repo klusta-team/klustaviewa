@@ -25,8 +25,8 @@ class RawDataManager(Manager):
     def set_data(self, rawdata=None, freq=None, channel_height=None, channel_names=None, dead_channels=None):
 
         # default settings
-        self.max_size = 10000
-        self.duration_initial = 10
+        self.max_size = 500
+        self.duration_initial = 1000
         self.default_channel_height = 0.25
         self.channel_height_limits = (0.01, 2.)
         self.nticks = 10
@@ -356,7 +356,6 @@ class GridEventProcessor(EventProcessor):
         x0 = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(x0)
         x1 = self.interaction_manager.get_processor('viewport').normalizer.unnormalize_x(x1)
         r = self.nicenum(x1 - x0 - 1e-6, False)
-        print r;
         d = self.nicenum(r / (self.parent.data_manager.nticks - 1), True)
         g0 = np.floor(x0 / d) * d
         g1 = np.ceil(x1 / d) * d
@@ -412,7 +411,7 @@ class ViewportUpdateProcessor(EventProcessor):
         
         nav.constrain_navigation = True
         nav.xmin = -1
-        nav.xmax = 2 * self.parent.data_manager.totalduration / self.parent.data_manager.duration_initial
+        nav.xmax = 2 * (self.parent.data_manager.totalduration / self.parent.data_manager.duration_initial) - 1
         nav.sxmin = 1.
         
         self.parent.data_manager.xlim = ((self.viewbox[0] + 1) / 2. * (self.parent.data_manager.duration_initial),\
