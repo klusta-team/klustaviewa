@@ -36,7 +36,7 @@ def get_waveforms_description(nsamples=None, nchannels=None, has_umask=None):
     waveforms_description = dict(
         waveform=tables.Int16Col(shape=(nsamples * nchannels)),)
     if has_umask:
-        waveforms_description['waveform_unfiltered'] = tables.Float32Col(
+        waveforms_description['waveform_unfiltered'] = tables.Int16Col(
             shape=(nsamples * nchannels))
     return waveforms_description
     

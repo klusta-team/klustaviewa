@@ -78,6 +78,7 @@ class MainWindow(QtGui.QMainWindow):
         self.statscache = None
         # self.loader = KlustersLoader()
         self.loader = HDF5Loader()
+        self.loader_raw = HDF5RawDataLoader()
         self.loader.progressReported.connect(self.open_progress_reported)
         self.wizard = Wizard()
         self.controller = None
