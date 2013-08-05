@@ -1,3 +1,5 @@
+from qtools import QtCore
+
 class HDF5RawDataLoader(QtCore.QObject):
     def open(self, filename):
         # filename is blah.xxxx

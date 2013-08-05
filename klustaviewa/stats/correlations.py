@@ -104,7 +104,6 @@ def compute_correlations_approximation(features, clusters, masks,
     spikes_in_clusters = dict([(clu, np.nonzero(clusters == clu)[0]) for clu in c])
     nclusters = len(spikes_in_clusters)
     
-    print c
     stats = compute_statistics(features, features, spikes_in_clusters, masks)
     
     clusterslist = sorted(stats.keys())
