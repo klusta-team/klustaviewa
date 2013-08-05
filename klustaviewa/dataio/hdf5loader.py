@@ -196,7 +196,7 @@ class HDF5Loader(Loader):
         return (masks_full * 1. / 255).astype(np.float32)
     
     def process_masks(self, masks_full):
-        return (masks_full[:,:-1:self.fetdim] * 1. / 255).astype(np.float32)
+        return (masks_full[:,:-self.nextrafet:self.fetdim] * 1. / 255).astype(np.float32)
     
     def process_waveforms(self, waveforms):
         return (waveforms * 1e-5).astype(np.float32).reshape((-1, self.nsamples, self.nchannels))
@@ -290,6 +290,7 @@ class HDF5Loader(Loader):
             else:
                 values = self.process_masks(masks)
             return pandaize(values, self.spikes_selected)
+            
         # Normal case.
         if clusters is not None:
             spikes = get_spikes_in_clusters(clusters, self.clusters)
