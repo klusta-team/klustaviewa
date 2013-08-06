@@ -26,15 +26,14 @@ class RawDataManager(Manager):
 
         # default settings
         self.max_size = 500
-        self.duration_initial = 1000
+        self.duration_initial = 10
         self.default_channel_height = 0.25
         self.channel_height_limits = (0.01, 2.)
         self.nticks = 10
         
-        self.dead_channels = np.arange(0,5,1)
-        
         # load initial variables
         self.rawdata = rawdata
+        self.dead_channels = dead_channels
         self.freq = freq
         self.totalduration= (self.rawdata.shape[0] - 1) / self.freq
         self.totalsamples, self.nchannels = self.rawdata.shape
@@ -143,7 +142,7 @@ class RawDataManager(Manager):
         self.size = size
         
         colors = np.arange(self.nchannels)
-        colors[self.dead_channels] = 4
+        colors[self.dead_channels] = 1
         channels = np.arange(self.nchannels)
         
         self.channel_index = np.repeat(channels, self.samples.shape[0] / self.nchannels)

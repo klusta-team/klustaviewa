@@ -40,10 +40,12 @@ def test_rawdataview():
         data = f.root.raw_data
 
     freq = 20000.
+    dead_channels = np.arange(0,5,1)
     
     kwargs = {}
     kwargs['rawdata'] = data
     kwargs['freq'] = freq
+    kwargs['dead_channels'] = dead_channels
     kwargs['operators'] = [
         lambda self: (self.close() 
             if USERPREF['test_auto_close'] != False else None),
