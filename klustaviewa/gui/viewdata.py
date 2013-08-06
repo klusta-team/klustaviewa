@@ -3,6 +3,8 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
+import os
+
 import numpy as np
 import pandas as pd
 
@@ -16,6 +18,7 @@ import klustaviewa.utils.logger as log
 from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.utils.colors import random_color
 from klustaviewa.gui.threads import ThreadedTasks
+import tables
 
 
 # -----------------------------------------------------------------------------
@@ -34,11 +37,33 @@ def get_waveformview_data(loader, autozoom=None, wizard=None):
     )
     return data
 
+# def get_rawdataview_data(loader):
+#     # TODO
+#     # loader: HDF5RawDataLoader
+#     data = dict(
+#         raw_data=loader.get_raw_data(),
+#     )
+#     return data
+    
 def get_rawdataview_data(loader):
-    # TODO
-    # loader: HDF5RawDataLoader
+    dir = os.path.dirname(os.path.abspath(__file__))
+    try:
+        filename = r"../views/tests/datatest/n6mab031109.h5"
+        f = tables.openFile(os.path.join(dir, filename))
+    except:
+        filename = r"../views/tests/datatest/n6mab031109.trim.h5"
+        f = tables.openFile(os.path.join(dir, filename))
+    try:
+        data = f.root.RawData
+    except:
+        data = f.root.raw_data
+
+    freq = 20000.
+    dead_channels = np.arange(0,5,1)
     data = dict(
-        raw_data=loader.get_raw_data(),
+        rawdata=data,
+        freq=freq,
+        dead_channels=dead_channels,
     )
     return data
     
@@ -89,7 +114,7 @@ def get_similaritymatrixview_data(loader, statscache):
     )
     return data
     
-def get_featureview_data(loader, autozoom=None):
+def get_featureview_data(loader, autozoom):
     data = dict(
         features=loader.get_features(),
         features_background=loader.get_features_background(),
@@ -109,4 +134,3 @@ def get_featureview_data(loader, autozoom=None):
         time_unit=USERPREF['features_info_time_unit'] or 'second',
     )        
     return data
-    

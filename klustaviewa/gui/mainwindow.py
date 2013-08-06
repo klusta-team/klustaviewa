@@ -568,22 +568,12 @@ class MainWindow(QtGui.QMainWindow):
     def add_rawdata_view(self, do_update=None, floating=False):
         print "raw data view adding"
         view = self.create_view(vw.RawDataView,
-            # TODO
+            index=len(self.views['RawDataView']),
             position=QtCore.Qt.RightDockWidgetArea,
             floating=floating)
         self.views['RawDataView'].append(view)
-        
-        # data = dict(
-        #     rawdata=self.,
-        #     freq=self.freq
-        #     )
-        # view.set_data(**data)
-        
         if do_update and self.is_file_open and self.loader.has_selection():
             self.taskgraph.update_rawdata_view()
-            
-            # kwargs['rawdata'] = data
-            #  kwargs['freq'] = freq
             
     def get_view(self, name, index=0):
         views = self.views[name] 
@@ -649,7 +639,7 @@ class MainWindow(QtGui.QMainWindow):
         [self.add_feature_view() for _ in xrange(count['FeatureView'])]
         [self.add_ipython_view() for _ in xrange(count['IPythonView'])]
         [self.add_correlograms_view() for _ in xrange(count['CorrelogramsView'])]
-        [self.add_rawdata_view() for _ in xrange(count['RawDataView'])]
+        # [self.add_rawdata_view() for _ in xrange(count['RawDataView'])]
     
     def dock_widget_closed(self, dock):
         for key in self.views.keys():

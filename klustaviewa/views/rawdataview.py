@@ -23,6 +23,10 @@ class RawDataManager(Manager):
     
     # initialization
     def set_data(self, rawdata=None, freq=None, channel_height=None, channel_names=None, dead_channels=None):
+        
+        if rawdata is None:
+            rawdata = np.zeros((1000, 32))
+            freq = 10
 
         # default settings
         self.max_size = 500
