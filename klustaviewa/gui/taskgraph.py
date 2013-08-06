@@ -185,28 +185,13 @@ class TaskGraph(AbstractTaskGraph):
     def _compute_similarity_matrix(self, target_next=None):
         similarity_measure = self.loader.similarity_measure
         
-        
-        # Get the correlation matrix parameters.
-        # spikes_slice = _get_similarity_matrix_slice(self.loader.nspikes,    
-            # len(self.loader.get_clusters_unique()))
-        # features = get_array(self.loader.get_features(spikes=spikes_slice))
-        # masks = get_array(self.loader.get_masks(spikes=spikes_slice, full=True))
-        # clusters = get_array(self.loader.get_clusters(spikes=spikes_slice))
-        # features = self.loader.background_table['features']
         features = self.loader.background_features
-        # masks = self.loader.background_table['masks']
         masks = self.loader.background_masks
-        # clusters = self.loader.background_table['cluster']
-        clusters = self.loader.background_clusters
-        
-        # print features, features.shape
-        # print masks, masks.shape
-        # print clusters
-        
+        clusters = get_array(self.loader.get_clusters(
+            spikes=self.loader.background_spikes))
         cluster_groups = get_array(self.loader.get_cluster_groups('all'))
-        
-        
         clusters_all = self.loader.get_clusters_unique()
+        
         # Get cluster indices that need to be updated.
         # if clusters_to_update is None:
         # NOTE: not specifying explicitely clusters_to_update ensures that
@@ -215,6 +200,9 @@ class TaskGraph(AbstractTaskGraph):
         # when multiple calls to this functions are called quickly.
         clusters_to_update = (self.statscache.similarity_matrix.
             not_in_key_indices(clusters_all))
+            
+        log.debug("Clusters to update: {0:s}".format(str(clusters_to_update)))
+            
         # If there are pairs that need to be updated, launch the task.
         if len(clusters_to_update) > 0:
             self.mainwindow.set_busy(computing_matrix=True)
