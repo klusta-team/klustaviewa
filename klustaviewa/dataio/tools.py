@@ -35,6 +35,8 @@ def check_shape(data, shape):
 def get_array(data, copy=False):
     """Get a NumPy array from a NumPy array or a Pandas data object (Series,
     DataFrame or Panel)."""
+    if data is None:
+        return None
     if type(data) == np.ndarray:
         if data.dtype == np.int64:
             return data.astype(np.int32)
@@ -215,10 +217,15 @@ class MemMappedBinary(object):
         self.row += 1
         return values
         
-    def __del__(self):
+    def close(self):
         self.f.close()
+        
+    def __del__(self):
+        self.close()
     
 class MemMappedText(object):
+    BUFFER_SIZE = 10000
+    
     def __init__(self, filename, dtype, skiprows=0):
         self.filename = filename
         self.dtype = dtype
@@ -228,13 +235,41 @@ class MemMappedText(object):
         # Skip rows in non-binary mode.
         for _ in xrange(skiprows):
             self.f.readline()
+            
+        self._buffer_size = self.BUFFER_SIZE
+        self._next_lines()
+        
+    def _next_lines(self):
+        """Read several lines at once as it's faster than f.readline()."""
+        self._lines = self.f.readlines(self._buffer_size)
+        self._nlines = len(self._lines)
+        self._index = 0
+        
+    def _next_line(self):
+        if self._index >= self._nlines:
+            self._next_lines()
+        if self._index < self._nlines:
+            line = self._lines[self._index]
+            self._index += 1
+        else:
+            line = ''
+        return line
         
     def next(self):
         """Return the values in the next row."""
-        return np.fromstring(self.f.readline(), dtype=self.dtype, sep=' ')
+        # HACK: remove the double spaces.
+        l = self._next_line()
+        if not l:
+            return None
+        l = l.replace('  ', ' ')
+        values = np.fromstring(l, dtype=self.dtype, sep=' ')
+        return values
+        
+    def close(self):
+        self.f.close()
         
     def __del__(self):
-        self.f.close()
+        self.close()
     
 
 # -----------------------------------------------------------------------------

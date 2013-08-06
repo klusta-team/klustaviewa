@@ -88,6 +88,9 @@ class UserPreferences(object):
         
     def __getitem__(self, key):
         return self.get(key)
+        
+    def __setitem__(self, key, value):
+        self.preferences[key] = value
 
 
 # -----------------------------------------------------------------------------

@@ -4,6 +4,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 import os
+import time
 
 import numpy as np
 import numpy.random as rnd
@@ -11,7 +12,8 @@ import pandas as pd
 import shutil
 
 from klustaviewa.utils.colors import COLORS_COUNT
-from klustaviewa.dataio.tools import save_binary, save_text, check_dtype, check_shape
+from klustaviewa.dataio import (save_binary, save_text, check_dtype, 
+    check_shape, save_cluster_info, save_group_info)
 from klustaviewa.stats.cache import IndexedMatrix
 import klustaviewa.utils.logger as log
 
@@ -22,6 +24,7 @@ import klustaviewa.utils.logger as log
 # Mock parameters.
 nspikes = 1000
 nclusters = 20
+ngroups = 4
 cluster_offset = 2
 nsamples = 20
 ncorrbins = 100
@@ -58,6 +61,12 @@ def create_clusters(nspikes, nclusters, cluster_offset=cluster_offset):
     
 def create_cluster_colors(nclusters):
     return np.mod(np.arange(nclusters, dtype=np.int32), COLORS_COUNT) + 1
+   
+def create_group_colors(ngroups):
+    return np.mod(np.arange(ngroups, dtype=np.int32), COLORS_COUNT) + 1
+    
+def create_group_names(ngroups):
+    return ["Group {0:d}".format(group) for group in xrange(ngroups)]
     
 def create_cluster_groups(nclusters):
     return np.array(np.random.randint(size=nclusters, low=0, high=4), 
@@ -115,6 +124,14 @@ def create_xml(nchannels, nsamples, fetdim):
             <peakSampleIndex>10</peakSampleIndex>
             <nFeatures>{3:d}</nFeatures>
           </group>
+          <group>
+            <channels>
+              {2:s}
+            </channels>
+            <nSamples>{1:d}</nSamples>
+            <peakSampleIndex>10</peakSampleIndex>
+            <nFeatures>{3:d}</nFeatures>
+          </group>
         </channelGroups>
       </spikeDetection>
     </parameters>
@@ -123,11 +140,21 @@ def create_xml(nchannels, nsamples, fetdim):
 
 def create_probe(nchannels):
     # return np.random.randint(size=(nchannels, 2), low=0, high=10)
-    probe = np.zeros((nchannels, 2), dtype=np.int32)
-    probe[:, 0] = np.arange(nchannels)
-    probe[::2, 0] *= -1
-    probe[:, 1] = np.arange(nchannels)
-    return probe
+    geometry = np.zeros((nchannels, 2), dtype=np.int32)
+    geometry[:, 0] = np.arange(nchannels)
+    geometry[::2, 0] *= -1
+    geometry[:, 1] = np.arange(nchannels)
+    
+    graph = [(i, (i + 1) % nchannels) for i in xrange(nchannels)]
+    
+    probe = {'probes': {1: graph}, 
+             'geometry': {i: tuple(geometry[i, :]) for i in xrange(nchannels)}}
+    
+    probe_python = "probes = {0:s}\ngeometry = {1:s}\n".format(
+        str(probe['probes']),
+        str(probe['geometry']),
+    )
+    return probe_python
 
     
 # -----------------------------------------------------------------------------
@@ -139,18 +166,31 @@ def setup():
     # Create mock directory if needed.
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
     if not os.path.exists(dir):
-        # import time
-        # time.sleep(1)
         os.mkdir(dir)
-    else:
-        # No need to recreate the files.
-        return
+    # else:
+        # # No need to recreate the files.
+        # return
         
     # Create mock data.
     waveforms = create_waveforms(nspikes, nsamples, nchannels)
     features = create_features(nspikes, nchannels, fetdim, duration, freq)
     clusters = create_clusters(nspikes, nclusters)
+    
     cluster_colors = create_cluster_colors(nclusters)
+    cluster_groups = create_cluster_groups(nclusters)
+    cluster_info = pd.DataFrame(
+            {'color': cluster_colors, 
+             'group': cluster_groups}, 
+         dtype=np.int32,
+         index=np.unique(clusters))
+         
+    group_colors = create_group_colors(ngroups)
+    group_names = create_group_names(ngroups)
+    group_info = pd.DataFrame(
+            {'color': group_colors, 
+             'name': group_names}, 
+         index=np.arange(ngroups))
+         
     masks = create_masks(nspikes, nchannels, fetdim)
     xml = create_xml(nchannels, nsamples, fetdim)
     probe = create_probe(nchannels)
@@ -161,7 +201,9 @@ def setup():
     save_text(os.path.join(dir, 'test.fet.1'), features,
         header=nchannels * fetdim + 1)
     save_text(os.path.join(dir, 'test.aclu.1'), clusters, header=nclusters)
-    # save_text(os.path.join(dir, 'test.clucol.1'), cluster_colors)
+    # save_cluster_info(os.path.join(dir, 'test.acluinfo.1'), cluster_info)
+    # save_group_info(os.path.join(dir, 'test.groupinfo.1'), group_info)
+    save_text(os.path.join(dir, 'test.clu.1'), clusters, header=nclusters)
     save_text(os.path.join(dir, 'test.fmask.1'), masks, header=nclusters,
         fmt='%.6f')
     save_text(os.path.join(dir, 'test.xml'), xml)
@@ -172,6 +214,16 @@ def teardown():
     
     # Erase the temporary data directory.
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
-    if os.path.exists(dir):
-        shutil.rmtree(dir, ignore_errors=True)
-    
+    # if os.path.exists(dir):
+        # shutil.rmtree(dir, ignore_errors=True)
+    # Erase the contents instead, otherwise run into Access denied errors
+    # when trying to re-create the directory right after it has been deleted.
+    for the_file in os.listdir(dir):
+        file_path = os.path.join(dir, the_file)
+        try:
+            os.unlink(file_path)
+        except:
+            pass
+        
+        
+        

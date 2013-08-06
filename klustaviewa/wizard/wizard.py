@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-from collections import Counter, OrderedDict
+from collections import OrderedDict
 
 import numpy as np
 
@@ -36,6 +36,8 @@ class Wizard(object):
         self.candidates = []
         # List of skipped candidates.
         self.skipped = []
+        # List of skipped targets.
+        self.skipped_targets = []
         # Current position in the candidates list.
         self.index = 0
         # Size of the candidates list.
@@ -54,15 +56,17 @@ class Wizard(object):
         if (similarity_matrix is not None and similarity_matrix.size > 0):
             self.matrix = similarity_matrix
             self.quality = np.diag(self.matrix)
-        
+            
             assert len(self.cluster_groups) == self.matrix.shape[0]
         
     
     # Core methods.
     # -------------
     def find_target(self):
-        # For the target, only consider the unsorted clusters.
-        kept = self.cluster_groups >= 3
+        # For the target, only consider the unsorted clusters, and remove
+        # the skipped targets.
+        kept = ((self.cluster_groups >= 3) & 
+            (~np.in1d(self.clusters_unique, self.skipped_targets)))
         quality_kept = self.quality[kept]
         if len(quality_kept) == 0:
             return None
@@ -185,6 +189,7 @@ class Wizard(object):
         if candidate is not None:
             return self.current_target(), candidate
     
-    
+    def skip_target(self):
+        self.skipped_targets.append(self.current_target())
     
     

@@ -24,13 +24,12 @@ from klustaviewa.views.tests.utils import show_view, get_data
 # -----------------------------------------------------------------------------
 def test_featureview():
         
-    keys = ('features,masks,clusters,clusters_selected,cluster_colors,'
-            'fetdim,nchannels,nextrafet,duration,freq').split(',')
+    keys = ('features,features_background,masks,clusters,clusters_selected,'
+            'spiketimes,'
+            'cluster_colors,fetdim,nchannels,nextrafet,duration,freq').split(',')
            
     data = get_data()
     kwargs = {k: data[k] for k in keys}
-    
-    kwargs['features'] = data['features_full']
     
     kwargs['operators'] = [
         lambda self: self.view.toggle_mask(),

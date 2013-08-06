@@ -26,7 +26,6 @@ def compute_correlograms_cython(
     cdef float t0, t1, t0min, t0max, d
 
     # unique clusters
-    # counter = Counter(clusters)
     cdef np.ndarray[DTYPEI_t, ndim=1] clusters_unique = np.unique(clusters)
     cdef int nclusters = len(clusters_unique)
     cdef int cluster_max = clusters_unique[-1]

@@ -11,6 +11,8 @@ from galry import QtGui, QtCore, show_window
 
 import mock_data as md
 from klustaviewa.utils.userpref import USERPREF
+import klustaviewa.views as v
+import klustaviewa.gui.viewdata as vd
 
 
 # -----------------------------------------------------------------------------
@@ -31,7 +33,8 @@ def get_data():
     data = dict(
         clusters_selected=clusters_selected,
         features=l.get_features(),
-        features_full=l.get_features('all'),
+        features_background=l.get_features_background(),
+        # features_full=l.get_features('all'),
         masks=l.get_masks(),
         waveforms=l.get_waveforms(),
         clusters=l.get_clusters(),
@@ -58,6 +61,10 @@ def get_data():
     
     return data
 
+    
+# -----------------------------------------------------------------------------
+# View functions
+# -----------------------------------------------------------------------------
 def show_view(view_class, **kwargs):
     
     operators = kwargs.pop('operators', None)
@@ -70,6 +77,7 @@ def show_view(view_class, **kwargs):
             super(TestWindow, self).__init__()
             self.setFocusPolicy(QtCore.Qt.WheelFocus)
             self.setMouseTracking(True)
+            self.setWindowTitle("KlustaViewa")
             self.view = view_class(self, getfocus=False)
             self.view.set_data(**kwargs)
             self.setCentralWidget(self.view)
@@ -119,4 +127,18 @@ def show_view(view_class, **kwargs):
                 
     window = show_window(TestWindow)
     return window
+    
+def show_waveformview(loader, clusters, **kwargs):
+    loader.select(clusters=clusters)
+    data = vd.get_waveformview_data(loader)
+    kwargs.update(data)
+    show_view(v.WaveformView, **kwargs)
+    
+def show_featureview(loader, clusters, **kwargs):
+    loader.select(clusters=clusters)
+    data = vd.get_featureview_data(loader)
+    kwargs.update(data)
+    show_view(v.FeatureView, **kwargs)
+    
+    
     

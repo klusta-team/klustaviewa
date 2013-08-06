@@ -7,7 +7,6 @@ data sets."""
 import os
 import os.path
 import re
-from collections import Counter
 
 import numpy as np
 import pandas as pd
@@ -37,9 +36,46 @@ def find_index(filename):
         return int(r.group(3))
     # If the filename has no index in it, and if the file does not actually
     # exist, return the index of an existing filename.
-    if not os.path.exists(filename):
-        return find_index(find_filename(filename, 'fet'))
+    # if not os.path.exists(filename):
+    return find_index(find_filename(filename, 'fet'))
 
+def find_indices(filename, dir='', files=[]):
+    """Return the list of all indices for the given filename, present
+    in the filename's directory."""
+    # get the extension-free filename, extension, and file index
+    # template: FILENAME.xxx.0  => FILENAME (can contain points), 0 (index)
+    # try different patterns
+    patterns = [r"([^\n]+)\.([^\.]+)\.([0-9]+)$",
+                r"([^\n]+)\.([^\.]+)$"]
+    for pattern in patterns:
+        r = re.search(pattern, filename)
+        if r:
+            filename = r.group(1)
+            # extension = r.group(2)
+            break
+    
+    # get the full path
+    if not dir:
+        dir = os.path.dirname(filename)
+    filename = os.path.basename(filename)
+    # try obtaining the list of all files in the directory
+    if not files:
+        try:
+            files = os.listdir(dir)
+        except (WindowsError, OSError, IOError):
+            raise IOError("Error when accessing '{0:s}'.".format(dir))
+    
+    # If the requested filename does not have a file index, then get the 
+    # smallest available fileindex in the files list.
+    fileindex_set = set()
+    for file in files:
+        r = re.search(r"([^\n]+)\.([^\.]+)\.([0-9]+)$", file)
+        if r:
+            if r.group(1) == filename:
+                fileindex_set.add(int(r.group(3)))
+        
+    return sorted(fileindex_set)
+          
 def find_filename(filename, extension_requested, dir='', files=[]):
     """Search the most plausible existing filename corresponding to the
     requested approximate filename, which has the required file index and
@@ -90,12 +126,18 @@ def find_filename(filename, extension_requested, dir='', files=[]):
                 fileindex_set.add(int(r.group(3)))
         if fileindex_set:
             fileindex = sorted(fileindex_set)[0]
-            
+    
     # try different suffixes
-    suffixes = [
-                '.{0:s}.{1:d}'.format(extension_requested, fileindex),
-                '.{0:s}'.format(extension_requested),
-                ]
+    if fileindex is not None:
+        suffixes = [
+                    '.{0:s}.{1:d}'.format(extension_requested, fileindex),
+                    '.{0:s}'.format(extension_requested),
+                    ]
+    else:
+        suffixes = [
+                    # '.{0:s}.{1:d}'.format(extension_requested, fileindex),
+                    '.{0:s}'.format(extension_requested),
+                    ]
     
     # find the real filename with the longest path that fits the requested
     # filename
@@ -129,7 +171,8 @@ def find_any_filename(filename, extension_requested, dir='', files=[]):
     if filtered:
         return os.path.join(dir, filtered[0])
     
-def find_filename_or_new(filename, extension_requested, dir='', files=[]):
+def find_filename_or_new(filename, extension_requested,
+        have_file_index=True, dir='', files=[]):
     """Find an existing filename with a requested extension, or create
     a new filename based on an existing file."""
     # Find the filename with the requested extension.
@@ -137,9 +180,14 @@ def find_filename_or_new(filename, extension_requested, dir='', files=[]):
     # If it does not exist, find a file that exists, and replace the extension 
     # with the requested one.
     if not filename_found:
-        filename_existing = find_filename(filename, 'fet', dir=dir, files=files)
-        filename_new = filename_existing.replace('.fet.', '.{0:s}.'.format(
-            extension_requested))
+        if have_file_index:
+            filename_existing = find_filename(filename, 'fet', dir=dir, files=files)
+            filename_new = filename_existing.replace('.fet.', '.{0:s}.'.format(
+                extension_requested))
+        else:
+            filename_existing = find_filename(filename, 'xml', dir=dir, files=files)
+            filename_new = filename_existing.replace('.xml', 
+                '.' + extension_requested)
         return filename_new
     else:
         return filename_found
@@ -148,16 +196,41 @@ def find_filenames(filename):
     """Find the filenames of the different files for the current
     dataset."""
     filenames = {}
-    for ext in ['xml', 'fet', 'spk', 'res', 'dat',]:
+    for ext in ['xml', 'fet', 'spk', 'uspk', 'res', 'dat',]:
         filenames[ext] = find_filename(filename, ext) or ''
-    for ext in ['clu', 'aclu', 'acluinfo', 'groupinfo',]:
+    for ext in ['clu', 'aclu', 'acluinfo', 'groupinfo', 'kvwlg']:
         filenames[ext] = find_filename_or_new(filename, ext)
     filenames['probe'] = (find_filename(filename, 'probe') or
                           find_any_filename(filename, 'probe'))
     filenames['mask'] = (find_filename(filename, 'fmask') or
                          find_filename(filename, 'mask'))
+    # HDF5 file format
+    filenames.update(find_hdf5_filenames(filename))
     return filenames
 
+def filename_to_triplet(filename):
+    patterns = [r"([^\n]+)\.([^\.]+)\.([0-9]+)$",
+                r"([^\n]+)\.([^\.]+)$"]
+    fileindex = None
+    for pattern in patterns:
+        r = re.search(pattern, filename)
+        if r:
+            filename = r.group(1)
+            extension = r.group(2)
+            if len(r.groups()) >= 3:
+                fileindex = int(r.group(3))
+            return (filename, extension, fileindex)
+    return (filename, )
+    
+def triplet_to_filename(triplet):
+    return '.'.join(map(str, triplet))
+    
+def find_hdf5_filenames(filename):
+    filenames = {}
+    for key in ['main', 'wave', 'raw', 'low', 'high']:
+        filenames['hdf5_' + key] = os.path.abspath(
+            find_filename_or_new(filename, key + '.h5', have_file_index=False))
+    return filenames
 
 # -----------------------------------------------------------------------------
 # File reading functions
@@ -193,9 +266,10 @@ def process_features(features, fetdim, nchannels, freq, nfet=None):
     # normalize normal features while keeping symmetry
     features_normal = normalize(features[:,:fetdim * nchannels],
                                         symmetric=True)
-    # features_time = normalize(features[:,[-1]],
-                                        # symmetric=False)
+    # TODO: put the following line in FeatureView: it is necessary for correct
+    # normalization of the times.
     features_time = spiketimes.reshape((-1, 1)) * 1. / spiketimes[-1] * 2 - 1
+    # features_time = spiketimes.reshape((-1, 1)) * 1. / spiketimes[-1]# * 2 - 1
     # normalize extra features without keeping symmetry
     if nextrafet > 1:
         features_extra = normalize(features[:,-nextrafet:-1],
@@ -205,15 +279,18 @@ def process_features(features, fetdim, nchannels, freq, nfet=None):
         features = np.hstack((features_normal, features_time))
     return features, spiketimes
     
-def read_features(filename_fet, nchannels, fetdim, freq):
+def read_features(filename_fet, nchannels, fetdim, freq, do_process=True):
     """Read a .fet file and return the normalize features array,
     as well as the spiketimes."""
     try:
-        features = load_text(filename_fet, np.int32, skiprows=1, delimiter=' ')
+        features = load_text(filename_fet, np.int64, skiprows=1, delimiter=' ')
     except ValueError:
         features = load_text(filename_fet, np.float32, skiprows=1, delimiter='\t')
-    return process_features(features, fetdim, nchannels, freq, 
-        nfet=first_row(filename_fet))
+    if do_process:
+        return process_features(features, fetdim, nchannels, freq, 
+            nfet=first_row(filename_fet))
+    else:
+        return features
     
 # Clusters.
 def process_clusters(clusters):
@@ -301,11 +378,14 @@ def read_probe(filename_probe):
         except:
             # Or try the Python-flavored probe file (SpikeDetekt, with an
             # extra field 'geometry').
-            ns = {}
-            execfile(filename_probe, ns)
-            probe = ns['geometry']
-            probe = np.array([probe[i] for i in sorted(probe.keys())],
-                                dtype=np.float32)
+            try:
+                ns = {}
+                execfile(filename_probe, ns)
+                probe = ns['geometry']
+                probe = np.array([probe[i] for i in sorted(probe.keys())],
+                                    dtype=np.float32)
+            except:
+                return None
         return process_probe(probe)
 
 
@@ -518,8 +598,8 @@ class KlustersLoader(Loader):
     # Log file.
     # ---------
     def initialize_logfile(self):
-        filename = self.filename_fet.replace('.fet.', '.kvwlg.')
-        self.logfile = FileLogger(filename, name='datafile', 
+        # filename = self.filename_fet.replace('.fet.', '.kvwlg.')
+        self.logfile = FileLogger(self.filename_kvwlg, name='datafile', 
             level=USERPREF['loglevel_file'])
         # Register log file.
         register(self.logfile)
@@ -619,7 +699,7 @@ class MemoryLoader(Loader):
         # Count the number of spikes and save it in the metadata.
         self.nspikes = self.features.shape[0]
         self.nextrafet = self.features.shape[1] - self.nchannels * self.fetdim
-    
+        
     def read_clusters(self, clusters):
         self.clusters = process_clusters(clusters)
         # Convert to Pandas.

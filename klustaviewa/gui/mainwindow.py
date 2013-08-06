@@ -7,7 +7,7 @@ import pprint
 import time
 import os
 import inspect
-from collections import OrderedDict, Counter
+from collections import OrderedDict
 from functools import partial
 import webbrowser
 
@@ -22,7 +22,7 @@ from klustaviewa.gui.icons import get_icon
 from klustaviewa.control.controller import Controller
 from klustaviewa.wizard.wizard import Wizard
 from klustaviewa.dataio.tools import get_array
-from klustaviewa.dataio import KlustersLoader
+from klustaviewa.dataio import KlustersLoader, HDF5Loader
 from klustaviewa.gui.buffer import Buffer
 from klustaviewa.gui.dock import ViewDockWidget, DockTitleBar
 from klustaviewa.stats.cache import StatsCache
@@ -76,7 +76,8 @@ class MainWindow(QtGui.QMainWindow):
         
         # Initialize some variables.
         self.statscache = None
-        self.loader = KlustersLoader()
+        # self.loader = KlustersLoader()
+        self.loader = HDF5Loader()
         self.loader.progressReported.connect(self.open_progress_reported)
         self.wizard = Wizard()
         self.controller = None
@@ -228,6 +229,9 @@ class MainWindow(QtGui.QMainWindow):
             shortcut='SHIFT+Space')
         self.add_action('next_candidate', '&Skip closest match', 
             shortcut='Space')
+        self.add_action('skip_target', '&Skip best unsorted', 
+            # shortcut='Space'
+            )
         self.add_action('delete_candidate', 'Move closest match to &MUA', 
             shortcut='CTRL+M')
         self.add_action('delete_candidate_noise', 'Move closest match to &noise', 
@@ -304,13 +308,15 @@ class MainWindow(QtGui.QMainWindow):
         wizard_menu.addAction(self.next_candidate_action)
         wizard_menu.addAction(self.previous_candidate_action)
         wizard_menu.addSeparator()
-        # Good group.
-        wizard_menu.addAction(self.next_target_action)
+        wizard_menu.addAction(self.skip_target_action)
         wizard_menu.addSeparator()
+        # Good group.
+        # wizard_menu.addSeparator()
         # Delete.
         wizard_menu.addAction(self.delete_candidate_action)
         wizard_menu.addAction(self.delete_candidate_noise_action)
         wizard_menu.addSeparator()
+        wizard_menu.addAction(self.next_target_action)
         wizard_menu.addAction(self.delete_target_action)
         wizard_menu.addAction(self.delete_target_noise_action)
         wizard_menu.addSeparator()
@@ -352,8 +358,8 @@ class MainWindow(QtGui.QMainWindow):
         self.addToolBar(QtCore.Qt.LeftToolBarArea, self.toolbar)
         
     def create_open_progress_dialog(self):
-        self.open_progress = QtGui.QProgressDialog("Loading...", "Cancel", 
-            0, 0, self, QtCore.Qt.Popup)
+        self.open_progress = QtGui.QProgressDialog("Converting to HDF5...", 
+            "Cancel", 0, 0, self, QtCore.Qt.Popup)
         self.open_progress.setWindowModality(QtCore.Qt.WindowModal)
         self.open_progress.setValue(0)
         self.open_progress.setWindowTitle('Loading')
@@ -744,7 +750,8 @@ class MainWindow(QtGui.QMainWindow):
     def buffer_accepted_callback(self, (clusters, wizard)):
         self._wizard = wizard
         # The wizard boolean specifies whether the autozoom is activated or not.
-        self.taskgraph.select(clusters, wizard and self.automatic_projection_action.isChecked())
+        self.taskgraph.select(clusters, wizard and 
+            self.automatic_projection_action.isChecked())
         
     def clusters_selected_callback(self, clusters, wizard=False):
         self.buffer.request((clusters, wizard))
@@ -904,6 +911,12 @@ class MainWindow(QtGui.QMainWindow):
             return
         # Skip candidate.
         self.taskgraph.wizard_next_candidate()
+    
+    def skip_target_callback(self, checked=None):
+        if self.is_busy:
+            return
+        # Skip target.
+        self.taskgraph.wizard_skip_target()
     
     def next_target_callback(self, checked=None):
         if self.is_busy:

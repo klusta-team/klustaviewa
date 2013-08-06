@@ -95,8 +95,7 @@ def test_select_some():
     
     spikes = get_some_spikes(clusters, 10)
     
-    assert len(spikes) == 10
-    
+    assert len(np.arange(spikes.start, spikes.stop, spikes.step)) == 10
     
 def test_select_array():
     # All spikes in cluster 1.

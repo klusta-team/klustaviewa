@@ -1,14 +1,17 @@
 import os
 import tables
+import time
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 import klustaviewa.dataio as kvio
 
+t0 = time.clock()
+
 # Get the filenames.
-folder = r"D:\Spike sorting\test"
-basename = "test"
+folder = r"D:\Spike sorting\sirota"
+basename = "ec016.694_711"
 filenames = kvio.find_filenames(os.path.join(folder, basename))
 fileindex = kvio.find_index(os.path.join(folder, basename))
 
@@ -31,17 +34,20 @@ if 'probe' in filenames:
 # Find out the number of columns in the .fet file.
 f = open(filenames['fet'], 'r')
 f.readline()
-fetcol = len(f.readline().split(' '))
-
+# Get the number of non-empty columns in the .fet file.
+fetcol = len([col for col in f.readline().split(' ') if col.strip() != ''])
+f.close()
 
 nspikes = len(data['clu'])
 nchannels = metadata['nchannels']
 nsamples = metadata['nsamples']
 
 # Open big Klusters files.
-data['fet'] = kvio.MemMappedText(filenames['fet'], np.int16, skiprows=1)
+data['fet'] = kvio.MemMappedText(filenames['fet'], np.int64, skiprows=1)
 data['spk'] = kvio.MemMappedBinary(filenames['spk'], np.int16, rowsize=nchannels * nsamples)
-if 'mask' in filenames and os.path.exists(filenames['mask']):
+if 'uspk' in filenames and os.path.exists(filenames['uspk'] or ''):
+    data['uspk'] = kvio.MemMappedBinary(filenames['uspk'], np.int16, rowsize=nchannels * nsamples)
+if 'mask' in filenames and os.path.exists(filenames['mask'] or ''):
     data['mask'] = kvio.MemMappedText(filenames['mask'], np.float32, skiprows=1)
     hasmask = True
 else:
@@ -57,25 +63,33 @@ hdf_waves.createGroup('/', 'shanks')
 hdf_waves.createGroup('/shanks', 'shank0')
 
 spikes_description = dict(
-    time=tables.Int64Col(),
-    mask_binary=tables.BoolCol(shape=(fetcol,)),
-    mask_float=tables.Int8Col(shape=(fetcol,)),
+    time=tables.UInt64Col(),
+    # mask_binary=tables.BoolCol(shape=(fetcol,)),
+    # mask_float=tables.Int8Col(shape=(fetcol,)),
     features=tables.Int16Col(shape=(fetcol,)),
-    cluster=tables.Int32Col(),)
+    cluster=tables.UInt32Col(),)
+if 'mask' in data:
+    spikes_description['mask'] = tables.UInt8Col(shape=(fetcol,))
 waves_description = dict(
-        wave=tables.Int16Col(shape=(metadata['nsamples'], metadata['nchannels'])),
-        wave_unfiltered=tables.Int16Col(shape=(metadata['nsamples'], metadata['nchannels'])))
+        wave=tables.Int16Col(shape=(metadata['nsamples'] * metadata['nchannels'])),)
+if 'uspk' in data:
+    waves_description['wave_unfiltered'] = tables.Int16Col(
+        shape=(metadata['nsamples'] * metadata['nchannels']))
 
 spikes_table = hdf_main.createTable('/shanks/shank0', 'spikes', spikes_description)
 waves_table = hdf_waves.createTable('/shanks/shank0', 'waves', waves_description)
+hdf_main.createExternalLink('/shanks/shank0', 'waveforms', waves_table)
 
 for spike in xrange(nspikes):
     
+    if spike >= 10:
+        break
+        
     if spike % 1000 == 0:
         print "{0:.1f}%\r".format(spike / float(nspikes) * 100),
 
     fet = data['fet'].next()
-    spk = data['spk'].next().reshape((nsamples, nchannels))
+    spk = data['spk'].next()#.reshape((nsamples, nchannels))
     
     if hasmask:
         mask = data['mask'].next()
@@ -86,11 +100,7 @@ for spike in xrange(nspikes):
     row_main['time'] = fet[-1]
     
     if hasmask:
-        row_main['mask_binary'] = mask.astype(np.bool)
-        row_main['mask_float'] = (mask * 255).astype(np.uint8)
-    else:
-        row_main['mask_binary'] = True
-        row_main['mask_float'] = 255
+        row_main['mask'] = (mask * 255).astype(np.uint8)
         
     row_main['features'] = fet
     row_main['cluster'] = data['clu'][spike]
@@ -105,4 +115,9 @@ hdf_main.close()
 
 hdf_waves.flush()
 hdf_waves.close()
+
+t1 = time.clock()
+
+print "Time:", (t1 - t0)
+
 

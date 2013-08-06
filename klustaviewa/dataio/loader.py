@@ -161,6 +161,9 @@ class Loader(QtCore.QObject):
             spikes = self.spikes_selected
         return select(self.features, spikes)
     
+    def get_features_background(self):
+        return self.features
+        
     def get_some_features(self, clusters=None):
         """Return the features for a subset of all spikes: a large number
         of spikes from any cluster, and a controlled subset of the selected 
@@ -279,6 +282,9 @@ class Loader(QtCore.QObject):
     # Access to the data: misc
     # ------------------------
     def get_probe(self):
+        return self.probe
+    
+    def get_probe_geometry(self):
         return self.probe
     
     def get_new_clusters(self, n=1):

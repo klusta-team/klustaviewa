@@ -4,7 +4,6 @@ clusters."""
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-# from collections import Counter
 from itertools import product
 
 import numpy as np
@@ -48,7 +47,6 @@ except Exception as e:
             correlograms = {}
 
             # unique clusters
-            # counter = Counter(clusters)
             clusters_unique = np.unique(clusters)
             nclusters = len(clusters_unique)
             cluster_max = clusters_unique[-1]

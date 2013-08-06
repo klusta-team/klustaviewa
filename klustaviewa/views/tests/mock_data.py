@@ -4,7 +4,6 @@
 # Imports
 # -----------------------------------------------------------------------------
 import os
-from collections import Counter
 
 import numpy as np
 import numpy.random as rnd

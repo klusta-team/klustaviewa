@@ -3,7 +3,6 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-from collections import Counter
 import operator
 import time
 
@@ -244,7 +243,9 @@ class FeatureDataManager(Manager):
     # Initialization methods
     # ----------------------
     def set_data(self,
-                 features=None,  # a subset of all spikes, disregarding cluster
+                 features=None,
+                 features_background=None,
+                 spiketimes=None,  # a subset of all spikes, disregarding cluster
                  masks=None,  # masks for all spikes in selected clusters
                  clusters=None,  # clusters for all spikes in selected clusters
                  clusters_selected=None,
@@ -262,6 +263,7 @@ class FeatureDataManager(Manager):
 
         if features is None:
             features = np.zeros((0, 2))
+            features_background = np.zeros((0, 2))
             masks = np.zeros((0, 1))
             clusters = np.zeros(0, dtype=np.int32)
             clusters_selected = []
@@ -273,6 +275,7 @@ class FeatureDataManager(Manager):
         assert fetdim is not None
         
         self.duration = duration
+        self.spiketimes = spiketimes
         self.freq = freq
         self.interaction_manager.get_processor('grid').update_viewbox()
         
@@ -283,29 +286,35 @@ class FeatureDataManager(Manager):
         # can be 'second' or 'samples'
         self.time_unit = time_unit
         
-        # Indices of all subset spikes.
-        indices_all = get_indices(features)
+        # # Indices of all subset spikes.
+        # indices_all = get_indices(features)
         
-        # Select only the clusters for subset of spikes.
-        clusters = select(clusters, indices_all)
+        # # Select only the clusters for subset of spikes.
+        # clusters = select(clusters, indices_all)
         
-        # Indices of subset spikes in selected clusters.
-        indices_selection = get_indices(clusters)
+        # # Indices of subset spikes in selected clusters.
+        # indices_selection = get_indices(clusters)
         
-        # Indices of subset spikes that are not in selected clusters.
-        indices_background = np.setdiff1d(indices_all, indices_selection, True)
+        # # Indices of subset spikes that are not in selected clusters.
+        # indices_background = np.setdiff1d(indices_all, indices_selection, True)
         
         # Extract the relevant spikes, but keep the other ones in features_full
         self.clusters = clusters
         self.clusters_array = get_array(self.clusters)
         
+        
         # self.features contains selected spikes.
-        self.features = select(features, indices_selection)
+        # self.features = select(features, indices_selection)
+        self.features = features
         self.features_array = get_array(self.features)
         
         # self.features_background contains all non-selected spikes
-        self.features_background = select(features, indices_background)
+        # self.features_background = select(features, indices_background)
+        self.features_background = features_background
         self.features_background_array = get_array(self.features_background)
+        
+        
+        
         
         # Background spikes are those which do not belong to the selected clusters
         self.npoints_background = self.features_background_array.shape[0]
@@ -944,8 +953,9 @@ class FeatureInfoManager(Manager):
         
         # Absolute spike index.
         ispk_abs = self.data_manager.feature_indices[ispk]
-        time = select(self.data_manager.features, ispk_abs)[-1]
-        time = (time + 1) * .5 * self.parent.data_manager.duration
+        # time = select(self.data_manager.features, ispk_abs)[-1]
+        # time = (time + 1) * .5 * self.parent.data_manager.duration
+        time = self.data_manager.spiketimes[ispk_abs]
         
         unit = self.data_manager.time_unit
         if unit == 'second':

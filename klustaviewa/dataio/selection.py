@@ -55,6 +55,37 @@ def select_pandas(data, spikes, drop_empty_rows=True):
         data_selected = data_selected.dropna()
     return data_selected
 
+def pandaize(values, spikes):
+    """Convert a NumPy array to a Pandas object, with the spikes indices."""
+    # Get the spike indices.
+    if isinstance(spikes, slice):
+        spike_indices = np.arange(spikes.start, spikes.stop, spikes.step)
+    elif spikes.dtype == np.bool:
+        spike_indices = np.nonzero(spikes)[0]
+    else:
+        spike_indices = spikes
+    
+    # Create the Pandas object with the spike indices.
+    if values.ndim == 1:
+        pd_arr = pd.Series(values, index=spike_indices)
+    elif values.ndim == 2:
+        pd_arr = pd.DataFrame(values, index=spike_indices)
+    elif values.ndim == 3:
+        pd_arr = pd.Panel(values, items=spike_indices)
+    return pd_arr
+    
+def select_pytables(data, spikes):
+    if len(data) == 2:
+        table, column = data
+        process_fun = None
+    elif len(data) == 3:
+        table, column, process_fun = data
+    values = table[spikes][column]
+    # Process the NumPy array.
+    if process_fun:
+        values = process_fun(values)
+    return pandaize(values, spikes)
+    
 def select(data, indices=None):
     """Select portion of the data, with the only assumption that indices are
     along the first axis.
@@ -64,17 +95,17 @@ def select(data, indices=None):
     """
     # indices=None or 'all' means select all.
     if indices is None or indices is 'all':
-        return data
+        if type(data) == tuple:
+            indices = np.ones(data[0].shape[0], dtype=np.bool)
+        else:
+            return data
         
     indices_argument = indices
-    if not hasattr(indices, '__len__'):
+    if not hasattr(indices, '__len__') and not isinstance(indices, slice):
         indices = [indices]
-        # is_single = True
-    # else:
-        # is_single = False
         
     # Ensure indices is an array of indices or boolean masks.
-    if not isinstance(indices, np.ndarray):
+    if not isinstance(indices, np.ndarray) and not isinstance(indices, slice):
         # Deal with empty indices.
         if not len(indices):
             if data.ndim == 1:
@@ -91,11 +122,13 @@ def select(data, indices=None):
             else:
                 indices = np.array(indices)
     
-    # Use NumPy or Pandas version
+    # Use NumPy, PyTables (tuple) or Pandas version
     if type(data) == np.ndarray:
         if data.size == 0:
             return data
         return select_numpy(data, indices_argument)
+    elif type(data) == tuple:
+        return select_pytables(data, indices_argument)
     else:
         if data.values.size == 0:
             return data
@@ -130,6 +163,8 @@ def get_some_spikes_in_clusters(clusters_selected, clusters, counter=None,
     clusters, with at least `nspikes_per_cluster_min` spikes per cluster,
     and an expected maximum number of spikes equal to `nspikes_max_expected`.
     """
+    if not hasattr(clusters_selected, '__len__'):
+        clusters_selected = [clusters_selected]
     if nspikes_max_expected is None:
         nspikes_max_expected = 100
     if nspikes_per_cluster_min is None:
@@ -138,7 +173,6 @@ def get_some_spikes_in_clusters(clusters_selected, clusters, counter=None,
     nspikes = len(clusters)
     spikes = np.zeros(nspikes, dtype=np.bool)
     # Number of spikes in all selected clusters.
-    # counter = Counter(clusters)
     nspikes_in_clusters_selected = np.sum(np.array([counter[cluster]
         for cluster in clusters_selected]))
     # Take a sample of the spikes in each cluster.
@@ -174,7 +208,8 @@ def get_some_spikes_in_clusters(clusters_selected, clusters, counter=None,
             k = max(int(1. / p), 1)
             for _ in xrange(10):
                 s[:] = False
-                s[np.random.randint(low=0, high=k)::k] = True
+                # s[np.random.randint(low=0, high=k)::k] = True
+                s[0::k] = True
                 spikes_in_cluster = spikes_in_cluster0 & s
                 # Try to increase the number of spikes if there are no
                 # spikes in the current cluster.
@@ -195,13 +230,10 @@ def get_some_spikes(clusters,
     if nspikes_max is None:
         nspikes_max = 10000
     spikes = get_indices(clusters)
-    spikes_selected = np.zeros(len(spikes), dtype=np.bool)
     p = nspikes_max / float(len(spikes))
     k = max(int(1. / p), 1)
-    spikes_selected[np.random.randint(low=0, high=k)::k] = True
-    return np.nonzero(spikes_selected)[0]
+    return slice(0, len(spikes), k)
     
-
 def get_indices(data):
     if type(data) == np.ndarray:
         return np.arange(data.shape[0], dtype=np.int32)
