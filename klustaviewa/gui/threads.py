@@ -32,7 +32,6 @@ class OpenTask(QtCore.QObject):
         try:
             loader.close()
             loader.open(path)
-            # TODO: add loader_raw.open(path)
             self.dataOpened.emit()
         except Exception as e:
             self.dataOpenFailed.emit(traceback.format_exc())

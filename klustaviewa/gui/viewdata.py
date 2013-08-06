@@ -54,14 +54,14 @@ def get_rawdataview_data(loader):
         filename = r"../views/tests/datatest/n6mab031109.trim.h5"
         f = tables.openFile(os.path.join(dir, filename))
     try:
-        data = f.root.RawData
+        rawdata = f.root.RawData
     except:
-        data = f.root.raw_data
+        rawdata = f.root.raw_data
 
     freq = 20000.
     dead_channels = np.arange(0,5,1)
     data = dict(
-        rawdata=data,
+        rawdata=rawdata,
         freq=freq,
         dead_channels=dead_channels,
     )

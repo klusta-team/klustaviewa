@@ -29,7 +29,7 @@ class RawDataManager(Manager):
             freq = 10
 
         # default settings
-        self.max_size = 500
+        self.max_size = 5000
         self.duration_initial = 10
         self.default_channel_height = 0.25
         self.channel_height_limits = (0.01, 2.)
@@ -39,7 +39,7 @@ class RawDataManager(Manager):
         self.rawdata = rawdata
         self.dead_channels = dead_channels
         self.freq = freq
-        self.totalduration= (self.rawdata.shape[0] - 1) / self.freq
+        self.totalduration = (self.rawdata.shape[0] - 1) / self.freq
         self.totalsamples, self.nchannels = self.rawdata.shape
         
         if channel_height is None:
@@ -66,7 +66,7 @@ class RawDataManager(Manager):
         self.interaction_manager.activate_grid()
         
         # register the updater threads
-        self.slice_retriever = inthread(SliceRetriever)()
+        self.slice_retriever = inthread(SliceRetriever)(impatient=True)
         self.slice_retriever.sliceLoaded.connect(self.slice_loaded)
         
     def load_correct_slices(self):
@@ -153,7 +153,7 @@ class RawDataManager(Manager):
         self.color_index = np.repeat(colors, self.samples.shape[0] / self.nchannels)
         self.position = self.samples
         
-        self.paint_manager.update()
+        self.paint_manager.update_slice()
         self.paint_manager.updateGL()
         
 class SliceRetriever(QtCore.QObject):
@@ -197,7 +197,6 @@ class SliceRetriever(QtCore.QObject):
 class RawDataPaintManager(PlotPaintManager):
     
     def initialize(self):
-        
         self.add_visual(MultiChannelVisual,
             position=self.data_manager.position,
             name='rawdata_waveforms',
@@ -208,6 +207,15 @@ class RawDataPaintManager(PlotPaintManager):
         self.data_manager.paintinitialized = True
 
     def update(self):
+        self.reinitialize_visual(visual='rawdata_waveforms',
+            channel_height=self.data_manager.channel_height,
+            position=self.data_manager.position,
+            shape=self.data_manager.shape,
+            size=self.data_manager.size)
+            
+        self.data_manager.paintinitialized = True
+            
+    def update_slice(self):
         self.set_data(visual='rawdata_waveforms',
             channel_height=self.data_manager.channel_height,
             position0=self.data_manager.position,
@@ -464,7 +472,6 @@ class RawDataInteractionManager(PlotInteractionManager):
         # increase/decrease channel height between limits
         if ll <= self.data_manager.channel_height <= ul:
             self.data_manager.channel_height *= (1 + parameter)
-            self.paint_manager.set_data(channel_height=self.data_manager.channel_height)
             
         # restore limits to ensure it never exceeds them
         if self.data_manager.channel_height > ul:
@@ -472,11 +479,11 @@ class RawDataInteractionManager(PlotInteractionManager):
         elif self.data_manager.channel_height < ll:
             self.data_manager.channel_height = ll
             
-        self.paint_manager.update()
+        self.paint_manager.set_data(channel_height=self.data_manager.channel_height, visual='rawdata_waveforms')
         
     def reset_channel_height(self, parameter):
         self.data_manager.channel_height = self.data_manager.default_channel_height
-        self.paint_manager.update()
+        self.paint_manager.set_data(channel_height=self.data_manager.channel_height, visual='rawdata_waveforms')
     
 class RawDataBindings(KlustaViewaBindings):      
     def initialize(self):
@@ -490,7 +497,6 @@ class RawDataView(KlustaView):
     # Initialization
     # --------------
     def initialize(self):
-        
         self.set_bindings(RawDataBindings)
         self.set_companion_classes(
             paint_manager=RawDataPaintManager,
@@ -498,7 +504,14 @@ class RawDataView(KlustaView):
             data_manager=RawDataManager)
     
     def set_data(self, *args, **kwargs):
+        # if kwargs.get('similarity_matrix', None) is None:
+            # return
         self.data_manager.set_data(*args, **kwargs)
+
+        # update?
+        if self.initialized:
+            self.paint_manager.update()
+            self.updateGL()
     
     # Save and restore geometry
     # -------------------------

@@ -9,15 +9,12 @@ class HDF5RawDataLoader(QtCore.QObject):
         filenames = find_filename(filename, 'klxd')
         filename_main = filenames['hdf5_main']
         self.filename_log = filenames['kvwlg']
-        # Conversion if the main HDF5 file does not exist.
-        if not os.path.exists(filename_main):
-            klusters_to_hdf5(filename, self.klusters_to_hdf5_progress_report)
         self.filename = filename_main
         self.read()
         
         pass
 
-    def get_raw_data(self):
+    def get_rawdata(self):
         # return slicable pytables object (EArray)
         pass
     

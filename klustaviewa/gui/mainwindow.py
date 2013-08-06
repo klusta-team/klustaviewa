@@ -566,13 +566,12 @@ class MainWindow(QtGui.QMainWindow):
             self.taskgraph.update_correlograms_view()
             
     def add_rawdata_view(self, do_update=None, floating=False):
-        print "raw data view adding"
         view = self.create_view(vw.RawDataView,
             index=len(self.views['RawDataView']),
             position=QtCore.Qt.RightDockWidgetArea,
             floating=floating)
         self.views['RawDataView'].append(view)
-        if do_update and self.is_file_open and self.loader.has_selection():
+        if do_update and self.is_file_open:
             self.taskgraph.update_rawdata_view()
             
     def get_view(self, name, index=0):
@@ -639,7 +638,7 @@ class MainWindow(QtGui.QMainWindow):
         [self.add_feature_view() for _ in xrange(count['FeatureView'])]
         [self.add_ipython_view() for _ in xrange(count['IPythonView'])]
         [self.add_correlograms_view() for _ in xrange(count['CorrelogramsView'])]
-        # [self.add_rawdata_view() for _ in xrange(count['RawDataView'])]
+        [self.add_rawdata_view() for _ in xrange(count['RawDataView'])]
     
     def dock_widget_closed(self, dock):
         for key in self.views.keys():
@@ -724,6 +723,7 @@ class MainWindow(QtGui.QMainWindow):
         # self.taskgraph.update_projection_view()
         self.taskgraph.update_cluster_view()
         self.taskgraph.compute_similarity_matrix()
+        self.taskgraph.update_rawdata_view()
         
     def open_failed(self, message):
         self.open_progress.setValue(0)
