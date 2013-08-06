@@ -34,6 +34,14 @@ def get_waveformview_data(loader, autozoom=None, wizard=None):
     )
     return data
 
+def get_rawdataview_data(loader):
+    # TODO
+    # loader: HDF5RawDataLoader
+    data = dict(
+        raw_data=loader.get_raw_data(),
+    )
+    return data
+    
 def get_clusterview_data(loader, statscache, clusters=None):
     data = dict(
         cluster_colors=loader.get_cluster_colors('all',

@@ -127,7 +127,7 @@ class HDF5Loader(Loader):
         
     def get_probe_geometry(self):
         if self.probe:
-            return self.probe[self.shank]['geometry_array']
+            return self.probe[self.shank].get('geometry_array', None)
         else:
             return None
         
@@ -196,7 +196,7 @@ class HDF5Loader(Loader):
         return (masks_full * 1. / 255).astype(np.float32)
     
     def process_masks(self, masks_full):
-        return (masks_full[:,:-1:self.fetdim] * 1. / 255).astype(np.float32)
+        return (masks_full[:,:-self.nextrafet:self.fetdim] * 1. / 255).astype(np.float32)
     
     def process_waveforms(self, waveforms):
         return (waveforms * 1e-5).astype(np.float32).reshape((-1, self.nsamples, self.nchannels))
@@ -210,6 +210,7 @@ class HDF5Loader(Loader):
         self.masks = self.spike_table, 'masks', self.process_masks
         # For the waveforms, need to dereference with __call__ as it
         # is an external link.
+        # self.waveforms = self.wave_table(), 'waveform', self.process_waveforms
         self.waveforms = self.wave_table(), 'waveform', self.process_waveforms
         
         # Background spikes
@@ -247,8 +248,15 @@ class HDF5Loader(Loader):
         # from this in-memory table later.
         if spikes is not None:
             self.spikes_selected_table = self.spike_table[spikes]
+            # Select waveforms too.
+            self.spikes_waveforms = get_some_spikes_in_clusters(clusters, self.clusters,
+                    counter=self.counter,
+                    nspikes_max_expected=USERPREF['waveforms_nspikes_max_expected'],
+                    nspikes_per_cluster_min=USERPREF['waveforms_nspikes_per_cluster_min'])
+            self.waveforms_selected = self.waveforms[0][self.spikes_waveforms]['waveform']
         else:
             self.spikes_selected_table = None
+            self.waveforms_selected = None
         self.spikes_selected = spikes
         self.clusters_selected = clusters
 
@@ -271,15 +279,6 @@ class HDF5Loader(Loader):
             spikes = self.spikes_selected
         return select(self.features, spikes)
     
-    # def get_some_features(self):#, clusters=None):
-        # """Return the features for a subset of all spikes: a large number
-        # of spikes from any cluster, and a controlled subset of the selected 
-        # clusters."""
-        # # Merge background features and all features.
-        # features_bg = self.get_background_features()
-        # features = self.get_features()
-        # return pd.concat([features, features_bg])
-        
     def get_masks(self, spikes=None, full=None, clusters=None):
         if self.spikes_selected_table is None:
             return None
@@ -291,6 +290,7 @@ class HDF5Loader(Loader):
             else:
                 values = self.process_masks(masks)
             return pandaize(values, self.spikes_selected)
+            
         # Normal case.
         if clusters is not None:
             spikes = get_spikes_in_clusters(clusters, self.clusters)
@@ -303,6 +303,15 @@ class HDF5Loader(Loader):
         return select(masks, spikes)
     
     def get_waveforms(self, spikes=None, clusters=None):
+        
+        if self.waveforms_selected is None:
+            return None
+        # Special case: return the already-selected values from the cache.
+        if spikes is None and clusters is None:
+            values = self.process_waveforms(self.waveforms_selected)
+            return pandaize(values, self.spikes_waveforms)
+        
+        # Normal case.
         if self.spikes_selected_table is None:
             return None
         if spikes is not None:

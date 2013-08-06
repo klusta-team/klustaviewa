@@ -6,6 +6,7 @@
 import logging
 import numpy as np
 
+
 # -----------------------------------------------------------------------------
 # Logging
 # -----------------------------------------------------------------------------
@@ -54,9 +55,19 @@ feature_selected_alpha = .75
 features_nspikes_background_max = 10000  
 
 # Maximum number of spikes to show in the selected clusters.
+###########
+# WARNING #
+###########
+# Do not change this value, otherwise you will have problems when
+# splitting clusters (unselected spikes).
 features_nspikes_selection_max = np.inf  # always show all selected clusters
 
 # Minimum number of spikes to show per selected cluster.
+###########
+# WARNING #
+###########
+# Do not change this value, otherwise you will have problems when
+# splitting clusters (unselected spikes).
 features_nspikes_per_cluster_min = np.inf  # always show all selected clusters
 
 # Unit of the spike time in the feature view. Can be 'samples' or 'second'.
