@@ -23,18 +23,24 @@ class RawDataManager(Manager):
     
     # initialization
     def set_data(self, rawdata=None, freq=None, channel_height=None, channel_names=None, dead_channels=None):
-        
-        if rawdata is None:
-            rawdata = np.zeros((1000, 32))
-            freq = 10
 
         # default settings
-        self.max_size = 5000
-        self.duration_initial = 10
+        self.max_size = 1000
+        self.duration_initial = 10.
         self.default_channel_height = 0.25
         self.channel_height_limits = (0.01, 2.)
         self.nticks = 10
         
+        # these variables will be overwritten after initialization (used to check if init is complete)
+        self.slice_ref = (-1, -1) # slice paging
+        self.paintinitialized = False # to stop first slice from being loaded until correctly-shaped data drawn
+        self.no_data = False # hides grid and painting if we've made up false data of zeros
+        
+        if rawdata is None:
+            rawdata = np.zeros((self.duration_initial * 2, 32))
+            freq = 1
+            self.no_data = True
+            
         # load initial variables
         self.rawdata = rawdata
         self.dead_channels = dead_channels
@@ -52,18 +58,15 @@ class RawDataManager(Manager):
             channel_names = ['ch{0:d}'.format(i) for i in xrange(self.nchannels)]
         self.channel_names = channel_names
         
-        # these variables will be overwritten after initialization (used to check if init is complete)
-        self.slice_ref = (-1, -1)
-        self.paintinitialized = False
-        
         x = np.tile(np.linspace(0., self.totalduration, 2), (self.nchannels, 1))
         y = np.zeros_like(x)+ np.linspace(-1, 1, self.nchannels).reshape((-1, 1))
         
         self.position, self.shape = process_coordinates(x=x, y=y)
         
         # activate the grid
-        self.interaction_manager.get_processor('viewport').update_viewbox()
-        self.interaction_manager.activate_grid()
+        if self.no_data == False:
+            self.interaction_manager.get_processor('viewport').update_viewbox()
+            self.interaction_manager.activate_grid()
         
         # register the updater threads
         self.slice_retriever = inthread(SliceRetriever)(impatient=True)
@@ -202,7 +205,7 @@ class RawDataPaintManager(PlotPaintManager):
             name='rawdata_waveforms',
             shape=self.data_manager.shape,
             channel_height=self.data_manager.channel_height)
-        
+
         self.add_visual(GridVisual, name='grid')
         self.data_manager.paintinitialized = True
 
@@ -460,6 +463,8 @@ class RawDataInteractionManager(PlotInteractionManager):
     def activate_grid(self):
         self.paint_manager.set_data(visual='grid_lines', 
             visible=True)
+        self.paint_manager.set_data(visual='grid_text',
+            visible=True)
         processor = self.get_processor('grid')
         if processor:
             processor.activate(True)
@@ -504,13 +509,12 @@ class RawDataView(KlustaView):
             data_manager=RawDataManager)
     
     def set_data(self, *args, **kwargs):
-        # if kwargs.get('similarity_matrix', None) is None:
-            # return
         self.data_manager.set_data(*args, **kwargs)
 
         # update?
         if self.initialized:
             self.paint_manager.update()
+            self.data_manager.load_correct_slices()
             self.updateGL()
     
     # Save and restore geometry

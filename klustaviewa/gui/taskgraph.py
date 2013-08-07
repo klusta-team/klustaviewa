@@ -305,9 +305,6 @@ class TaskGraph(AbstractTaskGraph):
         
     def _update_rawdata_view(self):
         data = vd.get_rawdataview_data(self.loader)
-        print "~~~~~~PRINTING VIEWS~~~~~~~~", data['rawdata'].shape
-        for view in self.get_views('RawDataView'):
-            print "rawdataview is", view
         [view.set_data(**data) for view in self.get_views('RawDataView')]
         
     def _update_cluster_view(self, clusters=None):
