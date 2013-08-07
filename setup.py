@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     setup(
         name='klustaviewa',
-        version='0.1.0.dev',
+        version='0.1.0',
         author='Cyrille Rossant',
         author_email='rossant@github',
         packages=['klustaviewa',
@@ -71,7 +71,7 @@ if __name__ == '__main__':
         
         # Scripts.
         entry_points={
-            'console_scripts': [
+            'gui_scripts': [
                 'klustaviewa = klustaviewa.scripts.runklustaviewa:main' ]
         },
         
