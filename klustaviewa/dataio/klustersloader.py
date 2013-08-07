@@ -359,9 +359,9 @@ def read_waveforms(filename_spk, nsamples, nchannels):
     return process_waveforms(waveforms, nsamples, nchannels)
     
 # DAT.
-def read_dat(filename_dat, nchannels):
+def read_dat(filename_dat, nchannels, dtype=np.int16):
     nsamples = os.path.getsize(filename_dat) // nchannels
-    return load_binary_memmap(filename_dat, dtype=np.int16,
+    return load_binary_memmap(filename_dat, dtype=dtype,
                              shape=(nsamples, nchannels))
 
 # Probe.

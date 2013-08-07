@@ -9,7 +9,7 @@ import tempfile
 import numpy as np
 
 from klustaviewa.dataio import (normalize, find_filename, save_text, 
-    MemMappedText, load_text)
+    MemMappedText, load_text, save_binary, read_dat)
 
 
 # -----------------------------------------------------------------------------
@@ -47,5 +47,25 @@ def test_memmap_text():
         i += 1
         l = m.next()
         
-        
+def test_memmap_numpy():
+    folder = tempfile.gettempdir()
+    filename = os.path.join(folder, 'memmapb')
+    
+    dtype = np.int16
+    freq = 20000.
+    duration = 10.
+    nchannels = 32
+    nsamples = int(freq * duration)
+    
+    x = np.random.randint(size=(nsamples, nchannels), 
+        low=0, high=1000).astype(dtype)
+    save_binary(filename, x)
+    
+    m = read_dat(filename, nchannels=nchannels, dtype=dtype)
+    
+    slices = (slice(1000, 10000, 4), slice(2, 30, 3))
+    
+    np.testing.assert_equal(x[slices], m[slices])
+    
+    
     

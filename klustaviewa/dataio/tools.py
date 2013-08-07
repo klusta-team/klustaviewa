@@ -166,7 +166,7 @@ def load_pickle(file):
 # Memory mapping
 # -----------------------------------------------------------------------------
 def load_binary_memmap(file, dtype=None, shape=None):
-    return np.memmap(file, dtype=dtype, mode='r', shape=shape)
+    return np.memmap(file, dtype=dtype, shape=shape)
 
 def get_chunk(f, dtype, start, stop):
     itemsize = np.dtype(dtype).itemsize
