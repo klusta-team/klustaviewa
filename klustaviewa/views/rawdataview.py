@@ -34,12 +34,12 @@ class RawDataManager(Manager):
         # these variables will be overwritten after initialization (used to check if init is complete)
         self.slice_ref = (-1, -1) # slice paging
         self.paintinitialized = False # to stop first slice from being loaded until correctly-shaped data drawn
-        self.no_data = False # hides grid and painting if we've made up false data of zeros
+        self.real_data = True # hides grid and painting if we've made up false data of zeros
         
         if rawdata is None:
             rawdata = np.zeros((self.duration_initial * 2, 32))
             freq = 1
-            self.no_data = True
+            self.real_data = False
             
         # load initial variables
         self.rawdata = rawdata
@@ -64,7 +64,7 @@ class RawDataManager(Manager):
         self.position, self.shape = process_coordinates(x=x, y=y)
         
         # activate the grid
-        if self.no_data == False:
+        if self.real_data == True:
             self.interaction_manager.get_processor('viewport').update_viewbox()
             self.interaction_manager.activate_grid()
         
@@ -149,7 +149,7 @@ class RawDataManager(Manager):
         self.size = size
         
         colors = np.arange(self.nchannels)
-        colors[self.dead_channels] = 1
+        colors[self.dead_channels] = 0
         channels = np.arange(self.nchannels)
         
         self.channel_index = np.repeat(channels, self.samples.shape[0] / self.nchannels)
@@ -204,9 +204,13 @@ class RawDataPaintManager(PlotPaintManager):
             position=self.data_manager.position,
             name='rawdata_waveforms',
             shape=self.data_manager.shape,
-            channel_height=self.data_manager.channel_height)
+            channel_height=self.data_manager.channel_height,
+            visible=self.data_manager.real_data)
 
         self.add_visual(GridVisual, name='grid')
+        # if self.data_manager.no_data = False
+        # self.paint_manager.set_data(visual='rawdata_waveforms', 
+        #     visible=True)
         self.data_manager.paintinitialized = True
 
     def update(self):
@@ -214,7 +218,8 @@ class RawDataPaintManager(PlotPaintManager):
             channel_height=self.data_manager.channel_height,
             position=self.data_manager.position,
             shape=self.data_manager.shape,
-            size=self.data_manager.size)
+            size=self.data_manager.size,
+            visible=self.data_manager.real_data)
             
         self.data_manager.paintinitialized = True
             
