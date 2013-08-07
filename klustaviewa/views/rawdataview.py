@@ -207,7 +207,8 @@ class RawDataPaintManager(PlotPaintManager):
             channel_height=self.data_manager.channel_height,
             visible=self.data_manager.real_data)
 
-        self.add_visual(GridVisual, name='grid')
+        self.add_visual(GridVisual, name='grid', background_transparent=False,
+            letter_spacing=350.,)
         # if self.data_manager.no_data = False
         # self.paint_manager.set_data(visual='rawdata_waveforms', 
         #     visible=True)
@@ -525,17 +526,19 @@ class RawDataView(KlustaView):
     # Save and restore geometry
     # -------------------------
     def save_geometry(self):
-        pref = self.position_manager.get_geometry_preferences()
-        SETTINGS.set('waveform_view.geometry', pref)
+        # pref = self.position_manager.get_geometry_preferences()
+        # SETTINGS.set('rawdata_view.geometry', pref)
+        pass
 
     def restore_geometry(self):
         """Return a dictionary with the user preferences regarding geometry
         in the WaveformView."""
-        pref = SETTINGS.get('waveform_view.geometry')
-        self.position_manager.set_geometry_preferences(pref)
+        # pref = SETTINGS.get('rawdata_view.geometry')
+        # self.position_manager.set_geometry_preferences(pref)
+        pass
 
     def closeEvent(self, e):
         self.save_geometry()
-        super(WaveformView, self).closeEvent(e)
+        super(RawDataView, self).closeEvent(e)
       
         
