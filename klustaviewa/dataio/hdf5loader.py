@@ -367,23 +367,12 @@ class HDF5Loader(Loader):
         
         if renumber:
             self.renumber()
-            clusters = get_array(self.clusters_renumbered)
-            cluster_info = self.cluster_info_renumbered
-        else:
-            clusters = get_array(self.clusters)
-            cluster_info = self.cluster_info
-        
-        # # Save both ACLU and CLU files.
-        # save_clusters(self.filename_aclu, clusters)
-        # save_clusters(self.filename_clu, 
-            # convert_to_clu(clusters, cluster_info))
-        
-        # # Save CLUINFO and GROUPINFO files.
-        # save_cluster_info(self.filename_acluinfo, cluster_info)
-        # save_group_info(self.filename_groupinfo, self.group_info)
+            self.clusters = self.clusters_renumbered
+            self.cluster_info = self.cluster_info_renumbered
+            self._update_data()
         
         # Update the changes in the HDF5 tables.
-        self.spike_table.cols.cluster[:] = clusters
+        self.spike_table.cols.cluster[:] = get_array(self.clusters)
         
         # Update the clusters table.
         # --------------------------
@@ -391,8 +380,9 @@ class HDF5Loader(Loader):
         self._update_table_size(self.clusters_table, 
             len(self.get_clusters_unique()))
         self.clusters_table.cols.cluster[:] = self.get_clusters_unique()
-        self.clusters_table.cols.color[:] = cluster_info['color']
-        self.clusters_table.cols.group[:] = cluster_info['group']
+        self.clusters_table.cols.color[:] = self.cluster_info['color']
+        self.clusters_table.cols.group[:] = self.cluster_info['group']
+        
         
         # Update the group table.
         # -----------------------

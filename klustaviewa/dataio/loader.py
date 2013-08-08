@@ -66,6 +66,7 @@ def reorder(x, order):
 
 def renumber_clusters(clusters, cluster_info):
     clusters_unique = get_array(get_indices(cluster_info))
+    nclusters = len(clusters_unique)
     assert np.array_equal(clusters_unique, np.unique(clusters))
     clusters_array = get_array(clusters)
     groups = get_array(cluster_info['group'])
@@ -74,14 +75,17 @@ def renumber_clusters(clusters, cluster_info):
     # Reorder clusters according to the group.
     clusters_unique_reordered = np.hstack(
         [sorted(clusters_unique[groups == group]) for group in groups_unique])
-    clusters_renumbered = reorder(clusters_array, clusters_unique_reordered)
+    # WARNING: there's a +2 offset to avoid conflicts with the old convention
+    # cluster 0 = noise, cluster 1 = MUA.
+    clusters_renumbered = reorder(clusters_array, clusters_unique_reordered) + 2
     cluster_permutation = reorder(clusters_unique_reordered, clusters_unique)
     # Reorder cluster info.
     groups_reordered = groups[cluster_permutation]
     colors_reordered = colors[cluster_permutation]
     # Recreate new cluster info.
     cluster_info_reordered = pd.DataFrame({'color': colors_reordered, 
-        'group': groups_reordered}, dtype=np.int32)
+        'group': groups_reordered}, dtype=np.int32, 
+        index=(np.arange(nclusters) + 2))
     return clusters_renumbered, cluster_info_reordered
 
 
@@ -318,12 +322,13 @@ class Loader(QtCore.QObject):
     
     # Control methods
     # ---------------
-    def _update_data(self):
+    def _update_data(self,):
         """Update internal variables."""
         clusters_array = get_array(self.clusters)
         self.clusters_unique = np.unique(clusters_array)
         self.nclusters = len(self.clusters_unique)
-        self.counter = Counter(clusters_array)
+        bincount = np.bincount(clusters_array)
+        self.counter = {key: bincount[key] for key in np.nonzero(bincount)[0]}
         
     # Set.
     def set_cluster(self, spikes, cluster):
@@ -408,4 +413,5 @@ class Loader(QtCore.QObject):
     def renumber(self):
         self.clusters_renumbered, self.cluster_info_renumbered = \
             renumber_clusters(self.clusters, self.cluster_info)
-    
+        
+        

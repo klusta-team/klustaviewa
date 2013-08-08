@@ -334,7 +334,6 @@ class ClusterViewModel(TreeModel):
         # Create the tree.
         # go through all groups
         for groupidx, groupname in group_names.iteritems():
-            # add group
             spkcount = np.sum(cluster_sizes[cluster_groups == groupidx])
             groupitem = self.add_group_node(groupidx=groupidx, name=groupname,
                 # color=group_colors[groupidx], spkcount=spkcount)
