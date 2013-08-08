@@ -187,7 +187,12 @@ class HDF5Loader(Loader):
     # ------------------------
     def process_features(self, y):
         x = y.copy()
-        x[:,:-1] *= self.background_features_normalization
+        # Normalize all regular features.
+        x[:,:x.shape[1]-self.nextrafet] *= self.background_features_normalization
+        # Normalize extra features except time.
+        if self.nextrafet > 1:
+            x[:,-self.nextrafet:-1] *= self.background_extra_features_normalization
+        # Normalize time.
         x[:,-1] *= (1. / (self.duration * self.freq))
         x[:,-1] = 2 * x[:,-1] - 1
         return x
@@ -224,8 +229,13 @@ class HDF5Loader(Loader):
         self.background_table = self.spike_table[self.background_spikes]
         self.background_features = self.background_table['features']
         # Find normalization factor for features.
+        ncols = self.background_features.shape[1]
         self.background_features_normalization = 1. / np.abs(
-            self.background_features[:,:-1]).max()
+            self.background_features[:,:ncols-self.nextrafet]).max()
+        # Normalize extra features except time.
+        if self.nextrafet > 1:
+            self.background_extra_features_normalization = 1. / (np.median(np.abs(
+                self.background_features[:,-self.nextrafet:-1])) * 2)
         self.background_features = self.process_features(
             self.background_features)
         # self.background_features_pandas = pandaize(
