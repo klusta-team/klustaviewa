@@ -65,7 +65,7 @@ class HDF5Loader(Loader):
         info("Similarity measure: {0:s}.".format(self.similarity_measure))
         info("Opening {0:s}.".format(self.filename))
         
-        self.main = tb.openFile(self.filename)
+        self.main = tb.openFile(self.filename, mode='r+')
         # Get the list of shanks.
         self.shanks = [int(re.match("shank([0-9]+)", 
             shank._v_name).group(1)[0])
@@ -339,6 +339,18 @@ class HDF5Loader(Loader):
         register(self.logfile)
         
     
+    # Save.
+    # -----
+    def _update_table_size(self, table, size_new, default=None):
+        if default is None:
+            default = table.coldflts
+        nrows_old = table.nrows
+        if size_new < nrows_old:
+            table.removeRows(0, nrows_old - size_new)
+        elif size_new > nrows_old:
+            for _ in xrange(size_new - nrows_old):
+                table.append(default)
+    
     def save(self, renumber=False):
         self.update_cluster_info()
         self.update_group_info()
@@ -351,7 +363,6 @@ class HDF5Loader(Loader):
             clusters = get_array(self.clusters)
             cluster_info = self.cluster_info
         
-        # TODO
         # # Save both ACLU and CLU files.
         # save_clusters(self.filename_aclu, clusters)
         # save_clusters(self.filename_clu, 
@@ -360,6 +371,36 @@ class HDF5Loader(Loader):
         # # Save CLUINFO and GROUPINFO files.
         # save_cluster_info(self.filename_acluinfo, cluster_info)
         # save_group_info(self.filename_groupinfo, self.group_info)
+        
+        # Update the changes in the HDF5 tables.
+        self.spike_table.cols.cluster[:] = clusters
+        
+        # Update the clusters table.
+        # --------------------------
+        # Add/remove rows to match the new number of clusters.
+        self._update_table_size(self.clusters_table, 
+            len(self.get_clusters_unique()))
+        self.clusters_table.cols.cluster[:] = self.get_clusters_unique()
+        self.clusters_table.cols.color[:] = cluster_info['color']
+        self.clusters_table.cols.group[:] = cluster_info['group']
+        
+        # Update the group table.
+        # -----------------------
+        # Add/remove rows to match the new number of clusters.
+        groups = get_array(get_indices(self.group_info))
+        self._update_table_size(
+            self.groups_table, 
+            len(groups), 
+            default=np.zeros(1, dtype=[
+                ('group', np.uint8), 
+                ('color', np.uint8), 
+                ('name', 'S64'), ]))
+        self.groups_table.cols.group[:] = groups
+        self.groups_table.cols.color[:] = self.group_info['color']
+        self.groups_table.cols.name[:] = self.group_info['name']
+        
+        # Commit the changes on disk.
+        self.main.flush()
     
     
     # Close functions.
