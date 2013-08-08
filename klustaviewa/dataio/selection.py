@@ -35,7 +35,9 @@ def select_numpy(data, spikes):
 
 def select_pandas(data, spikes, drop_empty_rows=True):
     
-    if not hasattr(spikes, '__len__'):
+    if isinstance(spikes, slice):
+        return np.array(data.iloc[spikes]).squeeze()
+    elif not hasattr(spikes, '__len__'):
         try:
             return np.array(data.ix[spikes]).squeeze()
         except KeyError:

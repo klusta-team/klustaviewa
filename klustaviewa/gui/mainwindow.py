@@ -358,7 +358,7 @@ class MainWindow(QtGui.QMainWindow):
         
     def create_open_progress_dialog(self):
         self.open_progress = QtGui.QProgressDialog("Converting to HDF5...", 
-            "Cancel", 0, 0, self, QtCore.Qt.Popup)
+            "Cancel", 0, 0, self, QtCore.Qt.Tool)
         self.open_progress.setWindowModality(QtCore.Qt.WindowModal)
         self.open_progress.setValue(0)
         self.open_progress.setWindowTitle('Loading')
