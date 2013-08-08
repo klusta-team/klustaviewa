@@ -32,27 +32,31 @@ def check_dtype(data, dtype):
 def check_shape(data, shape):
     return tuple(data.shape) == shape
 
-def get_array(data, copy=False):
+def get_array(data, copy=False, dosort=False):
     """Get a NumPy array from a NumPy array or a Pandas data object (Series,
     DataFrame or Panel)."""
     if data is None:
         return None
     if type(data) == np.ndarray:
-        if data.dtype == np.int64:
-            return data.astype(np.int32)
-        elif data.dtype == np.float64:
-            return data.astype(np.float32)
+        if copy:
+            return data.copy()
         else:
-            if copy:
-                return data.copy()
-            else:
-                return data
+            return data
     elif isinstance(data, (pd.DataFrame, pd.Panel)):
-        return np.array(data.sort_index().values)
+        if dosort:
+            return np.array(data.sort_index().values)
+        else:
+            return data.values
     elif isinstance(data, (pd.Int64Index, pd.Index)):
-        return np.sort(data.values)
+        if dosort:
+            return np.sort(data.values)
+        else:
+            return data.values
     else:
-        return np.array(data.sort_index().values)
+        if dosort:
+            return np.array(data.sort_index().values)
+        else:
+            return data.values
     
 
 # -----------------------------------------------------------------------------
