@@ -433,11 +433,11 @@ class WaveformDataManager(Manager):
             
         if self.keep_order:
             self.clusters_rel_ordered2 = self.clusters_rel_ordered
-            self.cluster_colors_array = get_array(cluster_colors)[np.argsort(clusters_selected)]
+            self.cluster_colors_array = get_array(cluster_colors, dosort=True)[np.argsort(clusters_selected)]
             self.clusters_selected2 = clusters_selected
         else:
             self.clusters_rel_ordered2 = self.clusters_rel
-            self.cluster_colors_array = get_array(cluster_colors)
+            self.cluster_colors_array = get_array(cluster_colors, dosort=True)
             self.clusters_selected2 = sorted(clusters_selected)
             
         self.nspikes, self.nsamples, self.nchannels = self.waveforms_array.shape
