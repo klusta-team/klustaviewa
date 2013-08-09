@@ -237,6 +237,9 @@ def get_some_spikes(clusters,
     return slice(0, len(spikes), k)
     
 def get_indices(data):
+    # Convert list to array.
+    if type(data) == list:
+        data = np.array(data)
     if type(data) == np.ndarray:
         return np.arange(data.shape[0], dtype=np.int32)
     elif type(data) == pd.Series:

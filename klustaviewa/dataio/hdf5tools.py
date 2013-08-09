@@ -20,7 +20,7 @@ from klustersloader import (find_filenames, find_index, read_xml,
     find_hdf5_filenames, find_filename, find_any_filename,
     read_clusters, read_cluster_info, read_group_info, read_probe,)
 from loader import (default_cluster_info, default_group_info)
-from klatools import kla_to_json
+from klatools import kla_to_json, write_kla
 from tools import MemMappedText, MemMappedBinary
 
 
@@ -123,15 +123,21 @@ def open_klusters(filename):
     # Load probe file.
     filename_probe = (find_filename(filename, 'probe') or
                           find_any_filename(filename, 'probe'))
-    if filename_probe:
-        probe_ns = {}
-        execfile(filename_probe, {}, probe_ns)
-        klusters_data['probe'] = probe_ns
+          
+    # The probe file is mandatory.
+    if not filename_probe:
+        raise IOError(("The mandatory .probe file hasn't been "
+        "found in the current folder."))
     
+    probe_ns = {}
+    execfile(filename_probe, {}, probe_ns)
+    klusters_data['probe'] = probe_ns
+
     # Read the metadata.
     filenames = find_filenames(filename)
     metadata = read_xml(filenames['xml'], 1)
     klusters_data['metadata'] = metadata
+    klusters_data['filenames'] = filenames
     
     return klusters_data
 
@@ -145,7 +151,7 @@ def create_hdf5_files(filename, klusters_data):
     
     # Create the HDF5 file.
     hdf5['klx'] = tables.openFile(hdf5_filenames['hdf5_klx'], mode='w')
-    hdf5['kla'] = open(hdf5_filenames['hdf5_kla'], mode='w')
+    # hdf5['kla'] = open(hdf5_filenames['hdf5_kla'], mode='w')
     
     # Metadata.
     # for file in [hdf5['klx'], hdf5['wave_file']]:
@@ -269,6 +275,7 @@ class HDF5Writer(object):
         if filename is not None:
             self.filename = filename
         self.klusters_data = open_klusters(self.filename)
+        self.filenames = self.klusters_data['filenames']
         # self.filenames, self.klusters_data
         self.hdf5_data = create_hdf5_files(self.filename, self.klusters_data)
         self.shanks = sorted([key for key in self.klusters_data.keys() 
@@ -324,18 +331,21 @@ class HDF5Writer(object):
                 self.shanks.index(self.shank),
                 len(self.shanks))
         
+    def write_kla(self):
+        kla = {
+            shank: dict(
+                cluster_colors=self.klusters_data[shank]['acluinfo']['color'],
+                group_colors=self.klusters_data[shank]['groupinfo']['color'],
+            ) for shank in self.shanks
+        }
+        write_kla(self.filenames['hdf5_kla'], kla)
+        
     def convert(self):
         """Convert the old file format to the new HDF5-based format."""
-        
+        # Write the KLA file.
+        self.write_kla()
+        # Convert in HDF5 by going through all spikes.
         for self.shank in self.shanks:
-            # Create the KLA file.
-            kla_json = kla_to_json(dict(
-                cluster_colors=self.klusters_data[self.shank]['acluinfo']['color'],
-                group_colors=self.klusters_data[self.shank]['groupinfo']['color'],
-            ))
-            self.hdf5_data['kla'].write(kla_json)
-            
-            # Convert in HDF5 by going through all spikes.
             self.spike = 0
             read = self.read_next_spike()
             self.report_progress()
@@ -358,9 +368,9 @@ class HDF5Writer(object):
                     if isinstance(data, (MemMappedBinary, MemMappedText)):
                         data.close()
         
-        # Close the KLA file.
-        if self.hdf5_data['kla']:
-            self.hdf5_data['kla'].close()
+        # # Close the KLA file.
+        # if self.hdf5_data['kla']:
+            # self.hdf5_data['kla'].close()
         
         # Close the HDF5 files.
         if self.hdf5_data['klx'].isopen:

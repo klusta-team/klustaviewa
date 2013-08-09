@@ -23,7 +23,7 @@ from tools import (load_text, load_xml, normalize,
     first_row, load_binary_memmap)
 from probe import load_probe_json
 from params import load_params_json
-from klatools import load_kla_json, kla_to_json
+from klatools import load_kla_json, kla_to_json, write_kla
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices, pandaize)
 from klustaviewa.utils.userpref import USERPREF
@@ -87,31 +87,6 @@ class HDF5Loader(Loader):
     
     # Shank functions.
     # ----------------
-    def read_shank(self, shank=None):
-        """Read the tables corresponding to a given shank."""
-        if shank is not None:
-            self.shank = shank
-        # Get the tables.
-        self.spike_table = self.klx.getNode(
-            self.shank_path + '/spikes')
-        # self.has_masks = 'mask' in self.spike_table.coldescrs
-        # self.fetcol = self.spike_table.coldescrs['features'].shape[0]
-        self.wave_table = self.klx.getNode(
-            self.shank_path + '/waveforms')
-        self.clusters_table = self.klx.getNode(
-            self.shank_path + '/clusters')
-        self.groups_table = self.klx.getNode(
-            self.shank_path + '/groups_of_clusters')
-        # Get the contents.
-        # self.read_shank_metadata()
-        self.read_nchannels()
-        self.read_clusters()
-        self.read_spiketimes()
-        self.read_kla()
-        # self.read_cluster_info()
-        # self.read_group_info()
-        self.read_arrays()
-        
     def get_shanks(self):
         """Return the list of shanks available in the file."""
         return self.shanks
@@ -125,6 +100,26 @@ class HDF5Loader(Loader):
         self.shank_path = '/shanks/shank{0:d}'.format(self.shank)
         self.read_shank()
     
+    def read_shank(self, shank=None):
+        """Read the tables corresponding to a given shank."""
+        if shank is not None:
+            self.shank = shank
+        # Get the tables.
+        self.spike_table = self.klx.getNode(
+            self.shank_path + '/spikes')
+        self.wave_table = self.klx.getNode(
+            self.shank_path + '/waveforms')
+        self.clusters_table = self.klx.getNode(
+            self.shank_path + '/clusters')
+        self.groups_table = self.klx.getNode(
+            self.shank_path + '/groups_of_clusters')
+        # Get the contents.
+        self.read_nchannels()
+        self.read_clusters()
+        self.read_spiketimes()
+        self.read_kla()
+        self.read_arrays()
+        
     
     # Read contents.
     # --------------
@@ -165,22 +160,23 @@ class HDF5Loader(Loader):
         self.duration = spiketimes[-1]
     
     def read_kla(self):
-        
         # Read KLA JSON string.
-        kla = load_kla_json(self.kla_json)
-        if kla:
-            cluster_colors = kla['cluster_colors']
-            group_colors = kla['group_colors']
+        kla = load_kla_json(self.kla_json)[self.shank]
         
         # Read the cluster info.
         clusters = self.clusters_table.col('cluster')
-        
-        # TODO
-        if not kla:
-            cluster_colors = np.zeros_like(clusters)
-        # cluster_colors = self.clusters_table.col('color')
-        
         cluster_groups = self.clusters_table.col('group')
+        
+        groups = self.groups_table.col('group')
+        group_names = self.groups_table.col('name')
+
+        # Getting the colors from the KLA file, or creating them.
+        if kla:
+            cluster_colors = kla['cluster_colors']
+            group_colors = kla['group_colors']
+        else:
+            cluster_colors = generate_colors(len(clusters))
+            group_colors = generate_colors(len(groups))
         
         # Create the cluster_info DataFrame.
         self.cluster_info = pd.DataFrame(dict(
@@ -189,17 +185,6 @@ class HDF5Loader(Loader):
             ), index=clusters)
         self.cluster_colors = self.cluster_info['color'].astype(np.int32)
         self.cluster_groups = self.cluster_info['group'].astype(np.int32)
-        
-    # def read_group_info(self):
-        # Read the group info.
-        groups = self.groups_table.col('group')
-        
-        # TODO
-        # group_colors = self.groups_table.col('color')
-        if not kla:
-            group_colors = np.zeros_like(groups)
-        
-        group_names = self.groups_table.col('name')
         
         # Create the group_info DataFrame.
         self.group_info = pd.DataFrame(dict(
@@ -389,6 +374,8 @@ class HDF5Loader(Loader):
         self.update_cluster_info()
         self.update_group_info()
         
+        # Renumber internal variables, knowing that in this case the file
+        # will be automatically reloaded right afterwards.
         if renumber:
             self.renumber()
             self.clusters = self.clusters_renumbered
@@ -404,10 +391,7 @@ class HDF5Loader(Loader):
         self._update_table_size(self.clusters_table, 
             len(self.get_clusters_unique()))
         self.clusters_table.cols.cluster[:] = self.get_clusters_unique()
-        # TODO: save the cluster colors.
-        # self.clusters_table.cols.color[:] = self.cluster_info['color']
         self.clusters_table.cols.group[:] = self.cluster_info['group']
-        
         
         # Update the group table.
         # -----------------------
@@ -418,24 +402,19 @@ class HDF5Loader(Loader):
             len(groups), 
             default=np.zeros(1, dtype=[
                 ('group', np.uint8), 
-                # ('color', np.uint8), 
                 ('name', 'S64'), ]))
         self.groups_table.cols.group[:] = groups
-        # TODO: save the group colors.
-        # self.groups_table.cols.color[:] = self.group_info['color']
         self.groups_table.cols.name[:] = self.group_info['name']
-        
         
         # Update the KLA file.
         # --------------------
-        # Create the KLA file.
-        kla_json = kla_to_json(dict(
-            cluster_colors=self.cluster_info['color'],
-            group_colors=self.group_info['color'],
-        ))
-        with open(self.filename_kla, 'w') as f:
-            f.write(kla_json)
-        
+        kla = {
+            shank: dict(
+                cluster_colors=self.cluster_info['color'],
+                group_colors=self.group_info['color'],
+            ) for shank in self.shanks
+        }
+        write_kla(self.filename_kla, kla)
         
         # Commit the changes on disk.
         self.klx.flush()
@@ -445,14 +424,10 @@ class HDF5Loader(Loader):
     # ----------------
     def close(self):
         """Close the klx HDF5 file."""
-        # if hasattr(self, 'wave_table'):
-            # self.wave_table.umount()
         if hasattr(self, 'klx'):
             self.klx.flush()
             self.klx.close()
         if hasattr(self, 'logfile'):
             unregister(self.logfile)
        
-    # def __del__(self):
-        # self.close()
         
