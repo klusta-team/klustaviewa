@@ -159,12 +159,16 @@ def create_hdf5_files(filename, klusters_data):
     file.createGroup('/', 'shanks')
     file.createGroup('/', 'metadata')
     
+    # Put the version number.
+    file.setNodeAttr('/', 'VERSION', 1)
+    
     # Get the old probe information, convert it to JSON, and save it in
     # /metadata
-    if 'probe' in klusters_data:
-        probe_text = probe_to_json(klusters_data['probe'])
-    else:
-        probe_text = ''
+    # if 'probe' in klusters_data:
+    # WARNING: the .probe file is mandatory.
+    probe_text = probe_to_json(klusters_data['probe'])
+    # else:
+        # probe_text = ''
     file.setNodeAttr('/metadata', 'PRB_JSON', probe_text)
     
     # Read the old XML metadata and save the JSON parameters string.
