@@ -227,10 +227,16 @@ def triplet_to_filename(triplet):
     
 def find_hdf5_filenames(filename):
     filenames = {}
-    for key in ['main', 'wave', 'raw', 'low', 'high']:
+    # Find KLX and KLA files.
+    for key in ['klx', 'kla']:
         filenames['hdf5_' + key] = os.path.abspath(
-            find_filename_or_new(filename, key + '.h5', have_file_index=False))
+            find_filename_or_new(filename, key, have_file_index=False))
+    # Find KLD files.
+    for key in ['raw', 'low', 'high']:
+        filenames['hdf5_' + key] = os.path.abspath(
+            find_filename_or_new(filename, key + '.kld', have_file_index=False))
     return filenames
+
 
 # -----------------------------------------------------------------------------
 # File reading functions
