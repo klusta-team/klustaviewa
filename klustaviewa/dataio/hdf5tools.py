@@ -8,6 +8,7 @@ import json
 import os
 import tables
 import time
+from collections import OrderedDict
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,37 +24,34 @@ from tools import MemMappedText, MemMappedBinary
 
 # Table descriptions.
 # -------------------
-def get_spikes_description(fetcol=None):#, has_mask=None):
-    spikes_description = dict(
-        time=tables.UInt64Col(),
-        features=tables.Float32Col(shape=(fetcol,)),
-        cluster=tables.UInt32Col(),)
-    # if has_mask:
-    spikes_description['masks'] = tables.UInt8Col(shape=(fetcol,))
+def get_spikes_description(fetcol=None):
+    spikes_description = OrderedDict([
+        ('time', tables.UInt64Col()),
+        ('features', tables.Float32Col(shape=(fetcol,))),
+        ('cluster', tables.UInt32Col()),
+        ('masks', tables.UInt8Col(shape=(fetcol,))),])
     return spikes_description
     
 def get_waveforms_description(nsamples=None, nchannels=None, has_umask=None):
-    waveforms_description = dict(
-        waveform=tables.Int16Col(shape=(nsamples * nchannels)),)
+    waveforms_description = OrderedDict([
+        ('waveform', tables.Int16Col(shape=(nsamples * nchannels))),])
     if has_umask:
         waveforms_description['waveform_unfiltered'] = tables.Int16Col(
             shape=(nsamples * nchannels))
     return waveforms_description
     
 def get_clusters_description():
-    clusters_description = dict(
-        cluster=tables.UInt32Col(),
-        color=tables.UInt8Col(),
-        group=tables.UInt8Col(),
-    )
+    clusters_description = OrderedDict([
+        ('cluster', tables.UInt32Col()),
+        ('color', tables.UInt8Col()),
+        ('group', tables.UInt8Col()),])
     return clusters_description
     
 def get_groups_description():
-    groups_description = dict(
-        group=tables.UInt8Col(),
-        color=tables.UInt8Col(),
-        name=tables.StringCol(64),
-    )
+    groups_description = OrderedDict([
+        ('group', tables.UInt8Col()),
+        ('color', tables.UInt8Col()),
+        ('name', tables.StringCol(64)),])
     return groups_description
     
 
@@ -210,7 +208,6 @@ def create_hdf5_files(filename, klusters_data):
             shank_path, 'spikes', 
             get_spikes_description(
                 fetcol=data['fetcol'],
-                # has_mask=('masks' in data)
                 ))
                 
                 
@@ -286,14 +283,14 @@ class HDF5Writer(object):
 
         # Fill the main row.
         row_main['cluster'] = read['cluster']
-        row_main['features'] = read['fet']# * 1e-5
+        row_main['features'] = read['fet']
         row_main['time'] = read['time']
         if 'mask' in read:
             row_main['masks'] = (read['mask'] * 255).astype(np.uint8)
         row_main.append()
         
         # Fill the wave row.
-        row_wave['waveform'] = read['spk']# * 1e-5
+        row_wave['waveform'] = read['spk']
         row_wave.append()
 
     def report_progress(self):
