@@ -23,7 +23,7 @@ from tools import (load_text, load_xml, normalize,
     first_row, load_binary_memmap)
 from probe import load_probe_json
 from params import load_params_json
-from auxiliary import load_kla_json, kla_to_json
+from klatools import load_kla_json, kla_to_json
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices, pandaize)
 from klustaviewa.utils.userpref import USERPREF

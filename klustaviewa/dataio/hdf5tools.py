@@ -20,7 +20,7 @@ from klustersloader import (find_filenames, find_index, read_xml,
     find_hdf5_filenames, find_filename, find_any_filename,
     read_clusters, read_cluster_info, read_group_info, read_probe,)
 from loader import (default_cluster_info, default_group_info)
-from auxiliary import kla_to_json
+from klatools import kla_to_json
 from tools import MemMappedText, MemMappedBinary
 
 
