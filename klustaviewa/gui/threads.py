@@ -34,7 +34,8 @@ class OpenTask(QtCore.QObject):
             loader.open(path)
             self.dataOpened.emit()
         except Exception as e:
-            self.dataOpenFailed.emit(traceback.format_exc())
+            # self.dataOpenFailed.emit(traceback.format_exc())
+            self.dataOpenFailed.emit(e.message)
             
 
 class SelectionTask(QtCore.QObject):

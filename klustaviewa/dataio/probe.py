@@ -45,7 +45,7 @@ def probe_to_json(probe_ns):
         'dead_channels': [],
         'shanks': [
                     {
-                        'index': shank,
+                        'shank_index': shank,
                         'channels': shank_channels[shank],
                         'graph': graph[shank],
                     }
@@ -56,15 +56,17 @@ def probe_to_json(probe_ns):
     if geometry:
         for shank in shanks:
             for shank_dict in json_dict['shanks']:
-                shank = shank_dict['index']
+                shank = shank_dict['shank_index']
                 # WARNING: geometry contains channels as keys, not shanks
                 shank_dict['geometry'] = geometry#[shank]
     return json.dumps(json_dict)
     
 def load_probe_json(probe_json):
+    if not probe_json:
+        return None
     probe_dict = json.loads(probe_json)
     probe = {}
-    probe['nchannels'] = probe_dict['nchannels']
+    probe['nchannels'] = int(probe_dict['nchannels'])
     probe['dead_channels'] = map(int, probe_dict['dead_channels'])
     # List of all channels.
     probe['channels'] = sorted(map(int, probe_dict['channel_names'].keys()))
@@ -88,7 +90,7 @@ def load_probe_json(probe_json):
                     for key in sorted(shank_dict['geometry'].keys())
                         if key not in probe['dead_channels']], 
                 dtype=np.float32)
-        probe[shank_dict['index']] = shank_dict
+        probe[shank_dict['shank_index']] = shank_dict
     return probe
     
 

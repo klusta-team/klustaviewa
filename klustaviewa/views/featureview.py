@@ -330,7 +330,7 @@ class FeatureDataManager(Manager):
         self.feature_indices_array = get_array(self.feature_indices)
         
         self.masks_array = get_array(self.masks)
-        self.cluster_colors = get_array(cluster_colors)
+        self.cluster_colors = get_array(cluster_colors, dosort=True)
         
         # Relative indexing.
         if self.npoints > 0:

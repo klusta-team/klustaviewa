@@ -35,7 +35,9 @@ def select_numpy(data, spikes):
 
 def select_pandas(data, spikes, drop_empty_rows=True):
     
-    if not hasattr(spikes, '__len__'):
+    if isinstance(spikes, slice):
+        return np.array(data.iloc[spikes]).squeeze()
+    elif not hasattr(spikes, '__len__'):
         try:
             return np.array(data.ix[spikes]).squeeze()
         except KeyError:
@@ -235,6 +237,9 @@ def get_some_spikes(clusters,
     return slice(0, len(spikes), k)
     
 def get_indices(data):
+    # Convert list to array.
+    if type(data) == list:
+        data = np.array(data)
     if type(data) == np.ndarray:
         return np.arange(data.shape[0], dtype=np.int32)
     elif type(data) == pd.Series:

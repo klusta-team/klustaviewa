@@ -14,6 +14,10 @@ from klustaviewa.utils.settings import ensure_folder_exists
 # -----------------------------------------------------------------------------
 # Utility functions
 # -----------------------------------------------------------------------------
+PREFERENCES_DEFAULT_PATH = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            'preferences_default.py')
+
 def load(filepath, appname=''):
     """Load the settings from the file, and creates it if it does not exist."""
     if not os.path.exists(filepath):
@@ -31,15 +35,10 @@ def load(filepath, appname=''):
 def save(filepath, preferences=None, appname=''):
     """Save the preferences in the file, only for the default file."""
     if preferences is None:
-        default = os.path.join(
-            os.path.abspath(os.path.dirname(__file__)),
-            'preferences_default.py')
-        with open(default, 'r') as f:
+        with open(PREFERENCES_DEFAULT_PATH, 'r') as f:
             preferences = f.read()
     with open(filepath, 'w') as f:
         f.write(preferences)
-        # f.write("# User preferences for {0:s}\n{1:s}".format(appname,
-            # preferences))
     return preferences
 
 
@@ -72,8 +71,11 @@ class UserPreferences(object):
         if self.preferences is None:
             # Create the folder if it does not exist.
             ensure_folder_exists(self.folder)
+            # Load default preferences.
+            self.preferences_default = load(PREFERENCES_DEFAULT_PATH, appname=self.appname)
             # Load or create the preferences file.
-            self.preferences = load(self.filepath, appname=self.appname)
+            self.preferences = self.preferences_default
+            self.preferences.update(load(self.filepath, appname=self.appname))
 
     def refresh(self):
         self.preferences = None

@@ -185,8 +185,7 @@ class MainWindow(QtGui.QMainWindow):
             self.open_last_action.setEnabled(False)
             
         self.add_action('save', '&Save', shortcut='Ctrl+S', icon='save')
-        
-        self.add_action('renumber', '&Renumber when saving', checkable=True)
+        self.add_action('renumber', 'Save &renumbered')
         
         # Quit action.
         self.add_action('quit', '&Quit', shortcut='Ctrl+Q')
@@ -264,9 +263,9 @@ class MainWindow(QtGui.QMainWindow):
         file_menu.addAction(self.open_action)
         file_menu.addAction(self.open_last_action)
         file_menu.addSeparator()
-        file_menu.addAction(self.renumber_action)
-        file_menu.addSeparator()
+        # file_menu.addSeparator()
         file_menu.addAction(self.save_action)
+        file_menu.addAction(self.renumber_action)
         file_menu.addSeparator()
         file_menu.addAction(self.quit_action)
         
@@ -360,7 +359,7 @@ class MainWindow(QtGui.QMainWindow):
         
     def create_open_progress_dialog(self):
         self.open_progress = QtGui.QProgressDialog("Converting to HDF5...", 
-            "Cancel", 0, 0, self, QtCore.Qt.Popup)
+            "Cancel", 0, 0, self, QtCore.Qt.Tool)
         self.open_progress.setWindowModality(QtCore.Qt.WindowModal)
         self.open_progress.setValue(0)
         self.open_progress.setWindowTitle('Loading')
@@ -677,9 +676,15 @@ class MainWindow(QtGui.QMainWindow):
             SETTINGS['main_window.last_data_file'] = path
             
     def save_callback(self, checked=None):
-        folder = SETTINGS.get('main_window.last_data_file')
-        self.loader.save(renumber=self.renumber_action.isChecked())
+        # folder = SETTINGS.get('main_window.last_data_file')
+        self.loader.save()
         self.need_save = False
+        
+    def renumber_callback(self, checked=None):
+        # folder = SETTINGS.get('main_window.last_data_file')
+        self.loader.save(renumber=True)
+        # self.need_save = False
+        self.open_last_callback()
         
     def open_last_callback(self, checked=None):
         path = SETTINGS['main_window.last_data_file']
@@ -695,7 +700,11 @@ class MainWindow(QtGui.QMainWindow):
     def open_done(self):
         self.is_file_open = True
         # Start the selection buffer.
-        self.buffer = Buffer(self, delay_timer=.1, delay_buffer=.2)
+        self.buffer = Buffer(self, 
+            # delay_timer=.1, delay_buffer=.2
+            delay_timer=USERPREF['delay_timer'], 
+            delay_buffer=USERPREF['delay_buffer']
+            )
         self.buffer.start()
         self.buffer.accepted.connect(self.buffer_accepted_callback)
         

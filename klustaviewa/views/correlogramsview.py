@@ -108,7 +108,7 @@ class CorrelogramsDataManager(Manager):
         self.nclusters = len(clusters_selected)
         assert nclusters == self.nclusters
         self.cluster_colors = cluster_colors
-        self.cluster_colors_array = get_array(cluster_colors)
+        self.cluster_colors_array = get_array(cluster_colors, dosort=True)
         
         # HACK: if correlograms is empty, ncorrelograms == 1 here!
         if self.correlograms_array.size == 0:
@@ -124,7 +124,7 @@ class CorrelogramsDataManager(Manager):
         
         self.nprimitives = self.ncorrelograms
         # index 0 = heterogeneous clusters, index>0 ==> cluster index + 1
-        self.cluster_colors = get_array(cluster_colors)
+        # self.cluster_colors = get_array(cluster_colors)
         
         # normalize and update the data position
         self.normalize(normalization)
@@ -382,7 +382,7 @@ class CorrelogramsInfoManager(Manager):
         cx_rel = np.clip(cx, 0, self.data_manager.nclusters - 1)
         cy_rel = np.clip(cy, 0, self.data_manager.nclusters - 1)
         
-        color1 = self.data_manager.cluster_colors[cy_rel]
+        color1 = self.data_manager.cluster_colors_array[cy_rel]
         r, g, b = COLORMAP[color1,:]
         color1 = (r, g, b, .75)
         

@@ -227,10 +227,16 @@ def triplet_to_filename(triplet):
     
 def find_hdf5_filenames(filename):
     filenames = {}
-    for key in ['main', 'wave', 'raw', 'low', 'high']:
+    # Find KLX and KLA files.
+    for key in ['klx', 'kla']:
         filenames['hdf5_' + key] = os.path.abspath(
-            find_filename_or_new(filename, key + '.h5', have_file_index=False))
+            find_filename_or_new(filename, key, have_file_index=False))
+    # Find KLD files.
+    for key in ['raw', 'low', 'high']:
+        filenames['hdf5_' + key] = os.path.abspath(
+            find_filename_or_new(filename, key + '.kld', have_file_index=False))
     return filenames
+
 
 # -----------------------------------------------------------------------------
 # File reading functions
@@ -359,9 +365,9 @@ def read_waveforms(filename_spk, nsamples, nchannels):
     return process_waveforms(waveforms, nsamples, nchannels)
     
 # DAT.
-def read_dat(filename_dat, nchannels):
+def read_dat(filename_dat, nchannels, dtype=np.int16):
     nsamples = os.path.getsize(filename_dat) // nchannels
-    return load_binary_memmap(filename_dat, dtype=np.int16,
+    return load_binary_memmap(filename_dat, dtype=dtype,
                              shape=(nsamples, nchannels))
 
 # Probe.
@@ -405,8 +411,8 @@ def save_group_info(filename_groupinfo, group_info):
 def save_clusters(filename_clu, clusters):
     save_text(filename_clu, clusters, header=len(np.unique(clusters)))
 
-def convert_to_clu(clusters, cluster_info):
-    cluster_groups = cluster_info['group']
+def convert_to_clu(clusters, cluster_groups):
+    # cluster_groups = cluster_info['group']
     clusters_new = np.array(clusters, dtype=np.int32)
     for i in (0, 1):
         clusters_new[cluster_groups.ix[clusters] == i] = i
@@ -648,7 +654,7 @@ class KlustersLoader(Loader):
         # Save both ACLU and CLU files.
         save_clusters(self.filename_aclu, clusters)
         save_clusters(self.filename_clu, 
-            convert_to_clu(clusters, cluster_info))
+            convert_to_clu(clusters, cluster_info['group']))
         
         # Save CLUINFO and GROUPINFO files.
         save_cluster_info(self.filename_acluinfo, cluster_info)

@@ -181,33 +181,33 @@ def test_renumber_clusters():
     # New order:
     # c0 ... cm-1, cm+1, ..., c2-1, c1, ..., c0-1, cm, c2, ...
     
-    assert np.array_equal(clusters == c0, clusters_renumbered == 0)
+    assert np.array_equal(clusters == c0, clusters_renumbered == 0 + 2)
     assert np.array_equal(clusters == c0next, 
-        clusters_renumbered == 1)
-    assert np.array_equal(clusters == c1, clusters_renumbered == k - 1)
+        clusters_renumbered == 1 + 2)
+    assert np.array_equal(clusters == c1, clusters_renumbered == k - 1 + 2)
     assert np.array_equal(clusters == c1next, 
-        clusters_renumbered == k)
-    assert np.array_equal(clusters == c2, clusters_renumbered == 2 * k)
+        clusters_renumbered == k + 2)
+    assert np.array_equal(clusters == c2, clusters_renumbered == 2 * k + 2)
     assert np.array_equal(clusters == c2next, 
-        clusters_renumbered == 2 * k + 1)
+        clusters_renumbered == 2 * k + 1 + 2)
     
     assert np.array_equal(get_indices(cluster_info_renumbered),
-        np.arange(n))
+        np.arange(n) + 2)
     
     # Increasing groups with the new numbering.
     assert np.all(np.diff(get_array(cluster_info_renumbered)[:,1]) >= 0)
     
-    assert np.all(select(cluster_info_renumbered, 0) == 
+    assert np.all(select(cluster_info_renumbered, 0 + 2) == 
         select(cluster_info, c0))
-    assert np.all(select(cluster_info_renumbered, 1) == 
+    assert np.all(select(cluster_info_renumbered, 1 + 2) == 
         select(cluster_info, c0next))
-    assert np.all(select(cluster_info_renumbered, k - 1) == 
+    assert np.all(select(cluster_info_renumbered, k - 1 + 2) == 
         select(cluster_info, c1))
-    assert np.all(select(cluster_info_renumbered, k) == 
+    assert np.all(select(cluster_info_renumbered, k + 2) == 
         select(cluster_info, c1next))
-    assert np.all(select(cluster_info_renumbered, 2 * k) == 
+    assert np.all(select(cluster_info_renumbered, 2 * k + 2) == 
         select(cluster_info, c2))
-    assert np.all(select(cluster_info_renumbered, 2 * k + 1) == 
+    assert np.all(select(cluster_info_renumbered, 2 * k + 1 + 2) == 
         select(cluster_info, c2next))
     
 def test_convert_to_clu():
@@ -227,7 +227,7 @@ def test_convert_to_clu():
         index=clusters_unique,
         dtype=np.int32)
     
-    clusters_new = convert_to_clu(clusters, cluster_info)
+    clusters_new = convert_to_clu(clusters, cluster_info['group'])
     
     assert np.array_equal(clusters_new == 0, noise)
     assert np.array_equal(clusters_new == 1, mua)

@@ -40,6 +40,7 @@ if os.path.exists('MANIFEST'):
 if __name__ == '__main__':
 
     setup(
+        zip_safe=False,
         name='klustaviewa',
         version='0.1.0',
         author='Cyrille Rossant',

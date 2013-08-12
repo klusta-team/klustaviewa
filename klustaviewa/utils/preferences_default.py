@@ -23,6 +23,8 @@ loglevel_file = logging.DEBUG
 # -----------------------------------------------------------------------------
 # Should the software ask the user to save upon closing?
 prompt_save_on_exit = True
+delay_timer = .05
+delay_buffer = .1
 
 
 # -----------------------------------------------------------------------------

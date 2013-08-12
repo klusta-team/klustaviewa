@@ -75,12 +75,12 @@ def test_hdf5():
         writer.convert()
     
     # Open the HDF5 file.
-    filename = os.path.join(dir, 'test.main.h5')
+    filename = os.path.join(dir, 'test.klx')
     with tables.openFile(filename) as file:
         # Shank 1.
         # --------
         spikes = file.root.shanks.shank1.spikes
-        clusters_hdf5 = spikes.col('cluster')
+        clusters_hdf5 = spikes.col('cluster_manual')
         features_hdf5 = spikes.col('features')
     
         # Check that the arrays correspond to the original values.
@@ -95,7 +95,7 @@ def test_hdf5():
         # Shank 2.
         # --------
         spikes = file.root.shanks.shank2.spikes
-        clusters_hdf5 = spikes.col('cluster')
+        clusters_hdf5 = spikes.col('cluster_manual')
         features_hdf5 = spikes.col('features')
     
         # Check that the arrays correspond to the original values.
