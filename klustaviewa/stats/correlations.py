@@ -44,7 +44,7 @@ def compute_statistics(Fet1, Fet2, spikes_in_clusters, masks):
     LogP = np.zeros((nPoints, nclusters))
 
     stats = {}
-
+    
     for c in spikes_in_clusters:
         # MyPoints = np.nonzero(Clu2==c)[0]
         MyPoints = spikes_in_clusters[c]
@@ -101,6 +101,7 @@ def compute_correlations_approximation(features, clusters, masks,
     nPoints = features.shape[0] #size(Fet1, 1)
     nDims = features.shape[1] #size(Fet1, 2)
     c = np.unique(clusters)
+    
     spikes_in_clusters = dict([(clu, np.nonzero(clusters == clu)[0]) for clu in c])
     nclusters = len(spikes_in_clusters)
     
@@ -117,6 +118,16 @@ def compute_correlations_approximation(features, clusters, masks,
     # Update the new matrix on the rows and diagonals of the clusters to
     # update.
     for ci in clusters_to_update:
+        
+        # WARNING: some cluster statistics may be missing, as we only
+        # use a subset of all spikes when computing the similarity matrix
+        # (to avoid loading all features from HDF5). If a cluster is
+        # missing, we set the similarity value to 0.
+        if ci not in stats:
+            for cj in clusterslist:
+                C[ci, cj] = C[cj, ci] = 0.
+            continue
+                
         mui, Ci, Ciinv, logdeti, npointsi = stats[ci]
         for cj in clusterslist:
             muj, Cj, Cjinv, logdetj, npointsj = stats[cj]
