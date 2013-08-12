@@ -363,7 +363,9 @@ class HDF5Loader(Loader):
     # -----
     def _update_table_size(self, table, size_new, default=None):
         if default is None:
-            default = table.coldflts
+            cols = table.colnames
+            dtype = [(name, table.coldtypes[name]) for name in cols]
+            default = np.zeros(1, dtype=dtype)
         nrows_old = table.nrows
         if size_new < nrows_old:
             table.removeRows(0, nrows_old - size_new)
@@ -402,10 +404,7 @@ class HDF5Loader(Loader):
         groups = get_array(get_indices(self.group_info))
         self._update_table_size(
             self.groups_table, 
-            len(groups), 
-            default=np.zeros(1, dtype=[
-                ('group', np.uint8), 
-                ('name', 'S64'), ]))
+            len(groups), )
         self.groups_table.cols.group[:] = groups
         self.groups_table.cols.name[:] = self.group_info['name']
         

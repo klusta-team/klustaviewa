@@ -47,7 +47,6 @@ def get_waveforms_description(nsamples=None, nchannels=None, has_umask=None):
 def get_clusters_description():
     clusters_description = OrderedDict([
         ('cluster', tables.UInt32Col()),
-        # ('color', tables.UInt8Col()),
         ('group', tables.UInt8Col()),])
     return clusters_description
     
