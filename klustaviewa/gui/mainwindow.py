@@ -43,7 +43,7 @@ import rcicons
 # -----------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
     
-    def __init__(self, parent=None, dolog=True):
+    def __init__(self, parent=None, dolog=True, filename=None):
         super(MainWindow, self).__init__(parent)
 
         # HACK: display the icon in Windows' taskbar.
@@ -114,6 +114,12 @@ class MainWindow(QtGui.QMainWindow):
         # Show the main window.
         self.set_styles()
         self.restore_geometry()
+        
+        # Automatically load a file upon startup if requested.
+        if filename:
+            filename = os.path.realpath(filename)
+            self.open_task.open(self.loader, filename)
+        
         self.show()
     
     def set_styles(self):

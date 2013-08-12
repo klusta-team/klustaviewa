@@ -6,4 +6,4 @@ loglevel = pref.USERPREF['loglevel']
 if loglevel:
     log.set_level(loglevel)
     
-__version__ = '0.1.0.dev'
+__version__ = '0.2.0dev'

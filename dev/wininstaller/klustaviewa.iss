@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "KlustaViewa"
-#define MyAppVersion "0.1.0.dev"
+#define MyAppVersion "0.2.0dev"
 #define MyAppPublisher "Klusta-Team"
 #define MyAppURL "https://github.com/klusta-team/klustaviewa"
 
@@ -30,6 +30,7 @@ WizardSmallImageFile=wizard-small.bmp
 WizardImageBackColor=$ffffff
 OutputBaseFilename=klustaviewa-setup
 OutputDir=.
+ChangesAssociations=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -49,3 +50,10 @@ Filename: "{app}\WinPython-64bit-2.7.5.0\python-2.7.5.amd64\python.exe"; Working
 
 [Dirs]
 Name: "{app}\"; Permissions: everyone-modify
+
+[Registry]
+Root: HKCR; Subkey: ".klx"; ValueType: string; ValueName: ""; ValueData: "KlustaViewa"; Flags: uninsdeletevalue
+Root: HKCR; Subkey: "KlustaViewa"; ValueType: string; ValueName: ""; ValueData: "KlustaViewa"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "KlustaViewa\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\favicon.ico"
+Root: HKCR; Subkey: "KlustaViewa\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\WinPython-64bit-2.7.5.0\python-2.7.5.amd64\Scripts\klustaviewa.exe"" ""%1"""
+

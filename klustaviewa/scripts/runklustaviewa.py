@@ -16,7 +16,11 @@ from klustaviewa.gui.mainwindow import MainWindow
 # Main function
 # -----------------------------------------------------------------------------
 def main():
-    window = show_window(MainWindow)
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+    else:
+        filename = None
+    window = show_window(MainWindow, filename=filename)
     return window
 
 if __name__ == '__main__':
