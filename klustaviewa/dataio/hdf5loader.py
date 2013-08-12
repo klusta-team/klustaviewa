@@ -162,8 +162,6 @@ class HDF5Loader(Loader):
     
     def read_kla(self):
         # Read KLA JSON string.
-        kla = load_kla_json(self.kla_json)[self.shank]
-        
         # Read the cluster info.
         clusters = self.clusters_table.col('cluster')
         cluster_groups = self.clusters_table.col('group')
@@ -172,9 +170,10 @@ class HDF5Loader(Loader):
         group_names = self.groups_table.col('name')
 
         # Getting the colors from the KLA file, or creating them.
+        kla = load_kla_json(self.kla_json)
         if kla:
-            cluster_colors = kla['cluster_colors']
-            group_colors = kla['group_colors']
+            cluster_colors = kla[self.shank]['cluster_colors']
+            group_colors = kla[self.shank]['group_colors']
         else:
             cluster_colors = generate_colors(len(clusters))
             group_colors = generate_colors(len(groups))

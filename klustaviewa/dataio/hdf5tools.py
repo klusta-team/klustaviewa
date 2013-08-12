@@ -289,7 +289,6 @@ class HDF5Writer(object):
         
         # Backup the original CLU file.
         filename_clu_original = find_filename_or_new(self.filename, 'clu_original')
-        print self.filenames['clu'], filename_clu_original
         shutil.copyfile(self.filenames['clu'], filename_clu_original)
         
         self.hdf5_data = create_hdf5_files(self.filename, self.klusters_data)

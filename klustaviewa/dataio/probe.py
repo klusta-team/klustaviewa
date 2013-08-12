@@ -75,7 +75,7 @@ def probe_to_json(probe_ns):
             for shank_dict in json_dict['shanks']:
                 shank = shank_dict['shank_index']
                 shank_dict['geometry'] = geometry[shank]
-    return json.dumps(json_dict)
+    return json.dumps(json_dict, indent=4)
     
 def load_probe_json(probe_json):
     if not probe_json:

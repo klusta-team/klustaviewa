@@ -33,7 +33,7 @@ def kla_to_json(kla_dict):
                 for group in groups],
         )
         kla_full[shank] = kla_shank
-    return json.dumps(kla_full)
+    return json.dumps(kla_full, indent=4)
 
 def load_kla_json(kla_json):
     """Convert from KLA JSON into two NumPy arrays with the cluster colors and group colors."""

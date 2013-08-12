@@ -28,7 +28,7 @@ def params_to_json(metadata_xml):
         FETDIM=metadata_xml['fetdim'],
         WAVEFORMS_NSAMPLES=metadata_xml['nsamples'],
     )
-    return json.dumps(params)
+    return json.dumps(params, indent=4)
 
 def load_params_json(params_json):
     if not params_json:
