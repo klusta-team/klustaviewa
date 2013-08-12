@@ -16,7 +16,7 @@ from galry import QtGui, QtCore
 
 from loader import (Loader, default_group_info, reorder, renumber_clusters,
     default_cluster_info)
-from klustersloader import find_filenames
+from klustersloader import find_filenames, save_clusters, convert_to_clu
 from hdf5tools import klusters_to_hdf5
 from tools import (load_text, load_xml, normalize,
     load_binary, load_pickle, save_text, get_array,
@@ -45,6 +45,7 @@ class HDF5Loader(Loader):
         filename_klx = filenames['hdf5_klx']
         self.filename_kla = filenames['hdf5_kla']
         self.filename_log = filenames['kvwlg']
+        self.filename_clu = filenames['clu']
         # Conversion if the klx HDF5 file does not exist.
         if not os.path.exists(filename_klx):
             klusters_to_hdf5(filename, self.klusters_to_hdf5_progress_report)
@@ -385,6 +386,7 @@ class HDF5Loader(Loader):
         # Update the changes in the HDF5 tables.
         self.spike_table.cols.cluster_manual[:] = get_array(self.clusters)
         
+        
         # Update the clusters table.
         # --------------------------
         # Add/remove rows to match the new number of clusters.
@@ -392,6 +394,7 @@ class HDF5Loader(Loader):
             len(self.get_clusters_unique()))
         self.clusters_table.cols.cluster[:] = self.get_clusters_unique()
         self.clusters_table.cols.group[:] = self.cluster_info['group']
+        
         
         # Update the group table.
         # -----------------------
@@ -406,6 +409,16 @@ class HDF5Loader(Loader):
         self.groups_table.cols.group[:] = groups
         self.groups_table.cols.name[:] = self.group_info['name']
         
+        # Commit the changes on disk.
+        self.klx.flush()
+        
+        
+        # Save the CLU file.
+        # ------------------
+        save_clusters(self.filename_clu, 
+            convert_to_clu(self.clusters, self.cluster_info['group']))
+        
+        
         # Update the KLA file.
         # --------------------
         kla = {
@@ -416,8 +429,6 @@ class HDF5Loader(Loader):
         }
         write_kla(self.filename_kla, kla)
         
-        # Commit the changes on disk.
-        self.klx.flush()
     
     
     # Close functions.

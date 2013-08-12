@@ -8,6 +8,7 @@ import json
 import os
 import tables
 import time
+import shutil
 from collections import OrderedDict
 
 import numpy as np
@@ -17,7 +18,8 @@ from probe import probe_to_json
 from params import params_to_json
 from klustersloader import (find_filenames, find_index, read_xml,
     filename_to_triplet, triplet_to_filename, find_indices,
-    find_hdf5_filenames, find_filename, find_any_filename,
+    find_hdf5_filenames, find_filename, find_any_filename, 
+    find_filename_or_new,
     read_clusters, read_cluster_info, read_group_info, read_probe,)
 from loader import (default_cluster_info, default_group_info)
 from klatools import kla_to_json, write_kla
@@ -280,7 +282,12 @@ class HDF5Writer(object):
             self.filename = filename
         self.klusters_data = open_klusters(self.filename)
         self.filenames = self.klusters_data['filenames']
-        # self.filenames, self.klusters_data
+        
+        # Backup the original CLU file.
+        filename_clu_original = find_filename_or_new(self.filename, 'clu_original')
+        print self.filenames['clu'], filename_clu_original
+        shutil.copyfile(self.filenames['clu'], filename_clu_original)
+        
         self.hdf5_data = create_hdf5_files(self.filename, self.klusters_data)
         self.shanks = sorted([key for key in self.klusters_data.keys() 
             if isinstance(key, (int, long))])
@@ -310,11 +317,9 @@ class HDF5Writer(object):
         row_wave = self.hdf5_data['wave_table', self.shank].row
 
         # Fill the main row.
-        # WARNING: when converting from Klusters, we have no way to know 
-        # if the clustering is automatic or manual, so we set it to manual
-        # and put a fixed value in auto.
+        # We set both manual and auto clustering to the current CLU file.
         row_main['cluster_manual'] = read['cluster']
-        row_main['cluster_auto'] = 2
+        row_main['cluster_auto'] = read['cluster']
         row_main['features'] = read['fet']
         row_main['time'] = read['time']
         # if 'mask' in read:

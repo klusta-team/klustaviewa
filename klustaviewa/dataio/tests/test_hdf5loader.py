@@ -116,8 +116,7 @@ def test_hdf5_loader1():
     assert np.allclose(waveforms, waveforms_k, atol=1e-4)
     
     l.close()
-    
-    
+
 def test_hdf5_save():
     # TODO
     # convert, make actions, save, load, check

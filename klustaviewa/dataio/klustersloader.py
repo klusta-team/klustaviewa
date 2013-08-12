@@ -411,8 +411,8 @@ def save_group_info(filename_groupinfo, group_info):
 def save_clusters(filename_clu, clusters):
     save_text(filename_clu, clusters, header=len(np.unique(clusters)))
 
-def convert_to_clu(clusters, cluster_info):
-    cluster_groups = cluster_info['group']
+def convert_to_clu(clusters, cluster_groups):
+    # cluster_groups = cluster_info['group']
     clusters_new = np.array(clusters, dtype=np.int32)
     for i in (0, 1):
         clusters_new[cluster_groups.ix[clusters] == i] = i
@@ -654,7 +654,7 @@ class KlustersLoader(Loader):
         # Save both ACLU and CLU files.
         save_clusters(self.filename_aclu, clusters)
         save_clusters(self.filename_clu, 
-            convert_to_clu(clusters, cluster_info))
+            convert_to_clu(clusters, cluster_info['group']))
         
         # Save CLUINFO and GROUPINFO files.
         save_cluster_info(self.filename_acluinfo, cluster_info)

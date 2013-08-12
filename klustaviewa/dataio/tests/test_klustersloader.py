@@ -227,7 +227,7 @@ def test_convert_to_clu():
         index=clusters_unique,
         dtype=np.int32)
     
-    clusters_new = convert_to_clu(clusters, cluster_info)
+    clusters_new = convert_to_clu(clusters, cluster_info['group'])
     
     assert np.array_equal(clusters_new == 0, noise)
     assert np.array_equal(clusters_new == 1, mua)
