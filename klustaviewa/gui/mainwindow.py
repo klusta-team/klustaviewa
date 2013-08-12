@@ -199,6 +199,7 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('add_ipython_view', 'Add &IPythonView')
         self.add_action('add_rawdata_view', 'Add &RawDataView')
         self.add_action('reset_views', '&Reset views')
+        self.add_action('toggle_fullscreen', 'Toggle fullscreen', shortcut='F')
         
         self.add_action('override_color', 'Override cluster &color',
             icon='override_color')#, shortcut='C')
@@ -283,6 +284,7 @@ class MainWindow(QtGui.QMainWindow):
         views_menu.addAction(self.override_color_action)
         views_menu.addSeparator()
         views_menu.addAction(self.reset_views_action)
+        views_menu.addAction(self.toggle_fullscreen_action)
         
         # Correlograms menu.
         correlograms_menu = self.menuBar().addMenu("&Correlograms")
@@ -790,7 +792,12 @@ class MainWindow(QtGui.QMainWindow):
             self.views[key] = []
         # Re-create the default views.
         self.create_default_views(do_update=self.is_file_open, floating=False)
-        
+    
+    def toggle_fullscreen_callback(self):
+        if self.isFullScreen():
+            self.showNormal()
+        else:
+            self.showFullScreen()
         
     
     # Override color callback.
