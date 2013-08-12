@@ -18,7 +18,7 @@ from loader import (Loader, default_group_info, reorder, renumber_clusters,
     default_cluster_info)
 from klustersloader import find_filenames, save_clusters, convert_to_clu
 from hdf5tools import klusters_to_hdf5
-from tools import (load_text, load_xml, normalize,
+from tools import (load_text, normalize,
     load_binary, load_pickle, save_text, get_array,
     first_row, load_binary_memmap)
 from probe import load_probe_json

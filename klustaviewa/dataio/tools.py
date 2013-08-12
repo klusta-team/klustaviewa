@@ -6,18 +6,17 @@
 import os.path
 import re
 import cPickle
-import xml.etree.ElementTree as ET
 
 import numpy as np
 # Try importing Pandas.
-try:
-    import pandas as pd
-    # Make sure that read_csv is available.
-    assert hasattr(pd, 'read_csv')
-    HAS_PANDAS = True
-except (ImportError, AssertionError):
-    log_warn("You should install Pandas v>=0.8.")
-    HAS_PANDAS = False
+# try:
+import pandas as pd
+    # # Make sure that read_csv is available.
+    # assert hasattr(pd, 'read_csv')
+    # HAS_PANDAS = True
+# except (ImportError, AssertionError):
+    # log_warn("You should install Pandas v>=0.8.")
+    # HAS_PANDAS = False
 
  
 # -----------------------------------------------------------------------------
@@ -62,10 +61,10 @@ def get_array(data, copy=False, dosort=False):
 # -----------------------------------------------------------------------------
 # Text files related functions
 # -----------------------------------------------------------------------------
-def load_text(filepath, dtype, skiprows=0):
-    if not filepath:
-        raise IOError("The filepath is empty.")
-    return np.loadtxt(filepath, dtype=dtype, skiprows=skiprows)
+# def load_text(filepath, dtype, skiprows=0):
+    # if not filepath:
+        # raise IOError("The filepath is empty.")
+    # return np.loadtxt(filepath, dtype=dtype, skiprows=skiprows)
 
 def first_row(filepath):
     with open(filepath, 'r') as f:
@@ -73,16 +72,16 @@ def first_row(filepath):
     return int(n)
 
 # Faster load_text version if Pandas is installed.
-if HAS_PANDAS:
-    def load_text(filepath, dtype, skiprows=0, delimiter=' '):
-        if not filepath:
-            raise IOError("The filepath is empty.")
-        with open(filepath, 'r') as f:
-            for _ in xrange(skiprows):
-                f.readline()
-            x = pd.read_csv(f, header=None, 
-                sep=delimiter).values.astype(dtype).squeeze()
-        return x
+# if HAS_PANDAS:
+def load_text(filepath, dtype, skiprows=0, delimiter=' '):
+    if not filepath:
+        raise IOError("The filepath is empty.")
+    with open(filepath, 'r') as f:
+        for _ in xrange(skiprows):
+            f.readline()
+        x = pd.read_csv(f, header=None, 
+            sep=delimiter).values.astype(dtype).squeeze()
+    return x
     
 def save_text(filepath, data, header=None, fmt='%d', delimiter=' '):
     if isinstance(data, basestring):
@@ -97,49 +96,7 @@ def save_text(filepath, data, header=None, fmt='%d', delimiter=' '):
             contents_updated = str(header) + '\n' + contents
             with open(filepath, 'w') as f:
                 f.write(contents_updated)
-        
-
-# -----------------------------------------------------------------------------
-# XML functions
-# -----------------------------------------------------------------------------
-def load_xml(filepath, fileindex=1):
-    """Load a XML Klusters file."""
-    tree = ET.parse(filepath)
-    root = tree.getroot()
-    
-    d = {}
-
-    ac = root.find('acquisitionSystem')
-    if ac is not None:
-        nc = ac.find('nChannels')
-        if nc is not None:
-            d['total_channels'] = int(nc.text)
-        sr = ac.find('samplingRate')
-        if sr is not None:
-            d['rate'] = float(sr.text)
-
-    sd = root.find('spikeDetection')
-    if sd is not None:
-        cg = sd.find('channelGroups')
-        if cg is not None:
-            # find the group corresponding to the fileindex
-            g = cg.findall('group')[fileindex-1]
-            if g is not None:
-                ns = g.find('nSamples')
-                if ns is not None:
-                    d['nsamples'] = int(ns.text)
-                nf = g.find('nFeatures')
-                if nf is not None:
-                    d['fetdim'] = int(nf.text)
-                c = g.find('channels')
-                if c is not None:
-                    d['nchannels'] = len(c.findall('channel'))
-    
-    if 'nchannels' not in d:
-        d['nchannels'] = d['total_channels']
-    
-    return d
-    
+         
 
 # -----------------------------------------------------------------------------
 # Binary files functions

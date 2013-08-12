@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from galry import QtGui, QtCore
 
-from tools import (load_text, load_xml, normalize,
+from tools import (load_text, normalize,
     load_binary, load_pickle, save_text, get_array, 
     first_row, load_binary_memmap)
 from selection import (select, select_pairs, get_spikes_in_clusters,

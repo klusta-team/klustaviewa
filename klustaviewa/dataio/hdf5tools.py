@@ -14,13 +14,13 @@ from collections import OrderedDict
 import numpy as np
 import matplotlib.pyplot as plt
 
-from probe import probe_to_json
+from probe import probe_to_json, linear_probe
 from params import params_to_json
 from klustersloader import (find_filenames, find_index, read_xml,
     filename_to_triplet, triplet_to_filename, find_indices,
     find_hdf5_filenames, find_filename, find_any_filename, 
     find_filename_or_new,
-    read_clusters, read_cluster_info, read_group_info, read_probe,)
+    read_clusters, read_cluster_info, read_group_info,)
 from loader import (default_cluster_info, default_group_info)
 from klatools import kla_to_json, write_kla
 from tools import MemMappedText, MemMappedBinary
@@ -115,31 +115,36 @@ def open_klusters_oneshank(filename):
 def open_klusters(filename):
     indices = find_indices(filename)
     triplet = filename_to_triplet(filename)
-    filenames = {}
+    filenames_shanks = {}
     for index in indices:
-        filenames[index] = triplet_to_filename(triplet[:2] + (index,))
+        filenames_shanks[index] = triplet_to_filename(triplet[:2] + (index,))
     klusters_data = {index: open_klusters_oneshank(filename) 
-        for index, filename in filenames.iteritems()}
+        for index, filename in filenames_shanks.iteritems()}
             
-    # Load probe file.
-    filename_probe = (find_filename(filename, 'probe') or
-                          find_any_filename(filename, 'probe'))
-          
-    # The probe file is mandatory.
-    if not filename_probe:
-        raise IOError(("The mandatory .probe file hasn't been "
-        "found in the current folder."))
-    
-    probe_ns = {}
-    execfile(filename_probe, {}, probe_ns)
-    klusters_data['probe'] = probe_ns
-
-    # Read the metadata.
+    # Find the dataset filenames and load the metadata.
     filenames = find_filenames(filename)
     metadata = read_xml(filenames['xml'], 1)
     klusters_data['metadata'] = metadata
     klusters_data['filenames'] = filenames
-    
+
+    # Load probe file.
+    filename_probe = filenames['probe']
+    # It no probe file exists, create a default, linear probe with the right
+    # number of channels per shank.
+    if not filename_probe:
+        # Generate a probe filename.
+        filename_probe = find_filename_or_new(filename, 'default.probe',
+            have_file_index=False)
+        shanks = {shank: klusters_data[shank]['nchannels']
+            for shank in filenames_shanks.keys()}
+        probe_python = linear_probe(shanks)
+        with open(filename_probe, 'w') as f:
+            f.write(probe_python)
+        
+    probe_ns = {}
+    execfile(filename_probe, {}, probe_ns)
+    klusters_data['probe'] = probe_ns
+
     return klusters_data
 
 def create_hdf5_files(filename, klusters_data):
