@@ -314,8 +314,6 @@ class FeatureDataManager(Manager):
         self.features_background_array = get_array(self.features_background)
         
         
-        
-        
         # Background spikes are those which do not belong to the selected clusters
         self.npoints_background = self.features_background_array.shape[0]
         self.nspikes_background = self.npoints_background

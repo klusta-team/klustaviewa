@@ -77,6 +77,13 @@ features_info_time_unit = 'second'
 
 
 # -----------------------------------------------------------------------------
+# Correlograms view
+# -----------------------------------------------------------------------------
+# Maximum number of clusters to show in the correlograms view.
+correlograms_max_nclusters = 20
+
+
+# -----------------------------------------------------------------------------
 # IPython import path
 # -----------------------------------------------------------------------------
 # Paths where all .py files are loaded in IPython view.

@@ -9,7 +9,7 @@ import pandas as pd
 from qtools import inthread, inprocess
 from qtools import QtGui, QtCore
 
-from klustaviewa.dataio.tools import get_array
+from klustaviewa.dataio import select, get_array
 from klustaviewa.stats.correlations import normalize
 from klustaviewa.stats.correlograms import get_baselines
 import klustaviewa.utils.logger as log
@@ -55,11 +55,20 @@ def get_clusterview_data(loader, statscache, clusters=None):
     return data
     
 def get_correlogramsview_data(loader, statscache):
-    clusters_selected = loader.get_clusters_selected()
+    clusters_selected0 = loader.get_clusters_selected()
+    
+    # Subset of selected clusters if there are too many clusters.
+    max_nclusters = USERPREF['correlograms_max_nclusters']
+    if len(clusters_selected0) < max_nclusters:
+        clusters_selected = clusters_selected0
+    else:
+        clusters_selected = clusters_selected0[:max_nclusters]
+    
     correlograms = statscache.correlograms.submatrix(
         clusters_selected)
     # Compute the baselines.
-    sizes = get_array(loader.get_cluster_sizes())
+    sizes = get_array(select(loader.get_cluster_sizes(), clusters_selected))
+    colors = select(loader.get_cluster_colors(), clusters_selected)
     duration = loader.get_duration()
     corrbin = loader.corrbin
     baselines = get_baselines(sizes, duration, corrbin)
@@ -67,7 +76,7 @@ def get_correlogramsview_data(loader, statscache):
         correlograms=correlograms,
         baselines=baselines,
         clusters_selected=clusters_selected,
-        cluster_colors=loader.get_cluster_colors(),
+        cluster_colors=colors,
         ncorrbins=loader.ncorrbins,
         corrbin=loader.corrbin,
     )
