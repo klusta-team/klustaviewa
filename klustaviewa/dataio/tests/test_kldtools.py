@@ -12,7 +12,7 @@ import tables as tb
 
 from klustaviewa.dataio import (save_binary, create_kld, write_raw_data, 
     close_kld, dat_to_kld, read_dat)
-from klustaviewa.dataio.tests import create_dat, duration, freq, nchannels
+from klustaviewa.dataio.tests import create_rawdata, duration, freq, nchannels
 
 # -----------------------------------------------------------------------------
 # Test fixtures
@@ -25,7 +25,7 @@ def setup():
     if not os.path.exists(dir):
         os.mkdir(dir)
         
-    dat = create_dat(nsamples, nchannels)
+    dat = create_rawdata(nsamples, nchannels)
     
     # Create mock DAT file.
     save_binary(os.path.join(dir, 'test.dat'), dat)

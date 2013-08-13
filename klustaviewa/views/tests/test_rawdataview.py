@@ -11,7 +11,7 @@ import pandas as pd
 
 from klustaviewa.views.tests.mock_data import (setup, teardown, 
     create_similarity_matrix, nspikes, nclusters, nsamples, nchannels, fetdim, 
-    ncorrbins, create_dat, freq)
+    ncorrbins, create_rawdata, freq)
 from klustaviewa.dataio import KlustersLoader
 from klustaviewa.dataio.selection import select
 from klustaviewa.dataio.tools import check_dtype, check_shape
@@ -25,11 +25,11 @@ import tables
 # -----------------------------------------------------------------------------
 def test_rawdataview():
     
-    data = create_dat(int(freq * 60), nchannels)
+    rawdata = create_rawdata(int(freq * 60), nchannels)
     dead_channels = np.arange(5)
     
     kwargs = {}
-    kwargs['rawdata'] = data
+    kwargs['rawdata'] = rawdata
     kwargs['freq'] = freq
     kwargs['dead_channels'] = dead_channels
     kwargs['operators'] = [

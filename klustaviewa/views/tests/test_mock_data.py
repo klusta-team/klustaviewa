@@ -35,5 +35,3 @@ def test_mock_data():
         cluster_info=cluster_info,
         group_info=group_info,
     )
-    
-    

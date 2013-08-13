@@ -48,7 +48,7 @@ def create_waveforms(nspikes, nsamples, nchannels):
             np.array(32768 // 2 * (.5 + .5 * rnd.rand()) * np.cos(t),
             dtype=np.int16))
     
-def create_dat(nsamples, nchannels):
+def create_rawdata(nsamples, nchannels):
     noise = np.array(rnd.randint(size=(nsamples, nchannels),
         low=-1000, high=1000), dtype=np.int16)
     t = np.linspace(0., 100., nsamples)
