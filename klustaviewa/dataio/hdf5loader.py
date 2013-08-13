@@ -18,7 +18,7 @@ from loader import (Loader, default_group_info, reorder, renumber_clusters,
     default_cluster_info)
 from klustersloader import find_filenames, save_clusters, convert_to_clu
 from hdf5tools import klusters_to_hdf5
-from tools import (load_text, load_xml, normalize,
+from tools import (load_text, normalize,
     load_binary, load_pickle, save_text, get_array,
     first_row, load_binary_memmap)
 from probe import load_probe_json
@@ -78,9 +78,14 @@ class HDF5Loader(Loader):
             
         self.klx = tb.openFile(self.filename, mode='r+')
         # Get the list of shanks.
-        self.shanks = [int(re.match("shank([0-9]+)", 
-            shank._v_name).group(1)[0])
-                for shank in self.klx.listNodes('/shanks')]
+        self.shanks = list(self.klx.getNodeAttr('/metadata', 'SHANKS'))
+        # WARNING
+        # The commented code above detects the shank indices from introspection
+        # in the "shanks" group. It is not necessary anymore as soon as the
+        # metadata contains a "SHANKS" attribute with the list of shanks.
+        # self.shanks = [int(re.match("shank([0-9]+)", 
+            # shank._v_name).group(1)[0])
+                # for shank in self.klx.listNodes('/shanks')]
         self.read_metadata()
         # By default, read the first available shank.
         self.set_shank(self.shanks[0])
@@ -116,6 +121,8 @@ class HDF5Loader(Loader):
             self.shank_path + '/groups_of_clusters')
         # Get the contents.
         self.read_nchannels()
+        self.read_fetdim()
+        self.read_nsamples()
         self.read_clusters()
         self.read_spiketimes()
         self.read_kla()
@@ -129,9 +136,22 @@ class HDF5Loader(Loader):
         params_json = self.klx.getNodeAttr('/metadata', 'PRM_JSON') or None
         self.params = load_params_json(params_json)
         
-        self.fetdim = self.params['fetdim']
-        self.nsamples = self.params['nsamples']
+        # Read the sampling frequency.
         self.freq = self.params['freq']
+        
+        # Read the number of features, global or per-shank information.
+        try:
+            self.fetdim = int(self.params['fetdim'])
+        except:
+            # To be set in "set_shank" as it is per-shank information.
+            self.fetdim = None
+            
+        # Read the number of samples, global or per-shank information.
+        try:
+            self.nsamples = int(self.params['nsamples'])
+        except:
+            # To be set in "set_shank" as it is per-shank information.
+            self.nsamples = None
         
         probe_json = self.klx.getNodeAttr('/metadata', 'PRB_JSON') or None
         self.probe = load_probe_json(probe_json)
@@ -139,6 +159,14 @@ class HDF5Loader(Loader):
     def read_nchannels(self):
         """Read the number of alive channels from the probe file."""
         self.nchannels = len(self.probe[self.shank]['channels_alive'])
+        
+    def read_fetdim(self):
+        if self.fetdim is None:
+            self.fetdim = self.params['fetdim'][self.shank]
+        
+    def read_nsamples(self):
+        if self.nsamples is None:
+            self.nsamples = self.params['nsamples'][self.shank]
         
     def get_probe_geometry(self):
         if self.probe:
@@ -162,8 +190,6 @@ class HDF5Loader(Loader):
     
     def read_kla(self):
         # Read KLA JSON string.
-        kla = load_kla_json(self.kla_json)[self.shank]
-        
         # Read the cluster info.
         clusters = self.clusters_table.col('cluster')
         cluster_groups = self.clusters_table.col('group')
@@ -172,9 +198,10 @@ class HDF5Loader(Loader):
         group_names = self.groups_table.col('name')
 
         # Getting the colors from the KLA file, or creating them.
+        kla = load_kla_json(self.kla_json)
         if kla:
-            cluster_colors = kla['cluster_colors']
-            group_colors = kla['group_colors']
+            cluster_colors = kla[self.shank]['cluster_colors']
+            group_colors = kla[self.shank]['group_colors']
         else:
             cluster_colors = generate_colors(len(clusters))
             group_colors = generate_colors(len(groups))
@@ -374,6 +401,10 @@ class HDF5Loader(Loader):
                 table.append(default)
     
     def save(self, renumber=False):
+        
+        # Report progress.
+        self.report_progress_save(1, 6)
+        
         self.update_cluster_info()
         self.update_group_info()
         
@@ -389,6 +420,9 @@ class HDF5Loader(Loader):
         self.spike_table.cols.cluster_manual[:] = get_array(self.clusters)
         
         
+        # Report progress.
+        self.report_progress_save(2, 6)
+        
         # Update the clusters table.
         # --------------------------
         # Add/remove rows to match the new number of clusters.
@@ -397,6 +431,9 @@ class HDF5Loader(Loader):
         self.clusters_table.cols.cluster[:] = self.get_clusters_unique()
         self.clusters_table.cols.group[:] = self.cluster_info['group']
         
+        
+        # Report progress.
+        self.report_progress_save(3, 6)
         
         # Update the group table.
         # -----------------------
@@ -412,11 +449,17 @@ class HDF5Loader(Loader):
         self.klx.flush()
         
         
+        # Report progress.
+        self.report_progress_save(4, 6)
+        
         # Save the CLU file.
         # ------------------
         save_clusters(self.filename_clu, 
             convert_to_clu(self.clusters, self.cluster_info['group']))
         
+        
+        # Report progress.
+        self.report_progress_save(5, 6)
         
         # Update the KLA file.
         # --------------------
@@ -428,6 +471,8 @@ class HDF5Loader(Loader):
         }
         write_kla(self.filename_kla, kla)
         
+        # Report progress.
+        self.report_progress_save(6, 6)
     
     
     # Close functions.

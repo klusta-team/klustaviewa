@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from galry import QtGui, QtCore
 
-from tools import (load_text, load_xml, normalize,
+from tools import (load_text, normalize,
     load_binary, load_pickle, save_text, get_array, 
     first_row, load_binary_memmap)
 from selection import (select, select_pairs, get_spikes_in_clusters,
@@ -94,11 +94,15 @@ def renumber_clusters(clusters, cluster_info):
 # -----------------------------------------------------------------------------
 class Loader(QtCore.QObject):
     progressReported = QtCore.pyqtSignal(int, int)
+    saveProgressReported = QtCore.pyqtSignal(int, int)
     
     # Progress report
     # ---------------
     def report_progress(self, index, count):
         self.progressReported.emit(index, count)
+        
+    def report_progress_save(self, index, count):
+        self.saveProgressReported.emit(index, count)
         
     
     # Initialization methods

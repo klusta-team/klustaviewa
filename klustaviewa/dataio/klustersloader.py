@@ -7,6 +7,7 @@ data sets."""
 import os
 import os.path
 import re
+import xml.etree.ElementTree as ET
 
 import numpy as np
 import pandas as pd
@@ -14,7 +15,7 @@ from galry import QtGui, QtCore
 
 from loader import (Loader, default_group_info, reorder, renumber_clusters,
     default_cluster_info)
-from tools import (load_text, load_xml, normalize,
+from tools import (load_text, normalize,
     load_binary, load_pickle, save_text, get_array,
     first_row, load_binary_memmap)
 from selection import (select, select_pairs, get_spikes_in_clusters,
@@ -241,18 +242,50 @@ def find_hdf5_filenames(filename):
 # -----------------------------------------------------------------------------
 # File reading functions
 # -----------------------------------------------------------------------------
-def read_xml(filename_xml, fileindex):
+def read_xml(filename_xml, fileindex=1):
     """Read the XML file associated to the current dataset,
     and return a metadata dictionary."""
     
-    params = load_xml(filename_xml, fileindex=fileindex)
+    tree = ET.parse(filename_xml)
+    root = tree.getroot()
+    
+    d = {}
+
+    ac = root.find('acquisitionSystem')
+    if ac is not None:
+        nc = ac.find('nChannels')
+        if nc is not None:
+            d['total_channels'] = int(nc.text)
+        sr = ac.find('samplingRate')
+        if sr is not None:
+            d['rate'] = float(sr.text)
+
+    sd = root.find('spikeDetection')
+    if sd is not None:
+        cg = sd.find('channelGroups')
+        if cg is not None:
+            # find the group corresponding to the fileindex
+            g = cg.findall('group')[fileindex - 1]
+            if g is not None:
+                ns = g.find('nSamples')
+                if ns is not None:
+                    d['nsamples'] = int(ns.text)
+                nf = g.find('nFeatures')
+                if nf is not None:
+                    d['fetdim'] = int(nf.text)
+                c = g.find('channels')
+                if c is not None:
+                    d['nchannels'] = len(c.findall('channel'))
+    
+    if 'nchannels' not in d:
+        d['nchannels'] = d['total_channels']
     
     # klusters tests
     metadata = dict(
-        nchannels=params['nchannels'],
-        nsamples=params['nsamples'],
-        fetdim=params['fetdim'],
-        freq=params['rate'])
+        nchannels=d['nchannels'],
+        nsamples=d['nsamples'],
+        fetdim=d['fetdim'],
+        freq=d['rate'])
     
     return metadata
 
@@ -374,7 +407,8 @@ def read_dat(filename_dat, nchannels, dtype=np.int16):
 def process_probe(probe):
     return normalize(probe)
 
-def read_probe(filename_probe):
+def read_probe(filename_probe, fileindex):
+    """fileindex is the shank index."""
     if not filename_probe:
         return
     if os.path.exists(filename_probe):
@@ -387,7 +421,7 @@ def read_probe(filename_probe):
             try:
                 ns = {}
                 execfile(filename_probe, ns)
-                probe = ns['geometry']
+                probe = ns['geometry'][fileindex]
                 probe = np.array([probe[i] for i in sorted(probe.keys())],
                                     dtype=np.float32)
             except:
@@ -481,7 +515,7 @@ class KlustersLoader(Loader):
             self.probe = None
         else:
             try:
-                self.probe = read_probe(self.filename_probe)
+                self.probe = read_probe(self.filename_probe, self.fileindex)
                 info("Successfully loaded {0:s}".format(self.filename_probe))
             except Exception as e:
                 info(("There was an error while loading the probe file "

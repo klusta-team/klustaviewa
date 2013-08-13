@@ -150,7 +150,7 @@ def create_probe(nchannels):
     probe = {'probes': {1: graph}, 
              'geometry': {i: tuple(geometry[i, :]) for i in xrange(nchannels)}}
     
-    probe_python = "probes = {0:s}\ngeometry = {1:s}\n".format(
+    probe_python = "probes = {0:s}\ngeometry = {{1: {1:s}}}\n".format(
         str(probe['probes']),
         str(probe['geometry']),
     )

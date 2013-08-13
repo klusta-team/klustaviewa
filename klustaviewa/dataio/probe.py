@@ -5,6 +5,7 @@
 # -----------------------------------------------------------------------------
 import json
 import os
+import pprint
 import tables
 import time
 
@@ -14,7 +15,7 @@ import matplotlib.pyplot as plt
 from klustersloader import (find_filenames, find_index, read_xml,
     filename_to_triplet, triplet_to_filename, find_indices,
     find_hdf5_filenames,
-    read_clusters, read_cluster_info, read_group_info, read_probe,)
+    read_clusters, read_cluster_info, read_group_info,)
 from tools import MemMappedText, MemMappedBinary
 
 
@@ -24,6 +25,42 @@ from tools import MemMappedText, MemMappedBinary
 def flatten(l):
     return sorted(set([item for sublist in l for item in sublist]))
 
+def linear_probe(shanks):
+    """shanks is a dict {shank: nchannels}."""
+    # Linear graph.
+    graph = {shank: [(i, (i + 1)) for i in xrange(nchannels - 1)] 
+        for shank, nchannels in shanks.iteritems()}
+    # Linear geometry.
+    geometry = {
+        shank:
+            {channel: (0., float(channel)) for channel in xrange(nchannels)}
+                for shank, nchannels in shanks.iteritems()}
+    
+    probe_python = "probes = {0:s}\ngeometry = {1:s}\n".format(
+        pprint.pformat(graph, indent=4),
+        pprint.pformat(geometry, indent=4),
+    )
+    return probe_python
+    
+def all_to_all_probe(shanks):
+    """shanks is a dict {shank: nchannels}."""
+    # All-to-all graph.
+    graph = {shank: [(i, j) 
+        for i in xrange(nchannels) 
+            for j in xrange(i + 1, nchannels)] 
+                for shank, nchannels in shanks.iteritems()}
+    # Linear geometry.
+    geometry = {
+        shank:
+            {channel: (0., float(channel)) for channel in xrange(nchannels)}
+                for shank, nchannels in shanks.iteritems()}
+    
+    probe_python = "probes = {0:s}\ngeometry = {1:s}\n".format(
+        pprint.pformat(graph, indent=4),
+        pprint.pformat(geometry, indent=4),
+    )
+    return probe_python
+    
 def probe_to_json(probe_ns):
     """Convert from the old Python .probe file to the new JSON format."""
     graph = probe_ns['probes']
@@ -57,9 +94,8 @@ def probe_to_json(probe_ns):
         for shank in shanks:
             for shank_dict in json_dict['shanks']:
                 shank = shank_dict['shank_index']
-                # WARNING: geometry contains channels as keys, not shanks
-                shank_dict['geometry'] = geometry#[shank]
-    return json.dumps(json_dict)
+                shank_dict['geometry'] = geometry[shank]
+    return json.dumps(json_dict, indent=4)
     
 def load_probe_json(probe_json):
     if not probe_json:

@@ -14,13 +14,13 @@ from collections import OrderedDict
 import numpy as np
 import matplotlib.pyplot as plt
 
-from probe import probe_to_json
+from probe import probe_to_json, all_to_all_probe
 from params import params_to_json
 from klustersloader import (find_filenames, find_index, read_xml,
     filename_to_triplet, triplet_to_filename, find_indices,
     find_hdf5_filenames, find_filename, find_any_filename, 
     find_filename_or_new,
-    read_clusters, read_cluster_info, read_group_info, read_probe,)
+    read_clusters, read_cluster_info, read_group_info,)
 from loader import (default_cluster_info, default_group_info)
 from klatools import kla_to_json, write_kla
 from tools import MemMappedText, MemMappedBinary
@@ -99,8 +99,9 @@ def open_klusters_oneshank(filename):
 
     # Open big Klusters files.
     data['fet'] = MemMappedText(filenames['fet'], np.int64, skiprows=1)
-    data['spk'] = MemMappedBinary(filenames['spk'], np.int16, 
-        rowsize=metadata['nchannels'] * metadata['nsamples'])
+    if 'spk' in filenames and os.path.exists(filenames['spk'] or ''):
+        data['spk'] = MemMappedBinary(filenames['spk'], np.int16, 
+            rowsize=metadata['nchannels'] * metadata['nsamples'])
     if 'uspk' in filenames and os.path.exists(filenames['uspk'] or ''):
         data['uspk'] = MemMappedBinary(filenames['uspk'], np.int16, 
             rowsize=metadata['nchannels'] * metadata['nsamples'])
@@ -115,31 +116,43 @@ def open_klusters_oneshank(filename):
 def open_klusters(filename):
     indices = find_indices(filename)
     triplet = filename_to_triplet(filename)
-    filenames = {}
+    filenames_shanks = {}
     for index in indices:
-        filenames[index] = triplet_to_filename(triplet[:2] + (index,))
+        filenames_shanks[index] = triplet_to_filename(triplet[:2] + (index,))
     klusters_data = {index: open_klusters_oneshank(filename) 
-        for index, filename in filenames.iteritems()}
-            
-    # Load probe file.
-    filename_probe = (find_filename(filename, 'probe') or
-                          find_any_filename(filename, 'probe'))
-          
-    # The probe file is mandatory.
-    if not filename_probe:
-        raise IOError(("The mandatory .probe file hasn't been "
-        "found in the current folder."))
+        for index, filename in filenames_shanks.iteritems()}
+    shanks = filenames_shanks.keys()
+           
+    # Find the dataset filenames and load the metadata.
+    filenames = find_filenames(filename)
+    # Metadata common to all shanks.
+    metadata = read_xml(filenames['xml'], 1)
+    # Metadata specific to each shank.
+    metadata.update({shank: read_xml(filenames['xml'], shank)
+        for shank in shanks})
+    metadata['shanks'] = sorted(shanks)
     
+    klusters_data['metadata'] = metadata
+    klusters_data['filenames'] = filenames
+
+    # Load probe file.
+    filename_probe = filenames['probe']
+    # It no probe file exists, create a default, linear probe with the right
+    # number of channels per shank.
+    if not filename_probe:
+        # Generate a probe filename.
+        filename_probe = find_filename_or_new(filename, 'default.probe',
+            have_file_index=False)
+        shanks = {shank: klusters_data[shank]['nchannels']
+            for shank in filenames_shanks.keys()}
+        probe_python = all_to_all_probe(shanks)
+        with open(filename_probe, 'w') as f:
+            f.write(probe_python)
+        
     probe_ns = {}
     execfile(filename_probe, {}, probe_ns)
     klusters_data['probe'] = probe_ns
 
-    # Read the metadata.
-    filenames = find_filenames(filename)
-    metadata = read_xml(filenames['xml'], 1)
-    klusters_data['metadata'] = metadata
-    klusters_data['filenames'] = filenames
-    
     return klusters_data
 
 def create_hdf5_files(filename, klusters_data):
@@ -152,7 +165,6 @@ def create_hdf5_files(filename, klusters_data):
     
     # Create the HDF5 file.
     hdf5['klx'] = tables.openFile(hdf5_filenames['hdf5_klx'], mode='w')
-    # hdf5['kla'] = open(hdf5_filenames['hdf5_kla'], mode='w')
     
     # Metadata.
     # for file in [hdf5['klx'], hdf5['wave_file']]:
@@ -176,27 +188,22 @@ def create_hdf5_files(filename, klusters_data):
     params_text = params_to_json(klusters_data['metadata'])
     file.setNodeAttr('/metadata', 'PRM_JSON', params_text)
     
-    # Create groups and tables for each shank.
+    # Get the list of shanks.
     shanks = sorted([key for key in klusters_data.keys() 
         if isinstance(key, (int, long))])
+    file.setNodeAttr('/metadata', 'SHANKS', np.unique(shanks))
+            
+    # Create groups and tables for each shank.
     for shank in shanks:
         data = klusters_data[shank]
         
         shank_path = '/shanks/shank{0:d}'.format(shank)
         
         # Create the /shanks/shank<X> groups in each file.
-        # for file in [hdf5['klx'], hdf5['wave_file']]:
         file = hdf5['klx']
         file.createGroup('/shanks', 'shank{0:d}'.format(shank))
-        # file.createGroup(shank_path, 'metadata')
-        # file.setNodeAttr(shank_path + '/metadata',
-            # 'nchannels', data['nchannels'],)
-        # file.setNodeAttr(shank_path + '/metadata',
-            # 'nsamples', data['nsamples'],)
-        # file.setNodeAttr(shank_path + '/metadata',
-            # 'fetdim', data['fetdim'],)
         
-                
+        
         # Create the cluster table.
         # -------------------------
         hdf5['cluster_table', shank] = hdf5['klx'].createTable(
@@ -248,11 +255,6 @@ def create_hdf5_files(filename, klusters_data):
                 # has_umask=('uspk' in data)
                 ))
         
-        # Create the link in the main file, to the wave table.
-        # hdf5['klx'].createExternalLink(
-            # shank_path, 'waveforms', 
-            # hdf5['wave_table', shank])
-
     return hdf5
 
 def klusters_to_hdf5(filename, progress_report=None):
@@ -284,7 +286,6 @@ class HDF5Writer(object):
         
         # Backup the original CLU file.
         filename_clu_original = find_filename_or_new(self.filename, 'clu_original')
-        print self.filenames['clu'], filename_clu_original
         shutil.copyfile(self.filenames['clu'], filename_clu_original)
         
         self.hdf5_data = create_hdf5_files(self.filename, self.klusters_data)
@@ -301,7 +302,8 @@ class HDF5Writer(object):
         read['cluster'] = data['aclu'][self.spike]
         read['fet'] = data['fet'].next()
         read['time'] = read['fet'][-1]
-        read['spk'] = data['spk'].next()
+        if 'spk' in data:
+            read['spk'] = data['spk'].next()
         if 'mask' in data:
             read['mask'] = data['mask'].next()
         else:
@@ -326,7 +328,8 @@ class HDF5Writer(object):
         row_main.append()
         
         # Fill the wave row.
-        row_wave['waveform_filtered'] = read['spk']
+        if 'spk' in read:
+            row_wave['waveform_filtered'] = read['spk']
         if 'uspk' in read:
             row_wave['waveform_unfiltered'] = read['uspk']
         row_wave.append()
