@@ -23,11 +23,9 @@ from klustaviewa.stats import compute_correlograms, compute_correlations
 # -----------------------------------------------------------------------------
 class OpenTask(QtCore.QObject):
     dataOpened = QtCore.pyqtSignal()
+    dataSaved = QtCore.pyqtSignal()
     dataOpenFailed = QtCore.pyqtSignal(str)
-    
-    # def __init__(self, parent=None):
-        # super(OpenTask, self).__init__(parent)
-    
+
     def open(self, loader, path):
         try:
             loader.close()
@@ -37,6 +35,10 @@ class OpenTask(QtCore.QObject):
         except Exception as e:
             self.dataOpenFailed.emit(traceback.format_exc())
             # self.dataOpenFailed.emit(e.message)
+
+    def save(self, loader):
+        loader.save()
+        self.dataSaved.emit()
             
 
 class SelectionTask(QtCore.QObject):

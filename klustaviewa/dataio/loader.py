@@ -94,11 +94,15 @@ def renumber_clusters(clusters, cluster_info):
 # -----------------------------------------------------------------------------
 class Loader(QtCore.QObject):
     progressReported = QtCore.pyqtSignal(int, int)
+    saveProgressReported = QtCore.pyqtSignal(int, int)
     
     # Progress report
     # ---------------
     def report_progress(self, index, count):
         self.progressReported.emit(index, count)
+        
+    def report_progress_save(self, index, count):
+        self.saveProgressReported.emit(index, count)
         
     
     # Initialization methods

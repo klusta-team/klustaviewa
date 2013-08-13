@@ -80,6 +80,7 @@ class MainWindow(QtGui.QMainWindow):
         self.loader = HDF5Loader()
         self.loader_raw = HDF5RawDataLoader()
         self.loader.progressReported.connect(self.open_progress_reported)
+        self.loader.saveProgressReported.connect(self.save_progress_reported)
         self.wizard = Wizard()
         self.controller = None
         self.spikes_highlighted = []
@@ -106,6 +107,7 @@ class MainWindow(QtGui.QMainWindow):
         self.create_menu()
         self.create_toolbar()
         self.create_open_progress_dialog()
+        self.create_save_progress_dialog()
         self.create_threads()
         
         # Update action enabled/disabled property.
@@ -369,6 +371,15 @@ class MainWindow(QtGui.QMainWindow):
         self.open_progress.setWindowTitle('Loading')
         self.open_progress.setCancelButton(None)
         self.open_progress.setMinimumDuration(0)
+    
+    def create_save_progress_dialog(self):
+        self.save_progress = QtGui.QProgressDialog("Saving...", 
+            "Cancel", 0, 0, self, QtCore.Qt.Tool)
+        self.save_progress.setWindowModality(QtCore.Qt.WindowModal)
+        self.save_progress.setValue(0)
+        self.save_progress.setWindowTitle('Saving')
+        self.save_progress.setCancelButton(None)
+        self.save_progress.setMinimumDuration(0)
         
         
     # Action enabled.
@@ -643,6 +654,7 @@ class MainWindow(QtGui.QMainWindow):
         # Create the external threads.
         self.open_task = inthread(OpenTask)()
         self.open_task.dataOpened.connect(self.open_done)
+        self.open_task.dataSaved.connect(self.save_done)
         self.open_task.dataOpenFailed.connect(self.open_failed)
     
     def join_threads(self):
@@ -669,9 +681,7 @@ class MainWindow(QtGui.QMainWindow):
             SETTINGS['main_window.last_data_file'] = path
             
     def save_callback(self, checked=None):
-        # folder = SETTINGS.get('main_window.last_data_file')
-        self.loader.save()
-        self.need_save = False
+        self.open_task.save(self.loader)
         
     def renumber_callback(self, checked=None):
         # folder = SETTINGS.get('main_window.last_data_file')
@@ -735,6 +745,13 @@ class MainWindow(QtGui.QMainWindow):
     def open_progress_reported(self, progress, progress_max):
         self.open_progress.setMaximum(progress_max)
         self.open_progress.setValue(progress)
+        
+    def save_progress_reported(self, progress, progress_max):
+        self.save_progress.setMaximum(progress_max)
+        self.save_progress.setValue(progress)
+        
+    def save_done(self):
+        self.need_save = False
         
     
     # Selection methods.

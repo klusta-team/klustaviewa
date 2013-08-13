@@ -373,6 +373,10 @@ class HDF5Loader(Loader):
                 table.append(default)
     
     def save(self, renumber=False):
+        
+        # Report progress.
+        self.report_progress_save(1, 6)
+        
         self.update_cluster_info()
         self.update_group_info()
         
@@ -388,6 +392,9 @@ class HDF5Loader(Loader):
         self.spike_table.cols.cluster_manual[:] = get_array(self.clusters)
         
         
+        # Report progress.
+        self.report_progress_save(2, 6)
+        
         # Update the clusters table.
         # --------------------------
         # Add/remove rows to match the new number of clusters.
@@ -396,6 +403,9 @@ class HDF5Loader(Loader):
         self.clusters_table.cols.cluster[:] = self.get_clusters_unique()
         self.clusters_table.cols.group[:] = self.cluster_info['group']
         
+        
+        # Report progress.
+        self.report_progress_save(3, 6)
         
         # Update the group table.
         # -----------------------
@@ -411,11 +421,17 @@ class HDF5Loader(Loader):
         self.klx.flush()
         
         
+        # Report progress.
+        self.report_progress_save(4, 6)
+        
         # Save the CLU file.
         # ------------------
         save_clusters(self.filename_clu, 
             convert_to_clu(self.clusters, self.cluster_info['group']))
         
+        
+        # Report progress.
+        self.report_progress_save(5, 6)
         
         # Update the KLA file.
         # --------------------
@@ -427,6 +443,8 @@ class HDF5Loader(Loader):
         }
         write_kla(self.filename_kla, kla)
         
+        # Report progress.
+        self.report_progress_save(6, 6)
     
     
     # Close functions.
