@@ -584,6 +584,8 @@ class MainWindow(QtGui.QMainWindow):
             self.taskgraph.update_correlograms_view()
             
     def add_rawdata_view(self, do_update=None, floating=False):
+        if len(self.views['RawDataView']) >= 1:
+            return
         view = self.create_view(vw.RawDataView,
             index=len(self.views['RawDataView']),
             position=QtCore.Qt.RightDockWidgetArea,
