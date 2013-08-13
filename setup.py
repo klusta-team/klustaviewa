@@ -78,6 +78,8 @@ if __name__ == '__main__':
         
         scripts=['postinstall.py'],
         
+        app=['klustaviewa/scripts/runklustaviewa.py'],
+        
         package_data={
             'klustaviewa': ['icons/*.png', 'icons/*.ico', 'gui/*.css'],
             
