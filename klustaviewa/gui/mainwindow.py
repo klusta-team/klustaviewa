@@ -5,6 +5,7 @@
 # -----------------------------------------------------------------------------
 import pprint
 import time
+from StringIO import StringIO
 import os
 import sys
 import inspect
@@ -65,6 +66,7 @@ class MainWindow(QtGui.QMainWindow):
         self.dolog = dolog
         if self.dolog:
             create_file_logger()
+        self.initialize_view_logger()
         
         log.debug("Using {0:s}.".format(QT_BINDING))
         
@@ -164,6 +166,14 @@ class MainWindow(QtGui.QMainWindow):
         else:
             self.set_normal_cursor()
             self.is_busy = False
+    
+    def initialize_view_logger(self):
+        # Initialize the view logger.
+        viewlogger = vw.ViewLogger(name='viewlogger', fmt='%(message)s',
+            level=USERPREF['loglevel'], print_caller=False)
+        register(viewlogger)
+        viewlogger.outlog.writeRequested.connect(self.log_view_write_callback)
+        self.view_logger_text = StringIO()
     
     
     # Actions.
@@ -589,21 +599,16 @@ class MainWindow(QtGui.QMainWindow):
         if len(self.views['LogView']) >= 1:
             return
         view = self.create_view(vw.LogView,
+            text=self.view_logger_text.getvalue(),
             position=QtCore.Qt.BottomDockWidgetArea,
             floating=True)
-            
-        # Initialize the view logger.
-        viewlogger = vw.ViewLogger(name='viewlogger', fmt='%(message)s',
-            level=USERPREF['loglevel'], print_caller=False)
-        register(viewlogger)
-        viewlogger.outlog.writeRequested.connect(self.log_view_write_callback)
-        
         self.views['LogView'].append(view)
         
     def log_view_write_callback(self, message):
         view = self.get_view('LogView')
         if view:
-            view.append(message + '\n')
+            view.append(message)
+        self.view_logger_text.write(message)
     
     def add_correlograms_view(self, do_update=None, floating=False):
         view = self.create_view(vw.CorrelogramsView,
