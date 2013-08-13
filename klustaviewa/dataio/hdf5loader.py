@@ -116,6 +116,8 @@ class HDF5Loader(Loader):
             self.shank_path + '/groups_of_clusters')
         # Get the contents.
         self.read_nchannels()
+        self.read_fetdim()
+        self.read_nsamples()
         self.read_clusters()
         self.read_spiketimes()
         self.read_kla()
@@ -129,9 +131,22 @@ class HDF5Loader(Loader):
         params_json = self.klx.getNodeAttr('/metadata', 'PRM_JSON') or None
         self.params = load_params_json(params_json)
         
-        self.fetdim = self.params['fetdim']
-        self.nsamples = self.params['nsamples']
+        # Read the sampling frequency.
         self.freq = self.params['freq']
+        
+        # Read the number of features, global or per-shank information.
+        try:
+            self.fetdim = int(self.params['fetdim'])
+        except:
+            # To be set in "set_shank" as it is per-shank information.
+            self.fetdim = None
+            
+        # Read the number of samples, global or per-shank information.
+        try:
+            self.nsamples = int(self.params['nsamples'])
+        except:
+            # To be set in "set_shank" as it is per-shank information.
+            self.nsamples = None
         
         probe_json = self.klx.getNodeAttr('/metadata', 'PRB_JSON') or None
         self.probe = load_probe_json(probe_json)
@@ -139,6 +154,14 @@ class HDF5Loader(Loader):
     def read_nchannels(self):
         """Read the number of alive channels from the probe file."""
         self.nchannels = len(self.probe[self.shank]['channels_alive'])
+        
+    def read_fetdim(self):
+        if self.fetdim is None:
+            self.fetdim = self.params['fetdim'][self.shank]
+        
+    def read_nsamples(self):
+        if self.nsamples is None:
+            self.nsamples = self.params['nsamples'][self.shank]
         
     def get_probe_geometry(self):
         if self.probe:

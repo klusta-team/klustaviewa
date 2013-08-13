@@ -265,7 +265,7 @@ def read_xml(filename_xml, fileindex=1):
         cg = sd.find('channelGroups')
         if cg is not None:
             # find the group corresponding to the fileindex
-            g = cg.findall('group')[fileindex-1]
+            g = cg.findall('group')[fileindex - 1]
             if g is not None:
                 ns = g.find('nSamples')
                 if ns is not None:

@@ -23,10 +23,13 @@ from tools import MemMappedText, MemMappedBinary
 # -----------------------------------------------------------------------------
 def params_to_json(metadata_xml):
     """Convert PARAMS from XML to JSON."""
+    shanks = metadata_xml['shanks']
     params = dict(
         SAMPLING_FREQUENCY=metadata_xml['freq'],
-        FETDIM=metadata_xml['fetdim'],
-        WAVEFORMS_NSAMPLES=metadata_xml['nsamples'],
+        FETDIM={shank: metadata_xml[shank]['fetdim'] 
+            for shank in shanks},
+        WAVEFORMS_NSAMPLES={shank: metadata_xml[shank]['nsamples'] 
+            for shank in shanks},
     )
     return json.dumps(params, indent=4)
 
@@ -39,9 +42,21 @@ def load_params_json(params_json):
     
     # Get the sampling frequency from the PARAMS file.
     params['freq'] = f = float(params_dict['SAMPLING_FREQUENCY'])
-    params['nsamples'] = params_dict['WAVEFORMS_NSAMPLES']
-    params['fetdim'] = params_dict['FETDIM']
     
+    # Number of samples per waveform.
+    if isinstance(params_dict['WAVEFORMS_NSAMPLES'], dict):
+        params['nsamples'] = {int(key): value 
+            for key, value in params_dict['WAVEFORMS_NSAMPLES'].iteritems()}
+    else:
+        params['nsamples'] = int(params_dict['WAVEFORMS_NSAMPLES'])
+        
+    # Number of features.
+    if isinstance(params_dict['FETDIM'], dict):
+        params['fetdim'] = {int(key): value 
+            for key, value in params_dict['FETDIM'].iteritems()}
+    else:
+        params['fetdim'] = int(params_dict['FETDIM'])
+        
     # if not 'nsamples' in params:
         # # Get the number of samples per waveform from the PARAMS file.
         # params['nsamples'] = int(f * float(params_dict['T_BEFORE']) + float(params_dict['T_AFTER']))

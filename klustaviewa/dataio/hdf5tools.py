@@ -121,10 +121,17 @@ def open_klusters(filename):
         filenames_shanks[index] = triplet_to_filename(triplet[:2] + (index,))
     klusters_data = {index: open_klusters_oneshank(filename) 
         for index, filename in filenames_shanks.iteritems()}
-            
+    shanks = filenames_shanks.keys()
+           
     # Find the dataset filenames and load the metadata.
     filenames = find_filenames(filename)
+    # Metadata common to all shanks.
     metadata = read_xml(filenames['xml'], 1)
+    # Metadata specific to each shank.
+    metadata.update({shank: read_xml(filenames['xml'], shank)
+        for shank in shanks})
+    metadata['shanks'] = sorted(shanks)
+    
     klusters_data['metadata'] = metadata
     klusters_data['filenames'] = filenames
 
@@ -179,6 +186,7 @@ def create_hdf5_files(filename, klusters_data):
     
     # Read the old XML metadata and save the JSON parameters string.
     params_text = params_to_json(klusters_data['metadata'])
+    print params_text
     file.setNodeAttr('/metadata', 'PRM_JSON', params_text)
     
     # Create groups and tables for each shank.
