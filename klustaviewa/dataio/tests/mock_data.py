@@ -24,6 +24,7 @@ import klustaviewa.utils.logger as log
 # Mock parameters.
 nspikes = 1000
 nclusters = 20
+nextrafet = 1
 ngroups = 4
 cluster_offset = 2
 nsamples = 20
@@ -48,8 +49,11 @@ def create_waveforms(nspikes, nsamples, nchannels):
             dtype=np.int16))
     
 def create_dat(nsamples, nchannels):
-    return np.array(rnd.randint(size=(nsamples, nchannels),
+    noise = np.array(rnd.randint(size=(nsamples, nchannels),
         low=-1000, high=1000), dtype=np.int16)
+    t = np.linspace(0., 100., nsamples)
+    low = np.array(10000 * np.cos(t), dtype=np.int16)
+    return noise + low[:, np.newaxis]
     
 def create_features(nspikes, nchannels, fetdim, duration, freq):
     features = np.array(rnd.randint(size=(nspikes, nchannels * fetdim + 1),
