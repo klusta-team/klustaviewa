@@ -14,7 +14,7 @@ try:
     IPYTHON = True
 except Exception as e:
     IPYTHON = False
-    log.debug(("You need IPython 1.0dev if you want the IPython console in the"
+    log.debug(("You need IPython 1.0 if you want the IPython console in the"
     "application: " + e.message))
     
 import galry
