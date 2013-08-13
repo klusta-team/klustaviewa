@@ -14,7 +14,7 @@ from collections import OrderedDict
 import numpy as np
 import matplotlib.pyplot as plt
 
-from probe import probe_to_json, linear_probe
+from probe import probe_to_json, all_to_all_probe
 from params import params_to_json
 from klustersloader import (find_filenames, find_index, read_xml,
     filename_to_triplet, triplet_to_filename, find_indices,
@@ -137,7 +137,7 @@ def open_klusters(filename):
             have_file_index=False)
         shanks = {shank: klusters_data[shank]['nchannels']
             for shank in filenames_shanks.keys()}
-        probe_python = linear_probe(shanks)
+        probe_python = all_to_all_probe(shanks)
         with open(filename_probe, 'w') as f:
             f.write(probe_python)
         

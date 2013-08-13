@@ -5,6 +5,7 @@
 # -----------------------------------------------------------------------------
 import json
 import os
+import pprint
 import tables
 import time
 
@@ -36,8 +37,27 @@ def linear_probe(shanks):
                 for shank, nchannels in shanks.iteritems()}
     
     probe_python = "probes = {0:s}\ngeometry = {1:s}\n".format(
-        str(graph),
-        str(geometry),
+        pprint.pformat(graph, indent=4),
+        pprint.pformat(geometry, indent=4),
+    )
+    return probe_python
+    
+def all_to_all_probe(shanks):
+    """shanks is a dict {shank: nchannels}."""
+    # All-to-all graph.
+    graph = {shank: [(i, j) 
+        for i in xrange(nchannels) 
+            for j in xrange(i + 1, nchannels)] 
+                for shank, nchannels in shanks.iteritems()}
+    # Linear geometry.
+    geometry = {
+        shank:
+            {channel: (0., float(channel)) for channel in xrange(nchannels)}
+                for shank, nchannels in shanks.iteritems()}
+    
+    probe_python = "probes = {0:s}\ngeometry = {1:s}\n".format(
+        pprint.pformat(graph, indent=4),
+        pprint.pformat(geometry, indent=4),
     )
     return probe_python
     
