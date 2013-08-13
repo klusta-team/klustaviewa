@@ -13,15 +13,15 @@ class HDF5RawDataLoader(QtCore.QObject):
         self.filename_raw = filenames['hdf5_raw']
         self.filename_kla = filenames['hdf5_kla']
 
-        if os.path.exists(self.filename_raw):
+        try:
             self.kld_raw = tb.openFile(self.filename_raw)
-        else:
+        except:
             self.kld_raw = None
 
     def get_rawdata(self):
-        if self.kld_raw is not None:
+        try:
             rawdata = self.kld_raw.root.data
-        else:
+        except:
             rawdata = None
         
         freq = 20000.
