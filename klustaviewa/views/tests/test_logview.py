@@ -1,18 +1,17 @@
-"""Unit tests for IPython view."""
+"""Unit tests for log view."""
 
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
 import os
+import sys
 import time
 
 import numpy as np
 import numpy.random as rnd
 import pandas as pd
 
-import galry
-
-from klustaviewa.views.ipythonview import IPythonView, IPYTHON
+from klustaviewa.views.logview import LogView
 from klustaviewa.utils.userpref import USERPREF
 from klustaviewa.views.tests.utils import show_view, assert_fun
 
@@ -20,20 +19,19 @@ from klustaviewa.views.tests.utils import show_view, assert_fun
 # -----------------------------------------------------------------------------
 # Tests
 # -----------------------------------------------------------------------------
-def test_ipythonview():
+def test_logview():
 
-    if not IPYTHON:
-        return
-    
     kwargs = {}
     
     kwargs['operators'] = [
+        lambda self: sys.stdout.write("Hello world!"),
+        lambda self: assert_fun(self.view.get_text() == "Hello world!"),
         lambda self: (self.close() 
             if USERPREF['test_auto_close'] != False else None),
     ]
     
     # Show the view.
-    window = show_view(IPythonView, **kwargs)
+    window = show_view(LogView, **kwargs)
     
     
     

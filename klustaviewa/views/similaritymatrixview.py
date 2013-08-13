@@ -351,6 +351,11 @@ class SimilarityMatrixView(KlustaView):
             self.paint_manager.update()
             self.updateGL()
 
+    def clear(self):
+        self.set_data()
+        self.paint_manager.set_data(visible=False, visual='clusterinfo')
+        self.paint_manager.set_data(visible=False, visual='square')
+            
     def show_selection(self, clu0, clu1):
         self.interaction_manager.show_square(clu0, clu1)
         self.interaction_manager.show_cluster(clu0, clu1)

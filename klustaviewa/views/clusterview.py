@@ -331,6 +331,9 @@ class ClusterViewModel(TreeModel):
         group_colors=None, group_names=None, cluster_sizes=None,
         cluster_quality=None, background={}):
         
+        if group_names is None or cluster_colors is None:
+            return
+        
         # Create the tree.
         # go through all groups
         for groupidx, groupname in group_names.iteritems():
@@ -813,6 +816,10 @@ class ClusterView(QtGui.QTreeView):
         # in this function
         self.model.clustersMoved.connect(self.move_clusters)
         
+    def clear(self):
+        self.setModel(ClusterViewModel())
+        
+        
     
     # Public methods
     # --------------
@@ -1032,7 +1039,6 @@ class ClusterView(QtGui.QTreeView):
             self.move_to_mua_action.setEnabled(False)
             self.move_to_good_action.setEnabled(False)
         
-        
     def contextMenuEvent(self, event):
         action = self.context_menu.exec_(self.mapToGlobal(event.pos()))
     
@@ -1189,9 +1195,6 @@ class ClusterView(QtGui.QTreeView):
         else:
             return super(ClusterView, self).keyPressEvent(e)
         
-    # def sizeHint(self):
-        # return QtCore.QSize(300, 600)
-        
     
     # Save and restore geometry
     # -------------------------
@@ -1209,7 +1212,6 @@ class ClusterView(QtGui.QTreeView):
         if h:
             self.header().restoreState(decode_bytearray(h))
     
-        
     def closeEvent(self, e):
         # Save the window geometry when closing the software.
         self.save_geometry()

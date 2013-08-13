@@ -88,7 +88,7 @@ class Settings(object):
 # -----------------------------------------------------------------------------
 # Global variables
 # -----------------------------------------------------------------------------
-FILENAME = 'settings.dat'
+FILENAME = 'settings'
 FOLDER = get_app_folder()
 FILEPATH = get_global_path(FILENAME)
 SETTINGS = Settings(appname=APPNAME, folder=FOLDER, filepath=FILEPATH)
