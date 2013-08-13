@@ -186,12 +186,14 @@ def create_hdf5_files(filename, klusters_data):
     
     # Read the old XML metadata and save the JSON parameters string.
     params_text = params_to_json(klusters_data['metadata'])
-    print params_text
     file.setNodeAttr('/metadata', 'PRM_JSON', params_text)
     
-    # Create groups and tables for each shank.
+    # Get the list of shanks.
     shanks = sorted([key for key in klusters_data.keys() 
         if isinstance(key, (int, long))])
+    file.setNodeAttr('/metadata', 'SHANKS', np.unique(shanks))
+            
+    # Create groups and tables for each shank.
     for shank in shanks:
         data = klusters_data[shank]
         

@@ -78,9 +78,14 @@ class HDF5Loader(Loader):
             
         self.klx = tb.openFile(self.filename, mode='r+')
         # Get the list of shanks.
-        self.shanks = [int(re.match("shank([0-9]+)", 
-            shank._v_name).group(1)[0])
-                for shank in self.klx.listNodes('/shanks')]
+        self.shanks = list(self.klx.getNodeAttr('/metadata', 'SHANKS'))
+        # WARNING
+        # The commented code above detects the shank indices from introspection
+        # in the "shanks" group. It is not necessary anymore as soon as the
+        # metadata contains a "SHANKS" attribute with the list of shanks.
+        # self.shanks = [int(re.match("shank([0-9]+)", 
+            # shank._v_name).group(1)[0])
+                # for shank in self.klx.listNodes('/shanks')]
         self.read_metadata()
         # By default, read the first available shank.
         self.set_shank(self.shanks[0])
