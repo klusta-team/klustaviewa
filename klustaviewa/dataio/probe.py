@@ -91,10 +91,15 @@ def probe_to_json(probe_ns):
             }
     # Add the geometry if it exists.
     if geometry:
-        for shank in shanks:
-            for shank_dict in json_dict['shanks']:
-                shank = shank_dict['shank_index']
+        # Find out if there's one geometry per shank, or a common geometry
+        # for all shanks.
+        multiple = shank in geometry and isinstance(geometry[shank], dict)
+        for shank_dict in json_dict['shanks']:
+            shank = shank_dict['shank_index']
+            if multiple:
                 shank_dict['geometry'] = geometry[shank]
+            else:
+                shank_dict['geometry'] = geometry
     return json.dumps(json_dict, indent=4)
     
 def load_probe_json(probe_json):
