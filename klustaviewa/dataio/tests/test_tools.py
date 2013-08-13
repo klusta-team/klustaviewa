@@ -65,6 +65,7 @@ def test_memmap_numpy():
     
     slices = (slice(1000, 10000, 4), slice(2, 30, 3))
     
+    assert m.shape == x.shape
     np.testing.assert_equal(x[slices], m[slices])
     
     
