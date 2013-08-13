@@ -158,7 +158,6 @@ def create_hdf5_files(filename, klusters_data):
     
     # Create the HDF5 file.
     hdf5['klx'] = tables.openFile(hdf5_filenames['hdf5_klx'], mode='w')
-    # hdf5['kla'] = open(hdf5_filenames['hdf5_kla'], mode='w')
     
     # Metadata.
     # for file in [hdf5['klx'], hdf5['wave_file']]:
@@ -191,18 +190,10 @@ def create_hdf5_files(filename, klusters_data):
         shank_path = '/shanks/shank{0:d}'.format(shank)
         
         # Create the /shanks/shank<X> groups in each file.
-        # for file in [hdf5['klx'], hdf5['wave_file']]:
         file = hdf5['klx']
         file.createGroup('/shanks', 'shank{0:d}'.format(shank))
-        # file.createGroup(shank_path, 'metadata')
-        # file.setNodeAttr(shank_path + '/metadata',
-            # 'nchannels', data['nchannels'],)
-        # file.setNodeAttr(shank_path + '/metadata',
-            # 'nsamples', data['nsamples'],)
-        # file.setNodeAttr(shank_path + '/metadata',
-            # 'fetdim', data['fetdim'],)
         
-                
+        
         # Create the cluster table.
         # -------------------------
         hdf5['cluster_table', shank] = hdf5['klx'].createTable(
@@ -254,11 +245,6 @@ def create_hdf5_files(filename, klusters_data):
                 # has_umask=('uspk' in data)
                 ))
         
-        # Create the link in the main file, to the wave table.
-        # hdf5['klx'].createExternalLink(
-            # shank_path, 'waveforms', 
-            # hdf5['wave_table', shank])
-
     return hdf5
 
 def klusters_to_hdf5(filename, progress_report=None):
