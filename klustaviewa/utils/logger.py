@@ -16,8 +16,6 @@ from klustaviewa.utils.globalpaths import APPNAME
 # -----------------------------------------------------------------------------
 def get_log_format(debug=False):
     if debug:
-        # return ('%(asctime)s,%(msecs)03d  %(levelname)-7s  P:%(process)-4d  '
-                # 'T:%(thread)-4d  %(message)s')
         return ('%(asctime)s,%(msecs)03d  %(levelname)-7s  %(message)s')
     else:
         return '%(asctime)s  %(message)s'
@@ -179,4 +177,11 @@ def exception(msg):
 def set_level(msg):
     for name, logger in LOGGERS.iteritems():
         logger.set_level(msg)
+
+
+# Capture all exceptions.
+def handle_exception(exc_type, exc_value, exc_traceback):
+    msg = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    exception(msg)
+sys.excepthook = handle_exception
 
