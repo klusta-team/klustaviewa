@@ -31,15 +31,15 @@ from klustaviewa.utils.userpref import USERPREF
 # Fixtures
 # -----------------------------------------------------------------------------
 def setup():
-    # log.debug("Creating mock data for dataio subpackage.")
+    # Special setup fixture to create a data set with 2 shanks.
+    # No need for teardown as the 'mockdata' folder will be cleared at the
+    # end of the tests anyway.
+    
     
     # Create mock directory if needed.
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
     if not os.path.exists(dir):
         os.mkdir(dir)
-    # else:
-        # # No need to recreate the files.
-        # return
         
     # Create mock data.
     waveforms = create_waveforms(nspikes, nsamples, nchannels)
@@ -49,7 +49,6 @@ def setup():
     masks = create_masks(nspikes, nchannels, fetdim)
     xml = create_xml(nchannels, nsamples, fetdim)
     probe = create_probe(nchannels)
-    
     
     # Create mock files.
     save_binary(os.path.join(dir, 'test.spk.2'), waveforms)

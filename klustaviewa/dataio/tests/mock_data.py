@@ -31,7 +31,7 @@ ncorrbins = 100
 corrbin = .001
 nchannels = 32
 fetdim = 3
-duration = 60.
+duration = 1.
 freq = 20000.
 
 
@@ -46,6 +46,10 @@ def create_waveforms(nspikes, nsamples, nchannels):
         low=-32768 // 2, high=32768 // 2), dtype=np.int16) -
             np.array(32768 // 2 * (.5 + .5 * rnd.rand()) * np.cos(t),
             dtype=np.int16))
+    
+def create_dat(nsamples, nchannels):
+    return np.array(rnd.randint(size=(nsamples, nchannels),
+        low=-1000, high=1000), dtype=np.int16)
     
 def create_features(nspikes, nchannels, fetdim, duration, freq):
     features = np.array(rnd.randint(size=(nspikes, nchannels * fetdim + 1),
