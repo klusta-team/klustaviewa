@@ -66,7 +66,7 @@ class HDF5Loader(Loader):
         # Refresh the preferences file when a new file is opened.
         USERPREF.refresh()
         self.similarity_measure = USERPREF['similarity_measure'] or 'gaussian'
-        info("Similarity measure: {0:s}.".format(self.similarity_measure))
+        debug("Similarity measure: {0:s}.".format(self.similarity_measure))
         info("Opening {0:s}.".format(self.filename))
         
         # Read KLA file.

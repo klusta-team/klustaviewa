@@ -22,11 +22,15 @@ def get_pretty_arg(item):
     if isinstance(item, (pd.Series)):
         if item.size == 0:
             return '[]'
+        elif item.size == 1:
+            return '[{0:s}]'.format(str(item.values[0]))
         else:
             return '[{0:s}, ..., {1:s}]'.format(*map(str, item.values[[0, -1]]))
     if isinstance(item, (pd.Int64Index, pd.Index)):
         if item.size == 0:
             return '[]'
+        elif item.size == 1:
+            return '[{0:s}]'.format(str(item.values[0]))
         else:
             return '[{0:s}, ..., {1:s}]'.format(*map(str, item.values[[0, -1]]))
     return str(item).replace('\n', '')
@@ -39,6 +43,18 @@ def get_pretty_action(method_name, args, kwargs, verb='Process'):
         kwargs_str = ', ' + kwargs_str
     return '{3:s} action {0:s}({1:s}{2:s})'.format(
         method_name, args_str, kwargs_str, verb)
+
+def log_action(action, prefix=''):
+    method_name, args, kwargs = action
+    description = kwargs.get('_description', 
+        get_pretty_action(*action))
+    log.info(prefix + description)
+
+def call_action(processor, action, suffix=''):
+    method_name, args, kwargs = action
+    kwargs = kwargs.copy()
+    kwargs.pop('_description', None)
+    return getattr(processor, method_name + suffix)(*args, **kwargs)
 
 
 # -----------------------------------------------------------------------------
@@ -61,6 +77,7 @@ class Controller(object):
     
     # Internal action methods.
     # ------------------------
+    
     def _process(self, method_name, *args, **kwargs):
         """Create, register, and process an action."""
         # Create the action.
@@ -68,9 +85,9 @@ class Controller(object):
         # Add the action to the stack.
         self.stack.add(action)
         # Log the action.
-        log.info(get_pretty_action(method_name, args, kwargs))
+        log_action(action)
         # Process the action.
-        output = getattr(self.processor, method_name)(*args, **kwargs)
+        output = call_action(self.processor, action)
         return method_name, output or {}
     
     
@@ -83,7 +100,10 @@ class Controller(object):
         cluster_groups = self.loader.get_cluster_groups(clusters_to_merge)
         cluster_colors = self.loader.get_cluster_colors(clusters_to_merge)
         return self._process('merge_clusters', clusters_old, cluster_groups, 
-            cluster_colors, cluster_merged)
+            cluster_colors, cluster_merged, 
+            _description='Merged clusters {0:s} into {1:s}'.format(
+                get_pretty_arg(list(clusters)), 
+                get_pretty_arg(cluster_merged)))
         
     def split_clusters(self, clusters, spikes):
         # Old clusters for all spikes to split.
@@ -103,37 +123,49 @@ class Controller(object):
         cluster_groups = self.loader.get_cluster_groups(cluster_indices_old)
         cluster_colors = self.loader.get_cluster_colors(cluster_indices_old)
         return self._process('split_clusters', clusters, 
-            clusters_old, cluster_groups, cluster_colors, clusters_new)
+            clusters_old, cluster_groups, cluster_colors, clusters_new, 
+            _description='Split clusters {0:s} into {1:s}'.format(
+                get_pretty_arg(list(cluster_indices_old)),
+                get_pretty_arg(list(clusters_indices_new)),
+                ))
         
     def change_cluster_color(self, cluster, color):
         color_old = self.loader.get_cluster_colors(cluster)
         color_new = color
         clusters_selected = self.loader.get_clusters_selected()
         return self._process('change_cluster_color', cluster, color_old, 
-            color_new, clusters_selected)
+            color_new, clusters_selected, 
+            _description='Changed cluster color of {0:s}'.format(get_pretty_arg(cluster)))
         
     def move_clusters(self, clusters, group):
         groups_old = self.loader.get_cluster_groups(clusters)
         group_new = group
-        return self._process('move_clusters', clusters, groups_old, group_new)
+        return self._process('move_clusters', clusters, groups_old, group_new, 
+            _description='Moved clusters {0:s} to {1:s}'.format(
+                get_pretty_arg(clusters), get_pretty_arg(group)))
       
     def rename_group(self, group, name):
         name_old = self.loader.get_group_names(group)
         name_new = name
-        return self._process('rename_group', group, name_old, name_new)
+        return self._process('rename_group', group, name_old, name_new, 
+            _description='Renamed group {0:s} to {1:s}'.format(
+                get_pretty_arg(group), get_pretty_arg(name)))
         
     def change_group_color(self, group, color):
         color_old = self.loader.get_group_colors(group)
         color_new = color
-        return self._process('change_group_color', group, color_old, color_new)
+        return self._process('change_group_color', group, color_old, color_new, 
+            _description='Changed color of group {0:s}'.format(get_pretty_arg(group)))
     
     def add_group(self, group, name, color):
-        return self._process('add_group', group, name, color)
+        return self._process('add_group', group, name, color, 
+            _description='Added group {0:s}'.format(get_pretty_arg(name)))
         
     def remove_group(self, group):
         name = self.loader.get_group_names(group)
         color = self.loader.get_group_colors(group)
-        return self._process('remove_group', group, name, color)
+        return self._process('remove_group', group, name, color, 
+            _description='Removed group {0:s}'.format(get_pretty_arg(group)))
         
     
     
@@ -147,10 +179,9 @@ class Controller(object):
         # Get the undone action.
         method_name, args, kwargs = action
         # Log the action.
-        log.info(get_pretty_action(method_name, args, kwargs, verb='Undo'))
+        log_action(action, prefix='Undo: ')
         # Undo the action.
-        output = getattr(self.processor, method_name + '_undo')(
-            *args, **kwargs)
+        output = call_action(self.processor, action, suffix='_undo')
         return method_name + '_undo', output or {}
         
     def redo(self):
@@ -160,10 +191,10 @@ class Controller(object):
         # Get the redo action.
         method_name, args, kwargs = action
         # Log the action.
-        log.info(get_pretty_action(method_name, args, kwargs, verb='Redo'))
+        log_action(action, prefix='Redo: ')
         # Redo the action.
-        output = getattr(self.processor, method_name)(
-            *args, **kwargs)
+        output = call_action(self.processor, action)
+            
         return method_name, output or {}
         
     def can_undo(self):
