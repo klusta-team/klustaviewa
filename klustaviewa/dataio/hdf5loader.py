@@ -479,7 +479,7 @@ class HDF5Loader(Loader):
     # ----------------
     def close(self):
         """Close the klx HDF5 file."""
-        if hasattr(self, 'klx'):
+        if hasattr(self, 'klx') and self.klx.isopen:
             self.klx.flush()
             self.klx.close()
         if hasattr(self, 'logfile'):

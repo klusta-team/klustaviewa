@@ -194,6 +194,7 @@ class MainWindow(QtGui.QMainWindow):
             
         self.add_action('save', '&Save', shortcut='Ctrl+S', icon='save')
         self.add_action('renumber', 'Save &renumbered')
+        self.add_action('close', '&Close file')
         
         # Quit action.
         self.add_action('quit', '&Quit', shortcut='Ctrl+Q')
@@ -276,6 +277,7 @@ class MainWindow(QtGui.QMainWindow):
         file_menu.addAction(self.save_action)
         file_menu.addAction(self.renumber_action)
         file_menu.addSeparator()
+        file_menu.addAction(self.close_action)
         file_menu.addAction(self.quit_action)
         
         # Views menu.
@@ -712,6 +714,28 @@ class MainWindow(QtGui.QMainWindow):
         if path:
             self.open_task.open(self.loader, self.loader_raw, path)
             
+    def close_callback(self, checked=None):
+        self.is_file_open = False
+        clusters = self.get_view('ClusterView').selected_clusters()
+        if clusters:
+            self.get_view('ClusterView').unselect()
+            time.sleep(.25)
+        
+        # Update the task graph.
+        self.taskgraph.set(self)
+        self.taskgraph.update_cluster_view()
+        self.taskgraph.compute_similarity_matrix()
+        self.taskgraph.update_rawdata_view()
+        
+        # Clear the ClusterView.
+        self.get_view('ClusterView').clear()
+        
+        # Clear the SimilarityMatrixView.
+        smv = self.get_view('SimilarityMatrixView')
+        if smv:
+            smv.clear()
+        self.loader.close()
+        
     def quit_callback(self, checked=None):
         self.close()
     
