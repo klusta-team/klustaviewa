@@ -325,11 +325,13 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical
 QTextEdit
 {
     background-color: #242424;
+    font-family: "Courier New";
 }
 
 QPlainTextEdit
 {
     background-color: #242424;
+    font-family: "Courier New";
 }
 
 QHeaderView::section

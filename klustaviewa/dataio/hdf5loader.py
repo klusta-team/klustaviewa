@@ -379,7 +379,6 @@ class HDF5Loader(Loader):
     # Log file.
     # ---------
     def initialize_logfile(self):
-        # filename = os.path.splitext(self.filename)[0] + '.kvwlg'
         self.logfile = FileLogger(self.filename_log, name='datafile', 
             level=USERPREF['loglevel_file'])
         # Register log file.

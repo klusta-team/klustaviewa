@@ -6,48 +6,38 @@
 import os
 import sys
 
-import klustaviewa.utils.logger as log
-
 from qtools import QtGui, QtCore
 
+from klustaviewa.utils.logger import Logger
 
-# -----------------------------------------------------------------------------
-# Out log, stream which writes in a TextEdit with a color.
-# -----------------------------------------------------------------------------
-class OutLog(object):
-    def __init__(self, edit, out=None, color=None):
-        self.edit = edit
-        self.out = None
-        self.color = color
 
-    def write(self, m):
-        if self.color:
-            tc = self.edit.textColor()
-            self.edit.setTextColor(self.color)
-
-        self.edit.moveCursor(QtGui.QTextCursor.End)
-        self.edit.insertPlainText(m)
-
-        if self.color:
-            self.edit.setTextColor(tc)
-
-        if self.out:
-            self.out.write(m)
-
-            
 # -----------------------------------------------------------------------------
 # Log view.
 # -----------------------------------------------------------------------------
+class OutLog(QtCore.QObject):
+    # We use signals so that this stream object can write from another thread
+    # and the QTextEdit widget will be updated in the main thread through
+    # a slot connected in the main window.
+    writeRequested = QtCore.pyqtSignal(str)
+    
+    def write(self, m):
+        self.writeRequested.emit(m)
+
+
+class ViewLogger(Logger):
+    def __init__(self, **kwargs):
+        self.outlog = OutLog()
+        kwargs['stream'] = self.outlog
+        super(ViewLogger, self).__init__(**kwargs)
+
+        
 class LogView(QtGui.QWidget):
     def __init__(self, parent=None, getfocus=None):
         super(LogView, self).__init__(parent)
         
         # Create the text edit widget.
         self.textedit = QtGui.QTextEdit()
-        
-        # Redirect standard output and error to the text edit.
-        sys.stdout = OutLog(self.textedit, sys.stdout, QtGui.QColor(50, 50, 50))
-        sys.stderr = OutLog(self.textedit, sys.stderr, QtGui.QColor(255, 50, 50))
+        self.textedit.setReadOnly(True)
         
         # Add the text edit widget to the layout.
         box = QtGui.QVBoxLayout()
@@ -64,7 +54,7 @@ class LogView(QtGui.QWidget):
         return self.textedit.toPlainText()
         
     def set_data(self, text=''):
-        self.append(text)
+        self.textedit.setText(text)
     
     
     
