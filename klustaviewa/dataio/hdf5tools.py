@@ -99,8 +99,9 @@ def open_klusters_oneshank(filename):
 
     # Open big Klusters files.
     data['fet'] = MemMappedText(filenames['fet'], np.int64, skiprows=1)
-    data['spk'] = MemMappedBinary(filenames['spk'], np.int16, 
-        rowsize=metadata['nchannels'] * metadata['nsamples'])
+    if 'spk' in filenames and os.path.exists(filenames['spk'] or ''):
+        data['spk'] = MemMappedBinary(filenames['spk'], np.int16, 
+            rowsize=metadata['nchannels'] * metadata['nsamples'])
     if 'uspk' in filenames and os.path.exists(filenames['uspk'] or ''):
         data['uspk'] = MemMappedBinary(filenames['uspk'], np.int16, 
             rowsize=metadata['nchannels'] * metadata['nsamples'])
@@ -305,7 +306,8 @@ class HDF5Writer(object):
         read['cluster'] = data['aclu'][self.spike]
         read['fet'] = data['fet'].next()
         read['time'] = read['fet'][-1]
-        read['spk'] = data['spk'].next()
+        if 'spk' in data:
+            read['spk'] = data['spk'].next()
         if 'mask' in data:
             read['mask'] = data['mask'].next()
         else:
@@ -330,7 +332,8 @@ class HDF5Writer(object):
         row_main.append()
         
         # Fill the wave row.
-        row_wave['waveform_filtered'] = read['spk']
+        if 'spk' in read:
+            row_wave['waveform_filtered'] = read['spk']
         if 'uspk' in read:
             row_wave['waveform_unfiltered'] = read['uspk']
         row_wave.append()
