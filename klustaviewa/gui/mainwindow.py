@@ -120,7 +120,7 @@ class MainWindow(QtGui.QMainWindow):
         # Automatically load a file upon startup if requested.
         if filename:
             filename = os.path.realpath(filename)
-            self.open_task.open(self.loader, filename)
+            self.open_task.open(self.loader, self.loader_raw, filename)
         
         self.show()
     
