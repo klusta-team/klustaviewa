@@ -9,8 +9,9 @@ import numpy as np
 import numpy.random as rnd
 import pandas as pd
 
-from klustaviewa.views.tests.mock_data import (setup, teardown, create_similarity_matrix,
-        nspikes, nclusters, nsamples, nchannels, fetdim, ncorrbins)
+from klustaviewa.views.tests.mock_data import (setup, teardown, 
+    create_similarity_matrix, nspikes, nclusters, nsamples, nchannels, fetdim, 
+    ncorrbins, create_dat, freq)
 from klustaviewa.dataio import KlustersLoader
 from klustaviewa.dataio.selection import select
 from klustaviewa.dataio.tools import check_dtype, check_shape
@@ -24,23 +25,8 @@ import tables
 # -----------------------------------------------------------------------------
 def test_rawdataview():
     
-    # for testing - we open a sample h5 file. This will be replaced by dynamically
-    # generated raw data.
-    
-    dir = os.path.dirname(os.path.abspath(__file__))
-    try:
-        filename = r"datatest/n6mab031109.h5"
-        f = tables.openFile(os.path.join(dir, filename))
-    except:
-        filename = r"datatest/n6mab031109.trim.h5"
-        f = tables.openFile(os.path.join(dir, filename))
-    try:
-        data = f.root.RawData
-    except:
-        data = f.root.raw_data
-
-    freq = 20000.
-    dead_channels = np.arange(0,5,1)
+    data = create_dat(int(freq * 60), nchannels)
+    dead_channels = np.arange(5)
     
     kwargs = {}
     kwargs['rawdata'] = data
@@ -54,7 +40,3 @@ def test_rawdataview():
     # Show the view.
     show_view(RawDataView, **kwargs)
     
-if __name__ == "__main__":
-    setup()
-    test_rawdataview()
-    teardown()
