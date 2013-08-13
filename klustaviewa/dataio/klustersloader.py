@@ -399,7 +399,8 @@ def read_waveforms(filename_spk, nsamples, nchannels):
     
 # DAT.
 def read_dat(filename_dat, nchannels, dtype=np.int16):
-    nsamples = os.path.getsize(filename_dat) // nchannels
+    nsamples = (os.path.getsize(filename_dat) // 
+        (nchannels * np.dtype(dtype).itemsize))
     return load_binary_memmap(filename_dat, dtype=dtype,
                              shape=(nsamples, nchannels))
 
