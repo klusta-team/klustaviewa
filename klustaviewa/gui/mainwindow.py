@@ -671,7 +671,7 @@ class MainWindow(QtGui.QMainWindow):
         # If a file has been selected, open it.
         if path:
             # Launch the loading task in the background asynchronously.
-            self.open_task.open(self.loader, path)
+            self.open_task.open(self.loader, self.loader_raw, path)
             # Save the folder.
             folder = os.path.dirname(path)
             SETTINGS['main_window.last_data_dir'] = folder
@@ -691,7 +691,7 @@ class MainWindow(QtGui.QMainWindow):
     def open_last_callback(self, checked=None):
         path = SETTINGS['main_window.last_data_file']
         if path:
-            self.open_task.open(self.loader, path)
+            self.open_task.open(self.loader, self.loader_raw, path)
             
     def quit_callback(self, checked=None):
         self.close()

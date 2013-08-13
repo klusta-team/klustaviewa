@@ -1,20 +1,30 @@
 from klustersloader import find_filenames
-from hdf5tools import klusters_to_hdf5
+import numpy as np
+import tables as tb
 from qtools import QtCore
 
 class HDF5RawDataLoader(QtCore.QObject):
     def open(self, filename):
-        # filename is blah.xxxx
-        # TODO: find the blah.klxd
-        filenames = find_filename(filename, 'klxd')
-        filename_main = filenames['hdf5_main']
-        self.filename_log = filenames['kvwlg']
-        self.filename = filename_main
-        self.read()
         
-        pass
+        filenames = find_filenames(filename)
+        self.filename_raw = filenames['hdf5_raw']
+        self.filename_kla = filenames['hdf5_kla']
+
+        self.kld_raw = tb.openFile(self.filename_raw)
 
     def get_rawdata(self):
-        # return slicable pytables object (EArray)
-        pass
+        try:
+            rawdata = self.kld_raw.root.RawData
+        except:
+            self.rawdata = self.kld_raw.root.raw_data
+        
+        freq = 20000.
+        dead_channels = np.arange(0,5,1)
+        data = dict(
+            rawdata=self.rawdata,
+            freq=freq,
+            dead_channels=dead_channels,
+        )
+        return data
     
+

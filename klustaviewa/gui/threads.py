@@ -28,10 +28,14 @@ class OpenTask(QtCore.QObject):
     # def __init__(self, parent=None):
         # super(OpenTask, self).__init__(parent)
     
-    def open(self, loader, path):
+    def open(self, loader, loader_raw, path):
         try:
             loader.close()
             loader.open(path)
+            
+            # now load raw data, if it exists
+            loader_raw.open(path)
+            
             self.dataOpened.emit()
         except Exception as e:
             # self.dataOpenFailed.emit(traceback.format_exc())

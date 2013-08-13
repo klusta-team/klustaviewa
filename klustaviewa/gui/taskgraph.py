@@ -90,6 +90,7 @@ class TaskGraph(AbstractTaskGraph):
         self.get_view = self.mainwindow.get_view
         self.get_views = self.mainwindow.get_views
         self.loader = self.mainwindow.loader
+        self.loader_raw = self.mainwindow.loader_raw
         self.wizard = self.mainwindow.wizard
         self.controller = self.mainwindow.controller
         self.statscache = self.mainwindow.statscache
@@ -292,7 +293,7 @@ class TaskGraph(AbstractTaskGraph):
         [view.set_data(**data) for view in self.get_views('WaveformView')]
         
     def _update_rawdata_view(self):
-        data = vd.get_rawdataview_data(self.loader)
+        data = vd.get_rawdataview_data(self.loader_raw)
         [view.set_data(**data) for view in self.get_views('RawDataView')]
         
     def _update_cluster_view(self, clusters=None):
