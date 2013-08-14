@@ -33,7 +33,7 @@ from klustaviewa.stats.correlations import normalize
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.logger import FileLogger, register, unregister
 from klustaviewa.utils.persistence import encode_bytearray, decode_bytearray
-from klustaviewa.utils.userpref import USERPREF, FILENAME
+from klustaviewa import USERPREF, FILENAME
 from klustaviewa.utils.settings import SETTINGS
 from klustaviewa import APPNAME, ABOUT, get_global_path
 from klustaviewa import get_global_path

@@ -35,6 +35,7 @@ def load(filepath, appname=''):
     
 def save(filepath, preferences=None, appname=''):
     """Save the preferences in the file, only for the default file."""
+    PREFERENCES_DEFAULT_PATH = get_default_preferences_path()
     if preferences is None:
         with open(PREFERENCES_DEFAULT_PATH, 'r') as f:
             preferences = f.read()

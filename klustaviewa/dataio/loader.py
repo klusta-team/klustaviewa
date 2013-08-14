@@ -18,7 +18,7 @@ from tools import (load_text, normalize,
     first_row, load_binary_memmap)
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices)
-from klustaviewa.utils.userpref import USERPREF
+from klustaviewa import USERPREF
 # from klustaviewa.utils.settings import SETTINGS
 from klustaviewa.utils.logger import (debug, info, warn, exception, FileLogger,
     register, unregister)

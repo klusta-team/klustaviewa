@@ -11,7 +11,7 @@ from galry import QtGui, QtCore, show_window
 
 import mock_data as md
 from klustaviewa.stats.correlograms import NCORRBINS_DEFAULT, CORRBIN_DEFAULT
-from klustaviewa.utils.userpref import USERPREF
+from klustaviewa import USERPREF
 import klustaviewa.views as v
 import klustaviewa.gui.viewdata as vd
 

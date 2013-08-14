@@ -8,7 +8,7 @@ import sys
 import numpy as np
 from galry import figure, imshow, show, ylim, rectangles
 
-from klustaviewa.utils.userpref import USERPREF
+from klustaviewa import USERPREF
 from klustaviewa.utils.colors import (COLORS_COUNT, COLORMAP, COLORMAP_TEXTURE,
     next_color, SHIFTLEN)
     

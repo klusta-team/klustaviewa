@@ -27,7 +27,7 @@ from klustaviewa.stats.correlations import normalize
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.logger import FileLogger, register, unregister
 from klustaviewa.utils.persistence import encode_bytearray, decode_bytearray
-from klustaviewa.utils.userpref import USERPREF
+from klustaviewa import USERPREF
 from klustaviewa.utils.settings import SETTINGS
 from klustaviewa import APPNAME, ABOUT
 from klustaviewa.gui.threads import ThreadedTasks

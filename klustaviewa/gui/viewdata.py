@@ -13,7 +13,7 @@ from klustaviewa.dataio import select, get_array
 from klustaviewa.stats.correlations import normalize
 from klustaviewa.stats.correlograms import get_baselines, NCORRBINS_DEFAULT, CORRBIN_DEFAULT
 import klustaviewa.utils.logger as log
-from klustaviewa.utils.userpref import USERPREF
+from klustaviewa import USERPREF
 from klustaviewa.utils.settings import SETTINGS
 from klustaviewa.utils.colors import random_color
 from klustaviewa.gui.threads import ThreadedTasks

@@ -12,7 +12,7 @@ import pandas as pd
 from klustaviewa.dataio import KlustersLoader
 from klustaviewa.dataio.selection import select
 from klustaviewa.dataio.tools import check_dtype, check_shape
-from klustaviewa.utils.userpref import USERPREF
+from klustaviewa import USERPREF
 from klustaviewa.views import ProjectionView
 from klustaviewa.views.tests.utils import show_view, get_data, assert_fun
 
