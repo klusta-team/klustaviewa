@@ -199,7 +199,7 @@ def find_filenames(filename):
     filenames = {}
     for ext in ['xml', 'fet', 'spk', 'uspk', 'res', 'dat',]:
         filenames[ext] = find_filename(filename, ext) or ''
-    for ext in ['clu', 'aclu', 'acluinfo', 'groupinfo', 'kvwlg']:
+    for ext in ['clu', 'aclu', 'cluinfo', 'acluinfo', 'groupinfo', 'kvwlg']:
         filenames[ext] = find_filename_or_new(filename, ext)
     filenames['probe'] = (find_filename(filename, 'probe') or
                           find_any_filename(filename, 'probe'))
