@@ -25,7 +25,7 @@ from klustaviewa.dataio.tools import get_array
 from klustaviewa.dataio import KlustersLoader, HDF5Loader, HDF5RawDataLoader
 from klustaviewa.gui.buffer import Buffer
 from klustaviewa.gui.dock import ViewDockWidget, DockTitleBar
-from klustaviewa.stats.cache import StatsCache
+# from klustaviewa.stats.cache import StatsCache
 from klustaviewa.stats.correlations import normalize
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.logger import FileLogger, register, unregister
@@ -75,7 +75,7 @@ class KwikSkope(QtGui.QMainWindow):
         self.setWindowIcon(get_icon('logo'))
         
         # Initialize some variables.
-        self.statscache = None
+        # self.statscache = None
         # self.loader = KlustersLoader()
         self.loader = HDF5Loader()
         self.loader_raw = HDF5RawDataLoader()
@@ -506,7 +506,7 @@ class KwikSkope(QtGui.QMainWindow):
             window=self,
             select=self.get_view('ClusterView').select,
             loader=self.loader,
-            stats=self.statscache,
+            # stats=self.statscache,
             wizard=self.wizard,
             )
         view.set_data(**namespace)
@@ -671,11 +671,11 @@ class KwikSkope(QtGui.QMainWindow):
         self.controller = Controller(self.loader)
         # Create the cache for the cluster statistics that need to be
         # computed in the background.
-        self.statscache = StatsCache(self.loader.ncorrbins)
+        # self.statscache = StatsCache(self.loader.ncorrbins)
         # Update stats cache in IPython view.
         ipython = self.get_view('IPythonView')
-        if ipython:
-            ipython.set_data(stats=self.statscache)
+        # if ipython:
+            # ipython.set_data(stats=self.statscache)
         
         # Initialize the wizard.
         self.wizard = Wizard()
