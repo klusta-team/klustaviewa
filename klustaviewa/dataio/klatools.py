@@ -42,6 +42,8 @@ def load_kla_json(kla_json):
     kla_dict = json.loads(kla_json)
 
     shank_all = {}
+    
+    # load list of cluster and group colors for each shank
     for shank, kla in kla_dict.iteritems():
         cluster_colors = [int(o['color']) for o in kla['clusters']]
         group_colors = [int(o['color']) for o in kla['groups_of_clusters']]

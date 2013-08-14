@@ -5,7 +5,9 @@
 # -----------------------------------------------------------------------------
 import pprint
 import time
+from StringIO import StringIO
 import os
+import sys
 import inspect
 from collections import OrderedDict
 from functools import partial
@@ -31,15 +33,21 @@ from klustaviewa.stats.correlations import normalize
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.logger import FileLogger, register, unregister
 from klustaviewa.utils.persistence import encode_bytearray, decode_bytearray
-from klustaviewa import USERPREF
-from klustaviewa import SETTINGS
+from klustaviewa import USERPREF, FILENAME
+from klustaviewa.utils.settings import SETTINGS
 from klustaviewa import APPNAME, ABOUT, get_global_path
 from klustaviewa import get_global_path
 from klustaviewa.gui.threads import ThreadedTasks, OpenTask
 from klustaviewa.gui.taskgraph import TaskGraph
 import rcicons
 
-    
+
+# -----------------------------------------------------------------------------
+# Register custom classes for Qt signals
+# -----------------------------------------------------------------------------
+# id = QtCore.QMetaType.type('QTextCursor')
+
+
 # -----------------------------------------------------------------------------
 # Main Window
 # -----------------------------------------------------------------------------
@@ -60,6 +68,7 @@ class MainWindow(QtGui.QMainWindow):
         self.dolog = dolog
         if self.dolog:
             create_file_logger()
+        self.initialize_view_logger()
         
         log.debug("Using {0:s}.".format(QT_BINDING))
         
@@ -160,6 +169,14 @@ class MainWindow(QtGui.QMainWindow):
             self.set_normal_cursor()
             self.is_busy = False
     
+    def initialize_view_logger(self):
+        # Initialize the view logger.
+        viewlogger = vw.ViewLogger(name='viewlogger', fmt='%(message)s',
+            level=USERPREF['loglevel'], print_caller=False)
+        register(viewlogger)
+        viewlogger.outlog.writeRequested.connect(self.log_view_write_callback)
+        self.view_logger_text = StringIO()
+    
     
     # Actions.
     # --------
@@ -196,6 +213,7 @@ class MainWindow(QtGui.QMainWindow):
             
         self.add_action('save', '&Save', shortcut='Ctrl+S', icon='save')
         self.add_action('renumber', 'Save &renumbered')
+        self.add_action('close', '&Close file')
         
         # Quit action.
         self.add_action('quit', '&Quit', shortcut='Ctrl+Q')
@@ -207,6 +225,7 @@ class MainWindow(QtGui.QMainWindow):
             'Add &SimilarityMatrixView')
         self.add_action('add_correlograms_view', 'Add &CorrelogramsView')
         self.add_action('add_ipython_view', 'Add &IPythonView')
+        self.add_action('add_log_view', 'Add &LogView')
         self.add_action('add_rawdata_view', 'Add &RawDataView')
         self.add_action('reset_views', '&Reset views')
         self.add_action('toggle_fullscreen', 'Toggle fullscreen', shortcut='F')
@@ -278,6 +297,7 @@ class MainWindow(QtGui.QMainWindow):
         file_menu.addAction(self.save_action)
         file_menu.addAction(self.renumber_action)
         file_menu.addSeparator()
+        file_menu.addAction(self.close_action)
         file_menu.addAction(self.quit_action)
         
         # Views menu.
@@ -288,6 +308,7 @@ class MainWindow(QtGui.QMainWindow):
         views_menu.addAction(self.add_similarity_matrix_view_action)
         views_menu.addAction(self.add_rawdata_view_action)
         views_menu.addSeparator()
+        views_menu.addAction(self.add_log_view_action)
         if vw.IPYTHON:
             views_menu.addAction(self.add_ipython_view_action)
             views_menu.addSeparator()
@@ -576,6 +597,21 @@ class MainWindow(QtGui.QMainWindow):
                     view.run_file(os.path.join(path, file))
         self.views['IPythonView'].append(view)
         
+    def add_log_view(self, floating=None):
+        if len(self.views['LogView']) >= 1:
+            return
+        view = self.create_view(vw.LogView,
+            text=self.view_logger_text.getvalue(),
+            position=QtCore.Qt.BottomDockWidgetArea,
+            floating=True)
+        self.views['LogView'].append(view)
+        
+    def log_view_write_callback(self, message):
+        view = self.get_view('LogView')
+        if view:
+            view.append(message)
+        self.view_logger_text.write(message)
+    
     def add_correlograms_view(self, do_update=None, floating=False):
         view = self.create_view(vw.CorrelogramsView,
             index=len(self.views['CorrelogramsView']),
@@ -618,6 +654,7 @@ class MainWindow(QtGui.QMainWindow):
             CorrelogramsView=[],
             IPythonView=[],
             RawDataView=[],
+            LogView=[],
             )
         
         count = SETTINGS['main_window.views']
@@ -654,14 +691,14 @@ class MainWindow(QtGui.QMainWindow):
             )
     
     def create_custom_views(self, count):
-        [self.add_cluster_view() for _ in xrange(count['ClusterView'])]
-        [self.add_similarity_matrix_view() for _ in xrange(count['SimilarityMatrixView'])]
-        [self.add_waveform_view() for _ in xrange(count['WaveformView'])]
-        [self.add_feature_view() for _ in xrange(count['FeatureView'])]
-        [self.add_ipython_view() for _ in xrange(count['IPythonView'])]
-        [self.add_correlograms_view() for _ in xrange(count['CorrelogramsView'])]
-        if 'RawDataView' in count:
-            [self.add_rawdata_view() for _ in xrange(count['RawDataView'])]
+        [self.add_cluster_view() for _ in xrange(count.get('ClusterView', 0))]
+        [self.add_similarity_matrix_view() for _ in xrange(count.get('SimilarityMatrixView', 0))]
+        [self.add_waveform_view() for _ in xrange(count.get('WaveformView', 0))]
+        [self.add_feature_view() for _ in xrange(count.get('FeatureView', 0))]
+        [self.add_log_view() for _ in xrange(count.get('LogView', 0))]
+        [self.add_ipython_view() for _ in xrange(count.get('IPythonView', 0))]
+        [self.add_correlograms_view() for _ in xrange(count.get('CorrelogramsView', 0))]
+        [self.add_rawdata_view() for _ in xrange(count.get('RawDataView', 0))]
     
     def dock_widget_closed(self, dock):
         for key in self.views.keys():
@@ -714,6 +751,28 @@ class MainWindow(QtGui.QMainWindow):
         if path:
             self.open_task.open(self.loader, self.loader_raw, path)
             
+    def close_callback(self, checked=None):
+        self.is_file_open = False
+        clusters = self.get_view('ClusterView').selected_clusters()
+        if clusters:
+            self.get_view('ClusterView').unselect()
+            time.sleep(.25)
+        
+        # Update the task graph.
+        self.taskgraph.set(self)
+        self.taskgraph.update_cluster_view()
+        self.taskgraph.compute_similarity_matrix()
+        self.taskgraph.update_rawdata_view()
+        
+        # Clear the ClusterView.
+        self.get_view('ClusterView').clear()
+        
+        # Clear the SimilarityMatrixView.
+        smv = self.get_view('SimilarityMatrixView')
+        if smv:
+            smv.clear()
+        self.loader.close()
+        
     def quit_callback(self, checked=None):
         self.close()
     
@@ -809,6 +868,9 @@ class MainWindow(QtGui.QMainWindow):
     def add_rawdata_view_callback(self, checked=None):
             self.add_rawdata_view(do_update=True, floating=True)
     
+    def add_log_view_callback(self, checked=None):
+        self.add_log_view()
+        
     def add_ipython_view_callback(self, checked=None):
         self.add_ipython_view()
     
