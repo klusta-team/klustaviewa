@@ -14,7 +14,7 @@ from klustaviewa.stats.correlations import normalize
 from klustaviewa.stats.correlograms import get_baselines
 import klustaviewa.utils.logger as log
 from klustaviewa import USERPREF
-from klustaviewa.utils.settings import SETTINGS
+from klustaviewa import SETTINGS
 from klustaviewa.utils.colors import random_color
 from klustaviewa.gui.threads import ThreadedTasks
 import klustaviewa.gui.viewdata as vd

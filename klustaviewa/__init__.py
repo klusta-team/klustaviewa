@@ -38,16 +38,27 @@ def get_global_path(filename, folder=None, appname=None):
 # -----------------------------------------------------------------------------
 import klustaviewa.utils.logger as log
 import klustaviewa.utils.userpref as pref
+import klustaviewa.utils.settings as settings
 
 
 # -----------------------------------------------------------------------------
 # User preferences
 # -----------------------------------------------------------------------------
+USERAPP_FOLDER = get_app_folder()
 PREFERENCES_DEFAULT_PATH = pref.get_default_preferences_path()
-FILENAME = 'preferences.py'
-FOLDER = get_app_folder()
-FILEPATH = get_global_path(FILENAME)
-USERPREF = pref.UserPreferences(appname=APPNAME, folder=FOLDER, filepath=FILEPATH)
+PREFERENCES_FILENAME = 'preferences.py'
+PREFERENCES_FILEPATH = get_global_path(PREFERENCES_FILENAME)
+USERPREF = pref.UserPreferences(appname=APPNAME, folder=USERAPP_FOLDER, 
+    filepath=PREFERENCES_FILEPATH)
+
+
+# -----------------------------------------------------------------------------
+# Settings
+# -----------------------------------------------------------------------------
+PREFERENCES_FILENAME = 'settings'
+PREFERENCES_FILEPATH = get_global_path(PREFERENCES_FILENAME)
+SETTINGS = settings.Settings(appname=APPNAME, folder=USERAPP_FOLDER, 
+    filepath=PREFERENCES_FILEPATH)
 
 
 # -----------------------------------------------------------------------------

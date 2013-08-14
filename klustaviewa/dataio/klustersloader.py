@@ -21,7 +21,7 @@ from tools import (load_text, normalize,
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices)
 from klustaviewa import USERPREF
-# from klustaviewa.utils.settings import SETTINGS
+# from klustaviewa import SETTINGS
 from klustaviewa.utils.logger import (debug, info, warn, exception, FileLogger,
     register, unregister)
 from klustaviewa.utils.colors import COLORS_COUNT, generate_colors

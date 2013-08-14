@@ -104,8 +104,8 @@ class UserPreferences(object):
             # os.path.abspath(os.path.dirname(__file__)),
             # 'preferences_default.py')
 # FILENAME = 'preferences.py'
-# FOLDER = get_app_folder()
+# USERAPP_FOLDER = get_app_folder()
 # FILEPATH = get_global_path(FILENAME)
-# USERPREF = UserPreferences(appname=APPNAME, folder=FOLDER, filepath=FILEPATH)
+# USERPREF = UserPreferences(appname=APPNAME, folder=USERAPP_FOLDER, filepath=FILEPATH)
 
 

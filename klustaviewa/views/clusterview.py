@@ -16,7 +16,7 @@ from klustaviewa.dataio.selection import get_indices, select
 from klustaviewa.gui.icons import get_icon
 from klustaviewa.utils.colors import COLORMAP, random_color
 import klustaviewa.utils.logger as log
-from klustaviewa.utils.settings import SETTINGS
+from klustaviewa import SETTINGS
 from klustaviewa.utils.persistence import encode_bytearray, decode_bytearray
 
 

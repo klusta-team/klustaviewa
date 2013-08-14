@@ -17,7 +17,7 @@ from klustaviewa.dataio.selection import get_spikes_in_clusters, select, get_ind
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings, KlustaView
 from klustaviewa.utils.colors import COLORMAP_TEXTURE, SHIFTLEN
 import klustaviewa.utils.logger as log
-from klustaviewa.utils.settings import SETTINGS
+from klustaviewa import SETTINGS
 
 
 __all__ = ['WaveformView']
