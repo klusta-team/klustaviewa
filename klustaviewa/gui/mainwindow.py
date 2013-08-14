@@ -752,26 +752,26 @@ class MainWindow(QtGui.QMainWindow):
             self.open_task.open(self.loader, self.loader_raw, path)
             
     def close_callback(self, checked=None):
-        self.is_file_open = False
-        clusters = self.get_view('ClusterView').selected_clusters()
-        if clusters:
-            self.get_view('ClusterView').unselect()
-            time.sleep(.25)
+        # clusters = self.get_view('ClusterView').selected_clusters()
+        # if clusters:
+            # self.get_view('ClusterView').unselect()
+            # time.sleep(.25)
         
-        # Update the task graph.
-        self.taskgraph.set(self)
-        self.taskgraph.update_cluster_view()
-        self.taskgraph.compute_similarity_matrix()
-        self.taskgraph.update_rawdata_view()
+        # Clear the views.
+        self.clear_view('ClusterView')
+        self.clear_view('SimilarityMatrixView')
+        self.clear_view('FeatureView')
+        self.clear_view('WaveformView')
+        self.clear_view('CorrelogramsView')
         
-        # Clear the ClusterView.
-        self.get_view('ClusterView').clear()
-        
-        # Clear the SimilarityMatrixView.
-        smv = self.get_view('SimilarityMatrixView')
-        if smv:
-            smv.clear()
         self.loader.close()
+        self.is_file_open = False
+        
+    def clear_view(self, view_name):
+        for v in self.get_views(view_name):
+            v.set_data()
+            if hasattr(v, 'clear'):
+                v.clear()
         
     def quit_callback(self, checked=None):
         self.close()

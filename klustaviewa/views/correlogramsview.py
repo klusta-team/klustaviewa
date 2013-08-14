@@ -336,7 +336,7 @@ class CorrelogramsPaintManager(PlotPaintManager):
         
     def update(self):
         self.reinitialize_visual(
-            size=self.data_manager.position.shape[0],
+            # size=self.data_manager.position.shape[0],
             nclusters=self.data_manager.nclusters,
             ncorrelograms=self.data_manager.ncorrelograms,
             position=self.data_manager.position,
@@ -348,14 +348,14 @@ class CorrelogramsPaintManager(PlotPaintManager):
             visual='correlograms')
             
         self.reinitialize_visual(
-            size=2 * self.data_manager.baselines.size,
+            # size=2 * self.data_manager.baselines.size,
             baselines=self.data_manager.baselines,
             nclusters=self.data_manager.nclusters,
             clusters=self.data_manager.clusters0,
             visual='baselines')
             
         self.reinitialize_visual(
-            size=2 * self.data_manager.nticks,
+            # size=2 * self.data_manager.nticks,
             ncorrbins=self.data_manager.ncorrbins,
             corrbin=self.data_manager.corrbin,
             nclusters=self.data_manager.nclusters,
@@ -469,17 +469,23 @@ class CorrelogramsView(KlustaView):
             data_manager=CorrelogramsDataManager,)
     
     def set_data(self, *args, **kwargs):
-        # if kwargs.get('clusters_selected', None) is None:
-            # return
         kwargs['normalization'] = self.interaction_manager.normalization_list[
             self.interaction_manager.normalization_index]
         self.data_manager.set_data(*args, **kwargs)
         
         # update?
         if self.initialized:
+            self.paint_manager.set_data(visible=True, visual='correlograms')
+            self.paint_manager.set_data(visible=True, visual='baselines')
+            self.paint_manager.set_data(visible=True, visual='ticks')
             self.paint_manager.update()
             self.updateGL()
 
+    def clear(self):
+        self.paint_manager.set_data(visible=False, visual='correlograms')
+        self.paint_manager.set_data(visible=False, visual='baselines')
+        self.paint_manager.set_data(visible=False, visual='ticks')
+            
     def change_normalization(self, normalization=None):
         self.interaction_manager.change_normalization(normalization)
             
