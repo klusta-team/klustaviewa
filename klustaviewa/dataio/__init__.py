@@ -6,7 +6,6 @@ from loader import *
 from klustersloader import *
 from hdf5tools import *
 from hdf5loader import *
-from hdf5rawloader import *
 from klatools import *
 from kldtools import *
 
