@@ -11,7 +11,7 @@ The installation procedure can be found on the [main page](https://github.com/kl
 
 The software uses OpenGL 2.1 so that the visualization features benefit from the hardware acceleration of the graphics card. A reasonably powerful computer is preferable for clustering large datasets (>100,000 spikes): RAM >= 8 GB, and a graphics card that is less than 5 years old.
 
-Users familiar with Python can also install IPython 1.0.dev to have the possibility to open an IPython console within the software. This console gives interactive access to the data.
+Users familiar with Python can also install IPython 1.0 to have the possibility to open an IPython console within the software. This console gives interactive access to the data.
 
 ### Troubleshooting
 
@@ -182,12 +182,12 @@ A preferences file is stored in `~/.klustaviewa/preferences.py`. The `~` directo
 
 ### Settings file
 
-A settings file is stored in `~/.klustaviewa/settings.dat`. It contains your user settings (main window arrangement, last opened file, etc.) and is automatically updated every time you use the software. This file should not be modified. You might need to delete it if you encounter some bugs.
+A settings file is stored in `~/.klustaviewa/settings`. It contains your user settings (main window arrangement, last opened file, etc.) and is automatically updated every time you use the software. This file should not be modified. You might need to delete it if you encounter some bugs.
 
 
 ### IPython console
 
-If IPython 1.0.dev is installed (which requires, for now, [installing the development version from GitHub](https://github.com/ipython/ipython)), you can open an IPythonView which gives you access to the data. You can even have custom Python modules automatically loaded by putting them in a directory specified in the `ipython_import_paths` variable of the preferences file.
+If IPython 1.0+ is installed, you can open an IPythonView which gives you access to the data. You can even have custom Python modules automatically loaded by putting them in a directory specified in the `ipython_import_paths` variable of the preferences file.
 
 In the IPython console, the following variables are available:
 
@@ -196,7 +196,7 @@ In the IPython console, the following variables are available:
   * `stats`: a `StatsCache` instance that gives you access to the cluster statistics (correlograms and similarity matrix).
   * `wizard`: a `Wizard` instance that gives you access to the wizard.
   
-You can use tab completion to find the available methods. For instance, `loader.get_features(clusters=3)` returns a Pandas DataFrame object containing the features of all spikes in cluster 3.
+You can use tab completion to find the available methods. For instance, `loader.get_features(clusters=3)` returns a Pandas DataFrame object containing the features of all spikes in cluster 3. Type `%who` to see the list of available variables.
 
 You can perform custom computations interactively on the data and draw plots with Matplotlib.
 

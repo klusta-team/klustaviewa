@@ -95,21 +95,6 @@ Use this if you want to be able to update with `git pull` (you need git).
         pip install -r requirements.txt
         
 
-### IPython 1.0.dev
-
-If IPython 1.0.dev is installed, then you will have the possibility to open an IPython terminal in the context of the GUI. This lets you access all elements and data variables programatically. To install this version of IPython, do the following:
-
-  * Ensure that any version of IPython is uninstalled.
-  * Install pygments with `pip install pygments`
-  * Execute the following commands:
-  
-        git clone https://github.com/ipython/ipython.git
-        cd ipython
-        python setupegg.py develop
-  
-Then, in the software, you will be able to open an interactive IPython shell (with pylab mode activated) in the Views menu. Type `%who` to see the list of available variables.
-
-
 Contact
 -------
 
