@@ -14,6 +14,7 @@ This software was developed by Cyrille Rossant in the Cortical Processing Labora
 # Imports
 # -----------------------------------------------------------------------------
 import os
+import sys
 
 
 # -----------------------------------------------------------------------------
@@ -40,13 +41,25 @@ import klustaviewa.utils.userpref as pref
 
 
 # -----------------------------------------------------------------------------
-# USER PREFERENCES
+# User preferences
 # -----------------------------------------------------------------------------
 PREFERENCES_DEFAULT_PATH = pref.get_default_preferences_path()
 FILENAME = 'preferences.py'
 FOLDER = get_app_folder()
 FILEPATH = get_global_path(FILENAME)
 USERPREF = pref.UserPreferences(appname=APPNAME, folder=FOLDER, filepath=FILEPATH)
+
+
+# -----------------------------------------------------------------------------
+# Loggers
+# -----------------------------------------------------------------------------
+LOGGERS = {}
+log.LOGGERS = LOGGERS
+# Console logger.
+LOGGER = log.ConsoleLogger(name='{0:s}.console'.format(APPNAME))
+log.register(LOGGER)
+
+sys.excepthook = log.handle_exception
 
 # Set the logging level specified in the user preferences.
 loglevel = USERPREF['loglevel']

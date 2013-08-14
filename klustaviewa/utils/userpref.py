@@ -6,9 +6,8 @@
 import cPickle
 import os
 
-from klustaviewa import (get_global_path, get_app_folder, APPNAME)
-import klustaviewa.utils.logger as log
-from klustaviewa.utils.settings import ensure_folder_exists
+import logger as log
+from settings import ensure_folder_exists
 
 
 # -----------------------------------------------------------------------------

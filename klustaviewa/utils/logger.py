@@ -8,7 +8,7 @@ import sys
 import logging
 import traceback
 
-from klustaviewa import APPNAME
+# from klustaviewa import APPNAME
 
 
 # -----------------------------------------------------------------------------
@@ -61,8 +61,8 @@ class Logger(object):
             print_caller=True, handler=None):
         if stream is None:
             stream = sys.stdout
-        if name is None:
-            name = APPNAME
+        # if name is None:
+            # name = APPNAME
         self.name = name
         self.print_caller = print_caller
         if handler is None:
@@ -141,8 +141,6 @@ class FileLogger(Logger):
 # -----------------------------------------------------------------------------
 # Global variables
 # -----------------------------------------------------------------------------
-LOGGERS = {}
-
 def register(logger):
     name = logger.name
     if name not in LOGGERS:
@@ -154,10 +152,6 @@ def unregister(logger):
         LOGGERS[name].close()
         del LOGGERS[name]
         
-# Console logger.
-LOGGER = ConsoleLogger(name='{0:s}.console'.format(APPNAME))
-register(LOGGER)
-
 def debug(msg):
     for name, logger in LOGGERS.iteritems():
         logger.debug(msg)
@@ -183,5 +177,4 @@ def set_level(msg):
 def handle_exception(exc_type, exc_value, exc_traceback):
     msg = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     exception(msg)
-sys.excepthook = handle_exception
 
