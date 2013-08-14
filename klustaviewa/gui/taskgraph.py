@@ -14,6 +14,7 @@ from klustaviewa.stats.correlations import normalize
 from klustaviewa.stats.correlograms import get_baselines
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.userpref import USERPREF
+from klustaviewa.utils.settings import SETTINGS
 from klustaviewa.utils.colors import random_color
 from klustaviewa.gui.threads import ThreadedTasks
 import klustaviewa.gui.viewdata as vd
@@ -161,8 +162,10 @@ class TaskGraph(AbstractTaskGraph):
         # Make a copy of the array so that it does not change before the
         # computation of the correlograms begins.
         clusters = np.array(get_array(self.loader.get_clusters('all')))
-        corrbin = self.loader.corrbin
-        ncorrbins = self.loader.ncorrbins
+        # corrbin = self.loader.corrbin
+        # ncorrbins = self.loader.ncorrbins
+        corrbin = SETTINGS.get('correlograms.corrbin', .001)
+        ncorrbins = SETTINGS.get('correlograms.ncorrbins', 100)
         
         # Get cluster indices that need to be updated.
         clusters_to_update = (self.statscache.correlograms.
@@ -323,11 +326,11 @@ class TaskGraph(AbstractTaskGraph):
     def _change_correlograms_parameters(self, ncorrbins=None, corrbin=None):
         # Update the correlograms parameters.
         if ncorrbins is not None:
-            self.loader.ncorrbins = ncorrbins
+            SETTINGS['correlograms.ncorrbins'] = ncorrbins
         if corrbin is not None:
-            self.loader.corrbin = corrbin
+            SETTINGS['correlograms.corrbin'] = corrbin
         # Reset the cache.
-        self.statscache.reset(self.loader.ncorrbins)
+        self.statscache.reset(ncorrbins)
         # Update the correlograms.
         clusters = self.loader.get_clusters_selected()
         return ('_compute_correlograms', (clusters,))

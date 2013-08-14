@@ -28,6 +28,7 @@ from klustaviewa.dataio import KlustersLoader, HDF5Loader, HDF5RawDataLoader
 from klustaviewa.gui.buffer import Buffer
 from klustaviewa.gui.dock import ViewDockWidget, DockTitleBar
 from klustaviewa.stats.cache import StatsCache
+from klustaviewa.stats.correlograms import NCORRBINS_DEFAULT, CORRBIN_DEFAULT
 from klustaviewa.stats.correlations import normalize
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.logger import FileLogger, register, unregister
@@ -798,7 +799,7 @@ class MainWindow(QtGui.QMainWindow):
         self.controller = Controller(self.loader)
         # Create the cache for the cluster statistics that need to be
         # computed in the background.
-        self.statscache = StatsCache(self.loader.ncorrbins)
+        self.statscache = StatsCache(SETTINGS.get('correlograms.ncorrbins', NCORRBINS_DEFAULT))
         # Update stats cache in IPython view.
         ipython = self.get_view('IPythonView')
         if ipython:
@@ -900,8 +901,10 @@ class MainWindow(QtGui.QMainWindow):
     def change_ncorrbins_callback(self, checked=None):
         if not self.loader:
             return
-        corrbin = self.loader.corrbin
-        duration = self.loader.get_correlogram_window()
+        corrbin = SETTINGS.get('correlograms.corrbin', CORRBIN_DEFAULT)
+        ncorrbins = SETTINGS.get('correlograms.ncorrbins', NCORRBINS_DEFAULT)
+        duration = corrbin * ncorrbins
+        # duration = self.loader.get_correlogram_window()
         duration_new, ok = QtGui.QInputDialog.getDouble(self,
             "Correlograms time window", "Half width (ms):", 
             duration / 2 * 1000, 1, 100000, 1)
@@ -909,14 +912,18 @@ class MainWindow(QtGui.QMainWindow):
             duration_new = duration_new * .001 * 2
             ncorrbins_new = 2 * int(np.ceil(.5 * duration_new / corrbin))
             # ncorrbins_new = int(duration_new / corrbin * .001)
+            SETTINGS['correlograms.ncorrbins'] = ncorrbins_new
             self.taskgraph.change_correlograms_parameters(ncorrbins=ncorrbins_new)
     
     def change_corrbin_callback(self, checked=None):
         if not self.loader:
             return
-        ncorrbins = self.loader.ncorrbins
-        corrbin = self.loader.corrbin
-        duration = self.loader.get_correlogram_window()
+        # ncorrbins = self.loader.ncorrbins
+        # corrbin = self.loader.corrbin
+        # duration = self.loader.get_correlogram_window()
+        corrbin = SETTINGS.get('correlograms.corrbin', CORRBIN_DEFAULT)
+        ncorrbins = SETTINGS.get('correlograms.ncorrbins', NCORRBINS_DEFAULT)
+        duration = corrbin * ncorrbins
         corrbin_new, ok = QtGui.QInputDialog.getDouble(self,
             "Correlograms bin size", "Bin size (ms):", 
             corrbin * 1000, .01, 1000, 2)

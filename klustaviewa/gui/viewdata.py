@@ -11,9 +11,10 @@ from qtools import QtGui, QtCore
 
 from klustaviewa.dataio import select, get_array
 from klustaviewa.stats.correlations import normalize
-from klustaviewa.stats.correlograms import get_baselines
+from klustaviewa.stats.correlograms import get_baselines, NCORRBINS_DEFAULT, CORRBIN_DEFAULT
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.userpref import USERPREF
+from klustaviewa.utils.settings import SETTINGS
 from klustaviewa.utils.colors import random_color
 from klustaviewa.gui.threads import ThreadedTasks
 import tables
@@ -66,16 +67,17 @@ def get_correlogramsview_data(loader, statscache):
     # Compute the baselines.
     sizes = get_array(select(loader.get_cluster_sizes(), clusters_selected))
     colors = select(loader.get_cluster_colors(), clusters_selected)
-    duration = loader.get_duration()
-    corrbin = loader.corrbin
+    corrbin = SETTINGS.get('correlograms.corrbin', CORRBIN_DEFAULT)
+    ncorrbins = SETTINGS.get('correlograms.ncorrbins', NCORRBINS_DEFAULT)
+    duration = corrbin * ncorrbins
     baselines = get_baselines(sizes, duration, corrbin)
     data = dict(
         correlograms=correlograms,
         baselines=baselines,
         clusters_selected=clusters_selected,
         cluster_colors=colors,
-        ncorrbins=loader.ncorrbins,
-        corrbin=loader.corrbin,
+        ncorrbins=ncorrbins,
+        corrbin=corrbin,
     )
     return data
     

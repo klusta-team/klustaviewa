@@ -31,7 +31,13 @@ except Exception as e:
         # Pure Python version.
         # --------------------
         def compute_correlograms(spiketimes, clusters, clusters_to_update=None,
-            ncorrbins=100, corrbin=.001):
+            ncorrbins=None, corrbin=None):
+            
+            if ncorrbins is None:
+                ncorrbins = NCORRBINS_DEFAULT
+            if corrbin is None:
+                corrbin = CORRBIN_DEFAULT
+            
             # Ensure ncorrbins is an even number.
             assert ncorrbins % 2 == 0
             
@@ -103,7 +109,14 @@ except Exception as e:
             correlograms.update({(cl1, cl0): correlograms[cl0, cl1][::-1]
                 for cl0 in clusters_to_update for cl1 in clusters_unique})
             return correlograms
-            
+
+
+# -----------------------------------------------------------------------------
+# Global variables
+# -----------------------------------------------------------------------------
+NCORRBINS_DEFAULT = 100
+CORRBIN_DEFAULT = .001
+
 
 # -----------------------------------------------------------------------------
 # Computing one correlogram
