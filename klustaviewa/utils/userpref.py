@@ -6,7 +6,7 @@
 import cPickle
 import os
 
-from klustaviewa.utils.globalpaths import (get_global_path, get_app_folder, APPNAME)
+from klustaviewa import (get_global_path, get_app_folder, APPNAME)
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.settings import ensure_folder_exists
 
@@ -14,7 +14,8 @@ from klustaviewa.utils.settings import ensure_folder_exists
 # -----------------------------------------------------------------------------
 # Utility functions
 # -----------------------------------------------------------------------------
-PREFERENCES_DEFAULT_PATH = os.path.join(
+def get_default_preferences_path():
+    return os.path.join(
             os.path.abspath(os.path.dirname(__file__)),
             'preferences_default.py')
 
@@ -69,6 +70,7 @@ class UserPreferences(object):
         """Load or create the preferences file, unless it has already been
         loaded."""
         if self.preferences is None:
+            PREFERENCES_DEFAULT_PATH = get_default_preferences_path()
             # Create the folder if it does not exist.
             ensure_folder_exists(self.folder)
             # Load default preferences.
@@ -98,9 +100,12 @@ class UserPreferences(object):
 # -----------------------------------------------------------------------------
 # Global variables
 # -----------------------------------------------------------------------------
-FILENAME = 'preferences.py'
-FOLDER = get_app_folder()
-FILEPATH = get_global_path(FILENAME)
-USERPREF = UserPreferences(appname=APPNAME, folder=FOLDER, filepath=FILEPATH)
+# PREFERENCES_DEFAULT_PATH = os.path.join(
+            # os.path.abspath(os.path.dirname(__file__)),
+            # 'preferences_default.py')
+# FILENAME = 'preferences.py'
+# FOLDER = get_app_folder()
+# FILEPATH = get_global_path(FILENAME)
+# USERPREF = UserPreferences(appname=APPNAME, folder=FOLDER, filepath=FILEPATH)
 
 

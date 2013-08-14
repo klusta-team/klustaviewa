@@ -9,7 +9,7 @@ import sys
 import klustaviewa
 import klustaviewa.utils.globalpaths as paths
 
-APPNAME_ORIGINAL = paths.APPNAME
+APPNAME_ORIGINAL = klustaviewa.APPNAME
 
 
 # -----------------------------------------------------------------------------
@@ -17,7 +17,7 @@ APPNAME_ORIGINAL = paths.APPNAME
 # -----------------------------------------------------------------------------
 def setup():
     # HACK: monkey patch
-    paths.APPNAME = APPNAME_ORIGINAL + '_test'
+    klustaviewa.APPNAME = APPNAME_ORIGINAL + '_test'
     reload(klustaviewa.utils.userpref)
     import klustaviewa.utils.userpref as pref
     
@@ -32,7 +32,7 @@ def teardown():
     paths.delete_folder(pref.FOLDER)
     
     # HACK: cancel monkey patch
-    paths.APPNAME = APPNAME_ORIGINAL
+    klustaviewa.APPNAME = APPNAME_ORIGINAL
     
     reload(klustaviewa.utils.userpref)
 

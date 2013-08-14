@@ -35,7 +35,8 @@ from klustaviewa.utils.logger import FileLogger, register, unregister
 from klustaviewa.utils.persistence import encode_bytearray, decode_bytearray
 from klustaviewa.utils.userpref import USERPREF, FILENAME
 from klustaviewa.utils.settings import SETTINGS
-from klustaviewa.utils.globalpaths import APPNAME, ABOUT, get_global_path
+from klustaviewa import APPNAME, ABOUT, get_global_path
+from klustaviewa import get_global_path
 from klustaviewa.gui.threads import ThreadedTasks, OpenTask
 from klustaviewa.gui.taskgraph import TaskGraph
 import rcicons

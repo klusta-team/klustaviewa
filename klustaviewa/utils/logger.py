@@ -8,7 +8,7 @@ import sys
 import logging
 import traceback
 
-from klustaviewa.utils.globalpaths import APPNAME
+from klustaviewa import APPNAME
 
 
 # -----------------------------------------------------------------------------
