@@ -18,8 +18,8 @@ from tools import (load_text, normalize,
     first_row, load_binary_memmap)
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices)
-from klustaviewa.utils.userpref import USERPREF
-from klustaviewa.utils.settings import SETTINGS
+from klustaviewa import USERPREF
+# from klustaviewa import SETTINGS
 from klustaviewa.utils.logger import (debug, info, warn, exception, FileLogger,
     register, unregister)
 from klustaviewa.utils.colors import COLORS_COUNT, generate_colors
@@ -120,8 +120,8 @@ class Loader(QtCore.QObject):
         self.clusters_selected = None
         self.override_color = False
         
-        self.ncorrbins = 100
-        self.corrbin = .001
+        # self.ncorrbins = 100
+        # self.corrbin = .001
         
         if filename:
             self.open(filename)
@@ -317,8 +317,8 @@ class Loader(QtCore.QObject):
         else:
             return 0
     
-    def get_correlogram_window(self):
-        return self.ncorrbins * self.corrbin
+    # def get_correlogram_window(self):
+        # return self.ncorrbins * self.corrbin
     
     def set_override_color(self, override_color):
         self.override_color = override_color

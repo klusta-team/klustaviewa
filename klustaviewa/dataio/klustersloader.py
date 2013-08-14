@@ -20,8 +20,8 @@ from tools import (load_text, normalize,
     first_row, load_binary_memmap)
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices)
-from klustaviewa.utils.userpref import USERPREF
-from klustaviewa.utils.settings import SETTINGS
+from klustaviewa import USERPREF
+# from klustaviewa import SETTINGS
 from klustaviewa.utils.logger import (debug, info, warn, exception, FileLogger,
     register, unregister)
 from klustaviewa.utils.colors import COLORS_COUNT, generate_colors
@@ -199,7 +199,7 @@ def find_filenames(filename):
     filenames = {}
     for ext in ['xml', 'fet', 'spk', 'uspk', 'res', 'dat',]:
         filenames[ext] = find_filename(filename, ext) or ''
-    for ext in ['clu', 'aclu', 'acluinfo', 'groupinfo', 'kvwlg']:
+    for ext in ['clu', 'aclu', 'cluinfo', 'acluinfo', 'groupinfo', 'kvwlg']:
         filenames[ext] = find_filename_or_new(filename, ext)
     filenames['probe'] = (find_filename(filename, 'probe') or
                           find_any_filename(filename, 'probe'))
@@ -631,9 +631,9 @@ class KlustersLoader(Loader):
         except IOError:
             warn("The FIL file is missing.")
     
-    def read_stats(self):
-        self.ncorrbins = SETTINGS.get('correlograms.ncorrbins', 100)
-        self.corrbin = SETTINGS.get('correlograms.corrbin', .001)
+    # def read_stats(self):
+        # self.ncorrbins = 100 #SETTINGS.get('correlograms.ncorrbins', 100)
+        # self.corrbin = .001  #SETTINGS.get('correlograms.corrbin', .001)
 
         
     # Log file.
@@ -672,7 +672,7 @@ class KlustersLoader(Loader):
         self.report_progress(4, 5)
         self.read_waveforms()
         self.report_progress(5, 5)
-        self.read_stats()
+        # self.read_stats()
     
     def save(self, renumber=False):
         self.update_cluster_info()
@@ -774,9 +774,9 @@ class MemoryLoader(Loader):
         # Convert to Pandas.
         self.waveforms = pd.Panel(self.waveforms, dtype=np.float32)
     
-    def read_stats(self):
-        self.ncorrbins = SETTINGS.get('correlograms.ncorrbins', 100)
-        self.corrbin = SETTINGS.get('correlograms.corrbin', .001)
+    # def read_stats(self):
+        # self.ncorrbins = 100 #SETTINGS.get('correlograms.ncorrbins', 100)
+        # self.corrbin = .001 #SETTINGS.get('correlograms.corrbin', .001)
     
     
     # Public methods.
@@ -794,7 +794,7 @@ class MemoryLoader(Loader):
         self.read_group_info(group_info)
         self.read_masks(masks)
         self.read_waveforms(waveforms)
-        self.read_stats()
+        # self.read_stats()
     
     
     

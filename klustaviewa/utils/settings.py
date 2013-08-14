@@ -6,8 +6,9 @@
 import cPickle
 import os
 
-from klustaviewa.utils.globalpaths import (get_global_path, get_app_folder, 
-    APPNAME, ensure_folder_exists)
+from klustaviewa import get_global_path, get_app_folder
+from klustaviewa.utils.globalpaths import ensure_folder_exists
+from klustaviewa import APPNAME
 
 
 # -----------------------------------------------------------------------------
@@ -85,11 +86,3 @@ class Settings(object):
         return self.get(key)
         
         
-# -----------------------------------------------------------------------------
-# Global variables
-# -----------------------------------------------------------------------------
-FILENAME = 'settings'
-FOLDER = get_app_folder()
-FILEPATH = get_global_path(FILENAME)
-SETTINGS = Settings(appname=APPNAME, folder=FOLDER, filepath=FILEPATH)
-

@@ -79,6 +79,9 @@ def open_klusters_oneshank(filename):
     # Read .acluinfo data.
     if 'acluinfo' in filenames and os.path.exists(filenames['acluinfo']):
         data['acluinfo'] = read_cluster_info(filenames['acluinfo'])
+    # If the ACLUINFO does not exist, try CLUINFO (older file extension)
+    elif 'cluinfo' in filenames and os.path.exists(filenames['cluinfo']):
+        data['acluinfo'] = read_cluster_info(filenames['cluinfo'])
     else:
         data['acluinfo'] = default_cluster_info(np.unique(data['aclu']))
         

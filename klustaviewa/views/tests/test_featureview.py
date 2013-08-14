@@ -14,7 +14,7 @@ from klustaviewa.views.tests.mock_data import (setup, teardown,
 from klustaviewa.dataio import KlustersLoader
 from klustaviewa.dataio.selection import select
 from klustaviewa.dataio.tools import check_dtype, check_shape
-from klustaviewa.utils.userpref import USERPREF
+from klustaviewa import USERPREF
 from klustaviewa.views import FeatureView
 from klustaviewa.views.tests.utils import show_view, get_data
 

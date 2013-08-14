@@ -24,7 +24,7 @@ from klustaviewa.dataio import (KlustersLoader, read_clusters, save_clusters,
     read_cluster_info, save_cluster_info, read_group_info, save_group_info,
     renumber_clusters, reorder, convert_to_clu, select, get_indices,
     check_dtype, check_shape, get_array, load_text)
-from klustaviewa.utils.userpref import USERPREF
+from klustaviewa import USERPREF
 
 
 # -----------------------------------------------------------------------------

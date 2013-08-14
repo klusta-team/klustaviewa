@@ -10,7 +10,8 @@ import time
 from galry import QtGui, QtCore, show_window
 
 import mock_data as md
-from klustaviewa.utils.userpref import USERPREF
+from klustaviewa.stats.correlograms import NCORRBINS_DEFAULT, CORRBIN_DEFAULT
+from klustaviewa import USERPREF
 import klustaviewa.views as v
 import klustaviewa.gui.viewdata as vd
 
@@ -55,8 +56,8 @@ def get_data():
         nsamples=l.nsamples,
         fetdim=l.fetdim,
         nextrafet=l.nextrafet,
-        ncorrbins=l.ncorrbins,
-        duration=l.get_duration(),
+        ncorrbins=NCORRBINS_DEFAULT,  #l.ncorrbins,
+        duration=NCORRBINS_DEFAULT * CORRBIN_DEFAULT,  #l.get_duration(),
     )
     
     return data

@@ -17,7 +17,7 @@ from klustaviewa.dataio import (HDF5Loader, HDF5Writer, select, get_indices,
     check_dtype, check_shape, get_array, load_text, KlustersLoader,
     klusters_to_hdf5
     )
-from klustaviewa.utils.userpref import USERPREF
+from klustaviewa import USERPREF
 
 
 def normalize_inplace(x):

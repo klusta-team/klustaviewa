@@ -12,7 +12,7 @@ import numpy.random as rnd
 import pandas as pd
 
 from klustaviewa.views.logview import LogView
-from klustaviewa.utils.userpref import USERPREF
+from klustaviewa import USERPREF
 from klustaviewa.views.tests.utils import show_view, assert_fun
 
 
