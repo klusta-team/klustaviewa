@@ -18,7 +18,7 @@ from tools import (load_text, normalize,
     first_row, load_binary_memmap)
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices)
-from klustaviewa import USERPREF
+# from klustaviewa import USERPREF
 # from klustaviewa import SETTINGS
 from klustaviewa.utils.logger import (debug, info, warn, exception, FileLogger,
     register, unregister)
@@ -107,7 +107,7 @@ class Loader(QtCore.QObject):
     
     # Initialization methods
     # ----------------------
-    def __init__(self, parent=None, filename=None):
+    def __init__(self, parent=None, filename=None, userpref=None):
         """Initialize a Loader object for loading Klusters-formatted files.
         
         Arguments:
@@ -120,8 +120,14 @@ class Loader(QtCore.QObject):
         self.clusters_selected = None
         self.override_color = False
         
-        # self.ncorrbins = 100
-        # self.corrbin = .001
+        if not userpref:
+            # HACK: if no UserPref is given in argument to the loader,
+            # use a mock dictionary returning None all the time.
+            class MockDict(object):
+                def __getitem__(self, name):
+                    return None
+            userpref = MockDict()
+        self.userpref = userpref
         
         if filename:
             self.open(filename)
@@ -180,14 +186,14 @@ class Loader(QtCore.QObject):
             clusters = self.clusters_selected
         if clusters is not None:
             spikes_background = get_some_spikes(self.clusters,
-                nspikes_max=USERPREF['features_nspikes_background_max'],)
+                nspikes_max=self.userpref['features_nspikes_background_max'],)
             spikes_clusters = get_some_spikes_in_clusters(
                 clusters,
                 self.clusters,
                 counter=self.counter,
-                nspikes_max_expected=USERPREF[
+                nspikes_max_expected=self.userpref[
                     'features_nspikes_selection_max'],
-                nspikes_per_cluster_min=USERPREF[
+                nspikes_per_cluster_min=self.userpref[
                     'features_nspikes_per_cluster_min'])
             spikes = np.union1d(spikes_background, spikes_clusters)
         else:
@@ -229,8 +235,8 @@ class Loader(QtCore.QObject):
             if clusters is not None:
                 spikes = get_some_spikes_in_clusters(clusters, self.clusters,
                     counter=self.counter,
-                    nspikes_max_expected=USERPREF['waveforms_nspikes_max_expected'],
-                    nspikes_per_cluster_min=USERPREF['waveforms_nspikes_per_cluster_min'])
+                    nspikes_max_expected=self.userpref['waveforms_nspikes_max_expected'],
+                    nspikes_per_cluster_min=self.userpref['waveforms_nspikes_per_cluster_min'])
             else:
                 spikes = self.spikes_selected
         return select(self.waveforms, spikes)

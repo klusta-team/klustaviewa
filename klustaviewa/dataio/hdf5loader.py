@@ -26,7 +26,7 @@ from params import load_params_json
 from klatools import load_kla_json, kla_to_json, write_kla
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices, pandaize)
-from klustaviewa import USERPREF
+# from klustaviewa import USERPREF
 from klustaviewa.utils.logger import (debug, info, warn, exception, FileLogger,
     register, unregister)
 from klustaviewa.utils.colors import COLORS_COUNT, generate_colors
@@ -79,8 +79,8 @@ class HDF5Loader(Loader):
         # Load the similarity measure chosen by the user in the preferences
         # file: 'gaussian' or 'kl'.
         # Refresh the preferences file when a new file is opened.
-        USERPREF.refresh()
-        self.similarity_measure = USERPREF['similarity_measure'] or 'gaussian'
+        # USERPREF.refresh()
+        self.similarity_measure = self.userpref['similarity_measure'] or 'gaussian'
         debug("Similarity measure: {0:s}.".format(self.similarity_measure))
         info("Opening {0:s}.".format(self.filename))
             
@@ -319,8 +319,8 @@ class HDF5Loader(Loader):
             # Select waveforms too.
             self.spikes_waveforms = get_some_spikes_in_clusters(clusters, self.clusters,
                     counter=self.counter,
-                    nspikes_max_expected=USERPREF['waveforms_nspikes_max_expected'],
-                    nspikes_per_cluster_min=USERPREF['waveforms_nspikes_per_cluster_min'])
+                    nspikes_max_expected=self.userpref['waveforms_nspikes_max_expected'],
+                    nspikes_per_cluster_min=self.userpref['waveforms_nspikes_per_cluster_min'])
             self.waveforms_selected = self.waveforms[0][self.spikes_waveforms]['waveform_filtered']
         else:
             self.spikes_selected_table = None
@@ -390,8 +390,8 @@ class HDF5Loader(Loader):
             if clusters is not None:
                 spikes = get_some_spikes_in_clusters(clusters, self.clusters,
                     counter=self.counter,
-                    nspikes_max_expected=USERPREF['waveforms_nspikes_max_expected'],
-                    nspikes_per_cluster_min=USERPREF['waveforms_nspikes_per_cluster_min'])
+                    nspikes_max_expected=self.userpref['waveforms_nspikes_max_expected'],
+                    nspikes_per_cluster_min=self.userpref['waveforms_nspikes_per_cluster_min'])
             else:
                 spikes = self.spikes_selected
         return select(self.waveforms, spikes)
@@ -401,7 +401,7 @@ class HDF5Loader(Loader):
     # ---------
     def initialize_logfile(self):
         self.logfile = FileLogger(self.filename_log, name='datafile', 
-            level=USERPREF['loglevel_file'])
+            level=self.userpref['loglevel_file'])
         # Register log file.
         register(self.logfile)
         
