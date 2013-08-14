@@ -20,7 +20,7 @@ from tools import (load_text, normalize,
     first_row, load_binary_memmap)
 from selection import (select, select_pairs, get_spikes_in_clusters,
     get_some_spikes_in_clusters, get_some_spikes, get_indices)
-from klustaviewa import USERPREF
+# from klustaviewa import USERPREF
 # from klustaviewa import SETTINGS
 from klustaviewa.utils.logger import (debug, info, warn, exception, FileLogger,
     register, unregister)
@@ -641,7 +641,7 @@ class KlustersLoader(Loader):
     def initialize_logfile(self):
         # filename = self.filename_fet.replace('.fet.', '.kvwlg.')
         self.logfile = FileLogger(self.filename_kvwlg, name='datafile', 
-            level=USERPREF['loglevel_file'])
+            level=self.userpref['loglevel_file'])
         # Register log file.
         register(self.logfile)
         
@@ -653,8 +653,8 @@ class KlustersLoader(Loader):
         # Load the similarity measure chosen by the user in the preferences
         # file: 'gaussian' or 'kl'.
         # Refresh the preferences file when a new file is opened.
-        USERPREF.refresh()
-        self.similarity_measure = USERPREF['similarity_measure'] or 'gaussian'
+        # USERPREF.refresh()
+        self.similarity_measure = self.userpref['similarity_measure'] or 'gaussian'
         debug("Similarity measure: {0:s}.".format(self.similarity_measure))
         info("Opening {0:s}.".format(self.filename))
         self.report_progress(0, 5)
