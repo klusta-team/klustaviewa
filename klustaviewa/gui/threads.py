@@ -27,14 +27,14 @@ class OpenTask(QtCore.QObject):
     dataSaved = QtCore.pyqtSignal()
     dataOpenFailed = QtCore.pyqtSignal(str)
         
-    def open(self, loader, loader_raw, path):
+    def open(self, loader, path):
 
         try:
             loader.close()
-            loader.open(path)
-            
-            # now load raw data, if it exists
-            loader_raw.open(path)
+            loader.set_filenames(path)
+            loader.open_kla()
+            loader.open_klx()
+            loader.open_kld()
             
             self.dataOpened.emit()
         except Exception as e:
