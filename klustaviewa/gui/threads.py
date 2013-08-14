@@ -31,7 +31,10 @@ class OpenTask(QtCore.QObject):
 
         try:
             loader.close()
-            loader.open(path)
+            loader.set_filenames(path)
+            loader.open_kla()
+            loader.open_klx()
+            # loader.open_kld(path)
             
             # now load raw data, if it exists
             loader_raw.open(path)

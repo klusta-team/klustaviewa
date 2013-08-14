@@ -38,26 +38,42 @@ from klustaviewa.utils.colors import COLORS_COUNT, generate_colors
 class HDF5Loader(Loader):
     # Read functions.
     # ---------------
-    def open(self, filename):
-        """Open a file."""
+    def set_filenames(self, filename):
         filenames = find_filenames(filename)
-        filename_klx = filenames['hdf5_klx']
-        self.filename_kla = filenames['hdf5_kla']
+        self.filename_klx = filenames['hdf5_klx']
         self.filename_log = filenames['kvwlg']
         self.filename_clu = filenames['clu']
-        # Conversion if the klx HDF5 file does not exist.
-        if not os.path.exists(filename_klx):
-            klusters_to_hdf5(filename, self.klusters_to_hdf5_progress_report)
-        self.filename = filename_klx
-        self.read()
+        self.filename_kla = filenames['hdf5_kla']
+        self.filename_raw_kld = filenames['hdf5_raw']
+        self.filename = self.filename_klx
+    
+    # def open_klx(self, filename):
+    #     """Open a file."""
+    #     self.set_filenames(filename)
+    #     # Conversion if the klx HDF5 file does not exist.
+    #     self.read_klx()
+    #     
+    # def open_kla(self, filename):
+    #     """Open a file."""
+    #     filenames = find_filenames(filename)
+    #     self.read_kla()
+    #         
+    # def open_kld(self, filename):
+    #     """Open a file."""
+    #     filenames = find_filenames(filename)
+    # 
+    #     self.read_kld()
        
     def klusters_to_hdf5_progress_report(self, spike, nspikes, shank, nshanks):
         count = 100 * nshanks
         index = int((shank + spike * 1. / nspikes) * 100)
         self.report_progress(index, count)
        
-    def read(self):
+    def open_klx(self):
         """Open a HDF5 klx file."""
+        
+        if not os.path.exists(self.filename_klx):
+            klusters_to_hdf5(filename, self.klusters_to_hdf5_progress_report)
         
         self.initialize_logfile()
         # Load the similarity measure chosen by the user in the preferences
@@ -67,13 +83,6 @@ class HDF5Loader(Loader):
         self.similarity_measure = USERPREF['similarity_measure'] or 'gaussian'
         debug("Similarity measure: {0:s}.".format(self.similarity_measure))
         info("Opening {0:s}.".format(self.filename))
-        
-        # Read KLA file.
-        try:
-            with open(self.filename_kla) as f:
-                self.kla_json = f.read()
-        except IOError:
-            self.kla_json = None
             
         self.klx = tb.openFile(self.filename, mode='r+')
         # Get the list of shanks.
@@ -89,6 +98,19 @@ class HDF5Loader(Loader):
         # By default, read the first available shank.
         self.set_shank(self.shanks[0])
         
+    def open_kla(self):
+        # Read KLA file.
+        try:
+            with open(self.filename_kla) as f:
+                self.kla_json = f.read()
+        except IOError:
+            self.kla_json = None
+    
+    def open_kld(self):
+        try:
+            self.kld_raw = tb.openFile(self.filename_raw)
+        except:
+            self.kld_raw = None
     
     # Shank functions.
     # ----------------
