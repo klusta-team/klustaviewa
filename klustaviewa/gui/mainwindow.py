@@ -658,7 +658,7 @@ class MainWindow(QtGui.QMainWindow):
         [self.add_feature_view() for _ in xrange(count['FeatureView'])]
         [self.add_ipython_view() for _ in xrange(count['IPythonView'])]
         [self.add_correlograms_view() for _ in xrange(count['CorrelogramsView'])]
-        if RawDataView in count:
+        if 'RawDataView' in count:
             [self.add_rawdata_view() for _ in xrange(count['RawDataView'])]
     
     def dock_widget_closed(self, dock):
