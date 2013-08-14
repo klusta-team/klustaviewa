@@ -51,6 +51,17 @@ def get_clusterview_data(loader, statscache, clusters=None):
     )
     return data
     
+def get_channelview_data(loader, channels=None):
+    data = dict(
+        cluster_colors=loader.get_cluster_colors('all',
+            can_override=False),
+        cluster_groups=loader.get_cluster_groups('all'),
+        group_colors=loader.get_group_colors('all'),
+        group_names=loader.get_group_names('all'),
+        cluster_sizes=loader.get_cluster_sizes('all'),
+    )
+    return data
+    
 def get_correlogramsview_data(loader, statscache):
     clusters_selected0 = loader.get_clusters_selected()
     

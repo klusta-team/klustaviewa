@@ -25,7 +25,6 @@ from klustaviewa.dataio.tools import get_array
 from klustaviewa.dataio import KlustersLoader, HDF5Loader, HDF5RawDataLoader
 from klustaviewa.gui.buffer import Buffer
 from klustaviewa.gui.dock import ViewDockWidget, DockTitleBar
-# from klustaviewa.stats.cache import StatsCache
 from klustaviewa.stats.correlations import normalize
 import klustaviewa.utils.logger as log
 from klustaviewa.utils.logger import FileLogger, register, unregister
@@ -34,7 +33,7 @@ from klustaviewa.utils.userpref import USERPREF, FILENAME
 from klustaviewa.utils.settings import SETTINGS
 from klustaviewa.utils.globalpaths import APPNAME, ABOUT, get_global_path
 from klustaviewa.gui.threads import ThreadedTasks, OpenTask
-from klustaviewa.gui.taskgraph import TaskGraph
+import klustaviewa.gui.viewdata as vd
 import rcicons
 
     
@@ -82,13 +81,13 @@ class KwikSkope(QtGui.QMainWindow):
         self.loader.progressReported.connect(self.open_progress_reported)
         self.loader.saveProgressReported.connect(self.save_progress_reported)
         self.wizard = Wizard()
+        
         self.controller = None
         self.spikes_highlighted = []
         self.spikes_selected = []
         self._wizard = False
         self.is_file_open = False
         self.need_save = False
-        self.taskgraph = TaskGraph(self)
         self.busy_cursor = QtGui.QCursor(QtCore.Qt.BusyCursor)
         self.normal_cursor = QtGui.QCursor(QtCore.Qt.ArrowCursor)
         self.is_busy = False
@@ -205,7 +204,7 @@ class KwikSkope(QtGui.QMainWindow):
         self.add_action('reset_views', '&Reset views')
         self.add_action('toggle_fullscreen', 'Toggle fullscreen', shortcut='F')
         
-        self.add_action('override_color', 'Override cluster &color',
+        self.add_action('override_color', 'Override channel &color',
             icon='override_color')#, shortcut='C')
     
     def create_control_actions(self):
@@ -296,8 +295,8 @@ class KwikSkope(QtGui.QMainWindow):
         actions_menu.addAction(self.undo_action)
         actions_menu.addAction(self.redo_action)
         actions_menu.addSeparator()
-        actions_menu.addAction(self.get_view('ClusterView').move_to_mua_action)
-        actions_menu.addAction(self.get_view('ClusterView').move_to_noise_action)
+        actions_menu.addAction(self.get_view('ChannelView').move_to_mua_action)
+        actions_menu.addAction(self.get_view('ChannelView').move_to_noise_action)
         actions_menu.addSeparator()
         actions_menu.addAction(self.merge_action)
         actions_menu.addAction(self.split_action)
@@ -347,8 +346,8 @@ class KwikSkope(QtGui.QMainWindow):
         self.toolbar.addAction(self.merge_action)
         self.toolbar.addAction(self.split_action)
         self.toolbar.addSeparator()
-        self.toolbar.addAction(self.get_view('ClusterView').move_to_mua_action)
-        self.toolbar.addAction(self.get_view('ClusterView').move_to_noise_action)
+        self.toolbar.addAction(self.get_view('ChannelView').move_to_mua_action)
+        self.toolbar.addAction(self.get_view('ChannelView').move_to_noise_action)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.undo_action)
         self.toolbar.addAction(self.redo_action)
@@ -395,13 +394,13 @@ class KwikSkope(QtGui.QMainWindow):
         return self.controller.can_redo()
     
     def can_merge(self):
-        cluster_view = self.get_view('ClusterView')
-        clusters = cluster_view.selected_clusters()
-        return len(clusters) >= 2
+        channel_view = self.get_view('ChannelView')
+        channels = channel_view.selected_channels()
+        return len(channels) >= 2
         
     def can_split(self):
-        cluster_view = self.get_view('ClusterView')
-        clusters = cluster_view.selected_clusters()
+        channel_view = self.get_view('ChannelView')
+        channels = channel_view.selected_channels()
         spikes_selected = self.spikes_selected
         return len(spikes_selected) >= 1
     
@@ -454,27 +453,27 @@ class KwikSkope(QtGui.QMainWindow):
         # Return the view widget.
         return view
     
-    def add_cluster_view(self, do_update=None, floating=False):
-        view = self.create_view(vw.ClusterView,
+    def add_channel_view(self, do_update=None, floating=False):
+        view = self.create_view(vw.ChannelView,
             position=QtCore.Qt.LeftDockWidgetArea,
-            index=len(self.views['ClusterView']),
+            index=len(self.views['ChannelView']),
             closable=False, 
             # floatable=False
             )
             
         # Connect callback functions.
-        view.clustersSelected.connect(self.clusters_selected_callback)
-        view.clusterColorChanged.connect(self.cluster_color_changed_callback)
-        view.groupColorChanged.connect(self.group_color_changed_callback)
-        view.groupRenamed.connect(self.group_renamed_callback)
-        view.clustersMoved.connect(self.clusters_moved_callback)
-        view.groupAdded.connect(self.group_added_callback)
-        view.groupRemoved.connect(self.group_removed_callback)
+        # view.channelsSelected.connect(self.channels_selected_callback)
+        # view.channelColorChanged.connect(self.channel_color_changed_callback)
+        # view.groupColorChanged.connect(self.group_color_changed_callback)
+        # view.groupRenamed.connect(self.group_renamed_callback)
+        # view.channelsMoved.connect(self.channels_moved_callback)
+        # view.groupAdded.connect(self.group_added_callback)
+        # view.groupRemoved.connect(self.group_removed_callback)
         
-        self.views['ClusterView'].append(view)
+        self.views['ChannelView'].append(view)
         
         if do_update:
-            self.taskgraph.update_cluster_view()
+            self.update_channel_view()
         
     def dock_visibility_changed_callback(self, view, visibility):
         # Register dock widget visibility.
@@ -504,7 +503,7 @@ class KwikSkope(QtGui.QMainWindow):
         # Create namespace for the interactive session.
         namespace = dict(
             window=self,
-            select=self.get_view('ClusterView').select,
+            select=self.get_view('ChannelView').select,
             loader=self.loader,
             # stats=self.statscache,
             wizard=self.wizard,
@@ -532,7 +531,19 @@ class KwikSkope(QtGui.QMainWindow):
             floating=floating)
         self.views['RawDataView'].append(view)
         if do_update and self.is_file_open:
-            self.taskgraph.update_rawdata_view()
+            self.update_rawdata_view()
+            
+    def update_rawdata_view(self):
+        data = vd.get_rawdataview_data(self.loader_raw)
+        [view.set_data(**data) for view in self.get_views('RawDataView')]
+
+    def update_channel_view(self, channels=None):
+        """Update the channel view using the data stored in the loader
+        object."""
+        data = vd.get_channelview_data(self.loader, channels=channels)
+        self.get_view('ChannelView').set_data(**data)
+        if channels is not None:
+            return
             
     def get_view(self, name, index=0):
         views = self.views[name] 
@@ -549,7 +560,7 @@ class KwikSkope(QtGui.QMainWindow):
         
         # Create the default layout.
         self.views = dict(
-            ClusterView=[],
+            ChannelView=[],
             IPythonView=[],
             RawDataView=[],
             )
@@ -562,12 +573,12 @@ class KwikSkope(QtGui.QMainWindow):
             self.create_custom_views(count)
     
     def create_default_views(self, do_update=None, floating=False):
-        self.add_cluster_view(do_update=do_update)
+        self.add_channel_view(do_update=do_update)
         self.add_rawdata_view(do_update=do_update)
     
     def create_custom_views(self, count):
         print "IM CREATING MY STUFF YEAH"
-        [self.add_cluster_view() for _ in xrange(count['ClusterView'])]
+        [self.add_channel_view() for _ in xrange(count['ChannelView'])]
         [self.add_ipython_view() for _ in xrange(count['IPythonView'])]
         [self.add_rawdata_view() for _ in xrange(count['RawDataView'])]
     
@@ -587,8 +598,6 @@ class KwikSkope(QtGui.QMainWindow):
     
     def join_threads(self):
          self.open_task.join()
-         self.taskgraph.join()
-    
     
     # File menu callbacks.
     # --------------------
@@ -624,25 +633,17 @@ class KwikSkope(QtGui.QMainWindow):
             
     def close_callback(self, checked=None):
         self.is_file_open = False
-        clusters = self.get_view('ClusterView').selected_clusters()
-        if clusters:
-            self.get_view('ClusterView').unselect()
+        channels = self.get_view('ChannelView').selected_channels()
+        if channels:
+            self.get_view('ChannelView').unselect()
             time.sleep(.25)
 
-        # Update the task graph.
-        self.taskgraph.set(self)
-        self.taskgraph.update_cluster_view()
-        self.taskgraph.compute_similarity_matrix()
-        self.taskgraph.update_rawdata_view()
+        # Update the views.
+        self.update_channel_view()
+        self.update_rawdata_view()
 
-        # Clear the ClusterView.
-        self.get_view('ClusterView').clear()
-
-        # Clear the SimilarityMatrixView.
-        smv = self.get_view('SimilarityMatrixView')
-        if smv:
-            smv.clear()
-        self.loader.close()
+        # Clear the ChannelView.
+        self.get_view('ChannelView').clear()
             
     def quit_callback(self, checked=None):
         self.close()
@@ -652,24 +653,16 @@ class KwikSkope(QtGui.QMainWindow):
     # --------------
     def open_done(self):
         self.is_file_open = True
-        # Start the selection buffer.
-        self.buffer = Buffer(self, 
-            # delay_timer=.1, delay_buffer=.2
-            delay_timer=USERPREF['delay_timer'], 
-            delay_buffer=USERPREF['delay_buffer']
-            )
-        self.buffer.start()
-        self.buffer.accepted.connect(self.buffer_accepted_callback)
         
         # HACK: force release of Control key.
         self.force_key_release()
-        clusters = self.get_view('ClusterView').selected_clusters()
-        if clusters:
-            self.get_view('ClusterView').unselect()
+        channels = self.get_view('ChannelView').selected_channels()
+        if channels:
+            self.get_view('ChannelView').unselect()
         
         # Create the Controller.
         self.controller = Controller(self.loader)
-        # Create the cache for the cluster statistics that need to be
+        # Create the cache for the channel statistics that need to be
         # computed in the background.
         # self.statscache = StatsCache(self.loader.ncorrbins)
         # Update stats cache in IPython view.
@@ -680,11 +673,9 @@ class KwikSkope(QtGui.QMainWindow):
         # Initialize the wizard.
         self.wizard = Wizard()
         
-        # Update the task graph.
-        self.taskgraph.set(self)
-        # self.taskgraph.update_projection_view()
-        self.taskgraph.update_cluster_view()
-        self.taskgraph.update_rawdata_view()
+        # Update the views.
+        self.update_channel_view()
+        self.update_rawdata_view()
         
     def open_failed(self, message):
         self.open_progress.setValue(0)
@@ -706,19 +697,19 @@ class KwikSkope(QtGui.QMainWindow):
     
     # Selection methods.
     # ------------------
-    def buffer_accepted_callback(self, (clusters, wizard)):
-        self._wizard = wizard
-        # The wizard boolean specifies whether the autozoom is activated or not.
-        self.taskgraph.select(clusters, wizard and 
-            self.automatic_projection_action.isChecked())
+    # def buffer_accepted_callback(self, (channels, wizard)):
+    #     self._wizard = wizard
+    #     # The wizard boolean specifies whether the autozoom is activated or not.
+    #     self.taskgraph.select(channels, wizard and 
+    #         self.automatic_projection_action.isChecked())
         
-    def clusters_selected_callback(self, clusters, wizard=False):
-        self.buffer.request((clusters, wizard))
+    def channels_selected_callback(self, channels, wizard=False):
+        self.buffer.request((channels, wizard))
     
-    def cluster_pair_selected_callback(self, clusters):
+    def channel_pair_selected_callback(self, channels):
         """Callback when the user clicks on a pair in the
         SimilarityMatrixView."""
-        self.get_view('ClusterView').select(clusters)
+        self.get_view('ChannelView').select(channels)
     
     
     # Views menu callbacks.
@@ -748,139 +739,139 @@ class KwikSkope(QtGui.QMainWindow):
     
     # Override color callback.
     # ------------------------
-    def override_color_callback(self, checked=None):
-        self.override_color = not self.override_color
-        self.taskgraph.override_color(self.override_color)
+    # def override_color_callback(self, checked=None):
+    #     self.override_color = not self.override_color
+    #     self.taskgraph.override_color(self.override_color)
     
     
     # Actions callbacks.
     # ------------------
-    def merge_callback(self, checked=None):
-        if self.is_busy:
-            return
-        self.need_save = True
-        cluster_view = self.get_view('ClusterView')
-        clusters = cluster_view.selected_clusters()
-        self.taskgraph.merge(clusters, self._wizard)
-        self.update_action_enabled()
-        
-    def split_callback(self, checked=None):
-        if self.is_busy:
-            return
-        self.need_save = True
-        cluster_view = self.get_view('ClusterView')
-        clusters = cluster_view.selected_clusters()
-        spikes_selected = self.spikes_selected
-        # Cancel the selection after the split.
-        self.spikes_selected = []
-        self.taskgraph.split(clusters, spikes_selected, self._wizard)
-        self.update_action_enabled()
-        
-    def undo_callback(self, checked=None):
-        if self.is_busy:
-            return
-        self.taskgraph.undo(self._wizard)
-        self.update_action_enabled()
-        
-    def redo_callback(self, checked=None):
-        if self.is_busy:
-            return
-        self.taskgraph.redo(self._wizard)
-        self.update_action_enabled()
-        
-    def cluster_color_changed_callback(self, cluster, color):
-        self.taskgraph.cluster_color_changed(cluster, color, self._wizard)
-        self.update_action_enabled()
-        
-    def group_color_changed_callback(self, group, color):
-        self.taskgraph.group_color_changed(group, color)
-        self.update_action_enabled()
-        
-    def group_renamed_callback(self, group, name):
-        self.taskgraph.group_renamed(group, name)
-        self.update_action_enabled()
-        
-    def clusters_moved_callback(self, clusters, group):
-        self.taskgraph.clusters_moved(clusters, group)
-        self.update_action_enabled()
-        
-    def group_removed_callback(self, group):
-        self.taskgraph.group_removed(group)
-        self.update_action_enabled()
-        
-    def group_added_callback(self, group, name, color):
-        self.taskgraph.group_added(group, name, color)
-        self.update_action_enabled()
+    # def merge_callback(self, checked=None):
+    #     if self.is_busy:
+    #         return
+    #     self.need_save = True
+    #     channel_view = self.get_view('ChannelView')
+    #     channels = channel_view.selected_channels()
+    #     self.taskgraph.merge(channels, self._wizard)
+    #     self.update_action_enabled()
+    #     
+    # def split_callback(self, checked=None):
+    #     if self.is_busy:
+    #         return
+    #     self.need_save = True
+    #     channel_view = self.get_view('ChannelView')
+    #     channels = channel_view.selected_channels()
+    #     spikes_selected = self.spikes_selected
+    #     # Cancel the selection after the split.
+    #     self.spikes_selected = []
+    #     self.taskgraph.split(channels, spikes_selected, self._wizard)
+    #     self.update_action_enabled()
+    #     
+    # def undo_callback(self, checked=None):
+    #     if self.is_busy:
+    #         return
+    #     self.taskgraph.undo(self._wizard)
+    #     self.update_action_enabled()
+    #     
+    # def redo_callback(self, checked=None):
+    #     if self.is_busy:
+    #         return
+    #     self.taskgraph.redo(self._wizard)
+    #     self.update_action_enabled()
+    #     
+    # def channel_color_changed_callback(self, channel, color):
+    #     self.taskgraph.channel_color_changed(channel, color, self._wizard)
+    #     self.update_action_enabled()
+    #     
+    # def group_color_changed_callback(self, group, color):
+    #     self.taskgraph.group_color_changed(group, color)
+    #     self.update_action_enabled()
+    #     
+    # def group_renamed_callback(self, group, name):
+    #     self.taskgraph.group_renamed(group, name)
+    #     self.update_action_enabled()
+    #     
+    # def channels_moved_callback(self, channels, group):
+    #     self.taskgraph.channels_moved(channels, group)
+    #     self.update_action_enabled()
+    #     
+    # def group_removed_callback(self, group):
+    #     self.taskgraph.group_removed(group)
+    #     self.update_action_enabled()
+    #     
+    # def group_added_callback(self, group, name, color):
+    #     self.taskgraph.group_added(group, name, color)
+    #     self.update_action_enabled()
+    # 
+    # 
+    # # Wizard callbacks.
+    # # -----------------
+    # def reset_navigation_callback(self, checked=None):
+    #     self.taskgraph.wizard_reset()
+    # 
+    # def previous_candidate_callback(self, checked=None):
+    #     # Previous candidate.
+    #     self.taskgraph.wizard_previous_candidate()
+    #     
+    # def next_candidate_callback(self, checked=None):
+    #     if self.is_busy:
+    #         return
+    #     # Skip candidate.
+    #     self.taskgraph.wizard_next_candidate()
+    # 
+    # def skip_target_callback(self, checked=None):
+    #     if self.is_busy:
+    #         return
+    #     # Skip target.
+    #     self.taskgraph.wizard_skip_target()
+    # 
+    # def next_target_callback(self, checked=None):
+    #     if self.is_busy:
+    #         return
+    #     # Move target to Good group, and select next target.
+    #     self.taskgraph.wizard_move_and_next('target', 2)
+    #     
+    # def delete_candidate_noise_callback(self, checked=None):
+    #     self.taskgraph.wizard_move_and_next('candidate', 0)
+    #     
+    # def delete_candidate_callback(self, checked=None):
+    #     self.taskgraph.wizard_move_and_next('candidate', 1)
+    #     
+    # def delete_target_noise_callback(self, checked=None):
+    #     self.taskgraph.wizard_move_and_next('target', 0)
+    #     
+    # def delete_target_callback(self, checked=None):
+    #     self.taskgraph.wizard_move_and_next('target', 1)
+    #     
+    # def delete_both_noise_callback(self, checked=None):
+    #     self.taskgraph.wizard_move_and_next('both', 0)
+    #     
+    # def delete_both_callback(self, checked=None):
+    #     self.taskgraph.wizard_move_and_next('both', 1)
+    # 
+    # def change_candidate_color_callback(self, checked=None):
+    #     self.taskgraph.wizard_change_candidate_color()
+    #     self.update_action_enabled()
+    # 
     
-    
-    # Wizard callbacks.
-    # -----------------
-    def reset_navigation_callback(self, checked=None):
-        self.taskgraph.wizard_reset()
-    
-    def previous_candidate_callback(self, checked=None):
-        # Previous candidate.
-        self.taskgraph.wizard_previous_candidate()
-        
-    def next_candidate_callback(self, checked=None):
-        if self.is_busy:
-            return
-        # Skip candidate.
-        self.taskgraph.wizard_next_candidate()
-    
-    def skip_target_callback(self, checked=None):
-        if self.is_busy:
-            return
-        # Skip target.
-        self.taskgraph.wizard_skip_target()
-    
-    def next_target_callback(self, checked=None):
-        if self.is_busy:
-            return
-        # Move target to Good group, and select next target.
-        self.taskgraph.wizard_move_and_next('target', 2)
-        
-    def delete_candidate_noise_callback(self, checked=None):
-        self.taskgraph.wizard_move_and_next('candidate', 0)
-        
-    def delete_candidate_callback(self, checked=None):
-        self.taskgraph.wizard_move_and_next('candidate', 1)
-        
-    def delete_target_noise_callback(self, checked=None):
-        self.taskgraph.wizard_move_and_next('target', 0)
-        
-    def delete_target_callback(self, checked=None):
-        self.taskgraph.wizard_move_and_next('target', 1)
-        
-    def delete_both_noise_callback(self, checked=None):
-        self.taskgraph.wizard_move_and_next('both', 0)
-        
-    def delete_both_callback(self, checked=None):
-        self.taskgraph.wizard_move_and_next('both', 1)
-    
-    def change_candidate_color_callback(self, checked=None):
-        self.taskgraph.wizard_change_candidate_color()
-        self.update_action_enabled()
-    
-    
-    # Views callbacks.
-    # ----------------
-    def waveform_spikes_highlighted_callback(self, spikes):
-        self.spikes_highlighted = spikes
-        [view.highlight_spikes(get_array(spikes)) for view in self.get_views('FeatureView')]
-        
-    def features_spikes_highlighted_callback(self, spikes):
-        self.spikes_highlighted = spikes
-        [view.highlight_spikes(get_array(spikes)) for view in self.get_views('WaveformView')]
-        
-    def features_spikes_selected_callback(self, spikes):
-        self.spikes_selected = spikes
-        self.update_action_enabled()
-        [view.highlight_spikes(get_array(spikes)) for view in self.get_views('WaveformView')]
-        
-    def waveform_box_clicked_callback(self, coord, cluster, channel):
-        """Changed in waveform ==> change in feature"""
-        [view.set_projection(coord, channel, -1) for view in self.get_views('FeatureView')]
+    # # Views callbacks.
+    # # ----------------
+    # def waveform_spikes_highlighted_callback(self, spikes):
+    #     self.spikes_highlighted = spikes
+    #     [view.highlight_spikes(get_array(spikes)) for view in self.get_views('FeatureView')]
+    #     
+    # def features_spikes_highlighted_callback(self, spikes):
+    #     self.spikes_highlighted = spikes
+    #     [view.highlight_spikes(get_array(spikes)) for view in self.get_views('WaveformView')]
+    #     
+    # def features_spikes_selected_callback(self, spikes):
+    #     self.spikes_selected = spikes
+    #     self.update_action_enabled()
+    #     [view.highlight_spikes(get_array(spikes)) for view in self.get_views('WaveformView')]
+    #     
+    # def waveform_box_clicked_callback(self, coord, channel, channel):
+    #     """Changed in waveform ==> change in feature"""
+    #     [view.set_projection(coord, channel, -1) for view in self.get_views('FeatureView')]
 
         
     # Help callbacks.

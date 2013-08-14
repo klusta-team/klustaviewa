@@ -8,3 +8,4 @@ from featureprojview import *
 from ipythonview import *
 from logview import *
 from rawdataview import *
+from channelview import *

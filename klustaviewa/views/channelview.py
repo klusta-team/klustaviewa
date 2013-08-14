@@ -1,4 +1,4 @@
-"""Cluster View: show all clusters and groups."""
+"""Channel View: show all channels and groups."""
 
 # -----------------------------------------------------------------------------
 # Imports
@@ -22,8 +22,8 @@ from klustaviewa.views.treemodel import TreeModel, TreeItem
 
 # Specific item classes
 # ---------------------
-class ClusterItem(TreeItem):
-    def __init__(self, parent=None, clusteridx=None, color=None, bgcolor=None,
+class ChannelItem(TreeItem):
+    def __init__(self, parent=None, channelidx=None, color=None, bgcolor=None,
             spkcount=None, quality=None):
         if color is None:
             color = 0
@@ -37,8 +37,8 @@ class ClusterItem(TreeItem):
         self.bgcolor = bgcolor
         # data['bgcolor'] = bgcolor
         # the index is the last column
-        data['clusteridx'] = clusteridx
-        super(ClusterItem, self).__init__(parent=parent, data=data)
+        data['channelidx'] = channelidx
+        super(ChannelItem, self).__init__(parent=parent, data=data)
 
     def spkcount(self):
         return self.item_data['spkcount']
@@ -49,8 +49,8 @@ class ClusterItem(TreeItem):
     def color(self):
         return self.item_data['color']
                 
-    def clusteridx(self):
-        return self.item_data['clusteridx']
+    def channelidx(self):
+        return self.item_data['channelidx']
 
 
 class GroupItem(TreeItem):
@@ -86,92 +86,92 @@ class GroupItem(TreeItem):
 
 # Custom model
 # ------------
-class ClusterViewModel(TreeModel):
-    headers = ['Cluster', 'Quality', 'Spikes', 'Color']
-    clustersMoved = QtCore.pyqtSignal(np.ndarray, int)
+class ChannelViewModel(TreeModel):
+    headers = ['Channel', 'Quality', 'Spikes', 'Color']
+    channelsMoved = QtCore.pyqtSignal(np.ndarray, int)
     
     def __init__(self, **kwargs):
         """Initialize the tree model.
         
         Arguments:
-          * clusters: a Nspikes long array with the cluster index for each
+          * channels: a Nspikes long array with the channel index for each
             spike.
-          * clusters_info: an Info object with fields names, colors, spkcounts,
+          * channels_info: an Info object with fields names, colors, spkcounts,
             groups_info.
         
         """
-        super(ClusterViewModel, self).__init__(self.headers)
+        super(ChannelViewModel, self).__init__(self.headers)
         self.background = {}
         self.load(**kwargs)
         
     
     # I/O methods
     # -----------
-    def load(self, cluster_colors=None, cluster_groups=None,
-        group_colors=None, group_names=None, cluster_sizes=None,
-        cluster_quality=None, background={}):
+    def load(self, channel_colors=None, channel_groups=None,
+        group_colors=None, group_names=None, channel_sizes=None,
+        channel_quality=None, background={}):
         
-        if group_names is None or cluster_colors is None:
+        if group_names is None or channel_colors is None:
             return
         
         # Create the tree.
         # go through all groups
         for groupidx, groupname in group_names.iteritems():
-            spkcount = np.sum(cluster_sizes[cluster_groups == groupidx])
+            spkcount = np.sum(channel_sizes[channel_groups == groupidx])
             groupitem = self.add_group_node(groupidx=groupidx, name=groupname,
                 # color=group_colors[groupidx], spkcount=spkcount)
                 color=select(group_colors, groupidx), spkcount=spkcount)
         
-        # go through all clusters
-        for clusteridx, color in cluster_colors.iteritems():
-            if cluster_quality is not None:
+        # go through all channels
+        for channelidx, color in channel_colors.iteritems():
+            if channel_quality is not None:
                 try:
-                    quality = select(cluster_quality, clusteridx)
+                    quality = select(channel_quality, channelidx)
                 except IndexError:
                     quality = 0.
             else:
                 quality = 0.
-            # add cluster
-            bgcolor = background.get(clusteridx, None)
-            clusteritem = self.add_cluster(
-                clusteridx=clusteridx,
-                # name=info.names[clusteridx],
+            # add channel
+            bgcolor = background.get(channelidx, None)
+            channelitem = self.add_channel(
+                channelidx=channelidx,
+                # name=info.names[channelidx],
                 color=color,
                 bgcolor=bgcolor,
                 quality=quality,
-                # spkcount=cluster_sizes[clusteridx],
-                spkcount=select(cluster_sizes, clusteridx),
-                # assign the group as a parent of this cluster
-                parent=self.get_group(select(cluster_groups, clusteridx)))
+                # spkcount=channel_sizes[channelidx],
+                spkcount=select(channel_sizes, channelidx),
+                # assign the group as a parent of this channel
+                parent=self.get_group(select(channel_groups, channelidx)))
     
     def save(self):
         groups = self.get_groups()
-        allclusters = self.get_clusters()
+        allchannels = self.get_channels()
         
         ngroups = len(groups)
-        nclusters = len(allclusters)
+        nchannels = len(allchannels)
         
         # Initialize objects.
-        cluster_colors = pd.Series(np.zeros(nclusters, dtype=np.int32))
-        cluster_groups = pd.Series(np.zeros(nclusters, dtype=np.int32))
+        channel_colors = pd.Series(np.zeros(nchannels, dtype=np.int32))
+        channel_groups = pd.Series(np.zeros(nchannels, dtype=np.int32))
         group_colors = pd.Series(np.zeros(ngroups, dtype=np.int32))
         group_names = pd.Series(np.zeros(ngroups, dtype=np.str_))
         
         # Loop through all groups.
         for group in groups:
             groupidx = group.groupidx()
-            clusters = self.get_clusters_in_group(groupidx)
+            channels = self.get_channels_in_group(groupidx)
             # set the group info object
             group_colors[groupidx] = group.color()
             group_names[groupidx] = group.name()
-            # Loop through clusters in the current group.
-            for cluster in clusters:
-                clusteridx = cluster.clusteridx()
-            cluster_colors[clusteridx] = cluster.color()
-            cluster_groups[clusteridx] = groupidx
+            # Loop through channels in the current group.
+            for channel in channels:
+                channelidx = channel.channelidx()
+            channel_colors[channelidx] = channel.color()
+            channel_groups[channelidx] = groupidx
         
-        return dict(cluster_colors=cluster_colors,
-                    cluster_groups=cluster_groups,
+        return dict(channel_colors=channel_colors,
+                    channel_groups=channel_groups,
                     group_colors=group_colors,
                     group_names=group_names)
     
@@ -212,12 +212,12 @@ class ClusterViewModel(TreeModel):
                 elif role == QtCore.Qt.DisplayRole:
                     return ""
                 
-        # cluster item
-        if type(item) == ClusterItem:
-            # clusteridx
+        # channel item
+        if type(item) == ChannelItem:
+            # channelidx
             if col == 0:
                 if role == QtCore.Qt.DisplayRole:
-                    return str(item.clusteridx())
+                    return str(item.channelidx())
                 elif role == QtCore.Qt.BackgroundRole:
                     if item.bgcolor is None:
                         return
@@ -313,28 +313,28 @@ class ClusterViewModel(TreeModel):
     
     def update_group_sizes(self):
         for group in self.get_groups():
-            spkcount = np.sum([cluster.spkcount() 
-                for cluster in self.get_clusters_in_group(group.groupidx())])
+            spkcount = np.sum([channel.spkcount() 
+                for channel in self.get_channels_in_group(group.groupidx())])
             self.setData(self.index(group.row(), 2), spkcount)
     
     def set_quality(self, quality):
-        """quality is a Series with cluster index and quality value."""
-        for clusteridx, value in quality.iteritems():
-            groupidx = self.get_groupidx(clusteridx)
-            # If the cluster does not exist yet in the view, just discard it.
+        """quality is a Series with channel index and quality value."""
+        for channelidx, value in quality.iteritems():
+            groupidx = self.get_groupidx(channelidx)
+            # If the channel does not exist yet in the view, just discard it.
             if groupidx is None:
                 continue
             group = self.get_group(groupidx)
-            cluster = self.get_cluster(clusteridx)
-            self.setData(self.index(cluster.row(), 1, parent=group.index), value)
+            channel = self.get_channel(channelidx)
+            self.setData(self.index(channel.row(), 1, parent=group.index), value)
     
     def set_background(self, background=None):
-        """Set the background of some clusters. The argument is a dictionary
-        clusteridx ==> color index."""
+        """Set the background of some channels. The argument is a dictionary
+        channelidx ==> color index."""
         if background is not None:
-            # Record the changed clusters.
+            # Record the changed channels.
             self.background.update(background)
-            # Get all clusters to update.
+            # Get all channels to update.
             keys = self.background.keys()
             # Reset the keys
             if not background:
@@ -343,16 +343,16 @@ class ClusterViewModel(TreeModel):
         else:
             background = self.background
             keys = self.background.keys()
-        for clusteridx in keys:
-            bgcolor = background.get(clusteridx, None)
-            groupidx = self.get_groupidx(clusteridx)
-            # If the cluster does not exist yet in the view, just discard it.
+        for channelidx in keys:
+            bgcolor = background.get(channelidx, None)
+            groupidx = self.get_groupidx(channelidx)
+            # If the channel does not exist yet in the view, just discard it.
             if groupidx is None:
                 continue
             group = self.get_group(groupidx)
-            cluster = self.get_cluster(clusteridx)
-            index = self.index(cluster.row(), 0, parent=group.index)
-            index1 = self.index(cluster.row(), 1, parent=group.index)
+            channel = self.get_channel(channelidx)
+            index = self.index(channel.row(), 0, parent=group.index)
+            index1 = self.index(channel.row(), 1, parent=group.index)
             if index.isValid():
                 item = index.internalPointer()
                 # bgcolor = True means using the same color
@@ -379,7 +379,7 @@ class ClusterViewModel(TreeModel):
         """Remove an empty group. Raise an error if the group is not empty."""
         groupidx = group.groupidx()
         # check that the group is empty
-        if self.get_clusters_in_group(groupidx):
+        if self.get_channels_in_group(groupidx):
             raise ValueError("group %d is not empty, unable to delete it" % \
                     groupidx)
         groups = [g for g in self.get_groups() if g.groupidx() == groupidx]
@@ -389,33 +389,33 @@ class ClusterViewModel(TreeModel):
         else:
             log.warn("Group %d does not exist0" % groupidx)
         
-    def add_cluster(self, parent=None, **kwargs):
-        cluster = self.add_node(item_class=ClusterItem, parent=parent, 
+    def add_channel(self, parent=None, **kwargs):
+        channel = self.add_node(item_class=ChannelItem, parent=parent, 
                             **kwargs)
-        return cluster
+        return channel
     
-    def move_clusters(self, sources, target):
+    def move_channels(self, sources, target):
         # Get the groupidx if the target is a group,
         if type(target) == GroupItem:
             groupidx = target.groupidx()
             target = None
-        # else, if it is a cluster, take the corresponding group.
-        elif type(target) == ClusterItem:
-            groupidx = self.get_groupidx(target.clusteridx())
+        # else, if it is a channel, take the corresponding group.
+        elif type(target) == ChannelItem:
+            groupidx = self.get_groupidx(target.channelidx())
         else:
             return None
             
-        # Move clusters.
+        # Move channels.
         target_group = self.get_group(groupidx)
         for node in sources:
-            self._move_cluster(node, target_group, target)
+            self._move_channel(node, target_group, target)
         
         self.update_group_sizes()
     
-    def _move_cluster(self, cluster, parent_target, child_target=None):
-        row = cluster.row()
-        parent_source = cluster.parent()
-        # Find the row where the cluster needs to be inserted.
+    def _move_channel(self, channel, parent_target, child_target=None):
+        row = channel.row()
+        parent_source = channel.parent()
+        # Find the row where the channel needs to be inserted.
         if child_target is not None:
             child_target_row = child_target.row()
         else:
@@ -424,42 +424,42 @@ class ClusterViewModel(TreeModel):
         canmove = self.beginMoveRows(parent_source.index, row, row,
             parent_target.index, child_target_row)
         if canmove:
-            # Create a new cluster, clone of the old one.
-            cluster_new = ClusterItem(parent=parent_target,
-                clusteridx=cluster.clusteridx(),
-                spkcount=cluster.spkcount(),
-                color=cluster.color())
+            # Create a new channel, clone of the old one.
+            channel_new = ChannelItem(parent=parent_target,
+                channelidx=channel.channelidx(),
+                spkcount=channel.spkcount(),
+                color=channel.color())
             # Create the index.
-            cluster_new.index = self.createIndex(child_target_row, 
-                0, cluster_new)
-            # Insert the new cluster.
-            parent_target.insertChild(cluster_new, child_target_row)
-            # Remove the old cluster.
+            channel_new.index = self.createIndex(child_target_row, 
+                0, channel_new)
+            # Insert the new channel.
+            parent_target.insertChild(channel_new, child_target_row)
+            # Remove the old channel.
             if parent_target == parent_source:
                 if child_target_row < row:
                     row += 1
                 parent_source.removeChildAt(row)
             else:
-                parent_source.removeChild(cluster)
+                parent_source.removeChild(channel)
             self.endMoveRows()
         
     
-    # Drag and drop for moving clusters
+    # Drag and drop for moving channels
     # ---------------------------------
     def drag(self, target, sources):
-        # Get source ClusterItem nodes.
+        # Get source ChannelItem nodes.
         source_items = [node for node in self.all_nodes() 
-            if (str(node) in sources and type(node) == ClusterItem )]
+            if (str(node) in sources and type(node) == ChannelItem )]
         # Find the target group.
         if type(target) == GroupItem:
             groupidx = target.groupidx()
-        # else, if it is a cluster, take the corresponding group.
-        elif type(target) == ClusterItem:
-            groupidx = self.get_groupidx(target.clusteridx())
+        # else, if it is a channel, take the corresponding group.
+        elif type(target) == ChannelItem:
+            groupidx = self.get_groupidx(target.channelidx())
         # Emit internal signal to let TreeView emit a public signal, and to
-        # effectively move the clusters.
-        self.clustersMoved.emit(np.array([cluster.clusteridx() 
-            for cluster in source_items]), groupidx)
+        # effectively move the channels.
+        self.channelsMoved.emit(np.array([channel.channelidx() 
+            for channel in source_items]), groupidx)
     
     def rename_group(self, group, name):
         self.setData(self.index(group.row(), 0), name)
@@ -467,10 +467,10 @@ class ClusterViewModel(TreeModel):
     def change_group_color(self, group, color):
         self.setData(self.index(group.row(), 2), color)
         
-    def change_cluster_color(self, cluster, color):
-        groupidx = self.get_groupidx(cluster.clusteridx())
+    def change_channel_color(self, channel, color):
+        groupidx = self.get_groupidx(channel.channelidx())
         group = self.get_group(groupidx)
-        self.setData(self.index(cluster.row(), 2, parent=group.index), color)
+        self.setData(self.index(channel.row(), 2, parent=group.index), color)
         
         
     # Getter methods
@@ -484,54 +484,54 @@ class ClusterViewModel(TreeModel):
             if (type(group) == GroupItem) and \
                 (group.groupidx() == groupidx)][0]
         
-    def get_clusters(self):
-        return [cluster for cluster in self.get_descendants(self.root_item) \
-          if (type(cluster) == ClusterItem)]
+    def get_channels(self):
+        return [channel for channel in self.get_descendants(self.root_item) \
+          if (type(channel) == ChannelItem)]
             
-    def get_cluster(self, clusteridx):
-        l = [cluster for cluster in self.get_descendants(self.root_item) \
-                  if (type(cluster) == ClusterItem) and \
-                        (cluster.clusteridx() == clusteridx)]
+    def get_channel(self, channelidx):
+        l = [channel for channel in self.get_descendants(self.root_item) \
+                  if (type(channel) == ChannelItem) and \
+                        (channel.channelidx() == channelidx)]
         if l:
             return l[0]
                 
-    def get_clusters_in_group(self, groupidx):
+    def get_channels_in_group(self, groupidx):
         group = self.get_group(groupidx)
-        return [cluster for cluster in self.get_descendants(group) \
-            if (type(cluster) == ClusterItem)]
+        return [channel for channel in self.get_descendants(group) \
+            if (type(channel) == ChannelItem)]
         
-    def get_groupidx(self, clusteridx):
-        """Return the group index currently assigned to the specifyed cluster
+    def get_groupidx(self, channelidx):
+        """Return the group index currently assigned to the specifyed channel
         index."""
         for group in self.get_groups():
-            clusterindices = [cluster.clusteridx() \
-                            for cluster in self.get_clusters_in_group(group.groupidx())]
-            if clusteridx in clusterindices:
+            channelindices = [channel.channelidx() \
+                            for channel in self.get_channels_in_group(group.groupidx())]
+            if channelidx in channelindices:
                 return group.groupidx()
         return None
           
         
 # Top-level widget
 # ----------------
-class ClusterView(QtGui.QTreeView):
+class ChannelView(QtGui.QTreeView):
     # Signals
     # -------
     # Selection.
     # The boolean indicates whether the selection has been initiated externally
     # or not (internally by clicking on items in the view).
-    clustersSelected = QtCore.pyqtSignal(np.ndarray, bool)
+    channelsSelected = QtCore.pyqtSignal(np.ndarray, bool)
     # groupsSelected = QtCore.pyqtSignal(np.ndarray)
     
-    # Cluster and group info.
-    clusterColorChanged = QtCore.pyqtSignal(int, int)
+    # Channel and group info.
+    channelColorChanged = QtCore.pyqtSignal(int, int)
     groupColorChanged = QtCore.pyqtSignal(int, int)
     groupRenamed = QtCore.pyqtSignal(int, object)
 
-    clustersMoved = QtCore.pyqtSignal(np.ndarray, int)
+    channelsMoved = QtCore.pyqtSignal(np.ndarray, int)
     groupRemoved = QtCore.pyqtSignal(int)
     groupAdded = QtCore.pyqtSignal(int, str, int)
     
-    class ClusterDelegate(QtGui.QStyledItemDelegate):
+    class ChannelDelegate(QtGui.QStyledItemDelegate):
         def paint(self, painter, option, index):
             """Disable the color column so that the color remains the same even
             when it is selected."""
@@ -540,14 +540,14 @@ class ClusterView(QtGui.QTreeView):
             if index.column() >= 1:
                 if option.state and QtGui.QStyle.State_Selected:
                     option.state = option.state and QtGui.QStyle.State_Off
-            super(ClusterView.ClusterDelegate, self).paint(painter, option, index)
+            super(ChannelView.ChannelDelegate, self).paint(painter, option, index)
     
     def __init__(self, parent, getfocus=None):
-        super(ClusterView, self).__init__(parent)
+        super(ChannelView, self).__init__(parent)
         # Current item.
         self.current_item = None
         self.wizard = False
-        self.clusters_selected_previous = []
+        self.channels_selected_previous = []
         
         # Focus policy.
         if getfocus:
@@ -564,7 +564,7 @@ class ClusterView(QtGui.QTreeView):
         self.setMaximumWidth(300)
         
         # self.setRootIsDecorated(False)
-        self.setItemDelegate(self.ClusterDelegate())
+        self.setItemDelegate(self.ChannelDelegate())
         
         # Create menu.
         self.create_actions()
@@ -577,11 +577,11 @@ class ClusterView(QtGui.QTreeView):
     # ------------
     def set_data(self, **kwargs):
         
-        # if cluster_colors is None:
-        if kwargs.get('cluster_colors', None) is None:
+        # if channel_colors is None:
+        if kwargs.get('channel_colors', None) is None:
             return
         
-        self.model = ClusterViewModel(**kwargs)
+        self.model = ChannelViewModel(**kwargs)
         
         self.setModel(self.model)
         self.expandAll()
@@ -592,32 +592,32 @@ class ClusterView(QtGui.QTreeView):
         # set color column size
         self.header().resizeSection(3, 40)
         
-        # HACK: drag is triggered in the model, so connect it to move_clusters
+        # HACK: drag is triggered in the model, so connect it to move_channels
         # in this function
-        self.model.clustersMoved.connect(self.move_clusters)
+        self.model.channelsMoved.connect(self.move_channels)
         
     def clear(self):
-        self.setModel(ClusterViewModel())
+        self.setModel(ChannelViewModel())
         
         
     
     # Public methods
     # --------------
-    def select(self, clusters, groups=None, wizard=False):
-        """Select multiple clusters from their indices."""
+    def select(self, channels, groups=None, wizard=False):
+        """Select multiple channels from their indices."""
         self.wizard = wizard
-        if clusters is None:
-            clusters = []
+        if channels is None:
+            channels = []
         if groups is None:
             groups = []
-        if isinstance(clusters, (int, long, np.integer)):
-            clusters = [clusters]
+        if isinstance(channels, (int, long, np.integer)):
+            channels = [channels]
         if isinstance(groups, (int, long, np.integer)):
             groups = [groups]
-        if len(clusters) == len(groups) == 0:
+        if len(channels) == len(groups) == 0:
             return
         # Convert to lists.
-        clusters = list(clusters)
+        channels = list(channels)
         groups = list(groups)
         selection_model = self.selectionModel()
         selection = QtGui.QItemSelection()
@@ -626,11 +626,11 @@ class ClusterView(QtGui.QTreeView):
             group = self.model.get_group(groupidx)
             if group is not None:
                 selection.select(group.index, group.index)
-        # Select clusters.
-        for clusteridx in clusters:
-            cluster = self.model.get_cluster(clusteridx)
-            if cluster is not None:
-                selection.select(cluster.index, cluster.index)
+        # Select channels.
+        for channelidx in channels:
+            channel = self.model.get_channel(channelidx)
+            if channel is not None:
+                selection.select(channel.index, channel.index)
         # Process selection.
         selection_model.select(selection, 
                 selection_model.Clear |
@@ -638,39 +638,39 @@ class ClusterView(QtGui.QTreeView):
                 selection_model.Select | 
                 selection_model.Rows 
                 )
-        if len(clusters) > 0:
-            cluster = self.model.get_cluster(clusters[-1])
-            if cluster is not None:
+        if len(channels) > 0:
+            channel = self.model.get_channel(channels[-1])
+            if channel is not None:
                 # Set current index in the selection.
                 selection_model.setCurrentIndex(
-                    cluster.index,
+                    channel.index,
                     QtGui.QItemSelectionModel.NoUpdate)
-                # Scroll to that cluster.
-                self.scrollTo(cluster.index)
+                # Scroll to that channel.
+                self.scrollTo(channel.index)
                     
     def unselect(self):
         self.selectionModel().clear()
     
-    def move_clusters(self, clusters, groupidx):
-        if not hasattr(clusters, '__len__'):
-            clusters = [clusters]
-        if len(clusters) == 0:
+    def move_channels(self, channels, groupidx):
+        if not hasattr(channels, '__len__'):
+            channels = [channels]
+        if len(channels) == 0:
             return
         # Signal.
-        log.debug("Moving clusters {0:s} to group {1:d}.".format(
-            str(clusters), groupidx))
-        self.clustersMoved.emit(np.array(clusters), groupidx)
+        log.debug("Moving channels {0:s} to group {1:d}.".format(
+            str(channels), groupidx))
+        self.channelsMoved.emit(np.array(channels), groupidx)
     
-    def add_group(self, name, clusters=[]):
+    def add_group(self, name, channels=[]):
         color = random_color()
         group = self.model.add_group(name, color)
         groupidx = group.groupidx()
         # Signal.
         log.debug("Adding group {0:s}.".format(name))
         self.groupAdded.emit(groupidx, name, color)
-        # Move the selected clusters to the new group.
-        if clusters:
-            self.move_clusters(clusters, groupidx)
+        # Move the selected channels to the new group.
+        if channels:
+            self.move_channels(channels, groupidx)
         self.expandAll()
         return groupidx
     
@@ -687,13 +687,13 @@ class ClusterView(QtGui.QTreeView):
         log.debug("Removed group {0:d}.".format(groupidx))
         self.groupRemoved.emit(groupidx)
         
-    def change_cluster_color(self, clusteridx, color):
-        self.model.change_cluster_color(self.model.get_cluster(clusteridx), 
+    def change_channel_color(self, channelidx, color):
+        self.model.change_channel_color(self.model.get_channel(channelidx), 
             color)
         # Signal.
-        log.debug("Changed color of cluster {0:d} to {1:d}.".format(
-            clusteridx, color))
-        self.clusterColorChanged.emit(clusteridx, color)
+        log.debug("Changed color of channel {0:d} to {1:d}.".format(
+            channelidx, color))
+        self.channelColorChanged.emit(channelidx, color)
         
     def change_group_color(self, groupidx, color):
         self.model.change_group_color(self.model.get_group(groupidx), color)
@@ -702,20 +702,20 @@ class ClusterView(QtGui.QTreeView):
             groupidx, color))
         self.groupColorChanged.emit(groupidx, color)
     
-    def move_to_noise(self, clusters):
-        if not hasattr(clusters, '__len__'):
-            clusters = [clusters]
-        self.move_clusters(clusters, 0)
+    def move_to_noise(self, channels):
+        if not hasattr(channels, '__len__'):
+            channels = [channels]
+        self.move_channels(channels, 0)
     
-    def move_to_good(self, clusters):
-        if not hasattr(clusters, '__len__'):
-            clusters = [clusters]
-        self.move_clusters(clusters, 2)
+    def move_to_good(self, channels):
+        if not hasattr(channels, '__len__'):
+            channels = [channels]
+        self.move_channels(channels, 2)
     
-    def move_to_mua(self, clusters):
-        if not hasattr(clusters, '__len__'):
-            clusters = [clusters]
-        self.move_clusters(clusters, 1)
+    def move_to_mua(self, channels):
+        if not hasattr(channels, '__len__'):
+            channels = [channels]
+        self.move_channels(channels, 1)
     
     def set_quality(self, quality):
         self.model.set_quality(quality)
@@ -791,7 +791,7 @@ class ClusterView(QtGui.QTreeView):
         self.context_menu.addAction(self.remove_group_action)
         
     def update_actions(self):
-        clusters = self.selected_clusters()
+        channels = self.selected_channels()
         groups = self.selected_groups()
         
         if len(groups) > 0:
@@ -805,12 +805,12 @@ class ClusterView(QtGui.QTreeView):
             self.rename_group_action.setEnabled(False)
             self.remove_group_action.setEnabled(False)
             
-        if len(clusters) > 0 or len(groups) > 0:
+        if len(channels) > 0 or len(groups) > 0:
             self.change_color_action.setEnabled(True)
         else:
             self.change_color_action.setEnabled(False)
             
-        if len(clusters) > 0:
+        if len(channels) > 0:
             self.move_to_noise_action.setEnabled(True)
             self.move_to_mua_action.setEnabled(True)
             self.move_to_good_action.setEnabled(True)
@@ -845,8 +845,8 @@ class ClusterView(QtGui.QTreeView):
         # take the closest color in the palette
         color = np.argmin(np.abs(COLORMAP[1:,:] - rgb).sum(axis=1)) + 1 
         # Change the color and emit the signal.
-        if isinstance(item, ClusterItem):
-            self.change_cluster_color(item.clusteridx(), color)
+        if isinstance(item, ChannelItem):
+            self.change_channel_color(item.channelidx(), color)
         elif isinstance(item, GroupItem):
             self.change_group_color(item.groupidx(), color)
             
@@ -855,7 +855,7 @@ class ClusterView(QtGui.QTreeView):
             "Group name", "Name group:",
             QtGui.QLineEdit.Normal, "New group")
         if ok:
-            self.add_group(text, self.selected_clusters())
+            self.add_group(text, self.selected_channels())
         
     def remove_group_callback(self, checked=None):
         item = self.current_item
@@ -875,84 +875,84 @@ class ClusterView(QtGui.QTreeView):
                 self.rename_group(groupidx, text)
     
     def move_to_noise_callback(self, checked=None):
-        clusters = self.selected_clusters()
-        self.move_to_noise(clusters)
+        channels = self.selected_channels()
+        self.move_to_noise(channels)
         
     def move_to_mua_callback(self, checked=None):
-        clusters = self.selected_clusters()
-        self.move_to_mua(clusters)
+        channels = self.selected_channels()
+        self.move_to_mua(channels)
     
     def move_to_good_callback(self, checked=None):
-        clusters = self.selected_clusters()
-        self.move_to_good(clusters)
+        channels = self.selected_channels()
+        self.move_to_good(channels)
     
     
     # Get methods
     # -----------
-    def get_cluster_indices(self):
-        return [cluster.clusteridx() for cluster in self.model.get_clusters()]
+    def get_channel_indices(self):
+        return [channel.channelidx() for channel in self.model.get_channels()]
     
     def get_group_indices(self):
         return [group.groupidx() for group in self.model.get_groups()]
     
-    def get_cluster_indices_in_group(self, groupidx):
-        return [cluster.clusteridx() 
-            for cluster in self.model.get_clusters_in_group(groupidx)]
+    def get_channel_indices_in_group(self, groupidx):
+        return [channel.channelidx() 
+            for channel in self.model.get_channels_in_group(groupidx)]
     
     
     # Selection methods
     # -----------------
     def selectionChanged(self, selected, deselected):
-        super(ClusterView, self).selectionChanged(selected, deselected)
-        selected_clusters = self.selected_clusters()
+        super(ChannelView, self).selectionChanged(selected, deselected)
+        selected_channels = self.selected_channels()
         selected_groups = self.selected_groups()
-        # All clusters in selected groups minus selected clusters.
-        clusters = [cluster 
+        # All channels in selected groups minus selected channels.
+        channels = [channel 
             for group in selected_groups
-                for cluster in self.get_cluster_indices_in_group(group)
-                    if cluster not in selected_clusters]
-        # Add selected clusters not in selected groups.
-        clusters.extend([cluster
-            for cluster in selected_clusters
-                if (cluster not in clusters and
-                    self.model.get_groupidx(cluster) not in selected_groups)
+                for channel in self.get_channel_indices_in_group(group)
+                    if channel not in selected_channels]
+        # Add selected channels not in selected groups.
+        channels.extend([channel
+            for channel in selected_channels
+                if (channel not in channels and
+                    self.model.get_groupidx(channel) not in selected_groups)
             ])
         
         # Selected groups.
         group_indices = [self.model.get_group(groupidx)
             for groupidx in selected_groups]
         
-        # log.debug("Selected {0:d} clusters.".format(len(clusters)))
-        # log.debug("Selected clusters {0:s}.".format(str(clusters)))
-        self.clustersSelected.emit(np.array(clusters, dtype=np.int32),
+        # log.debug("Selected {0:d} channels.".format(len(channels)))
+        # log.debug("Selected channels {0:s}.".format(str(channels)))
+        self.channelsSelected.emit(np.array(channels, dtype=np.int32),
             self.wizard)
         
         # if group_indices:
             # self.scrollTo(group_indices[-1].index)
-        if len(self.clusters_selected_previous) <= 1:
-            if len(clusters) == 1:
-                self.scrollTo(self.model.get_cluster(clusters[0]).index)
+        if len(self.channels_selected_previous) <= 1:
+            if len(channels) == 1:
+                self.scrollTo(self.model.get_channel(channels[0]).index)
             elif len(group_indices) == 1:
                 self.scrollTo(group_indices[0].index)
     
         self.wizard = False
-        self.clusters_selected_previous = clusters
+        self.channels_selected_previous = channels
         self.update_actions()
     
     # Selected items
     # --------------
     def selected_items(self):
-        """Return the list of selected cluster indices."""
+        """Return the list of selected channel indices."""
         return [(v.internalPointer()) \
                     for v in self.selectedIndexes() \
                         if v.column() == 0]
                             
-    def selected_clusters(self):
-        """Return the list of selected cluster indices."""
-        return [(v.internalPointer().clusteridx()) \
+    def selected_channels(self):
+        """Return the list of selected channel indices."""
+        return [(v.internalPointer().channelidx()) \
                     for v in self.selectedIndexes() \
                         if v.column() == 0 and \
-                           type(v.internalPointer()) == ClusterItem]
+                           type(v.internalPointer()) == ChannelItem]
               
     def selected_groups(self):
         """Return the list of selected groups."""
@@ -971,22 +971,22 @@ class ClusterView(QtGui.QTreeView):
         shift = modif & QtCore.Qt.ShiftModifier
         alt = modif & QtCore.Qt.AltModifier
         if (ctrl and key == QtCore.Qt.Key_A):
-            self.select(self.get_cluster_indices())
+            self.select(self.get_channel_indices())
         else:
-            return super(ClusterView, self).keyPressEvent(e)
+            return super(ChannelView, self).keyPressEvent(e)
         
     
     # Save and restore geometry
     # -------------------------
     def save_geometry(self):
-        SETTINGS['cluster_widget.geometry'] = encode_bytearray(
+        SETTINGS['channel_widget.geometry'] = encode_bytearray(
             self.saveGeometry())
-        SETTINGS['cluster_widget.header'] = encode_bytearray(
+        SETTINGS['channel_widget.header'] = encode_bytearray(
             self.header().saveState())
         
     def restore_geometry(self):
-        g = SETTINGS['cluster_widget.geometry']
-        h = SETTINGS['cluster_widget.header']
+        g = SETTINGS['channel_widget.geometry']
+        h = SETTINGS['channel_widget.header']
         if g:
             self.restoreGeometry(decode_bytearray(g))
         if h:
@@ -995,6 +995,6 @@ class ClusterView(QtGui.QTreeView):
     def closeEvent(self, e):
         # Save the window geometry when closing the software.
         self.save_geometry()
-        return super(ClusterView, self).closeEvent(e)
+        return super(ChannelView, self).closeEvent(e)
         
         
