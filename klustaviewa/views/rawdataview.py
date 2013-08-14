@@ -28,7 +28,7 @@ class RawDataManager(Manager):
         self.max_size = 1000
         self.duration_initial = 10.
         self.default_channel_height = 0.25
-        self.channel_height_limits = (0.01, 2.)
+        self.channel_height_limits = (0.01, 20.)
         self.nticks = 10
         
         # these variables will be overwritten after initialization (used to check if init is complete)
