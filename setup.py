@@ -42,7 +42,7 @@ if __name__ == '__main__':
     setup(
         zip_safe=False,
         name='klustaviewa',
-        version='0.2.0',
+        version='0.2.0dev',
         author='Cyrille Rossant',
         author_email='rossant@github',
         packages=['klustaviewa',

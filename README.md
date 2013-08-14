@@ -36,7 +36,14 @@ Installation
 
 ### Mac OS X and Linux
 
-  * Step 1: [install Anaconda](http://continuum.io/downloads). Download the adequate version (64 bits if possible). If you're asked confirmation at some steps during installation, answer *yes*.
+  * Step 1: [install Anaconda](http://continuum.io/downloads).
+  
+      * Download the adequate version (64 bits if possible).
+      * Execute the installer. On Linux, you need to type a command similar to:
+            
+            $ bash Anaconda-1.6.1-Linux-x86_64.sh
+      
+      * You will need to press Enter or 'yes' at some steps.
   
   * Step 2: execute the following commands:
 
