@@ -4,6 +4,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 import time
+import sys
 import traceback
 from threading import Lock
 
@@ -122,8 +123,14 @@ class ThreadedTasks(QtCore.QObject):
             impatient=True)
         self.correlograms_task = inprocess(CorrelogramsTask)(
             impatient=True, use_master_thread=False)
-        self.similarity_matrix_task = inprocess(SimilarityMatrixTask)(
-            impatient=True, use_master_thread=False)
+        # HACK: the similarity matrix view does not appear to update on
+        # some versions of Mac+Qt, but it seems to work with inthread
+        if sys.platform == 'darwin':
+            self.similarity_matrix_task = inthread(SimilarityMatrixTask)(
+                impatient=True)
+        else:
+            self.similarity_matrix_task = inprocess(SimilarityMatrixTask)(
+                impatient=True, use_master_thread=False)
 
     def join(self):
         self.selection_task.join()
@@ -132,6 +139,9 @@ class ThreadedTasks(QtCore.QObject):
         
     def terminate(self):
         self.correlograms_task.terminate()
-        self.similarity_matrix_task.terminate()
+        # The similarity matrix is in an external process only
+        # if the system is not a Mac.
+        if sys.platform != 'darwin':
+            self.similarity_matrix_task.terminate()
     
         
