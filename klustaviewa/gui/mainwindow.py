@@ -89,7 +89,6 @@ class MainWindow(QtGui.QMainWindow):
         self.statscache = None
         # self.loader = KlustersLoader()
         self.loader = HDF5Loader(userpref=USERPREF)
-        self.loader_raw = HDF5RawDataLoader()
         self.loader.progressReported.connect(self.open_progress_reported)
         self.loader.saveProgressReported.connect(self.save_progress_reported)
         self.wizard = Wizard()
@@ -131,7 +130,7 @@ class MainWindow(QtGui.QMainWindow):
         # Automatically load a file upon startup if requested.
         if filename:
             filename = os.path.realpath(filename)
-            self.open_task.open(self.loader, self.loader_raw, filename)
+            self.open_task.open(self.loader, filename)
         
         self.show()
     
@@ -731,7 +730,7 @@ class MainWindow(QtGui.QMainWindow):
         # If a file has been selected, open it.
         if path:
             # Launch the loading task in the background asynchronously.
-            self.open_task.open(self.loader, self.loader_raw, path)
+            self.open_task.open(self.loader, path)
             # Save the folder.
             folder = os.path.dirname(path)
             SETTINGS['main_window.last_data_dir'] = folder
@@ -749,7 +748,7 @@ class MainWindow(QtGui.QMainWindow):
     def open_last_callback(self, checked=None):
         path = SETTINGS['main_window.last_data_file']
         if path:
-            self.open_task.open(self.loader, self.loader_raw, path)
+            self.open_task.open(self.loader, path)
             
     def close_callback(self, checked=None):
         self.is_file_open = False

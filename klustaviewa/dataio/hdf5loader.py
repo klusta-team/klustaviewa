@@ -46,23 +46,6 @@ class HDF5Loader(Loader):
         self.filename_kla = filenames['hdf5_kla']
         self.filename_raw_kld = filenames['hdf5_raw']
         self.filename = self.filename_klx
-    
-    # def open_klx(self, filename):
-    #     """Open a file."""
-    #     self.set_filenames(filename)
-    #     # Conversion if the klx HDF5 file does not exist.
-    #     self.read_klx()
-    #     
-    # def open_kla(self, filename):
-    #     """Open a file."""
-    #     filenames = find_filenames(filename)
-    #     self.read_kla()
-    #         
-    # def open_kld(self, filename):
-    #     """Open a file."""
-    #     filenames = find_filenames(filename)
-    # 
-    #     self.read_kld()
        
     def klusters_to_hdf5_progress_report(self, spike, nspikes, shank, nshanks):
         count = 100 * nshanks
@@ -108,7 +91,7 @@ class HDF5Loader(Loader):
     
     def open_kld(self):
         try:
-            self.kld_raw = tb.openFile(self.filename_raw)
+            self.kld_raw = tb.openFile(self.filename_raw_kld)
         except:
             self.kld_raw = None
     
@@ -303,6 +286,21 @@ class HDF5Loader(Loader):
         self.background_clusters = self.background_table['cluster_manual']
         self.spikes_selected_table = None
         
+    # Raw data functions.
+    def get_rawdata(self):
+        try:
+            rawdata = self.kld_raw.root.data
+        except:
+            rawdata = None
+            
+        freq = 20000.
+        dead_channels = np.arange(0,5,1)
+        data = dict(
+            rawdata=rawdata,
+            freq=freq,
+            dead_channels=dead_channels,
+        )
+        return data
 
     # Access to the data: spikes
     # --------------------------
