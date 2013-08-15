@@ -9,7 +9,7 @@ import time
 import numpy as np
 import numpy.random as rnd
 import pandas as pd
-from galry import show_window
+from qtools import show_window
 
 from klustaviewa.gui.mainwindow import MainWindow
 from klustaviewa.dataio import KlustersLoader

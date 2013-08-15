@@ -9,8 +9,7 @@ import time
 import threading
 
 import numpy as np
-from qtools import QtCore, QtGui
-from galry import get_application
+from qtools import QtCore, QtGui, get_application
 
 from klustaviewa.gui.taskgraph import AbstractTaskGraph
 

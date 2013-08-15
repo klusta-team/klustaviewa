@@ -9,8 +9,9 @@ import time
 import numpy as np
 import numpy.random as rdn
 
+from qtools import QtGui, QtCore, show_window
 from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
-    GalryWidget, QtGui, QtCore, show_window, enforce_dtype, RectanglesVisual,
+    GalryWidget, enforce_dtype, RectanglesVisual,
     TextVisual, PlotVisual, AxesVisual, GridVisual, NavigationEventProcessor,
     EventProcessor, DataNormalizer)
     

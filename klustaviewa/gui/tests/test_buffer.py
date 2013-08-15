@@ -8,7 +8,7 @@ import sys
 import time
 import threading
 
-from galry import get_application, QtCore, QtGui
+from qtools import get_application, QtCore, QtGui
 
 import klustaviewa.utils.logger as log
 from klustaviewa.gui.buffer import Buffer
