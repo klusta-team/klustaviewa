@@ -23,28 +23,20 @@ from klustaviewa.views.treemodel import TreeModel, TreeItem
 # Specific item classes
 # ---------------------
 class ChannelItem(TreeItem):
-    def __init__(self, parent=None, channelidx=None, color=None, bgcolor=None,
-            spkcount=None, quality=None):
+    def __init__(self, parent=None, name=None, channelidx=None, color=None):
         if color is None:
             color = 0
-        if quality is None:
-            quality = 0.
+        if name is None:
+           name = str(channelidx) if channelidx is not None else ''
         data = OrderedDict()
         # different columns fields
-        data['quality'] = quality
-        data['spkcount'] = spkcount
         data['color'] = color
-        self.bgcolor = bgcolor
-        # data['bgcolor'] = bgcolor
         # the index is the last column
         data['channelidx'] = channelidx
         super(ChannelItem, self).__init__(parent=parent, data=data)
-
-    def spkcount(self):
-        return self.item_data['spkcount']
-
-    def quality(self):
-        return self.item_data['quality']
+        
+    def name(self):
+        return self.item_data['name']
 
     def color(self):
         return self.item_data['color']
@@ -54,12 +46,10 @@ class ChannelItem(TreeItem):
 
 
 class GroupItem(TreeItem):
-    def __init__(self, parent=None, name=None, groupidx=None, color=None, spkcount=None):
+    def __init__(self, parent=None, name=None, groupidx=None, color=None):
         data = OrderedDict()
         # different columns fields
         data['name'] = name
-        data['quality'] = 0.
-        data['spkcount'] = spkcount
         data['color'] = color
         # the index is the last column
         data['groupidx'] = groupidx
@@ -70,12 +60,6 @@ class GroupItem(TreeItem):
 
     def color(self):
         return self.item_data['color']
-
-    def quality(self):
-        return self.item_data['quality']
-        
-    def spkcount(self):
-        return self.item_data['spkcount']
         
     def groupidx(self):
         return self.item_data['groupidx']
@@ -87,7 +71,7 @@ class GroupItem(TreeItem):
 # Custom model
 # ------------
 class ChannelViewModel(TreeModel):
-    headers = ['Channel', 'Quality', 'Spikes', 'Color']
+    headers = ['Channel', 'Name', 'Color']
     channelsMoved = QtCore.pyqtSignal(np.ndarray, int)
     
     def __init__(self, **kwargs):
@@ -172,6 +156,7 @@ class ChannelViewModel(TreeModel):
         
         return dict(channel_colors=channel_colors,
                     channel_groups=channel_groups,
+                    channel_names=channel_names,
                     group_colors=group_colors,
                     group_names=group_names)
     
