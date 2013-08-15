@@ -18,7 +18,7 @@ except Exception as e:
     "application: " + e.message))
     
 import galry
-from galry import QtGui, QtCore
+from qtools import QtGui, QtCore
 
 
 # -----------------------------------------------------------------------------

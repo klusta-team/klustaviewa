@@ -6,9 +6,7 @@
 import cPickle
 import os
 
-from klustaviewa import get_global_path, get_app_folder
 from klustaviewa.utils.globalpaths import ensure_folder_exists
-from klustaviewa import APPNAME
 
 
 # -----------------------------------------------------------------------------

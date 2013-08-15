@@ -7,7 +7,8 @@ import os
 import threading
 import time
 
-from galry import QtGui, QtCore, show_window
+from qtools import QtGui, QtCore
+from qtools import show_window
 
 import mock_data as md
 from klustaviewa.stats.correlograms import NCORRBINS_DEFAULT, CORRBIN_DEFAULT

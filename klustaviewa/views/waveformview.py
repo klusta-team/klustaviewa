@@ -9,8 +9,9 @@ from numpy.lib.stride_tricks import as_strided
 import operator
 import time
 
+from qtools import QtGui, QtCore, show_window, get_application
 from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
-    GalryWidget, QtGui, QtCore, show_window, enforce_dtype, RectanglesVisual,
+    GalryWidget, enforce_dtype, RectanglesVisual,
     TextVisual)
 from klustaviewa.dataio.tools import get_array
 from klustaviewa.dataio.selection import get_spikes_in_clusters, select, get_indices

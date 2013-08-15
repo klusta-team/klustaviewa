@@ -8,7 +8,7 @@ import time
 import numpy as np
 import numpy.random as rdn
 
-from galry import QtGui, QtCore
+from qtools import QtGui, QtCore
     
 import klustaviewa.utils.logger as log
 from klustaviewa.views.featureview import FeatureView

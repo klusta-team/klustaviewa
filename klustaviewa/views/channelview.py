@@ -10,7 +10,7 @@ from collections import OrderedDict
 import pandas as pd
 import numpy as np
 import numpy.random as rnd
-from galry import QtGui, QtCore
+from qtools import QtGui, QtCore
 
 from klustaviewa.dataio.selection import get_indices, select
 from klustaviewa.gui.icons import get_icon

@@ -6,7 +6,7 @@
 import cPickle
 import sys
 
-from galry import QtCore, QtGui
+from qtools import QtCore, QtGui
 
 
 # -----------------------------------------------------------------------------

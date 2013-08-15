@@ -8,7 +8,7 @@ import re
 
 import numpy as np
 
-from galry import show_window
+from qtools import show_window
 from klustaviewa.gui.kwikskope import KwikSkope
 
 

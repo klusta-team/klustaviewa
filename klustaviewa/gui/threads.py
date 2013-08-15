@@ -31,10 +31,11 @@ class OpenTask(QtCore.QObject):
 
         try:
             loader.close()
-            loader.set_filenames(path)
-            loader.open_kla()
-            loader.open_klx()
-            loader.open_kld()
+            # loader.set_filenames(path)
+            loader.open(path)
+            # loader.open_kla()
+            # loader.open_klx()
+            # loader.open_kld()
             
             self.dataOpened.emit()
         except Exception as e:
