@@ -38,6 +38,13 @@ from klustaviewa.utils.colors import COLORS_COUNT, generate_colors
 class HDF5Loader(Loader):
     # Read functions.
     # ---------------
+    def open(self, filename=None):
+        """Open everything."""
+        self.set_filenames(filename)
+        self.open_aesthetic()
+        self.open_spikes()
+        self.open_traces()
+        
     def set_filenames(self, filename):
         filenames = find_filenames(filename)
         self.filename_klx = filenames['hdf5_klx']
@@ -52,7 +59,7 @@ class HDF5Loader(Loader):
         index = int((shank + spike * 1. / nspikes) * 100)
         self.report_progress(index, count)
        
-    def open_klx(self):
+    def open_spikes(self):
         """Open a HDF5 klx file."""
         
         if not os.path.exists(self.filename_klx):
@@ -81,19 +88,22 @@ class HDF5Loader(Loader):
         # By default, read the first available shank.
         self.set_shank(self.shanks[0])
         
-    def open_kla(self):
+    def open_aesthetic(self):
         # Read KLA file.
         try:
             with open(self.filename_kla) as f:
                 self.kla_json = f.read()
+            self.kla = load_kla_json(self.kla_json)
         except IOError:
             self.kla_json = None
+            self.kla = None
     
-    def open_kld(self):
+    def open_traces(self):
         try:
             self.kld_raw = tb.openFile(self.filename_raw_kld)
         except:
             self.kld_raw = None
+    
     
     # Shank functions.
     # ----------------
@@ -202,10 +212,10 @@ class HDF5Loader(Loader):
         group_names = self.groups_table.col('name')
 
         # Getting the colors from the KLA file, or creating them.
-        kla = load_kla_json(self.kla_json)
-        if kla:
-            cluster_colors = kla[self.shank]['cluster_colors']
-            group_colors = kla[self.shank]['group_colors']
+        # kla = load_kla_json(self.kla_json)
+        if self.kla:
+            cluster_colors = self.kla[self.shank]['cluster_colors']
+            group_colors = self.kla[self.shank]['group_colors']
         else:
             cluster_colors = generate_colors(len(clusters))
             group_colors = generate_colors(len(groups))

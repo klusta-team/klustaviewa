@@ -130,11 +130,22 @@ class Loader(QtCore.QObject):
         self.userpref = userpref
         
         if filename:
-            self.open(filename)
+            self.filename = filename
+            self.open(self.filename)
     
-    def open(self, filename):
+    def open(self, filename=None):
+        """Open everything."""
         pass
-    
+        
+    def open_spikes(self):
+        """Open just spike-related information."""
+        
+    def open_traces(self):
+        """Open just trace information."""
+
+    def open_aesthetic(self):
+        """Open aesthetic visualization-related information."""
+        
     
     # Input-Output methods
     # --------------------
@@ -322,9 +333,6 @@ class Loader(QtCore.QObject):
             return groups.max() + 1
         else:
             return 0
-    
-    # def get_correlogram_window(self):
-        # return self.ncorrbins * self.corrbin
     
     def set_override_color(self, override_color):
         self.override_color = override_color
