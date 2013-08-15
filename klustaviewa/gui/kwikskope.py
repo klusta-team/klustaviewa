@@ -521,20 +521,20 @@ class KwikSkope(QtGui.QMainWindow):
                     view.run_file(os.path.join(path, file))
         self.views['IPythonView'].append(view)
             
-    def add_rawdata_view(self, do_update=None, floating=False):
-        if len(self.views['RawDataView']) >= 1:
+    def add_trace_view(self, do_update=None, floating=False):
+        if len(self.views['TraceView']) >= 1:
             return
-        view = self.create_view(vw.RawDataView,
-            index=len(self.views['RawDataView']),
+        view = self.create_view(vw.TraceView,
+            index=len(self.views['TraceView']),
             position=QtCore.Qt.RightDockWidgetArea,
             floating=floating)
-        self.views['RawDataView'].append(view)
+        self.views['TraceView'].append(view)
         if do_update and self.is_file_open:
-            self.update_rawdata_view()
+            self.update_trace_view()
             
-    def update_rawdata_view(self):
-        data = vd.get_rawdataview_data(self.loader)
-        [view.set_data(**data) for view in self.get_views('RawDataView')]
+    def update_trace_view(self):
+        data = vd.get_traceview_data(self.loader)
+        [view.set_data(**data) for view in self.get_views('TraceView')]
 
     def update_channel_view(self, channels=None):
         """Update the channel view using the data stored in the loader
@@ -561,7 +561,7 @@ class KwikSkope(QtGui.QMainWindow):
         self.views = dict(
             ChannelView=[],
             IPythonView=[],
-            RawDataView=[],
+            TraceView=[],
             )
         
         # count = SETTINGS['main_window.views']
@@ -573,13 +573,13 @@ class KwikSkope(QtGui.QMainWindow):
     
     def create_default_views(self, do_update=None, floating=False):
         self.add_channel_view(do_update=do_update)
-        self.add_rawdata_view(do_update=do_update)
+        self.add_trace_view(do_update=do_update)
     
     def create_custom_views(self, count):
         print "IM CREATING MY STUFF YEAH"
         [self.add_channel_view() for _ in xrange(count['ChannelView'])]
         [self.add_ipython_view() for _ in xrange(count['IPythonView'])]
-        [self.add_rawdata_view() for _ in xrange(count['RawDataView'])]
+        [self.add_trace_view() for _ in xrange(count['TraceView'])]
     
     def dock_widget_closed(self, dock):
         for key in self.views.keys():
@@ -639,7 +639,7 @@ class KwikSkope(QtGui.QMainWindow):
 
         # Update the views.
         self.update_channel_view()
-        self.update_rawdata_view()
+        self.update_trace_view()
 
         # Clear the ChannelView.
         self.get_view('ChannelView').clear()
@@ -674,7 +674,7 @@ class KwikSkope(QtGui.QMainWindow):
         
         # Update the views.
         self.update_channel_view()
-        self.update_rawdata_view()
+        self.update_trace_view()
         
     def open_failed(self, message):
         self.open_progress.setValue(0)
@@ -714,8 +714,8 @@ class KwikSkope(QtGui.QMainWindow):
     # Views menu callbacks.
     # ---------------------
     
-    def add_rawdata_view_callback(self, checked=None):
-            self.add_rawdata_view(do_update=True, floating=True)
+    def add_trace_view_callback(self, checked=None):
+            self.add_trace_view(do_update=True, floating=True)
     
     def add_ipython_view_callback(self, checked=None):
         self.add_ipython_view()

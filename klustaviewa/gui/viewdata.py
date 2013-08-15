@@ -36,8 +36,8 @@ def get_waveformview_data(loader, autozoom=None, wizard=None):
     )
     return data
 
-def get_rawdataview_data(loader):
-    return loader.get_rawdata()
+def get_traceview_data(loader):
+    return loader.get_trace()
     
 def get_clusterview_data(loader, statscache, clusters=None):
     data = dict(

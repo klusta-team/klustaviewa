@@ -12,17 +12,17 @@ from klustaviewa.views.common import KlustaViewaBindings, KlustaView
 import kwiklib.utils.logger as log
 from qtools import inthread
 
-__all__ = ['RawDataView']
+__all__ = ['TraceView']
 
 # -----------------------------------------------------------------------------
 # Data manager
 # -----------------------------------------------------------------------------
 
-class RawDataManager(Manager):
+class TraceManager(Manager):
     info = {}
     
     # initialization
-    def set_data(self, rawdata=None, freq=None, channel_height=None, channel_names=None, dead_channels=None):
+    def set_data(self, trace=None, freq=None, channel_height=None, channel_names=None, dead_channels=None):
 
         # default settings
         self.max_size = 1000
@@ -36,17 +36,17 @@ class RawDataManager(Manager):
         self.paintinitialized = False # to stop first slice from being loaded until correctly-shaped data drawn
         self.real_data = True # hides grid and painting if we've made up false data of zeros
         
-        if rawdata is None:
-            rawdata = np.zeros((self.duration_initial * 2, 32))
+        if trace is None:
+            trace = np.zeros((self.duration_initial * 2, 32))
             freq = 1
             self.real_data = False
             
         # load initial variables
-        self.rawdata = rawdata
+        self.trace = trace
         self.dead_channels = dead_channels
         self.freq = freq
-        self.totalduration = (self.rawdata.shape[0] - 1) / self.freq
-        self.totalsamples, self.nchannels = self.rawdata.shape
+        self.totalduration = (self.trace.shape[0] - 1) / self.freq
+        self.totalsamples, self.nchannels = self.trace.shape
         
         if channel_height is None:
             channel_height = self.default_channel_height
@@ -92,7 +92,7 @@ class RawDataManager(Manager):
             slice = self.get_viewslice(xlim_ext)
             
             # this executes in a new thread, and calls slice_loaded when done
-            self.slice_retriever.load_new_slice(self.rawdata, slice, xlim_ext, self.totalduration, self.duration_initial)
+            self.slice_retriever.load_new_slice(self.trace, slice, xlim_ext, self.totalduration, self.duration_initial)
             
     def get_buffered_viewlimits(self, xlim):
         d = self.xlim[1] - self.xlim[0]
@@ -117,9 +117,9 @@ class RawDataManager(Manager):
           * data: a HDF5 dataset of size Nsamples x Nchannels.
           * xlim: (x0, x1) of the desired data view.
         """
-        total_size = self.rawdata.shape[0]
+        total_size = self.trace.shape[0]
         
-        samples = self.rawdata[slice, :]
+        samples = self.trace[slice, :]
         
         # Convert the data into floating points.
         samples = np.array(samples, dtype=np.float32)
@@ -165,10 +165,10 @@ class SliceRetriever(QtCore.QObject):
     def __init__(self, parent=None):
         super(SliceRetriever, self).__init__(parent)
         
-    def load_new_slice(self, rawdata, slice, xlim, totalduration, duration_initial):
+    def load_new_slice(self, trace, slice, xlim, totalduration, duration_initial):
         
-        total_size = rawdata.shape[0]
-        samples = rawdata[slice, :]
+        total_size = trace.shape[0]
+        samples = trace[slice, :]
        
         # Convert the data into floating points.
         samples = np.array(samples, dtype=np.float32)
@@ -197,12 +197,12 @@ class SliceRetriever(QtCore.QObject):
 # -----------------------------------------------------------------------------
 # Visuals
 # -----------------------------------------------------------------------------
-class RawDataPaintManager(PlotPaintManager):
+class TracePaintManager(PlotPaintManager):
     
     def initialize(self):
         self.add_visual(MultiChannelVisual,
             position=self.data_manager.position,
-            name='rawdata_waveforms',
+            name='trace_waveforms',
             shape=self.data_manager.shape,
             channel_height=self.data_manager.channel_height,
             visible=self.data_manager.real_data)
@@ -210,12 +210,12 @@ class RawDataPaintManager(PlotPaintManager):
         self.add_visual(GridVisual, name='grid', background_transparent=False,
             letter_spacing=350.,)
         # if self.data_manager.no_data = False
-        # self.paint_manager.set_data(visual='rawdata_waveforms', 
+        # self.paint_manager.set_data(visual='trace_waveforms', 
         #     visible=True)
         self.data_manager.paintinitialized = True
 
     def update(self):
-        self.reinitialize_visual(visual='rawdata_waveforms',
+        self.reinitialize_visual(visual='trace_waveforms',
             channel_height=self.data_manager.channel_height,
             position=self.data_manager.position,
             shape=self.data_manager.shape,
@@ -225,7 +225,7 @@ class RawDataPaintManager(PlotPaintManager):
         self.data_manager.paintinitialized = True
             
     def update_slice(self):
-        self.set_data(visual='rawdata_waveforms',
+        self.set_data(visual='trace_waveforms',
             channel_height=self.data_manager.channel_height,
             position0=self.data_manager.position,
             shape=self.data_manager.shape,
@@ -448,7 +448,7 @@ class ViewportUpdateProcessor(EventProcessor):
 # -----------------------------------------------------------------------------
 # Interactivity
 # -----------------------------------------------------------------------------
-class RawDataInteractionManager(PlotInteractionManager):
+class TraceInteractionManager(PlotInteractionManager):
     def initialize(self):
         self.register('ChangeChannelHeight', self.change_channel_height)
         self.register('Reset', self.reset_channel_height)
@@ -490,29 +490,29 @@ class RawDataInteractionManager(PlotInteractionManager):
         elif self.data_manager.channel_height < ll:
             self.data_manager.channel_height = ll
             
-        self.paint_manager.set_data(channel_height=self.data_manager.channel_height, visual='rawdata_waveforms')
+        self.paint_manager.set_data(channel_height=self.data_manager.channel_height, visual='trace_waveforms')
         
     def reset_channel_height(self, parameter):
         self.data_manager.channel_height = self.data_manager.default_channel_height
-        self.paint_manager.set_data(channel_height=self.data_manager.channel_height, visual='rawdata_waveforms')
+        self.paint_manager.set_data(channel_height=self.data_manager.channel_height, visual='trace_waveforms')
     
-class RawDataBindings(KlustaViewaBindings):      
+class TraceBindings(KlustaViewaBindings):      
     def initialize(self):
         self.set('Wheel', 'ChangeChannelHeight', key_modifier='Control',
                    param_getter=lambda p: p['wheel'] * .001)
 # -----------------------------------------------------------------------------
 # Top-level widget
 # -----------------------------------------------------------------------------
-class RawDataView(KlustaView):
+class TraceView(KlustaView):
     
     # Initialization
     # --------------
     def initialize(self):
-        self.set_bindings(RawDataBindings)
+        self.set_bindings(TraceBindings)
         self.set_companion_classes(
-            paint_manager=RawDataPaintManager,
-            interaction_manager=RawDataInteractionManager,
-            data_manager=RawDataManager)
+            paint_manager=TracePaintManager,
+            interaction_manager=TraceInteractionManager,
+            data_manager=TraceManager)
     
     def set_data(self, *args, **kwargs):
         self.data_manager.set_data(*args, **kwargs)
@@ -527,18 +527,18 @@ class RawDataView(KlustaView):
     # -------------------------
     def save_geometry(self):
         # pref = self.position_manager.get_geometry_preferences()
-        # SETTINGS.set('rawdata_view.geometry', pref)
+        # SETTINGS.set('trace_view.geometry', pref)
         pass
 
     def restore_geometry(self):
         """Return a dictionary with the user preferences regarding geometry
         in the WaveformView."""
-        # pref = SETTINGS.get('rawdata_view.geometry')
+        # pref = SETTINGS.get('trace_view.geometry')
         # self.position_manager.set_geometry_preferences(pref)
         pass
 
     def closeEvent(self, e):
         self.save_geometry()
-        super(RawDataView, self).closeEvent(e)
+        super(TraceView, self).closeEvent(e)
       
         

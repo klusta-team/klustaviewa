@@ -225,7 +225,7 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('add_correlograms_view', 'Add &CorrelogramsView')
         self.add_action('add_ipython_view', 'Add &IPythonView')
         self.add_action('add_log_view', 'Add &LogView')
-        self.add_action('add_rawdata_view', 'Add &RawDataView')
+        self.add_action('add_trace_view', 'Add &TraceView')
         self.add_action('reset_views', '&Reset views')
         self.add_action('toggle_fullscreen', 'Toggle fullscreen', shortcut='F')
         
@@ -305,7 +305,7 @@ class MainWindow(QtGui.QMainWindow):
         views_menu.addAction(self.add_waveform_view_action)
         views_menu.addAction(self.add_correlograms_view_action)
         views_menu.addAction(self.add_similarity_matrix_view_action)
-        views_menu.addAction(self.add_rawdata_view_action)
+        views_menu.addAction(self.add_trace_view_action)
         views_menu.addSeparator()
         views_menu.addAction(self.add_log_view_action)
         if vw.IPYTHON:
@@ -620,16 +620,16 @@ class MainWindow(QtGui.QMainWindow):
         if do_update and self.is_file_open and self.loader.has_selection():
             self.taskgraph.update_correlograms_view()
             
-    def add_rawdata_view(self, do_update=None, floating=False):
-        if len(self.views['RawDataView']) >= 1:
+    def add_trace_view(self, do_update=None, floating=False):
+        if len(self.views['TraceView']) >= 1:
             return
-        view = self.create_view(vw.RawDataView,
-            index=len(self.views['RawDataView']),
+        view = self.create_view(vw.TraceView,
+            index=len(self.views['TraceView']),
             position=QtCore.Qt.RightDockWidgetArea,
             floating=floating)
-        self.views['RawDataView'].append(view)
+        self.views['TraceView'].append(view)
         if do_update and self.is_file_open:
-            self.taskgraph.update_rawdata_view()
+            self.taskgraph.update_trace_view()
             
     def get_view(self, name, index=0):
         views = self.views[name] 
@@ -652,7 +652,7 @@ class MainWindow(QtGui.QMainWindow):
             FeatureView=[],
             CorrelogramsView=[],
             IPythonView=[],
-            RawDataView=[],
+            TraceView=[],
             LogView=[],
             )
         
@@ -697,7 +697,7 @@ class MainWindow(QtGui.QMainWindow):
         [self.add_log_view() for _ in xrange(count.get('LogView', 0))]
         [self.add_ipython_view() for _ in xrange(count.get('IPythonView', 0))]
         [self.add_correlograms_view() for _ in xrange(count.get('CorrelogramsView', 0))]
-        [self.add_rawdata_view() for _ in xrange(count.get('RawDataView', 0))]
+        [self.add_trace_view() for _ in xrange(count.get('TraceView', 0))]
     
     def dock_widget_closed(self, dock):
         for key in self.views.keys():
@@ -813,7 +813,7 @@ class MainWindow(QtGui.QMainWindow):
         # self.taskgraph.update_projection_view()
         self.taskgraph.update_cluster_view()
         self.taskgraph.compute_similarity_matrix()
-        self.taskgraph.update_rawdata_view()
+        self.taskgraph.update_trace_view()
         
     def open_failed(self, message):
         self.open_progress.setValue(0)
@@ -864,8 +864,8 @@ class MainWindow(QtGui.QMainWindow):
     def add_correlograms_view_callback(self, checked=None):
         self.add_correlograms_view(do_update=True, floating=True)
     
-    def add_rawdata_view_callback(self, checked=None):
-            self.add_rawdata_view(do_update=True, floating=True)
+    def add_trace_view_callback(self, checked=None):
+            self.add_trace_view(do_update=True, floating=True)
     
     def add_log_view_callback(self, checked=None):
         self.add_log_view()

@@ -294,9 +294,9 @@ class TaskGraph(AbstractTaskGraph):
             wizard=wizard)
         [view.set_data(**data) for view in self.get_views('WaveformView')]
         
-    def _update_rawdata_view(self):
-        data = vd.get_rawdataview_data(self.loader)
-        [view.set_data(**data) for view in self.get_views('RawDataView')]
+    def _update_trace_view(self):
+        data = vd.get_traceview_data(self.loader)
+        [view.set_data(**data) for view in self.get_views('TraceView')]
         
     def _update_cluster_view(self, clusters=None):
         """Update the cluster view using the data stored in the loader
