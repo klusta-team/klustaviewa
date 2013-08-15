@@ -36,7 +36,7 @@ def setup():
     
     
     # Create mock directory if needed.
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
+    dir = TEST_FOLDER
     if not os.path.exists(dir):
         os.mkdir(dir)
         
@@ -65,7 +65,7 @@ def setup():
 # Tests
 # -----------------------------------------------------------------------------
 def test_hdf5():
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
+    dir = TEST_FOLDER
     filename = os.path.join(dir, 'test.xml')
     
     # Convert in HDF5.

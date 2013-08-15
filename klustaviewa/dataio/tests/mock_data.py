@@ -172,7 +172,7 @@ def setup():
     # log.debug("Creating mock data for dataio subpackage.")
     
     # Create mock directory if needed.
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
+    dir = TEST_FOLDER
     if not os.path.exists(dir):
         os.mkdir(dir)
     # else:
@@ -221,7 +221,7 @@ def teardown():
     # log.debug("Erasing mock data for dataio subpackage.")
     
     # Erase the temporary data directory.
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
+    dir = TEST_FOLDER
     # if os.path.exists(dir):
         # shutil.rmtree(dir, ignore_errors=True)
     # Erase the contents instead, otherwise run into Access denied errors

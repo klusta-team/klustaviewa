@@ -29,7 +29,7 @@ def normalize_inplace(x):
 # -----------------------------------------------------------------------------
 def test_hdf5_loader1():
     # Open the mock data.
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
+    dir = TEST_FOLDER
     filename = os.path.join(dir, 'test.xml')
     
     global nspikes

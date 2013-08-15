@@ -99,7 +99,7 @@ def test_triplets():
         'my/path/blabla.aclu.34'
     
 def test_clusters():
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
+    dir = TEST_FOLDER
     clufile = os.path.join(dir, 'test.aclu.1')
     clufile2 = os.path.join(dir, 'test.aclu.1.saved')
     clusters = read_clusters(clufile)
@@ -232,7 +232,7 @@ def test_convert_to_clu():
     assert np.array_equal(clusters_new == 1, mua)
     
 def test_cluster_info():
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
+    dir = TEST_FOLDER
     clufile = os.path.join(dir, 'test.aclu.1')
     cluinfofile = os.path.join(dir, 'test.acluinfo.1')
 
@@ -250,7 +250,7 @@ def test_cluster_info():
     assert np.array_equal(cluster_info.values, cluster_info2.values)
     
 def test_group_info():
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
+    dir = TEST_FOLDER
     groupinfofile = os.path.join(dir, 'test.groups.1')
 
     group_info = np.zeros((4, 2), dtype=object)
@@ -266,7 +266,7 @@ def test_group_info():
     
 def test_klusters_loader_1():
     # Open the mock data.
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
+    dir = TEST_FOLDER
     xmlfile = os.path.join(dir, 'test.xml')
     l = KlustersLoader(filename=xmlfile)
     
@@ -323,7 +323,7 @@ def test_klusters_loader_1():
     
 def test_klusters_loader_2():
     # Open the mock data.
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
+    dir = TEST_FOLDER
     xmlfile = os.path.join(dir, 'test.xml')
     l = KlustersLoader(filename=xmlfile)
     
@@ -375,7 +375,7 @@ def test_klusters_loader_2():
         
 def test_klusters_loader_control():
     # Open the mock data.
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
+    dir = TEST_FOLDER
     xmlfile = os.path.join(dir, 'test.xml')
     l = KlustersLoader(filename=xmlfile)
     
@@ -444,7 +444,7 @@ def test_klusters_save():
     """WARNING: this test should occur at the end of the module since it
     changes the mock data sets."""
     # Open the mock data.
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mockdata')
+    dir = TEST_FOLDER
     xmlfile = os.path.join(dir, 'test.xml')
     l = KlustersLoader(filename=xmlfile)
     

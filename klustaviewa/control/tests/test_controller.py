@@ -9,7 +9,7 @@ import numpy as np
 
 from klustaviewa.control.controller import Controller
 from kwiklib.dataio.tests.mock_data import (setup, teardown,
-                            nspikes, nclusters, nsamples, nchannels, fetdim)
+    nspikes, nclusters, nsamples, nchannels, fetdim, TEST_FOLDER)
 from kwiklib.dataio import KlustersLoader
 from kwiklib.dataio.selection import select, get_indices
 from kwiklib.dataio.tools import check_dtype, check_shape, get_array
@@ -20,8 +20,7 @@ from kwiklib.dataio.tools import check_dtype, check_shape, get_array
 # -----------------------------------------------------------------------------
 def load():
     # Open the mock data.
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                '../../dataio/tests/mockdata')
+    dir = TEST_FOLDER
     xmlfile = os.path.join(dir, 'test.xml')
     l = KlustersLoader(filename=xmlfile)
     c = Controller(l)

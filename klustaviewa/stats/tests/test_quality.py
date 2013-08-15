@@ -8,7 +8,7 @@ import os
 import numpy as np
 
 from kwiklib.dataio.tests.mock_data import (setup, teardown,
-                            nspikes, nclusters, nsamples, nchannels, fetdim)
+    nspikes, nclusters, nsamples, nchannels, fetdim, TEST_FOLDER)
 from kwiklib.dataio import KlustersLoader
 from klustaviewa.stats.quality import cluster_quality
 
@@ -18,8 +18,7 @@ from klustaviewa.stats.quality import cluster_quality
 # -----------------------------------------------------------------------------
 def load():
     # Open the mock data.
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                '../../dataio/tests/mockdata')
+    dir = TEST_FOLDER
     xmlfile = os.path.join(dir, 'test.xml')
     l = KlustersLoader(filename=xmlfile)
     # c = Controller(l)
