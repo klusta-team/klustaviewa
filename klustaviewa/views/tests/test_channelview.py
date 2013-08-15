@@ -32,9 +32,6 @@ def test_channelview():
     kwargs['channel_colors'] = data['channel_colors_full']
     # kwargs['background'] = {5: 1, 7: 2}
     
-    channels = get_indices(data['channel_sizes'])
-    quality = pd.Series(np.random.rand(len(channels)), index=channels)
-    
     kwargs['operators'] = [
         lambda self: self.view.set_quality(quality),
         lambda self: self.view.set_background({5: 1, 7: 2}),
@@ -47,5 +44,19 @@ def test_channelview():
     # Show the view.
     window = show_view(ChannelView, **kwargs)
     
-    
+def create_channel_names(nchannels):
+    return ["Channel {0:d}".format(channel) for channel in xrange(nchannels)]
+
+def create_channel_colors(nchannels):
+    return np.mod(np.arange(nchannels, dtype=np.int32), COLORS_COUNT) + 1
+
+def create_channel_group_names(nchannelgroups):
+    return ["Group {0:d}".format(channelgroup) for channelgroup in xrange(nchannelgroups)]
+
+def create_channel_groups(nchannels):
+    return np.array(np.random.randint(size=nchannels, low=0, high=4), 
+        dtype=np.int32)
+
+def create_channel_group_colors(nchannelgroups):
+    return np.mod(np.arange(nchannelgroups, dtype=np.int32), COLORS_COUNT) + 1
     
