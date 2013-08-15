@@ -49,6 +49,13 @@ def get_data():
         group_names=l.get_group_names('all'),
         cluster_sizes=l.get_cluster_sizes('all'),
         
+        # channel_names=l.get_channel_names(),
+        # channel_colors=l.get_channel_colors(),
+        # channel_groups=l.get_channel_groups(),
+        # 
+        # channel_group_colors=l.get_channel_group_colors(),
+        # channel_group_names=l.get_channel_group_names(),
+        
         spiketimes=l.get_spiketimes(),
         geometrical_positions=l.get_probe(),
         
