@@ -33,20 +33,20 @@ def create_group_info(ngroups):
     group_info[:, 2] = create_group_names(ngroups)
     return group_info
     
-def create_channel_info(nchannels, channel_offset):
-    channel_info = np.zeros((nchannels, 4), dtype=object)
-    channel_info[:, 0] = np.arange(2, nchannels + channel_offset)
-    channel_info[:, 1] = create_channel_colors(nchannels)
-    channel_info[:, 2] = create_channel_groups(nchannels)
-    channel_info[:, 3] = create_channel_names(nchannels)
-    return channel_info
-    
-def create_channel_group_info(nchannelgroups):
-    channel_group_info = np.zeros((nchannelgroups, 3), dtype=object)
-    channel_group_info[:, 0] = np.arange(nchannelgroups)
-    channel_group_info[:, 1] = create_channel_group_colors(nchannelgroups)
-    channel_group_info[:, 2] = create_channel_group_names(nchannelgroups)
-    return channel_group_info
+# def create_channel_info(nchannels, channel_offset):
+#     channel_info = np.zeros((nchannels, 4), dtype=object)
+#     channel_info[:, 0] = np.arange(2, nchannels + channel_offset)
+#     channel_info[:, 1] = create_channel_colors(nchannels)
+#     channel_info[:, 2] = create_channel_groups(nchannels)
+#     channel_info[:, 3] = create_channel_names(nchannels)
+#     return channel_info
+#     
+# def create_channel_group_info(nchannelgroups):
+#     channel_group_info = np.zeros((nchannelgroups, 3), dtype=object)
+#     channel_group_info[:, 0] = np.arange(nchannelgroups)
+#     channel_group_info[:, 1] = create_channel_group_colors(nchannelgroups)
+#     channel_group_info[:, 2] = create_channel_group_names(nchannelgroups)
+#     return channel_group_info
     
 def create_correlograms(clusters, ncorrbins):
     n = len(np.unique(clusters))
@@ -70,8 +70,8 @@ def setup():
     masks = create_masks(nspikes, nchannels, fetdim)
     cluster_info = create_cluster_info(nclusters, cluster_offset)
     group_info = create_group_info(ngroups)
-    channel_info = create_channel_info(nchannels, channel_offset)
-    channel_group_info = create_channel_group_info(nchannelgroups)
+    # channel_info = create_channel_info(nchannels, channel_offset)
+    # channel_group_info = create_channel_group_info(nchannelgroups)
     similarity_matrix = create_similarity_matrix(nclusters)
     correlograms = create_correlograms(clusters, ncorrbins)
     baselines = create_baselines(clusters)
@@ -89,8 +89,8 @@ def setup():
         masks=masks,
         cluster_info=cluster_info,
         group_info=group_info,
-        channel_info=channel_info,
-        channel_group_info=channel_group_info,
+        # channel_info=channel_info,
+        # channel_group_info=channel_group_info,
         probe=probe,
     )
     
