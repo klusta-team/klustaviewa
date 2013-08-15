@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 
 import numpy as np
 import pandas as pd
-from galry import QtGui, QtCore
+from qtools import QtGui, QtCore
 
 from loader import (Loader, default_group_info, reorder, renumber_clusters,
     default_cluster_info)

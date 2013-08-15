@@ -1,4 +1,4 @@
-from galry import QtGui, QtCore
+from qtools import QtGui, QtCore
 from collections import OrderedDict
 
 # Generic classes

@@ -14,7 +14,7 @@ import webbrowser
 import pandas as pd
 import numpy as np
 import numpy.random as rnd
-from galry import QtGui, QtCore
+from qtools import QtGui, QtCore
 from qtools import inprocess, inthread, QT_BINDING
 
 import klustaviewa.views as vw

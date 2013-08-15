@@ -12,7 +12,7 @@ from collections import Counter
 import numpy as np
 import pandas as pd
 import tables as tb
-from galry import QtGui, QtCore
+from qtools import QtGui, QtCore
 
 from loader import (Loader, default_group_info, reorder, renumber_clusters,
     default_cluster_info)

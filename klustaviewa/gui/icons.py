@@ -1,6 +1,6 @@
 import os
 import galry
-from galry import QtGui
+from qtools import QtGui
 
 __all__ = ['get_icon']
 

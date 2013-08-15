@@ -11,7 +11,7 @@ from collections import Counter
 
 import numpy as np
 import pandas as pd
-from galry import QtGui, QtCore
+from qtools import QtGui, QtCore
 
 from tools import (load_text, normalize,
     load_binary, load_pickle, save_text, get_array, 
