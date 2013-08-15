@@ -10,10 +10,10 @@ import numpy as np
 from klustaviewa.stats.cache import CacheMatrix
 from klustaviewa.stats.correlations import compute_correlations, normalize
 from klustaviewa.stats.tools import matrix_of_pairs
-from klustaviewa.dataio.tests.mock_data import (setup, teardown,
+from kwiklib.dataio.tests.mock_data import (setup, teardown,
                             nspikes, nclusters, nsamples, nchannels, fetdim)
-from klustaviewa.dataio import KlustersLoader
-from klustaviewa.dataio.tools import get_array
+from kwiklib.dataio import KlustersLoader
+from kwiklib.dataio.tools import get_array
 from klustaviewa.control.controller import Controller
 
 

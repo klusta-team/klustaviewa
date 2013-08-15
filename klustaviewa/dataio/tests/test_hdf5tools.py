@@ -12,13 +12,13 @@ import shutil
 from nose.tools import with_setup
 import tables
 
-from klustaviewa.dataio.tests.mock_data import (
+from kwiklib.dataio.tests.mock_data import (
     freq, nspikes, nclusters, nsamples, nchannels, fetdim, duration,
     create_waveforms, create_features, create_clusters, create_cluster_colors,
     create_masks, create_xml, create_probe,
     )
-from klustaviewa.dataio import HDF5Writer
-from klustaviewa.dataio import (KlustersLoader, read_clusters, save_clusters,
+from kwiklib.dataio import HDF5Writer
+from kwiklib.dataio import (KlustersLoader, read_clusters, save_clusters,
     find_filename, read_features,
     save_binary, save_text,
     read_cluster_info, save_cluster_info, read_group_info, save_group_info,

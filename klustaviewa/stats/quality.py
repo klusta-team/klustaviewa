@@ -6,8 +6,8 @@
 
 import numpy as np
 
-from klustaviewa.dataio.selection import select, get_spikes_in_clusters
-from klustaviewa.dataio.tools import get_array
+from kwiklib.dataio.selection import select, get_spikes_in_clusters
+from kwiklib.dataio.tools import get_array
 from klustaviewa.stats.correlations import (compute_statistics, normalize,
     get_similarity_matrix)
 

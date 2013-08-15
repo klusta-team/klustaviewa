@@ -15,12 +15,12 @@ from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
     TextVisual, PlotVisual, AxesVisual, GridVisual, NavigationEventProcessor,
     EventProcessor, DataNormalizer)
     
-from klustaviewa.dataio.selection import get_indices, select
-from klustaviewa.dataio.tools import get_array
+from kwiklib.dataio.selection import get_indices, select
+from kwiklib.dataio.tools import get_array
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings, KlustaView
-from klustaviewa.utils.colors import COLORMAP_TEXTURE, SHIFTLEN, COLORMAP
+from kwiklib.utils.colors import COLORMAP_TEXTURE, SHIFTLEN, COLORMAP
 # from klustaviewa import USERPREF
-import klustaviewa.utils.logger as log
+import kwiklib.utils.logger as log
 import klustaviewa
 
 

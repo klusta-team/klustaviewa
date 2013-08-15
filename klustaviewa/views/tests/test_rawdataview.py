@@ -12,9 +12,9 @@ import pandas as pd
 from klustaviewa.views.tests.mock_data import (setup, teardown, 
     create_similarity_matrix, nspikes, nclusters, nsamples, nchannels, fetdim, 
     ncorrbins, create_rawdata, freq)
-from klustaviewa.dataio import KlustersLoader
-from klustaviewa.dataio.selection import select
-from klustaviewa.dataio.tools import check_dtype, check_shape
+from kwiklib.dataio import KlustersLoader
+from kwiklib.dataio.selection import select
+from kwiklib.dataio.tools import check_dtype, check_shape
 from klustaviewa import USERPREF
 from klustaviewa.views import RawDataView
 from klustaviewa.views.tests.utils import show_view, get_data

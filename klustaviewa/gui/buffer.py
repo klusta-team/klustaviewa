@@ -9,7 +9,7 @@ from threading import Lock
 import numpy as np
 
 from qtools import QtGui, QtCore
-import klustaviewa.utils.logger as log
+import kwiklib.utils.logger as log
 
 
 # -----------------------------------------------------------------------------

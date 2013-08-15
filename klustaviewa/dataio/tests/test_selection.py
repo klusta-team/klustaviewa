@@ -8,7 +8,7 @@ from collections import Counter
 import numpy as np
 import pandas as pd
 
-from klustaviewa.dataio.selection import (select, select_pairs, get_spikes_in_clusters,
+from kwiklib.dataio.selection import (select, select_pairs, get_spikes_in_clusters,
     to_array, get_some_spikes_in_clusters, get_some_spikes)
 
 

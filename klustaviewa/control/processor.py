@@ -8,10 +8,10 @@ import inspect
 import numpy as np
 import pandas as pd
 
-import klustaviewa.utils.logger as log
-from klustaviewa.dataio.selection import get_indices, select
-from klustaviewa.dataio.tools import get_array
-from klustaviewa.utils.colors import random_color
+import kwiklib.utils.logger as log
+from kwiklib.dataio.selection import get_indices, select
+from kwiklib.dataio.tools import get_array
+from kwiklib.utils.colors import random_color
 
 
 # -----------------------------------------------------------------------------

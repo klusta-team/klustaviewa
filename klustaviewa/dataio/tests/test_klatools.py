@@ -11,7 +11,7 @@ import numpy as np
 import numpy.random as rnd
 import pandas as pd
 
-from klustaviewa.dataio import kla_to_json, load_kla_json
+from kwiklib.dataio import kla_to_json, load_kla_json
 
 # -----------------------------------------------------------------------------
 # KLA tests

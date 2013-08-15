@@ -7,7 +7,7 @@ import sys
 import os
 import logging
 
-from klustaviewa.utils.logger import (StringLogger, ConsoleLogger,
+from kwiklib.utils.logger import (StringLogger, ConsoleLogger,
     StringStream, FileLogger, register)
 
 

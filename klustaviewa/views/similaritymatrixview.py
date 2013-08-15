@@ -11,10 +11,10 @@ from galry import (Manager, DefaultPaintManager, PlotInteractionManager,
     TextVisual, TextureVisual)
 from galry.tools import hsv_to_rgb
     
-from klustaviewa.dataio.selection import get_indices
-from klustaviewa.dataio.tools import get_array
-from klustaviewa.utils.colors import COLORMAP
-import klustaviewa.utils.logger as log
+from kwiklib.dataio.selection import get_indices
+from kwiklib.dataio.tools import get_array
+from kwiklib.utils.colors import COLORMAP
+import kwiklib.utils.logger as log
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings, KlustaView
 
 

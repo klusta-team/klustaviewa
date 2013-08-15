@@ -10,10 +10,10 @@ import numpy.random as rnd
 import pandas as pd
 import shutil
 
-from klustaviewa.utils.colors import COLORS_COUNT
-from klustaviewa.dataio import MemoryLoader
-from klustaviewa.dataio.tests import *
-from klustaviewa.dataio.tools import normalize
+from kwiklib.utils.colors import COLORS_COUNT
+from kwiklib.dataio import MemoryLoader
+from kwiklib.dataio.tests import *
+from kwiklib.dataio.tools import normalize
 from klustaviewa.stats.cache import IndexedMatrix
 
 # -----------------------------------------------------------------------------

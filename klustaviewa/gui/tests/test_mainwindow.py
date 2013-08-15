@@ -12,9 +12,9 @@ import pandas as pd
 from qtools import show_window
 
 from klustaviewa.gui.mainwindow import MainWindow
-from klustaviewa.dataio import KlustersLoader
-from klustaviewa.dataio.selection import select
-from klustaviewa.dataio.tools import check_dtype, check_shape
+from kwiklib.dataio import KlustersLoader
+from kwiklib.dataio.selection import select
+from kwiklib.dataio.tools import check_dtype, check_shape
 from klustaviewa.gui.mainwindow import MainWindow
 
 

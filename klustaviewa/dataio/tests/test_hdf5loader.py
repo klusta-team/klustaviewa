@@ -11,9 +11,9 @@ import pandas as pd
 import shutil
 from nose.tools import with_setup
 
-from klustaviewa.dataio.tests.mock_data import (
+from kwiklib.dataio.tests.mock_data import (
                             nspikes, nclusters, nsamples, nchannels, fetdim)
-from klustaviewa.dataio import (HDF5Loader, HDF5Writer, select, get_indices,
+from kwiklib.dataio import (HDF5Loader, HDF5Writer, select, get_indices,
     check_dtype, check_shape, get_array, load_text, KlustersLoader,
     klusters_to_hdf5
     )

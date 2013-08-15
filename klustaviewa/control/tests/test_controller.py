@@ -8,11 +8,11 @@ import os
 import numpy as np
 
 from klustaviewa.control.controller import Controller
-from klustaviewa.dataio.tests.mock_data import (setup, teardown,
+from kwiklib.dataio.tests.mock_data import (setup, teardown,
                             nspikes, nclusters, nsamples, nchannels, fetdim)
-from klustaviewa.dataio import KlustersLoader
-from klustaviewa.dataio.selection import select, get_indices
-from klustaviewa.dataio.tools import check_dtype, check_shape, get_array
+from kwiklib.dataio import KlustersLoader
+from kwiklib.dataio.selection import select, get_indices
+from kwiklib.dataio.tools import check_dtype, check_shape, get_array
 
 
 # -----------------------------------------------------------------------------

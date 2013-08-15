@@ -7,7 +7,7 @@ import sys
 
 from qtools import QtCore
 
-from klustaviewa.utils.persistence import encode_bytearray, decode_bytearray
+from kwiklib.utils.persistence import encode_bytearray, decode_bytearray
 
 
 # -----------------------------------------------------------------------------

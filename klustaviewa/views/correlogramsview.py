@@ -10,8 +10,8 @@ from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
     TextVisual, PlotVisual, AxesVisual)
     
 from klustaviewa.stats.cache import IndexedMatrix
-from klustaviewa.dataio.tools import get_array
-from klustaviewa.utils.colors import COLORMAP
+from kwiklib.dataio.tools import get_array
+from kwiklib.utils.colors import COLORMAP
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings, KlustaView
 
 

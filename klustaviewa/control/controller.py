@@ -10,9 +10,9 @@ import pandas as pd
 
 from klustaviewa.control.processor import Processor
 from klustaviewa.control.stack import Stack
-import klustaviewa.utils.logger as log
-from klustaviewa.dataio.selection import get_indices, select
-from klustaviewa.dataio.tools import get_array
+import kwiklib.utils.logger as log
+from kwiklib.dataio.selection import get_indices, select
+from kwiklib.dataio.tools import get_array
 
 
 # -----------------------------------------------------------------------------

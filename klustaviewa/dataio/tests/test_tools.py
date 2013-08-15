@@ -8,7 +8,7 @@ import tempfile
 
 import numpy as np
 
-from klustaviewa.dataio import (normalize, find_filename, save_text, 
+from kwiklib.dataio import (normalize, find_filename, save_text, 
     MemMappedText, load_text, save_binary, read_dat)
 
 

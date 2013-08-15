@@ -8,7 +8,7 @@ from itertools import product
 
 import numpy as np
 
-import klustaviewa.utils.logger as log
+import kwiklib.utils.logger as log
 
 # Trying to load the Cython version.
 try:

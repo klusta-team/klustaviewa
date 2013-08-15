@@ -7,9 +7,9 @@ from collections import OrderedDict
 
 import numpy as np
 
-import klustaviewa.utils.logger as log
-from klustaviewa.dataio.selection import get_indices
-from klustaviewa.dataio.tools import get_array
+import kwiklib.utils.logger as log
+from kwiklib.dataio.selection import get_indices
+from kwiklib.dataio.tools import get_array
 
 
 # -----------------------------------------------------------------------------

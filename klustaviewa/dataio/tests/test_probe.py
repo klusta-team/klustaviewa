@@ -11,7 +11,7 @@ import numpy as np
 import numpy.random as rnd
 import pandas as pd
 
-from klustaviewa.dataio import probe_to_json, load_probe_json
+from kwiklib.dataio import probe_to_json, load_probe_json
 
 # -----------------------------------------------------------------------------
 # Probe tests

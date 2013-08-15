@@ -13,11 +13,11 @@ from qtools import QtGui, QtCore, show_window, get_application
 from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
     GalryWidget, enforce_dtype, RectanglesVisual,
     TextVisual)
-from klustaviewa.dataio.tools import get_array
-from klustaviewa.dataio.selection import get_spikes_in_clusters, select, get_indices
+from kwiklib.dataio.tools import get_array
+from kwiklib.dataio.selection import get_spikes_in_clusters, select, get_indices
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings, KlustaView
-from klustaviewa.utils.colors import COLORMAP_TEXTURE, SHIFTLEN
-import klustaviewa.utils.logger as log
+from kwiklib.utils.colors import COLORMAP_TEXTURE, SHIFTLEN
+import kwiklib.utils.logger as log
 from klustaviewa import SETTINGS
 
 

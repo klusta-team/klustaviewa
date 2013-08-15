@@ -5,7 +5,7 @@
 # -----------------------------------------------------------------------------
 import os
 
-import klustaviewa.utils.logger as log
+import kwiklib.utils.logger as log
 
 try:
     from IPython.qt.console.rich_ipython_widget import RichIPythonWidget

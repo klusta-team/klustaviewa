@@ -9,7 +9,7 @@ from galry import (Manager, PlotPaintManager, EventProcessor, PlotInteractionMan
     QtGui, QtCore, NavigationEventProcessor, GridVisual, TextVisual, DataNormalizer, 
     process_coordinates, get_next_color, get_color)
 from klustaviewa.views.common import KlustaViewaBindings, KlustaView
-import klustaviewa.utils.logger as log
+import kwiklib.utils.logger as log
 from qtools import inthread
 
 __all__ = ['RawDataView']

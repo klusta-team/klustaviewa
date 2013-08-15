@@ -8,7 +8,7 @@ import sys
 
 from qtools import QtGui, QtCore
 
-from klustaviewa.utils.logger import Logger
+from kwiklib.utils.logger import Logger
 
 
 # -----------------------------------------------------------------------------

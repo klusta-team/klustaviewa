@@ -36,9 +36,9 @@ def get_global_path(filename, folder=None, appname=None):
 # -----------------------------------------------------------------------------
 # Default logger
 # -----------------------------------------------------------------------------
-import klustaviewa.utils.logger as log
-import klustaviewa.utils.userpref as pref
-import klustaviewa.utils.settings as settings
+import kwiklib.utils.logger as log
+import kwiklib.utils.userpref as pref
+import kwiklib.utils.settings as settings
 
 
 # -----------------------------------------------------------------------------

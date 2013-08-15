@@ -6,7 +6,7 @@
 import cPickle
 import os
 
-from klustaviewa.utils.globalpaths import ensure_folder_exists
+from kwiklib.utils.globalpaths import ensure_folder_exists
 
 
 # -----------------------------------------------------------------------------

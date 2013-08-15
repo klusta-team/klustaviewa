@@ -21,14 +21,14 @@ import klustaviewa.views as vw
 from klustaviewa.gui.icons import get_icon
 from klustaviewa.control.controller import Controller
 from klustaviewa.wizard.wizard import Wizard
-from klustaviewa.dataio.tools import get_array
-from klustaviewa.dataio import KlustersLoader, HDF5Loader
+from kwiklib.dataio.tools import get_array
+from kwiklib.dataio import KlustersLoader, HDF5Loader
 from klustaviewa.gui.buffer import Buffer
 from klustaviewa.gui.dock import ViewDockWidget, DockTitleBar
 from klustaviewa.stats.correlations import normalize
-import klustaviewa.utils.logger as log
-from klustaviewa.utils.logger import FileLogger, register, unregister
-from klustaviewa.utils.persistence import encode_bytearray, decode_bytearray
+import kwiklib.utils.logger as log
+from kwiklib.utils.logger import FileLogger, register, unregister
+from kwiklib.utils.persistence import encode_bytearray, decode_bytearray
 from klustaviewa import USERPREF
 from klustaviewa import SETTINGS
 from klustaviewa import APPNAME, ABOUT, get_global_path

@@ -10,9 +10,9 @@ import numpy.random as rnd
 import pandas as pd
 import tables as tb
 
-from klustaviewa.dataio import (save_binary, create_kld, write_raw_data, 
+from kwiklib.dataio import (save_binary, create_kld, write_raw_data, 
     close_kld, dat_to_kld, read_dat)
-from klustaviewa.dataio.tests import create_rawdata, duration, freq, nchannels
+from kwiklib.dataio.tests import create_rawdata, duration, freq, nchannels
 
 # -----------------------------------------------------------------------------
 # Test fixtures

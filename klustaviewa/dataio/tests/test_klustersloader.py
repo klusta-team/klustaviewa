@@ -12,9 +12,9 @@ import pandas as pd
 import shutil
 from nose.tools import with_setup
 
-from klustaviewa.dataio.tests.mock_data import (
+from kwiklib.dataio.tests.mock_data import (
                             nspikes, nclusters, nsamples, nchannels, fetdim)
-from klustaviewa.dataio import (KlustersLoader, read_clusters, save_clusters,
+from kwiklib.dataio import (KlustersLoader, read_clusters, save_clusters,
     find_filename, find_indices, filename_to_triplet, triplet_to_filename,
     read_cluster_info, save_cluster_info, read_group_info, save_group_info,
     renumber_clusters, reorder, convert_to_clu, select, get_indices,

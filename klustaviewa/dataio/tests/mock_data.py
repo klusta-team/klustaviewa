@@ -11,11 +11,11 @@ import numpy.random as rnd
 import pandas as pd
 import shutil
 
-from klustaviewa.utils.colors import COLORS_COUNT
-from klustaviewa.dataio import (save_binary, save_text, check_dtype, 
+from kwiklib.utils.colors import COLORS_COUNT
+from kwiklib.dataio import (save_binary, save_text, check_dtype, 
     check_shape, save_cluster_info, save_group_info)
 from klustaviewa.stats.cache import IndexedMatrix
-import klustaviewa.utils.logger as log
+import kwiklib.utils.logger as log
 
 
 # -----------------------------------------------------------------------------
