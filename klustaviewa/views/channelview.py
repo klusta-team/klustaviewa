@@ -71,7 +71,7 @@ class GroupItem(TreeItem):
 # Custom model
 # ------------
 class ChannelViewModel(TreeModel):
-    headers = ['Channel', 'Name', 'Color']
+    headers = ['Cluster', 'Number' 'Color']
     channelsMoved = QtCore.pyqtSignal(np.ndarray, int)
     
     def __init__(self, **kwargs):
@@ -108,57 +108,13 @@ class ChannelViewModel(TreeModel):
         
         # go through all channels
         for channelidx, color in channel_colors.iteritems():
-            if channel_quality is not None:
-                try:
-                    quality = select(channel_quality, channelidx)
-                except IndexError:
-                    quality = 0.
-            else:
-                quality = 0.
             # add channel
             bgcolor = background.get(channelidx, None)
             channelitem = self.add_channel(
                 channelidx=channelidx,
-                # name=info.names[channelidx],
+                name=name,
                 color=color,
-                bgcolor=bgcolor,
-                quality=quality,
-                # spkcount=channel_sizes[channelidx],
-                spkcount=select(channel_sizes, channelidx),
-                # assign the group as a parent of this channel
                 parent=self.get_group(select(channel_groups, channelidx)))
-    
-    def save(self):
-        groups = self.get_groups()
-        allchannels = self.get_channels()
-        
-        ngroups = len(groups)
-        nchannels = len(allchannels)
-        
-        # Initialize objects.
-        channel_colors = pd.Series(np.zeros(nchannels, dtype=np.int32))
-        channel_groups = pd.Series(np.zeros(nchannels, dtype=np.int32))
-        group_colors = pd.Series(np.zeros(ngroups, dtype=np.int32))
-        group_names = pd.Series(np.zeros(ngroups, dtype=np.str_))
-        
-        # Loop through all groups.
-        for group in groups:
-            groupidx = group.groupidx()
-            channels = self.get_channels_in_group(groupidx)
-            # set the group info object
-            group_colors[groupidx] = group.color()
-            group_names[groupidx] = group.name()
-            # Loop through channels in the current group.
-            for channel in channels:
-                channelidx = channel.channelidx()
-            channel_colors[channelidx] = channel.color()
-            channel_groups[channelidx] = groupidx
-        
-        return dict(channel_colors=channel_colors,
-                    channel_groups=channel_groups,
-                    channel_names=channel_names,
-                    group_colors=group_colors,
-                    group_names=group_names)
     
     
     # Data methods
