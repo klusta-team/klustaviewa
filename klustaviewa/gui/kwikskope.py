@@ -97,10 +97,8 @@ class KwikSkope(QtGui.QMainWindow):
         # Create the main window.
         self.create_views()
         self.create_file_actions()
+        self.create_edit_actions()
         self.create_view_actions()
-        self.create_correlograms_actions()
-        self.create_control_actions()
-        self.create_wizard_actions()
         self.create_help_actions()
         self.create_menu()
         self.create_toolbar()
@@ -133,28 +131,6 @@ class KwikSkope(QtGui.QMainWindow):
         stylesheet = stylesheet.replace('%ACCENT3%', '#909090')
         stylesheet = stylesheet.replace('%ACCENT4%', '#cdcdcd')
         self.setStyleSheet(stylesheet)
-    
-    def set_busy_cursor(self):
-        cursor = QtGui.QApplication.overrideCursor()
-        if cursor is None or cursor.shape() != QtCore.Qt.BusyCursor:
-            QtGui.QApplication.setOverrideCursor(self.busy_cursor)
-        
-    def set_normal_cursor(self):
-        # QtGui.QApplication.setOverrideCursor(self.normal_cursor)
-        QtGui.QApplication.restoreOverrideCursor()
-    
-    def set_busy(self, computing_correlograms=None, computing_matrix=None):
-        if computing_correlograms is not None:
-            self.computing_correlograms = computing_correlograms
-        if computing_matrix is not None:
-            self.computing_matrix = computing_matrix
-        busy = self.computing_correlograms or self.computing_matrix
-        if busy:
-            self.set_busy_cursor()
-            self.is_busy = True
-        else:
-            self.set_normal_cursor()
-            self.is_busy = False
     
     
     # Actions.
@@ -191,13 +167,16 @@ class KwikSkope(QtGui.QMainWindow):
             self.open_last_action.setEnabled(False)
             
         self.add_action('save', '&Save', shortcut='Ctrl+S', icon='save')
-        self.add_action('renumber', 'Save &renumbered')
         
         self.add_action('close', '&Close file')
         
         # Quit action.
         self.add_action('quit', '&Quit', shortcut='Ctrl+Q')
-        
+
+    def create_edit_actions(self):
+        self.add_action('undo', '&Undo', shortcut='Ctrl+Z', icon='undo')
+        self.add_action('redo', '&Redo', shortcut='Ctrl+Y', icon='redo')
+            
     def create_view_actions(self):
         self.add_action('add_ipython_view', 'Add &IPythonView')
         self.add_action('reset_views', '&Reset views')
@@ -205,52 +184,6 @@ class KwikSkope(QtGui.QMainWindow):
         
         self.add_action('override_color', 'Override channel &color',
             icon='override_color')#, shortcut='C')
-    
-    def create_control_actions(self):
-        self.add_action('undo', '&Undo', shortcut='Ctrl+Z', icon='undo')
-        self.add_action('redo', '&Redo', shortcut='Ctrl+Y', icon='redo')
-        
-        self.add_action('merge', '&Merge', shortcut='G', icon='merge')
-        self.add_action('split', '&Split', shortcut='K', icon='split')
-
-    def create_correlograms_actions(self):
-        self.add_action('change_ncorrbins', 'Change time &window')
-        self.add_action('change_corrbin', 'Change &bin size')
-        
-        self.add_action('change_corr_normalization', 'Change &normalization')
-        
-    def create_wizard_actions(self):
-        self.add_action('reset_navigation', '&Reinitialize wizard',
-            shortcut='CTRL+ALT+Space')
-        self.add_action('automatic_projection', '&Automatic projection', 
-            checkable=True, checked=True)
-        self.add_action('change_candidate_color', 
-            'Change &color of the closest match',
-            shortcut='C')
-            
-        self.add_action('previous_candidate', '&Previous closest match', 
-            shortcut='SHIFT+Space')
-        self.add_action('next_candidate', '&Skip closest match', 
-            shortcut='Space')
-        self.add_action('skip_target', '&Skip best unsorted', 
-            # shortcut='Space'
-            )
-        self.add_action('delete_candidate', 'Move closest match to &MUA', 
-            shortcut='CTRL+M')
-        self.add_action('delete_candidate_noise', 'Move closest match to &noise', 
-            shortcut='CTRL+N')
-            
-        self.add_action('next_target', 'Move best unsorted to &good', 
-            shortcut='ALT+G')
-        self.add_action('delete_target', 'Move best unsorted to &MUA', 
-            shortcut='ALT+M')
-        self.add_action('delete_target_noise', 'Move best unsorted to &noise', 
-            shortcut='ALT+N')
-            
-        self.add_action('delete_both', 'Move &both to MUA', 
-            shortcut='CTRL+ALT+M')
-        self.add_action('delete_both_noise', 'Move both to noise', 
-            shortcut='CTRL+ALT+N')
         
     def create_help_actions(self):
         self.add_action('about', '&About')
@@ -268,12 +201,16 @@ class KwikSkope(QtGui.QMainWindow):
         file_menu.addSeparator()
         # file_menu.addSeparator()
         file_menu.addAction(self.save_action)
-        file_menu.addAction(self.renumber_action)
         file_menu.addSeparator()
         file_menu.addAction(self.quit_action)
+
+        # Edit menu.
+        edit_menu = self.menuBar().addMenu("&Edit")
+        edit_menu.addAction(self.undo_action)
+        edit_menu.addAction(self.redo_action)
         
-        # Views menu.
-        views_menu = self.menuBar().addMenu("&Views")
+        # View menu.
+        views_menu = self.menuBar().addMenu("&View")
         if vw.IPYTHON:
             views_menu.addAction(self.add_ipython_view_action)
             views_menu.addSeparator()
@@ -281,50 +218,6 @@ class KwikSkope(QtGui.QMainWindow):
         views_menu.addSeparator()
         views_menu.addAction(self.reset_views_action)
         views_menu.addAction(self.toggle_fullscreen_action)
-        
-        # Correlograms menu.
-        correlograms_menu = self.menuBar().addMenu("&Correlograms")
-        correlograms_menu.addAction(self.change_ncorrbins_action)
-        correlograms_menu.addAction(self.change_corrbin_action)
-        correlograms_menu.addSeparator()
-        correlograms_menu.addAction(self.change_corr_normalization_action)
-        
-        # Actions menu.
-        actions_menu = self.menuBar().addMenu("&Actions")
-        actions_menu.addAction(self.undo_action)
-        actions_menu.addAction(self.redo_action)
-        actions_menu.addSeparator()
-        actions_menu.addAction(self.get_view('ChannelView').move_to_mua_action)
-        actions_menu.addAction(self.get_view('ChannelView').move_to_noise_action)
-        actions_menu.addSeparator()
-        actions_menu.addAction(self.merge_action)
-        actions_menu.addAction(self.split_action)
-        
-        # Wizard menu.
-        wizard_menu = self.menuBar().addMenu("&Wizard")
-        # Previous/skip candidate.
-        wizard_menu.addAction(self.next_candidate_action)
-        wizard_menu.addAction(self.previous_candidate_action)
-        wizard_menu.addSeparator()
-        wizard_menu.addAction(self.skip_target_action)
-        wizard_menu.addSeparator()
-        # Good group.
-        # wizard_menu.addSeparator()
-        # Delete.
-        wizard_menu.addAction(self.delete_candidate_action)
-        wizard_menu.addAction(self.delete_candidate_noise_action)
-        wizard_menu.addSeparator()
-        wizard_menu.addAction(self.next_target_action)
-        wizard_menu.addAction(self.delete_target_action)
-        wizard_menu.addAction(self.delete_target_noise_action)
-        wizard_menu.addSeparator()
-        wizard_menu.addAction(self.delete_both_action)
-        wizard_menu.addAction(self.delete_both_noise_action)
-        wizard_menu.addSeparator()
-        # Misc.
-        wizard_menu.addAction(self.change_candidate_color_action)
-        wizard_menu.addAction(self.automatic_projection_action)
-        wizard_menu.addAction(self.reset_navigation_action)
         
         # Help menu.
         help_menu = self.menuBar().addMenu("&Help")
@@ -340,14 +233,6 @@ class KwikSkope(QtGui.QMainWindow):
         self.toolbar.setObjectName("KlustaViewaToolbar")
         self.toolbar.addAction(self.open_action)
         self.toolbar.addAction(self.save_action)
-        # self.toolbar.addAction(self.saveas_action)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.merge_action)
-        self.toolbar.addAction(self.split_action)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.get_view('ChannelView').move_to_mua_action)
-        self.toolbar.addAction(self.get_view('ChannelView').move_to_noise_action)
-        self.toolbar.addSeparator()
         self.toolbar.addAction(self.undo_action)
         self.toolbar.addAction(self.redo_action)
         # self.toolbar.addSeparator()
@@ -379,8 +264,6 @@ class KwikSkope(QtGui.QMainWindow):
     def update_action_enabled(self):
         self.undo_action.setEnabled(self.can_undo())
         self.redo_action.setEnabled(self.can_redo())
-        self.merge_action.setEnabled(self.can_merge())
-        self.split_action.setEnabled(self.can_split())
     
     def can_undo(self):
         if self.controller is None:
@@ -391,18 +274,6 @@ class KwikSkope(QtGui.QMainWindow):
         if self.controller is None:
             return False
         return self.controller.can_redo()
-    
-    def can_merge(self):
-        channel_view = self.get_view('ChannelView')
-        channels = channel_view.selected_channels()
-        return len(channels) >= 2
-        
-    def can_split(self):
-        channel_view = self.get_view('ChannelView')
-        channels = channel_view.selected_channels()
-        spikes_selected = self.spikes_selected
-        return len(spikes_selected) >= 1
-    
     
     # View methods.
     # -------------
@@ -619,12 +490,6 @@ class KwikSkope(QtGui.QMainWindow):
     def save_callback(self, checked=None):
         self.open_task.save(self.loader)
         
-    def renumber_callback(self, checked=None):
-        # folder = SETTINGS.get('main_window.last_data_file')
-        self.loader.save(renumber=True)
-        # self.need_save = False
-        self.open_last_callback()
-        
     def open_last_callback(self, checked=None):
         path = SETTINGS['main_window.last_data_file']
         if path:
@@ -745,26 +610,6 @@ class KwikSkope(QtGui.QMainWindow):
     
     # Actions callbacks.
     # ------------------
-    # def merge_callback(self, checked=None):
-    #     if self.is_busy:
-    #         return
-    #     self.need_save = True
-    #     channel_view = self.get_view('ChannelView')
-    #     channels = channel_view.selected_channels()
-    #     self.taskgraph.merge(channels, self._wizard)
-    #     self.update_action_enabled()
-    #     
-    # def split_callback(self, checked=None):
-    #     if self.is_busy:
-    #         return
-    #     self.need_save = True
-    #     channel_view = self.get_view('ChannelView')
-    #     channels = channel_view.selected_channels()
-    #     spikes_selected = self.spikes_selected
-    #     # Cancel the selection after the split.
-    #     self.spikes_selected = []
-    #     self.taskgraph.split(channels, spikes_selected, self._wizard)
-    #     self.update_action_enabled()
     #     
     # def undo_callback(self, checked=None):
     #     if self.is_busy:
@@ -802,76 +647,6 @@ class KwikSkope(QtGui.QMainWindow):
     #     self.taskgraph.group_added(group, name, color)
     #     self.update_action_enabled()
     # 
-    # 
-    # # Wizard callbacks.
-    # # -----------------
-    # def reset_navigation_callback(self, checked=None):
-    #     self.taskgraph.wizard_reset()
-    # 
-    # def previous_candidate_callback(self, checked=None):
-    #     # Previous candidate.
-    #     self.taskgraph.wizard_previous_candidate()
-    #     
-    # def next_candidate_callback(self, checked=None):
-    #     if self.is_busy:
-    #         return
-    #     # Skip candidate.
-    #     self.taskgraph.wizard_next_candidate()
-    # 
-    # def skip_target_callback(self, checked=None):
-    #     if self.is_busy:
-    #         return
-    #     # Skip target.
-    #     self.taskgraph.wizard_skip_target()
-    # 
-    # def next_target_callback(self, checked=None):
-    #     if self.is_busy:
-    #         return
-    #     # Move target to Good group, and select next target.
-    #     self.taskgraph.wizard_move_and_next('target', 2)
-    #     
-    # def delete_candidate_noise_callback(self, checked=None):
-    #     self.taskgraph.wizard_move_and_next('candidate', 0)
-    #     
-    # def delete_candidate_callback(self, checked=None):
-    #     self.taskgraph.wizard_move_and_next('candidate', 1)
-    #     
-    # def delete_target_noise_callback(self, checked=None):
-    #     self.taskgraph.wizard_move_and_next('target', 0)
-    #     
-    # def delete_target_callback(self, checked=None):
-    #     self.taskgraph.wizard_move_and_next('target', 1)
-    #     
-    # def delete_both_noise_callback(self, checked=None):
-    #     self.taskgraph.wizard_move_and_next('both', 0)
-    #     
-    # def delete_both_callback(self, checked=None):
-    #     self.taskgraph.wizard_move_and_next('both', 1)
-    # 
-    # def change_candidate_color_callback(self, checked=None):
-    #     self.taskgraph.wizard_change_candidate_color()
-    #     self.update_action_enabled()
-    # 
-    
-    # # Views callbacks.
-    # # ----------------
-    # def waveform_spikes_highlighted_callback(self, spikes):
-    #     self.spikes_highlighted = spikes
-    #     [view.highlight_spikes(get_array(spikes)) for view in self.get_views('FeatureView')]
-    #     
-    # def features_spikes_highlighted_callback(self, spikes):
-    #     self.spikes_highlighted = spikes
-    #     [view.highlight_spikes(get_array(spikes)) for view in self.get_views('WaveformView')]
-    #     
-    # def features_spikes_selected_callback(self, spikes):
-    #     self.spikes_selected = spikes
-    #     self.update_action_enabled()
-    #     [view.highlight_spikes(get_array(spikes)) for view in self.get_views('WaveformView')]
-    #     
-    # def waveform_box_clicked_callback(self, coord, channel, channel):
-    #     """Changed in waveform ==> change in feature"""
-    #     [view.set_projection(coord, channel, -1) for view in self.get_views('FeatureView')]
-
         
     # Help callbacks.
     # ---------------
