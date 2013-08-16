@@ -4,6 +4,12 @@ recursive-include docs *.md *.py
 recursive-exclude experimental *
 recursive-include klustaviewa *.md *.py *.png *.ico *.bmp *.css *.qrc *.c *.pyx
 
+recursive-include kwiklib *.md *.py
+recursive-include kwiklib/dataio *.md *.py
+recursive-include kwiklib/scripts *.md *.py
+recursive-exclude kwiklib/scripts/data *.*
+recursive-include kwiklib/utils *.md *.py
+
 recursive-include qtools *.md *.py *.png
 recursive-include qtools/tests *.md *.py *.png
 
