@@ -109,6 +109,7 @@ class MainWindow(QtGui.QMainWindow):
         # Create the main window.
         self.create_views()
         self.create_file_actions()
+        self.create_edit_actions()
         self.create_view_actions()
         self.create_correlograms_actions()
         self.create_control_actions()
@@ -214,6 +215,11 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('renumber', 'Save &renumbered')
         self.add_action('close', '&Close file')
         
+    def create_edit_actions(self):
+        # Undo/redo actions.
+        self.add_action('undo', '&Undo', shortcut='Ctrl+Z', icon='undo')
+        self.add_action('redo', '&Redo', shortcut='Ctrl+Y', icon='redo')
+        
         # Quit action.
         self.add_action('quit', '&Quit', shortcut='Ctrl+Q')
         
@@ -233,9 +239,6 @@ class MainWindow(QtGui.QMainWindow):
             icon='override_color')#, shortcut='C')
     
     def create_control_actions(self):
-        self.add_action('undo', '&Undo', shortcut='Ctrl+Z', icon='undo')
-        self.add_action('redo', '&Redo', shortcut='Ctrl+Y', icon='redo')
-        
         self.add_action('merge', '&Merge', shortcut='G', icon='merge')
         self.add_action('split', '&Split', shortcut='K', icon='split')
 
@@ -299,8 +302,13 @@ class MainWindow(QtGui.QMainWindow):
         file_menu.addAction(self.close_action)
         file_menu.addAction(self.quit_action)
         
-        # Views menu.
-        views_menu = self.menuBar().addMenu("&Views")
+        # Edit menu.
+        edit_menu = self.menuBar().addMenu("&Edit")
+        edit_menu.addAction(self.undo_action)
+        edit_menu.addAction(self.redo_action)
+        
+        # View menu.
+        views_menu = self.menuBar().addMenu("&View")
         views_menu.addAction(self.add_feature_view_action)
         views_menu.addAction(self.add_waveform_view_action)
         views_menu.addAction(self.add_correlograms_view_action)
@@ -325,8 +333,7 @@ class MainWindow(QtGui.QMainWindow):
         
         # Actions menu.
         actions_menu = self.menuBar().addMenu("&Actions")
-        actions_menu.addAction(self.undo_action)
-        actions_menu.addAction(self.redo_action)
+
         actions_menu.addSeparator()
         actions_menu.addAction(self.get_view('ClusterView').move_to_mua_action)
         actions_menu.addAction(self.get_view('ClusterView').move_to_noise_action)
