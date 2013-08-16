@@ -241,7 +241,7 @@ class KwikSkope(QtGui.QMainWindow):
         self.addToolBar(QtCore.Qt.LeftToolBarArea, self.toolbar)
         
     def create_open_progress_dialog(self):
-        self.open_progress = QtGui.QProgressDialog("Converting to HDF5...", 
+        self.open_progress = QtGui.QProgressDialog("Converting to Kwik...", 
             "Cancel", 0, 0, self, QtCore.Qt.Tool)
         self.open_progress.setWindowModality(QtCore.Qt.WindowModal)
         self.open_progress.setValue(0)
