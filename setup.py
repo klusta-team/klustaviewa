@@ -47,11 +47,9 @@ if __name__ == '__main__':
         author_email='rossant@github',
         packages=['klustaviewa',
                   'klustaviewa.control',
-                  'klustaviewa.dataio',
                   'klustaviewa.gui',
                   'klustaviewa.scripts',
                   'klustaviewa.stats',
-                  'klustaviewa.utils',
                   'klustaviewa.views',
                   'klustaviewa.wizard',
 
@@ -59,6 +57,11 @@ if __name__ == '__main__':
                   # 'qtools',
                   # 'qtools.qtpy',
                   # 'qtools.tests',
+                  
+                  # 'kwiklib',
+                  # 'kwiklib.dataio',
+                  # 'kwiklib.scripts',
+                  # 'kwiklib.utils',
                   
                   # 'galry',
                   # 'galry.managers',
@@ -73,7 +76,11 @@ if __name__ == '__main__':
         # Scripts.
         entry_points={
             'gui_scripts': [
-                'klustaviewa = klustaviewa.scripts.runklustaviewa:main' ]
+                'klustaviewa = klustaviewa.scripts.runklustaviewa:main', 
+                'kwikskope = klustaviewa.scripts.runkwikskope:main', ],
+            'console_scripts': [
+                'kwikkonvert = kwiklib.scripts.runkwikkonvert:main', 
+                ]
         },
         
         scripts=['postinstall.py'],
