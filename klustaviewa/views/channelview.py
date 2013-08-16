@@ -23,7 +23,7 @@ from klustaviewa.views.treemodel import TreeModel, TreeItem
 # Specific item classes
 # ---------------------
 class ChannelItem(TreeItem):
-    def __init__(self, parent=None, name=None, channelidx=None, color=None):
+    def __init__(self, parent=None, name=None, channelidx=None, color=None, bgcolor=None):
         if color is None:
             color = 0
         if name is None:
@@ -31,6 +31,7 @@ class ChannelItem(TreeItem):
         data = OrderedDict()
         # different columns fields
         data['color'] = color
+        self.bgcolor = bgcolor
         # the index is the last column
         data['channelidx'] = channelidx
         super(ChannelItem, self).__init__(parent=parent, data=data)
@@ -71,7 +72,7 @@ class GroupItem(TreeItem):
 # Custom model
 # ------------
 class ChannelViewModel(TreeModel):
-    headers = ['Cluster', 'Number' 'Color']
+    headers = ['Channel', 'Color']
     channelsMoved = QtCore.pyqtSignal(np.ndarray, int)
     
     def __init__(self, **kwargs):
@@ -80,7 +81,7 @@ class ChannelViewModel(TreeModel):
         Arguments:
           * channels: a Nspikes long array with the channel index for each
             spike.
-          * channels_info: an Info object with fields names, colors, spkcounts,
+          * channels_info: an Info object with fields names, colors,
             groups_info.
         
         """
@@ -92,8 +93,8 @@ class ChannelViewModel(TreeModel):
     # I/O methods
     # -----------
     def load(self, channel_colors=None, channel_groups=None,
-        group_colors=None, group_names=None, channel_sizes=None,
-        channel_quality=None, background={}):
+        channel_names=None, group_colors=None, group_names=None,
+        background={}):
         
         if group_names is None or channel_colors is None:
             return
@@ -101,10 +102,8 @@ class ChannelViewModel(TreeModel):
         # Create the tree.
         # go through all groups
         for groupidx, groupname in group_names.iteritems():
-            spkcount = np.sum(channel_sizes[channel_groups == groupidx])
             groupitem = self.add_group_node(groupidx=groupidx, name=groupname,
-                # color=group_colors[groupidx], spkcount=spkcount)
-                color=select(group_colors, groupidx), spkcount=spkcount)
+                color=select(group_colors, groupidx))
         
         # go through all channels
         for channelidx, color in channel_colors.iteritems():
@@ -112,8 +111,9 @@ class ChannelViewModel(TreeModel):
             bgcolor = background.get(channelidx, None)
             channelitem = self.add_channel(
                 channelidx=channelidx,
-                name=name,
+                # name=name,
                 color=color,
+                bgcolor=None,
                 parent=self.get_group(select(channel_groups, channelidx)))
     
     
@@ -132,18 +132,6 @@ class ChannelViewModel(TreeModel):
             if col == 0:
                 if role == QtCore.Qt.DisplayRole:
                     return str(item.name())
-            # quality
-            elif col == 1:
-                if role == QtCore.Qt.TextAlignmentRole:
-                    return QtCore.Qt.AlignRight
-                if role == QtCore.Qt.DisplayRole:
-                    return #"%." % item.quality()
-            # spkcount
-            elif col == 2:
-                if role == QtCore.Qt.TextAlignmentRole:
-                    return QtCore.Qt.AlignRight
-                if role == QtCore.Qt.DisplayRole:
-                    return str(item.spkcount())
             # color
             elif col == self.columnCount() - 1:
                 if role == QtCore.Qt.BackgroundRole:
@@ -173,50 +161,7 @@ class ChannelViewModel(TreeModel):
                     if item.bgcolor is None:
                         return QtGui.QColor(177, 177, 177, 255)
                     elif item.bgcolor == 'target':
-                        return QtGui.QColor(0, 0, 0, 255)
-            # quality
-            elif col == 1:
-                if role == QtCore.Qt.TextAlignmentRole:
-                    return QtCore.Qt.AlignRight
-                elif role == QtCore.Qt.DisplayRole:
-                    return "%.3f" % item.quality()
-                elif role == QtCore.Qt.BackgroundRole:
-                    if item.bgcolor is None:
-                        return
-                    elif item.bgcolor == 'candidate':
-                        color = np.array(COLORMAP[item.color()]) * 255
-                        return QtGui.QColor(color[0], color[1], color[2], 90)
-                    elif item.bgcolor == 'target':
-                        color = np.array(COLORMAP[item.color()]) * 255
-                        return QtGui.QColor(color[0], color[1], color[2], 255)
-                        # return QtGui.QColor(177, 177, 177, 255)
-                elif role == QtCore.Qt.ForegroundRole:
-                    if item.bgcolor is None:
-                        return QtGui.QColor(177, 177, 177, 255)
-                    elif item.bgcolor == 'target':
-                        return QtGui.QColor(0, 0, 0, 255)
-            # spkcount
-            elif col == 2:
-                if role == QtCore.Qt.TextAlignmentRole:
-                    return QtCore.Qt.AlignRight
-                if role == QtCore.Qt.DisplayRole:
-                    return "%d" % item.spkcount()
-                elif role == QtCore.Qt.BackgroundRole:
-                    if item.bgcolor is None:
-                        return
-                    elif item.bgcolor == 'candidate':
-                        color = np.array(COLORMAP[item.color()]) * 255
-                        return QtGui.QColor(color[0], color[1], color[2], 90)
-                    elif item.bgcolor == 'target':
-                        # return QtGui.QColor(177, 177, 177, 255)
-                        color = np.array(COLORMAP[item.color()]) * 255
-                        return QtGui.QColor(color[0], color[1], color[2], 255)
-                elif role == QtCore.Qt.ForegroundRole:
-                    if item.bgcolor is None:
-                        return QtGui.QColor(177, 177, 177, 255)
-                    elif item.bgcolor == 'target':
-                        return QtGui.QColor(0, 0, 0, 255)
-                
+                        return QtGui.QColor(0, 0, 0, 255)            
             # color
             elif col == self.columnCount() - 1:
                 if role == QtCore.Qt.BackgroundRole:
@@ -238,10 +183,6 @@ class ChannelViewModel(TreeModel):
             if index.column() == 0:
                 item.item_data['name'] = data
             elif index.column() == 1:
-                item.item_data['quality'] = data
-            elif index.column() == 2:
-                item.item_data['spkcount'] = data
-            elif index.column() == 3:
                 item.item_data['color'] = data
             self.dataChanged.emit(index, index)
             return True
@@ -251,23 +192,6 @@ class ChannelViewModel(TreeModel):
             return QtCore.Qt.ItemIsEnabled
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | \
                QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled
-    
-    def update_group_sizes(self):
-        for group in self.get_groups():
-            spkcount = np.sum([channel.spkcount() 
-                for channel in self.get_channels_in_group(group.groupidx())])
-            self.setData(self.index(group.row(), 2), spkcount)
-    
-    def set_quality(self, quality):
-        """quality is a Series with channel index and quality value."""
-        for channelidx, value in quality.iteritems():
-            groupidx = self.get_groupidx(channelidx)
-            # If the channel does not exist yet in the view, just discard it.
-            if groupidx is None:
-                continue
-            group = self.get_group(groupidx)
-            channel = self.get_channel(channelidx)
-            self.setData(self.index(channel.row(), 1, parent=group.index), value)
     
     def set_background(self, background=None):
         """Set the background of some channels. The argument is a dictionary
@@ -310,7 +234,7 @@ class ChannelViewModel(TreeModel):
         groupidx = max([group.groupidx() for group in self.get_groups()]) + 1
         # Add the group in the tree.
         groupitem = self.add_group_node(groupidx=groupidx,
-            name=name, spkcount=0, color=color)
+            name=name, color=color)
         return groupitem
         
     def add_group_node(self, **kwargs):
@@ -368,7 +292,7 @@ class ChannelViewModel(TreeModel):
             # Create a new channel, clone of the old one.
             channel_new = ChannelItem(parent=parent_target,
                 channelidx=channel.channelidx(),
-                spkcount=channel.spkcount(),
+                name=channel.name(),
                 color=channel.color())
             # Create the index.
             channel_new.index = self.createIndex(child_target_row, 
@@ -657,9 +581,6 @@ class ChannelView(QtGui.QTreeView):
         if not hasattr(channels, '__len__'):
             channels = [channels]
         self.move_channels(channels, 1)
-    
-    def set_quality(self, quality):
-        self.model.set_quality(quality)
     
     def set_background(self, background=None):
         self.model.set_background(background)
