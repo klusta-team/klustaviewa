@@ -4,14 +4,16 @@
 # Imports
 # -----------------------------------------------------------------------------
 import numpy as np
+import pandas as pd
 
 from galry import (Manager, PlotPaintManager, EventProcessor, PlotInteractionManager, Visual,
     QtGui, QtCore, NavigationEventProcessor, GridVisual, TextVisual, DataNormalizer, 
-    process_coordinates, get_next_color, get_color)
+    process_coordinates)
 from klustaviewa.views.common import KlustaViewaBindings, KlustaView
 import kwiklib.utils.logger as log
+from kwiklib.dataio import get_array
 from qtools import inthread
-from kwiklib.utils.colors import COLORS_COUNT
+from kwiklib.utils.colors import COLORS_COUNT, generate_colors, COLORMAP
 
 __all__ = ['TraceView']
 
@@ -46,7 +48,7 @@ class TraceManager(Manager):
             self.real_data = False
             
         if channel_colors is None:
-            channel_colors = np.mod(np.arange(trace.shape[1], dtype=np.int32), COLORS_COUNT) + 1
+            channel_colors = pd.Series(generate_colors(trace.shape[1]))
             
         # load initial variables
         self.trace = trace
@@ -55,6 +57,7 @@ class TraceManager(Manager):
         self.freq = freq
         self.totalduration = (self.trace.shape[0] - 1) / self.freq
         self.totalsamples, self.nchannels = self.trace.shape
+        self.channels = np.arange(self.nchannels)
         
         if channel_height is None:
             channel_height = self.default_channel_height
@@ -156,14 +159,13 @@ class TraceManager(Manager):
         self.bounds = bounds
         self.size = size
         
-        colors = np.arange(self.nchannels)
-        colors[self.ignored_channels] = 0
-        channels = np.arange(self.nchannels)
-        
-        self.channel_index = np.repeat(channels, self.samples.shape[0] / self.nchannels)
-        self.color_index = np.repeat(colors, self.samples.shape[0] / self.nchannels)
+        self.channel_index = np.repeat(self.channels, self.samples.shape[0] / self.nchannels)
+        self.color_index = np.repeat(get_array(self.channel_colors), self.samples.shape[0] / self.nchannels)
         self.position = self.samples
         
+        print "channel_colors is ", self.channel_colors
+        print "color_index is ", self.color_index
+
         self.paint_manager.update_slice()
         self.paint_manager.updateGL()
         
@@ -263,14 +265,10 @@ class MultiChannelVisual(Visual):
             self.bounds = [0, self.size]
         else:
             self.bounds = np.arange(0, self.size + 1, nsamples)
+
+        color = COLORMAP
+        print "color is ", color
         
-        # automatic color with color map
-        if autocolor is not None:
-            if nprimitives <= 1:
-                color = get_next_color(autocolor)
-            else:
-                color = np.array([get_next_color(i + autocolor) for i in xrange(nprimitives)])
-            
         # set position attribute
         self.add_attribute("position0", ndim=2, data=position, autonormalizable=True)
     
