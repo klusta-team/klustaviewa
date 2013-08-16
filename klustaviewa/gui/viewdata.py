@@ -53,12 +53,11 @@ def get_clusterview_data(loader, statscache, clusters=None):
     
 def get_channelview_data(loader, channels=None):
     data = dict(
-        cluster_colors=loader.get_cluster_colors('all',
+        channel_colors=loader.get_channel_colors('all',
             can_override=False),
-        cluster_groups=loader.get_cluster_groups('all'),
-        group_colors=loader.get_group_colors('all'),
-        group_names=loader.get_group_names('all'),
-        cluster_sizes=loader.get_cluster_sizes('all'),
+        channel_groups=loader.get_channel_groups('all'),
+        group_colors=loader.get_channel_group_colors('all'),
+        group_names=loader.get_channel_group_names('all'),
     )
     return data
     

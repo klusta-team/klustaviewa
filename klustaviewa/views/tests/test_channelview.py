@@ -32,8 +32,6 @@ def test_channelview():
     nchannelgroups = 4
     
     kwargs = {}
-    channels = np.arange(nchannels, dtype=np.int32)
-    groups = np.arange(nchannelgroups, dtype=np.int32)
     channel_names = create_channel_names(nchannels)
     channel_group_names = create_channel_group_names(nchannelgroups)    
     

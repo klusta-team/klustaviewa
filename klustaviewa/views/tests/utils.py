@@ -50,7 +50,7 @@ def get_data():
         cluster_sizes=l.get_cluster_sizes('all'),
         
         # channel_names=l.get_channel_names(),
-        # channel_colors=l.get_channel_colors(),
+        # channel_colors=l.self.kwa(),
         # channel_groups=l.get_channel_groups(),
         # 
         # channel_group_colors=l.get_channel_group_colors(),
