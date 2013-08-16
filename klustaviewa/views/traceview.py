@@ -162,9 +162,6 @@ class TraceManager(Manager):
         self.channel_index = np.repeat(self.channels, self.samples.shape[0] / self.nchannels)
         self.color_index = np.repeat(get_array(self.channel_colors), self.samples.shape[0] / self.nchannels)
         self.position = self.samples
-        
-        print "channel_colors is ", self.channel_colors
-        print "color_index is ", self.color_index
 
         self.paint_manager.update_slice()
         self.paint_manager.updateGL()
@@ -267,7 +264,6 @@ class MultiChannelVisual(Visual):
             self.bounds = np.arange(0, self.size + 1, nsamples)
 
         color = COLORMAP
-        print "color is ", color
         
         # set position attribute
         self.add_attribute("position0", ndim=2, data=position, autonormalizable=True)
