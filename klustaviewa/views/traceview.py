@@ -66,9 +66,9 @@ class TraceManager(Manager):
         self.channel_height = channel_height
         
         if channel_names is None:
-            channel_names = ['ch{0:d}'.format(i) for i in xrange(self.nchannels)]
+            channel_names = pd.Series(['ch{0:d}'.format(i) for i in xrange(self.nchannels)])
         self.channel_names = channel_names
-        
+
         x = np.tile(np.linspace(0., self.totalduration, 2), (self.nchannels, 1))
         y = np.zeros_like(x)+ np.linspace(-1, 1, self.nchannels).reshape((-1, 1))
         
@@ -404,7 +404,7 @@ class GridEventProcessor(EventProcessor):
         
         n = len(ticksx)
         text = [self.format_number(x, nfracx) for x in ticksx]
-        text += [str(self.parent.data_manager.channel_names[y]) for y in reversed(range(self.parent.data_manager.nchannels))]    
+        text += [str(get_array(self.parent.data_manager.channel_names)[y]) for y in reversed(range(self.parent.data_manager.nchannels))]    
         
         # position of the ticks
         coordinates = np.zeros((len(text), 2))

@@ -34,6 +34,7 @@ class ChannelItem(TreeItem):
         self.bgcolor = bgcolor
         # the index is the last column
         data['channelidx'] = channelidx
+        data['name'] = name
         super(ChannelItem, self).__init__(parent=parent, data=data)
         
     def name(self):
@@ -110,8 +111,8 @@ class ChannelViewModel(TreeModel):
             # add channel
             bgcolor = background.get(channelidx, None)
             channelitem = self.add_channel(
+                name=channel_names[channelidx],
                 channelidx=channelidx,
-                # name=name,
                 color=color,
                 bgcolor=None,
                 parent=self.get_group(select(channel_groups, channelidx)))
@@ -143,10 +144,10 @@ class ChannelViewModel(TreeModel):
                 
         # channel item
         if type(item) == ChannelItem:
-            # channelidx
+            # name
             if col == 0:
                 if role == QtCore.Qt.DisplayRole:
-                    return str(item.channelidx())
+                    return str(item.name())
                 elif role == QtCore.Qt.BackgroundRole:
                     if item.bgcolor is None:
                         return
@@ -718,7 +719,7 @@ class ChannelView(QtGui.QTreeView):
                 QtGui.QLineEdit.Normal, name)
             if ok:
                 # Rename the group.
-                self.rename_channel(groupidx, text)
+                self.rename_channel(channelidx, text)
     
     
     # Get methods
