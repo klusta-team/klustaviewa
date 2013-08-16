@@ -205,17 +205,17 @@ class KwikSkope(QtGui.QMainWindow):
         file_menu.addAction(self.quit_action)
 
         # Edit menu.
-        edit_menu = self.menuBar().addMenu("&Edit")
-        edit_menu.addAction(self.undo_action)
-        edit_menu.addAction(self.redo_action)
+        # edit_menu = self.menuBar().addMenu("&Edit")
+        # edit_menu.addAction(self.undo_action)
+        # edit_menu.addAction(self.redo_action)
         
         # View menu.
         views_menu = self.menuBar().addMenu("&View")
         if vw.IPYTHON:
             views_menu.addAction(self.add_ipython_view_action)
             views_menu.addSeparator()
-        views_menu.addAction(self.override_color_action)
-        views_menu.addSeparator()
+        # views_menu.addAction(self.override_color_action)
+        # views_menu.addSeparator()
         views_menu.addAction(self.reset_views_action)
         views_menu.addAction(self.toggle_fullscreen_action)
         
