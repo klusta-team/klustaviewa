@@ -11,6 +11,7 @@ from galry import (Manager, PlotPaintManager, EventProcessor, PlotInteractionMan
 from klustaviewa.views.common import KlustaViewaBindings, KlustaView
 import kwiklib.utils.logger as log
 from qtools import inthread
+from kwiklib.utils.colors import COLORS_COUNT
 
 __all__ = ['TraceView']
 
@@ -22,7 +23,7 @@ class TraceManager(Manager):
     info = {}
     
     # initialization
-    def set_data(self, trace=None, freq=None, channel_height=None, channel_names=None, ignored_channels=None):
+    def set_data(self, trace=None, freq=None, channel_height=None, channel_names=None, ignored_channels=None, channel_colors=None):
 
         # default settings
         self.max_size = 1000
@@ -37,12 +38,19 @@ class TraceManager(Manager):
         self.real_data = True # hides grid and painting if we've made up false data of zeros
         
         if trace is None:
+            # make up some data to keep the GPU happy, warm, and feeling loved
             trace = np.zeros((self.duration_initial * 2, 32))
             freq = 1
+            
+            # don't worry, we won't tell the GPU that it's not actually rendering any useful data, but we need to keep track
             self.real_data = False
+            
+        if channel_colors is None:
+            channel_colors = np.mod(np.arange(trace.shape[1], dtype=np.int32), COLORS_COUNT) + 1
             
         # load initial variables
         self.trace = trace
+        self.channel_colors = channel_colors
         self.ignored_channels = ignored_channels
         self.freq = freq
         self.totalduration = (self.trace.shape[0] - 1) / self.freq
