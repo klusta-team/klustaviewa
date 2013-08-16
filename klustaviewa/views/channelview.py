@@ -436,9 +436,9 @@ class ChannelView(QtGui.QTreeView):
         # self.setRootIsDecorated(False)
         self.setItemDelegate(self.ChannelDelegate())
         
-        # Create menu.
-        self.create_actions()
-        self.create_context_menu()
+        # Create menu. (hidden because it doesn't work - yet!)
+        # self.create_actions()
+        # self.create_context_menu()
         
         self.restore_geometry()
     
@@ -637,25 +637,26 @@ class ChannelView(QtGui.QTreeView):
     def update_actions(self):
         channels = self.selected_channels()
         groups = self.selected_groups()
-        
-        if len(groups) > 0:
-            self.rename_group_action.setEnabled(True)
-            # First three groups are not removable (noise and MUA and good).
-            if 0 not in groups and 1 not in groups and 2 not in groups:
-                self.remove_group_action.setEnabled(True)
-            else:
-                self.remove_group_action.setEnabled(False)
-        else:
-            self.rename_group_action.setEnabled(False)
-            self.remove_group_action.setEnabled(False)
-            
-        if len(channels) > 0:
-            self.rename_channel_action.setEnabled(True)
-        else:
-            self.rename_channel_action.setEnabled(False)
+        pass
+        # if len(groups) > 0:
+        #     self.rename_group_action.setEnabled(True)
+        #     # First three groups are not removable (noise and MUA and good).
+        #     if 0 not in groups and 1 not in groups and 2 not in groups:
+        #         self.remove_group_action.setEnabled(True)
+        #     else:
+        #         self.remove_group_action.setEnabled(False)
+        # else:
+        #     self.rename_group_action.setEnabled(False)
+        #     self.remove_group_action.setEnabled(False)
+        #     
+        # if len(channels) > 0:
+        #     self.rename_channel_action.setEnabled(True)
+        # else:
+        #     self.rename_channel_action.setEnabled(False)
         
     def contextMenuEvent(self, event):
-        action = self.context_menu.exec_(self.mapToGlobal(event.pos()))
+        pass
+        # action = self.context_menu.exec_(self.mapToGlobal(event.pos()))
     
     def currentChanged(self, index, previous):
         self.current_item = index.internalPointer()
