@@ -222,13 +222,13 @@ class TracePaintManager(PlotPaintManager):
         self.data_manager.paintinitialized = True
 
     def update(self):
-        self.reinitialize_visual(visual='trace_waveforms',
-            channel_height=self.data_manager.channel_height,
-            position=self.data_manager.position,
-            shape=self.data_manager.shape,
-            size=self.data_manager.size,
-            visible=self.data_manager.real_data)
-            
+        if not getattr(self.data_manager, 'paintinitialized', False):
+            self.reinitialize_visual(visual='trace_waveforms',
+                channel_height=self.data_manager.channel_height,
+                position=self.data_manager.position,
+                shape=self.data_manager.shape,
+                size=self.data_manager.size,
+                visible=self.data_manager.real_data)
         self.data_manager.paintinitialized = True
             
     def update_slice(self):
@@ -447,6 +447,8 @@ class ViewportUpdateProcessor(EventProcessor):
         
     def update_viewport(self, parameter):
         self.update_viewbox()
+
+        
 # -----------------------------------------------------------------------------
 # Interactivity
 # -----------------------------------------------------------------------------
@@ -502,6 +504,8 @@ class TraceBindings(KlustaViewaBindings):
     def initialize(self):
         self.set('Wheel', 'ChangeChannelHeight', key_modifier='Control',
                    param_getter=lambda p: p['wheel'] * .001)
+
+                   
 # -----------------------------------------------------------------------------
 # Top-level widget
 # -----------------------------------------------------------------------------
@@ -518,7 +522,7 @@ class TraceView(KlustaView):
     
     def set_data(self, *args, **kwargs):
         self.data_manager.set_data(*args, **kwargs)
-
+        
         # update?
         if self.initialized:
             self.paint_manager.update()
