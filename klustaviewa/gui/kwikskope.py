@@ -447,7 +447,6 @@ class KwikSkope(QtGui.QMainWindow):
         self.add_trace_view(do_update=do_update)
     
     def create_custom_views(self, count):
-        print "IM CREATING MY STUFF YEAH"
         [self.add_channel_view() for _ in xrange(count['ChannelView'])]
         [self.add_ipython_view() for _ in xrange(count['IPythonView'])]
         [self.add_trace_view() for _ in xrange(count['TraceView'])]
@@ -455,7 +454,6 @@ class KwikSkope(QtGui.QMainWindow):
     def dock_widget_closed(self, dock):
         for key in self.views.keys():
             self.views[key] = [view for view in self.views[key] if view.parent() != dock]
-    
     
     # Threads.
     # --------
