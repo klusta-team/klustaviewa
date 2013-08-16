@@ -452,10 +452,10 @@ class ChannelView(QtGui.QTreeView):
         self.expandAll()
         
         # set spkcount column size
-        self.header().resizeSection(1, 60)
+        self.header().resizeSection(1, 40)
         self.header().resizeSection(2, 60)
-        # set color column size
-        self.header().resizeSection(3, 40)
+        # # set color column size
+        # self.header().resizeSection(3, 40)
         
         # HACK: drag is triggered in the model, so connect it to move_channels
         # in this function
@@ -567,21 +567,6 @@ class ChannelView(QtGui.QTreeView):
             groupidx, color))
         self.groupColorChanged.emit(groupidx, color)
     
-    def move_to_noise(self, channels):
-        if not hasattr(channels, '__len__'):
-            channels = [channels]
-        self.move_channels(channels, 0)
-    
-    def move_to_good(self, channels):
-        if not hasattr(channels, '__len__'):
-            channels = [channels]
-        self.move_channels(channels, 2)
-    
-    def move_to_mua(self, channels):
-        if not hasattr(channels, '__len__'):
-            channels = [channels]
-        self.move_channels(channels, 1)
-    
     def set_background(self, background=None):
         self.model.set_background(background)
     
@@ -615,38 +600,17 @@ class ChannelView(QtGui.QTreeView):
         self.remove_group_action = QtGui.QAction("&Remove group", self)
         self.remove_group_action.triggered.connect(self.remove_group_callback)
         
-        self.move_to_mua_action = QtGui.QAction("Move to &MUA", self)
-        self.move_to_mua_action.setShortcut("Delete")
-        self.move_to_mua_action.setIcon(get_icon('multiunit'))
-        self.move_to_mua_action.triggered.connect(self.move_to_mua_callback)
-        
-        self.move_to_noise_action = QtGui.QAction("Move to &noise", self)
-        self.move_to_noise_action.setShortcut('Shift+Delete')
-        self.move_to_noise_action.setIcon(get_icon('noise'))
-        self.move_to_noise_action.triggered.connect(self.move_to_noise_callback)
-        
-        self.move_to_good_action = QtGui.QAction("Move to &good", self)
-        # self.move_to_good_action.setIcon(get_icon('noise'))
-        self.move_to_good_action.triggered.connect(self.move_to_good_callback)
-        
         # Add actions to the widget.
         self.addAction(self.change_color_action)
         self.addAction(self.add_group_action)
         self.addAction(self.rename_group_action)
         self.addAction(self.remove_group_action)
-        self.addAction(self.move_to_noise_action)
-        self.addAction(self.move_to_mua_action)
-        self.addAction(self.move_to_good_action)
-        
+
     def create_context_menu(self):
         self.create_color_dialog()
         
         self.context_menu = QtGui.QMenu(self)
         self.context_menu.addAction(self.change_color_action)
-        self.context_menu.addSeparator()
-        self.context_menu.addAction(self.move_to_noise_action)
-        self.context_menu.addAction(self.move_to_mua_action)
-        self.context_menu.addAction(self.move_to_good_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.add_group_action)
         self.context_menu.addAction(self.rename_group_action)
@@ -666,20 +630,6 @@ class ChannelView(QtGui.QTreeView):
         else:
             self.rename_group_action.setEnabled(False)
             self.remove_group_action.setEnabled(False)
-            
-        if len(channels) > 0 or len(groups) > 0:
-            self.change_color_action.setEnabled(True)
-        else:
-            self.change_color_action.setEnabled(False)
-            
-        if len(channels) > 0:
-            self.move_to_noise_action.setEnabled(True)
-            self.move_to_mua_action.setEnabled(True)
-            self.move_to_good_action.setEnabled(True)
-        else:
-            self.move_to_noise_action.setEnabled(False)
-            self.move_to_mua_action.setEnabled(False)
-            self.move_to_good_action.setEnabled(False)
         
     def contextMenuEvent(self, event):
         action = self.context_menu.exec_(self.mapToGlobal(event.pos()))
@@ -735,18 +685,6 @@ class ChannelView(QtGui.QTreeView):
             if ok:
                 # Rename the group.
                 self.rename_group(groupidx, text)
-    
-    def move_to_noise_callback(self, checked=None):
-        channels = self.selected_channels()
-        self.move_to_noise(channels)
-        
-    def move_to_mua_callback(self, checked=None):
-        channels = self.selected_channels()
-        self.move_to_mua(channels)
-    
-    def move_to_good_callback(self, checked=None):
-        channels = self.selected_channels()
-        self.move_to_good(channels)
     
     
     # Get methods
