@@ -721,7 +721,6 @@ class ChannelView(QtGui.QTreeView):
                 # Rename the group.
                 self.rename_channel(channelidx, text)
     
-    
     # Get methods
     # -----------
     def get_channel_indices(self):
