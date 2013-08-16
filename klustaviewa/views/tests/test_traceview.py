@@ -26,12 +26,12 @@ import tables
 def test_traceview():
     
     trace = create_trace(int(freq * 60), nchannels)
-    dead_channels = np.arange(5)
+    ignored_channels = np.arange(5)
     
     kwargs = {}
     kwargs['trace'] = trace
     kwargs['freq'] = freq
-    kwargs['dead_channels'] = dead_channels
+    kwargs['ignored_channels'] = ignored_channels
     kwargs['operators'] = [
         lambda self: (self.close() 
             if USERPREF['test_auto_close'] != False else None),

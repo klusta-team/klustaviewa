@@ -22,7 +22,7 @@ class TraceManager(Manager):
     info = {}
     
     # initialization
-    def set_data(self, trace=None, freq=None, channel_height=None, channel_names=None, dead_channels=None):
+    def set_data(self, trace=None, freq=None, channel_height=None, channel_names=None, ignored_channels=None):
 
         # default settings
         self.max_size = 1000
@@ -43,7 +43,7 @@ class TraceManager(Manager):
             
         # load initial variables
         self.trace = trace
-        self.dead_channels = dead_channels
+        self.ignored_channels = ignored_channels
         self.freq = freq
         self.totalduration = (self.trace.shape[0] - 1) / self.freq
         self.totalsamples, self.nchannels = self.trace.shape
@@ -149,7 +149,7 @@ class TraceManager(Manager):
         self.size = size
         
         colors = np.arange(self.nchannels)
-        colors[self.dead_channels] = 0
+        colors[self.ignored_channels] = 0
         channels = np.arange(self.nchannels)
         
         self.channel_index = np.repeat(channels, self.samples.shape[0] / self.nchannels)
