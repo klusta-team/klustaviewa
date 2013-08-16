@@ -296,7 +296,7 @@ class MultiChannelVisual(Visual):
         
         self.add_vertex_main("""
         vec2 position = position0;
-        position.y = channel_height * position.y + .9 * (2 * channel_index - (nchannels - 1)) / (nchannels - 1);
+        position.y = channel_height * position.y - .9 * (2 * channel_index - (nchannels - 1)) / (nchannels - 1);
         vindex = color_index;
         """)
         
