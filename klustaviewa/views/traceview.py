@@ -38,6 +38,7 @@ class TraceManager(Manager):
         self.slice_ref = (-1, -1) # slice paging
         self.paintinitialized = False # to stop first slice from being loaded until correctly-shaped data drawn
         self.real_data = True # hides grid and painting if we've made up false data of zeros
+        self.size = 1
         
         if trace is None:
             # make up some data to keep the GPU happy, warm, and feeling loved
