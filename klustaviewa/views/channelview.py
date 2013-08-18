@@ -327,11 +327,13 @@ class ChannelViewModel(TreeModel):
         self.channelsMoved.emit(np.array([channel.channelidx() 
             for channel in source_items]), groupidx)
     
-    def rename_group(self, group, name):
+    def rename_channel_group(self, group, name):
         self.setData(self.index(group.row(), 0), name)
         
     def rename_channel(self, channel, name):
-        self.setData(self.index(channel.row(), 0), name)
+        groupidx = self.get_groupidx(channel.channelidx())
+        group = self.get_group(groupidx)
+        self.setData(self.index(channel.row(), 0, parent=group.index), name)
         
     def change_group_color(self, group, color):
         self.setData(self.index(group.row(), 2), color)
@@ -437,8 +439,8 @@ class ChannelView(QtGui.QTreeView):
         self.setItemDelegate(self.ChannelDelegate())
         
         # Create menu. (hidden because it doesn't work - yet!)
-        # self.create_actions()
-        # self.create_context_menu()
+        self.create_actions()
+        self.create_context_menu()
         
         self.restore_geometry()
     
@@ -544,8 +546,8 @@ class ChannelView(QtGui.QTreeView):
         self.expandAll()
         return groupidx
     
-    def rename_group(self, groupidx, name):
-        self.model.rename_group(self.model.get_group(groupidx), name)
+    def rename_channel_group(self, groupidx, name):
+        self.model.rename_channel_group(self.model.get_group(groupidx), name)
         # Signal.
         log.debug("Rename group {0:d} to {1:s}.".format(
             groupidx, name))
@@ -605,9 +607,9 @@ class ChannelView(QtGui.QTreeView):
         self.add_group_action = QtGui.QAction("&Add group", self)
         self.add_group_action.triggered.connect(self.add_group_callback)
         
-        self.rename_group_action = QtGui.QAction("Re&name group", self)
-        self.rename_group_action.setShortcut("F2")
-        self.rename_group_action.triggered.connect(self.rename_group_callback)
+        self.rename_channel_group_action = QtGui.QAction("Re&name group", self)
+        self.rename_channel_group_action.setShortcut("F2")
+        self.rename_channel_group_action.triggered.connect(self.rename_channel_group_callback)
 
         self.rename_channel_action = QtGui.QAction("Rename c&hannel", self)
         self.rename_channel_action.setShortcut("F3")
@@ -619,7 +621,7 @@ class ChannelView(QtGui.QTreeView):
         # Add actions to the widget.
         self.addAction(self.change_color_action)
         self.addAction(self.add_group_action)
-        self.addAction(self.rename_group_action)
+        self.addAction(self.rename_channel_group_action)
         self.addAction(self.rename_channel_action)
         self.addAction(self.remove_group_action)
 
@@ -630,33 +632,32 @@ class ChannelView(QtGui.QTreeView):
         self.context_menu.addAction(self.change_color_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.add_group_action)
-        self.context_menu.addAction(self.rename_group_action)
+        self.context_menu.addAction(self.rename_channel_group_action)
         self.context_menu.addAction(self.rename_channel_action)
         self.context_menu.addAction(self.remove_group_action)
         
     def update_actions(self):
         channels = self.selected_channels()
         groups = self.selected_groups()
-        pass
-        # if len(groups) > 0:
-        #     self.rename_group_action.setEnabled(True)
-        #     # First three groups are not removable (noise and MUA and good).
-        #     if 0 not in groups and 1 not in groups and 2 not in groups:
-        #         self.remove_group_action.setEnabled(True)
-        #     else:
-        #         self.remove_group_action.setEnabled(False)
-        # else:
-        #     self.rename_group_action.setEnabled(False)
-        #     self.remove_group_action.setEnabled(False)
-        #     
-        # if len(channels) > 0:
-        #     self.rename_channel_action.setEnabled(True)
-        # else:
-        #     self.rename_channel_action.setEnabled(False)
+        
+        if len(groups) > 0:
+            self.rename_channel_group_action.setEnabled(True)
+            # First three groups are not removable (noise and MUA and good).
+            if 0 not in groups and 1 not in groups and 2 not in groups:
+                self.remove_group_action.setEnabled(True)
+            else:
+                self.remove_group_action.setEnabled(False)
+        else:
+            self.rename_channel_group_action.setEnabled(False)
+            self.remove_group_action.setEnabled(False)
+            
+        if len(channels) > 0:
+            self.rename_channel_action.setEnabled(True)
+        else:
+            self.rename_channel_action.setEnabled(False)
         
     def contextMenuEvent(self, event):
-        pass
-        # action = self.context_menu.exec_(self.mapToGlobal(event.pos()))
+        action = self.context_menu.exec_(self.mapToGlobal(event.pos()))
     
     def currentChanged(self, index, previous):
         self.current_item = index.internalPointer()
@@ -698,7 +699,7 @@ class ChannelView(QtGui.QTreeView):
         if isinstance(item, GroupItem):
             self.remove_group(item.groupidx())
             
-    def rename_group_callback(self, checked=None):
+    def rename_channel_group_callback(self, checked=None):
         group = self.current_item
         if isinstance(group, GroupItem):
             groupidx = group.groupidx()
@@ -708,7 +709,7 @@ class ChannelView(QtGui.QTreeView):
                 QtGui.QLineEdit.Normal, name)
             if ok:
                 # Rename the group.
-                self.rename_group(groupidx, text)
+                self.rename_channel_group(groupidx, text)
                 
     def rename_channel_callback(self, checked=None):
         channel = self.current_item
