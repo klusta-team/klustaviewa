@@ -30,7 +30,9 @@ for dir in os.listdir('.'):
 
 # create symlink to dependencies
 links = [(os.path.realpath('../galry/galry'), 'galry'),
-         (os.path.realpath('../qtools/qtools'), 'qtools')]
+         (os.path.realpath('../qtools/qtools'), 'qtools'),
+         (os.path.realpath('../kwiklib/kwiklib'), 'kwiklib'),
+         ]
 for source, target in links:
     if not os.path.exists(target):
         symlink(source, target)
@@ -61,8 +63,10 @@ copy('setup_dev.py', 'setup.py')
             
 # build the distribution
 call('python setup.py build_ext --inplace')
-call(('python setup.py sdist --formats=zip bdist_wininst --install-script postinstall.py '
-      '--bitmap images/logo-installer.bmp --title KlustaViewa upload'))
+# call(('python setup.py sdist --formats=zip bdist_wininst --install-script postinstall.py '
+      # '--bitmap images/logo-installer.bmp --title KlustaViewa upload'))
+call(('python setup.py sdist --formats=zip bdist_wininst '#--install-script postinstall.py '
+      '--bitmap images/logo-installer.bmp --title KlustaViewa'))
 # call('python setup.py sdist --formats=zip')
 
 # use the original setup.py

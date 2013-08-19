@@ -1,11 +1,5 @@
-
 import os
-# from distutils.core import setup
 from setuptools import *
-
-# Try importing Cython.
-from distutils.core import setup
-from distutils.extension import Extension
 
 try:
     from Cython.Distutils import build_ext
@@ -83,7 +77,7 @@ if __name__ == '__main__':
                 ]
         },
         
-        scripts=['postinstall.py'],
+        # scripts=[],
         
         app=['klustaviewa/scripts/runklustaviewa.py'],
         

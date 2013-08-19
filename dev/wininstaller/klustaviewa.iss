@@ -17,13 +17,14 @@ AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
+ArchitecturesAllowed=x64
+ArchitecturesInstallIn64BitMode=x64
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 SetupIconFile=D:\Git\klustaviewa\klustaviewa\icons\favicon.ico
-Compression=lzma
-SolidCompression=yes
+Compression=zip
 WizardImageFile=wizard.bmp
 WizardImageStretch=no
 WizardSmallImageFile=wizard-small.bmp
@@ -40,20 +41,44 @@ Source: "D:\Git\klustaviewa\dev\wininstaller\KlustaViewa\*"; DestDir: "{app}"; F
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{group}\KlustaViewa"; Filename: "{app}\WinPython-64bit-2.7.5.0\python-2.7.5.amd64\pythonw.exe"; WorkingDir: "{app}"; Parameters: """{app}\WinPython-64bit-2.7.5.0\python-2.7.5.amd64\Lib\site-packages\klustaviewa\scripts\runklustaviewa.py"""; IconFilename: "{app}\favicon.ico"
-Name: "{group}\Update KlustaViewa"; Filename: "{app}\WinPython-64bit-2.7.5.0\python-2.7.5.amd64\python.exe"; WorkingDir: "{app}"; Parameters: """{app}\tools\update.py""";
+; KlustaViewa
+Name: "{group}\KlustaViewa"; Filename: "{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\Scripts\klustaviewa.exe"; WorkingDir: "{userdocs}"; IconFilename: "{app}\favicon.ico"
+Name: "{userdesktop}\KlustaViewa"; Filename: "{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\Scripts\klustaviewa.exe"; WorkingDir: "{userdocs}"; IconFilename: "{app}\favicon.ico"
+
+; KwikSkope
+Name: "{group}\KwikSkope"; Filename: "{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\Scripts\kwikskope.exe"; WorkingDir: "{userdocs}"; IconFilename: "{app}\favicon.ico"
+Name: "{userdesktop}\KwikSkope"; Filename: "{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\Scripts\kwikskope.exe"; WorkingDir: "{userdocs}"; IconFilename: "{app}\favicon.ico"
+
+; Update and Uninstall
+Name: "{group}\Update KlustaViewa"; Filename: "{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\python.exe"; WorkingDir: "{app}"; Parameters: """{app}\tools\update.py""";
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
-Name: "{userdesktop}\KlustaViewa"; Filename: "{app}\WinPython-64bit-2.7.5.0\python-2.7.5.amd64\pythonw.exe"; WorkingDir: "{app}"; Parameters: """{app}\WinPython-64bit-2.7.5.0\python-2.7.5.amd64\Lib\site-packages\klustaviewa\scripts\runklustaviewa.py"""; IconFilename: "{app}\favicon.ico"
 
 [Run]
-Filename: "{app}\WinPython-64bit-2.7.5.0\python-2.7.5.amd64\python.exe"; WorkingDir: "{app}"; Parameters: """{app}\tools\update.py"""; Flags: runhidden
+Filename: "{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\python.exe"; WorkingDir: "{app}"; Parameters: """{app}\tools\update.py"""; Flags: runhidden
 
 [Dirs]
 Name: "{app}\"; Permissions: everyone-modify
 
 [Registry]
-Root: HKCR; Subkey: ".klx"; ValueType: string; ValueName: ""; ValueData: "KlustaViewa"; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\Scripts"; Check: NeedsAddPath('{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\Scripts')
+Root: HKCR; Subkey: ".kwik"; ValueType: string; ValueName: ""; ValueData: "Kwik spike file"; Flags: uninsdeletevalue
 Root: HKCR; Subkey: "KlustaViewa"; ValueType: string; ValueName: ""; ValueData: "KlustaViewa"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "KlustaViewa\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\favicon.ico"
-Root: HKCR; Subkey: "KlustaViewa\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\WinPython-64bit-2.7.5.0\python-2.7.5.amd64\Scripts\klustaviewa.exe"" ""%1"""
+Root: HKCR; Subkey: "KlustaViewa\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\Scripts\klustaviewa.exe"" ""%1"""
 
+[Code]
+function NeedsAddPath(Param: string): boolean;
+var
+  OrigPath: string;
+begin
+  if not RegQueryStringValue(HKEY_LOCAL_MACHINE,
+    'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
+    'Path', OrigPath)
+  then begin
+    Result := True;
+    exit;
+  end;
+  // look for the path with leading and trailing semicolon
+  // Pos() returns 0 if not found
+  Result := Pos(';' + Param + ';', ';' + OrigPath + ';') = 0;
+end; 
