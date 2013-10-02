@@ -2,7 +2,7 @@ include *.md *.py
 recursive-exclude dev *
 recursive-include docs *.md *.py
 recursive-exclude experimental *
-recursive-include klustaviewa *.md *.py *.png *.ico *.bmp *.css *.qrc *.c *.pyx
+recursive-include klustaviewa *.md *.py *.pyw *.png *.ico *.bmp *.css *.qrc *.c *.pyx
 
 recursive-include kwiklib *.md *.py
 recursive-include kwiklib/dataio *.md *.py

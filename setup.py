@@ -79,7 +79,9 @@ if __name__ == '__main__':
         
         # scripts=[],
         
-        app=['klustaviewa/scripts/runklustaviewa.py'],
+        app=['klustaviewa/scripts/runklustaviewa.pyw',
+             'klustaviewa/scripts/runkwikskope.pyw',
+            ],
         
         package_data={
             'klustaviewa': ['icons/*.png', 'icons/*.ico', 'gui/*.css'],
