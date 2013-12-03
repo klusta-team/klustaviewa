@@ -104,3 +104,7 @@ If you have any trouble, bug, comment or suggestion:
   * You can send an e-mail to the author of the software: cyrille *dot* rossant *at* gmail *dot* com.
 
 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/klusta-team/klustaviewa/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
