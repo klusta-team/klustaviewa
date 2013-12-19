@@ -6,28 +6,60 @@
 import os
 import sys
 import time
+import tempfile
 
 import numpy as np
 
-from spikedetekt2.dataio import Experiment
+from spikedetekt2.dataio import *
 from klustaviewa.views.viewdata import *
 from klustaviewa.views.tests.utils import show_view
 from klustaviewa.views import WaveformView, FeatureView
-from spikedetekt2.dataio.tests.test_experiment import setup, teardown, DIRPATH
 
 
 # -----------------------------------------------------------------------------
-# Mock data
+# Fixtures
 # -----------------------------------------------------------------------------
 # TODO: refactor this in proper mock data module in spikedetekt2
+DIRPATH = tempfile.mkdtemp()
+
 def rnd(*shape):
     return np.random.rand(*shape)
     
 def rndint(*shape):
     return np.random.randint(size=shape, low=-32000, high=32000)
 
-def add_spikes(exp, nspikes=1000):
+def setup():
+    # Create files.
+    prm = {'nfeatures': 3, 'waveforms_nsamples': 10, 'nchannels': 3,
+           'nfeatures_per_channel': 1}
+    prb = {'channel_groups': [
+        {
+            'channels': [4, 6, 8],
+            'graph': [[4, 6], [8, 4]],
+            'geometry': {4: [0.4, 0.6], 6: [0.6, 0.8], 8: [0.8, 0.0]},
+        }
+    ]}
+    create_files('myexperiment', dir=DIRPATH, prm=prm, prb=prb)
+    
+    # Open the files.
+    files = open_files('myexperiment', dir=DIRPATH, mode='a')
+    
+    # Add data.
+    add_recording(files, 
+                  sample_rate=20000.,
+                  start_time=10., 
+                  start_sample=200000.,
+                  bit_depth=16,
+                  band_high=100.,
+                  band_low=500.,
+                  nchannels=3,)
+    add_event_type(files, 'myevents')
+    add_cluster_group(files, channel_group_id='0', id='noise', name='Noise')
+    add_cluster(files, channel_group_id='0',)
+    
+    exp = Experiment(files=files)
     chgrp = exp.channel_groups[0]
+    nspikes = 1000
     chgrp.spikes.time_samples.append(np.sort(rndint(nspikes)))
     chgrp.spikes.clusters.main.append(np.zeros(nspikes, dtype=np.int32))
     chgrp.spikes.features_masks.append(rnd(nspikes, 3, 2))
@@ -35,14 +67,20 @@ def add_spikes(exp, nspikes=1000):
     chgrp.spikes.waveforms_raw.append(rndint(nspikes, 10, 3))
     chgrp.spikes.waveforms_filtered.append(rndint(nspikes, 10, 3))
     
-    
+    # Close the files
+    close_files(files)
+
+def teardown():
+    files = get_filenames('myexperiment', dir=DIRPATH)
+    [os.remove(path) for path in itervalues(files)]
+
+
 # -----------------------------------------------------------------------------
 # Tests
 # -----------------------------------------------------------------------------
 def test_viewdata_waveform_1():
-    with Experiment('myexperiment', dir=DIRPATH, mode='a') as exp:
+    with Experiment('myexperiment', dir=DIRPATH) as exp:
         chgrp = exp.channel_groups[0]
-        add_spikes(exp)
         data = get_waveformview_data(exp, clusters=[0])
         show_view(WaveformView, **data)
     
