@@ -24,15 +24,15 @@ from klustaviewa.gui.threads import ThreadedTasks
 # -----------------------------------------------------------------------------
 # Get data from loader for views
 # -----------------------------------------------------------------------------
-def get_waveformview_data(exp, clusters=[], channel_group=0, clustering=None,
+def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
                           autozoom=None, wizard=None):
     fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
     
-    clusters_data = exp.channel_groups[channel_group].clusters
+    clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
     spikes_data = exp.channel_groups[channel_group].spikes
     channels_data = exp.channel_groups[channel_group].channels
     
-    spike_clusters = spikes_data.clusters.main[:]
+    spike_clusters = getattr(spikes_data.clusters, clustering)[:]
     spikes_selected = get_some_spikes_in_clusters(clusters, spike_clusters)
     cluster_colors = np.array([clusters_data[cl].application_data.klustaviewa.color or 1
                                for cl in clusters])
