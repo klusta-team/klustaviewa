@@ -10,14 +10,15 @@ from qtools import inthread, inprocess
 from qtools import QtGui, QtCore
 
 from spikedetekt2.dataio import *
-from kwiklib.dataio import get_some_spikes_in_clusters, get_indices
-
 import kwiklib.utils.logger as log
+from kwiklib.dataio import (get_some_spikes_in_clusters, get_indices, 
+    get_spikes_in_clusters, get_some_spikes)
+from kwiklib.utils.colors import random_color
+
 from klustaviewa.stats.correlations import normalize
 from klustaviewa.stats.correlograms import get_baselines, NCORRBINS_DEFAULT, CORRBIN_DEFAULT
 from klustaviewa import USERPREF
 from klustaviewa import SETTINGS
-from kwiklib.utils.colors import random_color
 from klustaviewa.gui.threads import ThreadedTasks
 
 
@@ -26,6 +27,8 @@ from klustaviewa.gui.threads import ThreadedTasks
 # -----------------------------------------------------------------------------
 def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
                           autozoom=None, wizard=None):
+    # TODO: add spikes=None keyword
+    # TODO: add normalization coefficient in keyword argument
     fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
     
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
@@ -45,6 +48,8 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     
     channel_positions = np.array([channels_data[ch].position or (0., ch) 
                                   for ch in channels_data.keys()])
+    
+    # TODO: pandaize
     
     data = dict(
         waveforms=waveforms,
@@ -129,23 +134,66 @@ def get_similaritymatrixview_data(loader, statscache):
     )
     return data
     
-def get_featureview_data(loader, autozoom):
+def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
+                         nspikes_bg=None, autozoom=None):
+    # TODO: add spikes=None and spikes_bg=None
+    # TODO: add normalization coefficient in keyword argument
+    fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
+    
+    clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
+    spikes_data = exp.channel_groups[channel_group].spikes
+    channels_data = exp.channel_groups[channel_group].channels
+    
+    spike_clusters = getattr(spikes_data.clusters, clustering)[:]
+    spikes_selected = get_spikes_in_clusters(clusters, spike_clusters)
+    spikes_bg = get_some_spikes(spike_clusters, nspikes_max=nspikes_bg)
+    cluster_colors = np.array([clusters_data[cl].application_data.klustaviewa.color or 1
+                               for cl in clusters])
+    
+    # HACK: work-around PyTables bug #310: expand the dimensions of the boolean 
+    # indices
+    ind = np.tile(spikes_selected[:, np.newaxis, np.newaxis], 
+                  (1,) + spikes_data.features_masks.shape[1:])
+    fm = spikes_data.features_masks[ind].reshape((-1,) + spikes_data.features_masks.shape[1:])
+    
+    features = fm[:, :, 0]
+    masks = fm[:, ::fetdim, 1]
+    
+    spiketimes = spikes_data.time_samples[spikes_selected]
+    nchannels = features.shape[1]
+    freq = exp.application_data.spikedetekt.sampling_frequency
+    duration = exp.application_data.spikedetekt.duration
+    
+    # No need for hacky work-around here, since get_spikes returns a slice.
+    features_bg = spikes_data.features_masks[spikes_bg, :, 0]
+    
+    # Normalize features.
+    c = 1. / (features.max())
+    features = features * c
+    features_bg = features_bg * c
+    
+    # TODO: pandaize
+    
+    # TODO
+    nextrafet = 0
+    
     data = dict(
-        features=loader.get_features(),
-        features_background=loader.get_features_background(),
-        spiketimes=loader.get_spiketimes(),
-        masks=loader.get_masks(),
-        clusters=loader.get_clusters(),
-        clusters_selected=loader.get_clusters_selected(),
-        cluster_colors=loader.get_cluster_colors(),
-        nchannels=loader.nchannels,
-        fetdim=loader.fetdim,
-        nextrafet=loader.nextrafet,
-        freq=loader.freq,
+        features=features,
+        features_background=features_bg,
+        masks=masks,
+        spiketimes=spiketimes,
+        clusters=spike_clusters,
+        clusters_selected=clusters,
+        cluster_colors=cluster_colors,
+        nchannels=nchannels,
+        fetdim=fetdim,
+        nextrafet=nextrafet,
+        freq=freq,
         autozoom=autozoom,
-        duration=loader.get_duration(),
-        alpha_selected=USERPREF.get('feature_selected_alpha', .75),
-        alpha_background=USERPREF.get('feature_background_alpha', .1),
-        time_unit=USERPREF['features_info_time_unit'] or 'second',
+        duration=duration,
+        # TODO
+        # alpha_selected=USERPREF.get('feature_selected_alpha', .75),
+        # alpha_background=USERPREF.get('feature_background_alpha', .1),
+        # time_unit=USERPREF['features_info_time_unit'] or 'second',
     )        
     return data

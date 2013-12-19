@@ -23,7 +23,7 @@ from klustaviewa.views import WaveformView, FeatureView
 DIRPATH = tempfile.mkdtemp()
 
 def rnd(*shape):
-    return np.random.rand(*shape)
+    return .25 * np.random.randn(*shape)
     
 def rndint(*shape):
     return np.random.randint(size=shape, low=-32000, high=32000)
@@ -31,7 +31,9 @@ def rndint(*shape):
 def setup():
     # Create files.
     prm = {'nfeatures': 3, 'waveforms_nsamples': 10, 'nchannels': 3,
-           'nfeatures_per_channel': 1}
+           'nfeatures_per_channel': 1,
+           'sampling_frequency': 20000.,
+           'duration': 10.}
     prb = {'channel_groups': [
         {
             'channels': [4, 6, 8],
@@ -61,7 +63,7 @@ def setup():
     chgrp = exp.channel_groups[0]
     nspikes = 1000
     chgrp.spikes.time_samples.append(np.sort(rndint(nspikes)))
-    chgrp.spikes.clusters.main.append(np.zeros(nspikes, dtype=np.int32))
+    chgrp.spikes.clusters.main.append(np.random.randint(size=nspikes, low=0, high=2))
     chgrp.spikes.features_masks.append(rnd(nspikes, 3, 2))
     chgrp.spikes.features_masks[..., 1] = chgrp.spikes.features_masks[..., 1] < .5
     chgrp.spikes.waveforms_raw.append(rndint(nspikes, 10, 3))
@@ -83,4 +85,12 @@ def test_viewdata_waveform_1():
         chgrp = exp.channel_groups[0]
         data = get_waveformview_data(exp, clusters=[0])
         show_view(WaveformView, **data)
+    
+def test_viewdata_featureview_1():
+    with Experiment('myexperiment', dir=DIRPATH) as exp:
+        chgrp = exp.channel_groups[0]
+        data = get_featureview_data(exp, clusters=[0])
+        show_view(FeatureView, **data)
+    
+    
     
