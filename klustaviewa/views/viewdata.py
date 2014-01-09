@@ -40,7 +40,9 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     cluster_colors = np.array([clusters_data[cl].application_data.klustaviewa.color or 1
                                for cl in clusters])
 
-    waveforms = spikes_data.waveforms_filtered[spikes_selected,...]
+    waveforms = convert_dtype(
+        spikes_data.waveforms_filtered[spikes_selected,...],
+        np.float32)
     masks = spikes_data.masks[spikes_selected,::fetdim]
     
     # Normalize waveforms.
