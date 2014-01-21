@@ -13,7 +13,7 @@ import numpy as np
 from spikedetekt2.dataio import *
 from klustaviewa.views.viewdata import *
 from klustaviewa.views.tests.utils import show_view
-from klustaviewa.views import WaveformView, FeatureView
+from klustaviewa.views import WaveformView, FeatureView, ClusterView
 
 
 # -----------------------------------------------------------------------------
@@ -91,6 +91,12 @@ def test_viewdata_featureview_1():
         chgrp = exp.channel_groups[0]
         data = get_featureview_data(exp, clusters=[0])
         show_view(FeatureView, **data)
+    
+def _test_viewdata_clusterview_1():
+    with Experiment('myexperiment', dir=DIRPATH) as exp:
+        chgrp = exp.channel_groups[0]
+        data = get_clusterview_data(exp)
+        show_view(ClusterView, **data)
     
     
     

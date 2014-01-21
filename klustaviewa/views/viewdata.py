@@ -129,22 +129,47 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     )        
     return data
 
+def get_clusterview_data(exp, statscache=None, channel_group=0, 
+                         clustering='main',):
+    clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
+    cluster_groups_data = getattr(exp.channel_groups[channel_group].cluster_groups, clustering)
+    
+    # Get the list of all existing clusters.
+    clusters = sorted(clusters_data.keys())
+    groups = sorted(cluster_groups_data.keys())
+    
+    cluster_colors = np.array([clusters_data[cl].application_data.klustaviewa.color or 1
+                           for cl in clusters])
+    cluster_groups = np.array([clusters_data[cl].cluster_group
+                               for cl in clusters])
+                                
+    group_colors = np.array([cluster_groups_data[g].application_data.klustaviewa.color or 1
+                             for g in groups])
+    group_names = np.array([cluster_groups_data[g].name
+                            for g in groups])
+    
+    # TODO: cache the cluster size instead of recomputing every time here
+    # (in experiment class?)
+    spike_clusters = getattr(exp.channel_groups[channel_group].spikes.clusters, 
+                             clustering)[:]
+    sizes = np.bincount(spike_clusters)
+    cluster_sizes = sizes[clusters]
+    
+    data = dict(
+        cluster_colors=cluster_colors,
+        cluster_groups=cluster_groups,
+        group_colors=group_colors,
+        group_names=group_names,
+        cluster_sizes=cluster_sizes,
+    )
+    if statscache is not None:
+        data['cluster_quality'] = statscache.cluster_quality
+    return data
+    
     
 # TODO: loader ==> exp
 def get_traceview_data(loader):
     return loader.get_trace()
-    
-def get_clusterview_data(loader, statscache, clusters=None):
-    data = dict(
-        cluster_colors=loader.get_cluster_colors('all',
-            can_override=False),
-        cluster_groups=loader.get_cluster_groups('all'),
-        group_colors=loader.get_group_colors('all'),
-        group_names=loader.get_group_names('all'),
-        cluster_sizes=loader.get_cluster_sizes('all'),
-        cluster_quality=statscache.cluster_quality,
-    )
-    return data
     
 def get_channelview_data(loader, channels=None):
     data = dict(
