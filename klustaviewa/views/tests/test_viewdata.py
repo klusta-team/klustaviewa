@@ -57,7 +57,7 @@ def setup():
                   nchannels=3,)
     add_event_type(files, 'myevents')
     add_cluster_group(files, channel_group_id='0', id='noise', name='Noise')
-    add_cluster(files, channel_group_id='0',)
+    add_cluster(files, channel_group_id='0', cluster_group=0)
     
     exp = Experiment(files=files)
     chgrp = exp.channel_groups[0]
@@ -92,7 +92,7 @@ def test_viewdata_featureview_1():
         data = get_featureview_data(exp, clusters=[0])
         show_view(FeatureView, **data)
     
-def _test_viewdata_clusterview_1():
+def test_viewdata_clusterview_1():
     with Experiment('myexperiment', dir=DIRPATH) as exp:
         chgrp = exp.channel_groups[0]
         data = get_clusterview_data(exp)

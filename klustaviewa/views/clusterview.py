@@ -144,37 +144,6 @@ class ClusterViewModel(TreeModel):
                 # assign the group as a parent of this cluster
                 parent=self.get_group(select(cluster_groups, clusteridx)))
     
-    # def save(self):
-    #        groups = self.get_groups()
-    #        allclusters = self.get_clusters()
-    #        
-    #        ngroups = len(groups)
-    #        nclusters = len(allclusters)
-    #        
-    #        # Initialize objects.
-    #        cluster_colors = pd.Series(np.zeros(nclusters, dtype=np.int32))
-    #        cluster_groups = pd.Series(np.zeros(nclusters, dtype=np.int32))
-    #        group_colors = pd.Series(np.zeros(ngroups, dtype=np.int32))
-    #        group_names = pd.Series(np.zeros(ngroups, dtype=np.str_))
-    #        
-    #        # Loop through all groups.
-    #        for group in groups:
-    #            groupidx = group.groupidx()
-    #            clusters = self.get_clusters_in_group(groupidx)
-    #            # set the group info object
-    #            group_colors[groupidx] = group.color()
-    #            group_names[groupidx] = group.name()
-    #            # Loop through clusters in the current group.
-    #            for cluster in clusters:
-    #                clusteridx = cluster.clusteridx()
-    #            cluster_colors[clusteridx] = cluster.color()
-    #            cluster_groups[clusteridx] = groupidx
-    #        
-    #        return dict(cluster_colors=cluster_colors,
-    #                    cluster_groups=cluster_groups,
-    #                    group_colors=group_colors,
-    #                    group_names=group_names)
-    
     
     # Data methods
     # ------------

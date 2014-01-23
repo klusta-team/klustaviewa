@@ -136,17 +136,17 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
     
     # Get the list of all existing clusters.
     clusters = sorted(clusters_data.keys())
-    groups = sorted(cluster_groups_data.keys())
+    groups = cluster_groups_data.keys()
     
-    cluster_colors = np.array([clusters_data[cl].application_data.klustaviewa.color or 1
-                           for cl in clusters])
-    cluster_groups = np.array([clusters_data[cl].cluster_group
-                               for cl in clusters])
+    cluster_colors = pd.Series([clusters_data[cl].application_data.klustaviewa.color or 1
+                           for cl in clusters], index=clusters)
+    cluster_groups = pd.Series([clusters_data[cl].cluster_group
+                               for cl in clusters], index=clusters)
                                 
-    group_colors = np.array([cluster_groups_data[g].application_data.klustaviewa.color or 1
-                             for g in groups])
-    group_names = np.array([cluster_groups_data[g].name
-                            for g in groups])
+    group_colors = pd.Series([cluster_groups_data[g].application_data.klustaviewa.color or 1
+                             for g in groups], index=range(len(groups)))
+    group_names = pd.Series([cluster_groups_data[g].name
+                            for g in groups], index=range(len(groups)))
     
     # TODO: cache the cluster size instead of recomputing every time here
     # (in experiment class?)
