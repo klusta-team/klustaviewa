@@ -166,6 +166,49 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
         data['cluster_quality'] = statscache.cluster_quality
     return data
     
+def get_correlogramsview_data(exp, correlograms, clusters=[],
+                              channel_group=0, clustering='main',
+                              nclusters_max=10, ncorrbins=50, corrbin=.001):
+    
+    clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
+    cluster_groups_data = getattr(exp.channel_groups[channel_group].cluster_groups, clustering)
+    
+    cluster_colors = pd.Series([clusters_data[cl].application_data.klustaviewa.color or 1
+                           for cl in clusters], index=clusters)
+                            
+    # TODO: cache and optimize this
+    spike_clusters = getattr(exp.channel_groups[channel_group].spikes.clusters, 
+                             clustering)[:]
+    sizes = np.bincount(spike_clusters)
+    cluster_sizes = sizes[clusters]
+    
+    
+    clusters_selected0 = clusters
+    
+    # Subset of selected clusters if there are too many clusters.
+    if len(clusters_selected0) < nclusters_max:
+        clusters_selected = clusters_selected0
+    else:
+        clusters_selected = clusters_selected0[:nclusters_max]
+    
+    correlograms = correlograms.submatrix(clusters_selected)
+        
+    # Compute the baselines.
+    # colors = select(loader.get_cluster_colors(), clusters_selected)
+    # corrbin = SETTINGS.get('correlograms.corrbin', CORRBIN_DEFAULT)
+    # ncorrbins = SETTINGS.get('correlograms.ncorrbins', NCORRBINS_DEFAULT)
+    duration = corrbin * ncorrbins
+    baselines = get_baselines(cluster_sizes, duration, corrbin)
+    data = dict(
+        correlograms=correlograms,
+        baselines=baselines,
+        clusters_selected=clusters_selected,
+        cluster_colors=cluster_colors,
+        ncorrbins=ncorrbins,
+        corrbin=corrbin,
+    )
+    return data
+    
     
 # TODO: loader ==> exp
 def get_traceview_data(loader):
@@ -179,35 +222,6 @@ def get_channelview_data(loader, channels=None):
         channel_names=loader.get_channel_names('all'),
         group_colors=loader.get_channel_group_colors('all'),
         group_names=loader.get_channel_group_names('all'),
-    )
-    return data
-    
-def get_correlogramsview_data(loader, statscache):
-    clusters_selected0 = loader.get_clusters_selected()
-    
-    # Subset of selected clusters if there are too many clusters.
-    max_nclusters = USERPREF['correlograms_max_nclusters']
-    if len(clusters_selected0) < max_nclusters:
-        clusters_selected = clusters_selected0
-    else:
-        clusters_selected = clusters_selected0[:max_nclusters]
-    
-    correlograms = statscache.correlograms.submatrix(
-        clusters_selected)
-    # Compute the baselines.
-    sizes = get_array(select(loader.get_cluster_sizes(), clusters_selected))
-    colors = select(loader.get_cluster_colors(), clusters_selected)
-    corrbin = SETTINGS.get('correlograms.corrbin', CORRBIN_DEFAULT)
-    ncorrbins = SETTINGS.get('correlograms.ncorrbins', NCORRBINS_DEFAULT)
-    duration = corrbin * ncorrbins
-    baselines = get_baselines(sizes, duration, corrbin)
-    data = dict(
-        correlograms=correlograms,
-        baselines=baselines,
-        clusters_selected=clusters_selected,
-        cluster_colors=colors,
-        ncorrbins=ncorrbins,
-        corrbin=corrbin,
     )
     return data
     

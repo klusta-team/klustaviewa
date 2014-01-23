@@ -10,10 +10,13 @@ import tempfile
 
 import numpy as np
 
+from klustaviewa.views.tests.mock_data import (ncorrbins, corrbin,
+        create_baselines, create_correlograms)
 from spikedetekt2.dataio import *
 from klustaviewa.views.viewdata import *
 from klustaviewa.views.tests.utils import show_view
-from klustaviewa.views import WaveformView, FeatureView, ClusterView
+from klustaviewa.views import (WaveformView, FeatureView, ClusterView,
+    CorrelogramsView)
 
 
 # -----------------------------------------------------------------------------
@@ -97,6 +100,15 @@ def test_viewdata_clusterview_1():
         chgrp = exp.channel_groups[0]
         data = get_clusterview_data(exp)
         show_view(ClusterView, **data)
+    
+def test_viewdata_correlogramsview_1():
+    with Experiment('myexperiment', dir=DIRPATH) as exp:
+        chgrp = exp.channel_groups[0]
+        correlograms = create_correlograms([0], 50)
+        data = get_correlogramsview_data(exp, clusters=[0], 
+                                         correlograms=correlograms,
+                                         )
+        show_view(CorrelogramsView, **data)
     
     
     
