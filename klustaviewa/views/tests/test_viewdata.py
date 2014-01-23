@@ -11,12 +11,11 @@ import tempfile
 import numpy as np
 
 from klustaviewa.views.tests.mock_data import (ncorrbins, corrbin,
-        create_baselines, create_correlograms)
-from spikedetekt2.dataio import *
+        create_baselines, create_correlograms, create_similarity_matrix)
 from klustaviewa.views.viewdata import *
 from klustaviewa.views.tests.utils import show_view
 from klustaviewa.views import (WaveformView, FeatureView, ClusterView,
-    CorrelogramsView)
+    CorrelogramsView, SimilarityMatrixView)
 
 
 # -----------------------------------------------------------------------------
@@ -111,6 +110,13 @@ def test_viewdata_correlogramsview_1():
                                          correlograms=correlograms,
                                          )
         show_view(CorrelogramsView, **data)
+    
+def test_viewdata_similaritymatrixview_1():
+    with Experiment('myexperiment', dir=DIRPATH) as exp:
+        chgrp = exp.channel_groups[0]
+        matrix = create_similarity_matrix(2)
+        data = get_similaritymatrixview_data(exp, matrix=matrix)
+        show_view(SimilarityMatrixView, **data)
     
     
     

@@ -209,6 +209,31 @@ def get_correlogramsview_data(exp, correlograms, clusters=[],
     )
     return data
     
+def get_similaritymatrixview_data(exp, matrix=None,
+        channel_group=0, clustering='main',):
+    if matrix is None:
+        return
+    clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
+    cluster_groups_data = getattr(exp.channel_groups[channel_group].cluster_groups, clustering)
+    clusters = sorted(clusters_data.keys())
+    cluster_colors = pd.Series([clusters_data[cl].application_data.klustaviewa.color or 1
+                           for cl in clusters], index=clusters)
+    cluster_groups = pd.Series([clusters_data[cl].cluster_group
+                               for cl in clusters], index=clusters)
+                       
+        
+    # Clusters in groups 0 or 1 to hide.
+    clusters_hidden = np.nonzero(np.in1d(cluster_groups, [0, 1]))[0]
+    data = dict(
+        # WARNING: copy the matrix here so that we don't modify the
+        # original matrix while normalizing it.
+        similarity_matrix=matrix,
+        cluster_colors_full=cluster_colors,
+        clusters_hidden=clusters_hidden,
+    )
+    return data
+    
+    
     
 # TODO: loader ==> exp
 def get_traceview_data(loader):
@@ -222,22 +247,6 @@ def get_channelview_data(loader, channels=None):
         channel_names=loader.get_channel_names('all'),
         group_colors=loader.get_channel_group_colors('all'),
         group_names=loader.get_channel_group_names('all'),
-    )
-    return data
-    
-def get_similaritymatrixview_data(loader, statscache):
-    if statscache is None:
-        return
-    similarity_matrix = statscache.similarity_matrix_normalized
-    # Clusters in groups 0 or 1 to hide.
-    cluster_groups = loader.get_cluster_groups('all')
-    clusters_hidden = np.nonzero(np.in1d(cluster_groups, [0, 1]))[0]
-    data = dict(
-        # WARNING: copy the matrix here so that we don't modify the
-        # original matrix while normalizing it.
-        similarity_matrix=similarity_matrix,
-        cluster_colors_full=loader.get_cluster_colors('all'),
-        clusters_hidden=clusters_hidden,
     )
     return data
     
