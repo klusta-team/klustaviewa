@@ -59,8 +59,10 @@ def setup():
                   band_low=500.,
                   nchannels=3,)
     add_event_type(files, 'myevents')
-    add_cluster_group(files, channel_group_id='0', id='noise', name='Noise')
-    add_cluster(files, channel_group_id='0', cluster_group=0)
+    add_cluster_group(files, name='Noise')
+    add_cluster_group(files, name='MUA')
+    add_cluster(files, cluster_group=0)
+    add_cluster(files, cluster_group=1)
     
     exp = Experiment(files=files)
     chgrp = exp.channel_groups[0]
@@ -104,8 +106,8 @@ def test_viewdata_clusterview_1():
 def test_viewdata_correlogramsview_1():
     with Experiment('myexperiment', dir=DIRPATH) as exp:
         chgrp = exp.channel_groups[0]
-        correlograms = create_correlograms([0], 50)
-        data = get_correlogramsview_data(exp, clusters=[0], 
+        correlograms = create_correlograms([0, 1], 50)
+        data = get_correlogramsview_data(exp, clusters=[0, 1], 
                                          correlograms=correlograms,
                                          )
         show_view(CorrelogramsView, **data)
