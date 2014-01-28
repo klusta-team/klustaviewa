@@ -12,7 +12,7 @@ from qtools import QtGui, QtCore
 from spikedetekt2.dataio import *
 import kwiklib.utils.logger as log
 from kwiklib.dataio import (get_some_spikes_in_clusters, get_indices, 
-    get_spikes_in_clusters, get_some_spikes)
+    get_spikes_in_clusters, get_some_spikes, pandaize)
 from kwiklib.utils.colors import random_color
 
 from klustaviewa.stats.correlations import normalize
@@ -27,8 +27,7 @@ from klustaviewa.gui.threads import ThreadedTasks
 # -----------------------------------------------------------------------------
 def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
                           autozoom=None, wizard=None):
-    # TODO: add spikes=None keyword
-    # TODO: add normalization coefficient in keyword argument
+    clusters = np.array(clusters)
     fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
     
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
@@ -45,13 +44,16 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
         np.float32)
     masks = spikes_data.masks[spikes_selected,::fetdim]
     
-    # Normalize waveforms.
-    waveforms = waveforms * 1. / (waveforms.max())
-    
     channel_positions = np.array([channels_data[ch].position or (0., ch) 
                                   for ch in channels_data.keys()])
     
-    # TODO: pandaize
+    # Normalize waveforms.
+    waveforms = waveforms * 1. / (waveforms.max())
+    
+    # Pandaize
+    waveforms = pandaize(waveforms, spikes_selected)
+    cluster_colors = pandaize(cluster_colors, clusters)
+    masks = pandaize(masks, spikes_selected)
     
     data = dict(
         waveforms=waveforms,
@@ -235,7 +237,7 @@ def get_similaritymatrixview_data(exp, matrix=None,
     
     
     
-# TODO: loader ==> exp
+# TODO: loader ==> exp (supporting new file format)
 def get_traceview_data(loader):
     return loader.get_trace()
     
