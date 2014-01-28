@@ -60,8 +60,8 @@ def setup():
     add_event_type(files, 'myevents')
     add_cluster_group(files, name='Noise')
     add_cluster_group(files, name='MUA')
-    add_cluster(files, cluster_group=0)
-    add_cluster(files, cluster_group=1)
+    add_cluster(files, cluster_group=0, color=1)
+    add_cluster(files, cluster_group=1, color=2)
     
     exp = Experiment(files=files)
     chgrp = exp.channel_groups[0]
@@ -84,16 +84,16 @@ def teardown():
 # -----------------------------------------------------------------------------
 # Tests
 # -----------------------------------------------------------------------------
-def test_viewdata_waveform_1():
+def test_viewdata_waveformview_1():
     with Experiment('myexperiment', dir=DIRPATH) as exp:
         chgrp = exp.channel_groups[0]
-        data = get_waveformview_data(exp, clusters=[0])
+        data = get_waveformview_data(exp, clusters=[0, 1])
         show_view(WaveformView, **data)
     
 def test_viewdata_featureview_1():
     with Experiment('myexperiment', dir=DIRPATH) as exp:
         chgrp = exp.channel_groups[0]
-        data = get_featureview_data(exp, clusters=[0])
+        data = get_featureview_data(exp, clusters=[0], nspikes_bg=1000)
         show_view(FeatureView, **data)
     
 def test_viewdata_clusterview_1():

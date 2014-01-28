@@ -68,9 +68,12 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     return data
 
 def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
-                         nspikes_bg=None, autozoom=None):
+                         nspikes_bg=None, autozoom=None,
+                         alpha_selected=.75, alpha_background=.25,
+                         normalization=None,
+                         time_unit='second'):
+    clusters = np.array(clusters)
     # TODO: add spikes=None and spikes_bg=None
-    # TODO: add normalization coefficient in keyword argument
     fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
     
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
@@ -101,11 +104,16 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     features_bg = spikes_data.features_masks[spikes_bg, :, 0]
     
     # Normalize features.
-    c = 1. / (features.max())
+    c = normalization or (1. / (features.max()))
     features = features * c
     features_bg = features_bg * c
     
-    # TODO: pandaize
+    # Pandaize
+    features = pandaize(features, spikes_selected)
+    features_bg = pandaize(features_bg, spikes_bg)
+    masks = pandaize(masks, spikes_selected)
+    spiketimes = pandaize(spiketimes, spikes_selected)
+    cluster_colors = pandaize(cluster_colors, clusters)
     
     # TODO
     nextrafet = 0
@@ -124,10 +132,9 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
         freq=freq,
         autozoom=autozoom,
         duration=duration,
-        # TODO
-        # alpha_selected=USERPREF.get('feature_selected_alpha', .75),
-        # alpha_background=USERPREF.get('feature_background_alpha', .1),
-        # time_unit=USERPREF['features_info_time_unit'] or 'second',
+        alpha_selected=alpha_selected,
+        alpha_background=alpha_background,
+        time_unit=time_unit,
     )        
     return data
 
