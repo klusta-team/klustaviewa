@@ -19,6 +19,12 @@ Screenshots
 [![Screenshot 2](images/thumbnails/img1.png)](images/img1.PNG)
 
 
+Note
+----
+
+You may encounter problems with the latest version of KlustaViewa if you have multiple shanks. You should put all `*.1` files (+ the `.xml` file) in a separate folder **before** opening them in KlustaViewa. Idem for `*.2` files, etc. The next version (to be released in a few weeks) will solve this problem.
+
+
 Installation
 ------------
 
