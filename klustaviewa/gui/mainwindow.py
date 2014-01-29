@@ -43,16 +43,9 @@ import rcicons
 
 
 # -----------------------------------------------------------------------------
-# Register custom classes for Qt signals
-# -----------------------------------------------------------------------------
-# id = QtCore.QMetaType.type('QTextCursor')
-
-
-# -----------------------------------------------------------------------------
 # Main Window
 # -----------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
-    
     def __init__(self, parent=None, dolog=True, filename=None):
         super(MainWindow, self).__init__(parent)
 

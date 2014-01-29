@@ -17,7 +17,7 @@ from klustaviewa import USERPREF
 from klustaviewa import SETTINGS
 from kwiklib.utils.colors import random_color
 from klustaviewa.gui.threads import ThreadedTasks
-import klustaviewa.gui.viewdata as vd
+import klustaviewa.views.viewdata as vd
 
 
 # -----------------------------------------------------------------------------
@@ -91,6 +91,7 @@ class TaskGraph(AbstractTaskGraph):
         self.get_view = self.mainwindow.get_view
         self.get_views = self.mainwindow.get_views
         self.loader = self.mainwindow.loader
+        self.experiment = self.loader.experiment
         self.wizard = self.mainwindow.wizard
         self.controller = self.mainwindow.controller
         self.statscache = self.mainwindow.statscache
@@ -186,6 +187,8 @@ class TaskGraph(AbstractTaskGraph):
             return '_update_correlograms_view'
     
     def _compute_similarity_matrix(self, target_next=None):
+        # TODO: get_similarity_matrix_data in viewdata
+        return
         similarity_measure = self.loader.similarity_measure
         
         features = self.loader.background_features
@@ -273,11 +276,13 @@ class TaskGraph(AbstractTaskGraph):
     # View updates.
     # -------------
     def _update_correlograms_view(self):
-        data = vd.get_correlogramsview_data(self.loader, self.statscache)
+        data = vd.get_correlogramsview_data(self.experiment, 
+            self.statscache.correlograms, 
+            clusters=self.loader.get_clusters_selected())
         [view.set_data(**data) for view in self.get_views('CorrelogramsView')]
         
     def _update_similarity_matrix_view(self):
-        data = vd.get_similaritymatrixview_data(self.loader, self.statscache)
+        data = vd.get_similaritymatrixview_data(self.experiment, self.statscache.similarity_matrix)
         [view.set_data(**data) 
             for view in self.get_views('SimilarityMatrixView')]
         # Show selected clusters when the matrix has been updated.
@@ -285,24 +290,29 @@ class TaskGraph(AbstractTaskGraph):
         return ('_show_selection_in_matrix', (clusters,))
         
     def _update_feature_view(self, autozoom=None):
-        data = vd.get_featureview_data(self.loader, 
+        data = vd.get_featureview_data(self.experiment, 
+            clusters=self.loader.clusters_selected,
             autozoom=autozoom)
         [view.set_data(**data) for view in self.get_views('FeatureView')]
         
     def _update_waveform_view(self, autozoom=None, wizard=None):
-        data = vd.get_waveformview_data(self.loader, autozoom=autozoom, 
-            wizard=wizard)
+        data = vd.get_waveformview_data(self.experiment, 
+            clusters=self.loader.clusters_selected,
+            autozoom=autozoom, 
+            wizard=wizard
+            )
         [view.set_data(**data) for view in self.get_views('WaveformView')]
         
     def _update_trace_view(self):
-        data = vd.get_traceview_data(self.loader)
-        [view.set_data(**data) for view in self.get_views('TraceView')]
+        # TODO
+        # data = vd.get_traceview_data(self.loader)
+        # [view.set_data(**data) for view in self.get_views('TraceView')]
+        pass
         
     def _update_cluster_view(self, clusters=None):
         """Update the cluster view using the data stored in the loader
         object."""
-        data = vd.get_clusterview_data(self.loader, self.statscache, 
-            clusters=clusters)
+        data = vd.get_clusterview_data(self.experiment, self.statscache)
         self.get_view('ClusterView').set_data(**data)
         if clusters is not None:
             return

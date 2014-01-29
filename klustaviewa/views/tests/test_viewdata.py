@@ -34,7 +34,7 @@ def setup():
     # Create files.
     prm = {'nfeatures': 3, 'waveforms_nsamples': 10, 'nchannels': 3,
            'nfeatures_per_channel': 1,
-           'sampling_frequency': 20000.,
+           'sample_rate': 20000.,
            'duration': 10.}
     prb = {'channel_groups': [
         {

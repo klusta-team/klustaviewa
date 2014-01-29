@@ -97,8 +97,8 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     
     spiketimes = spikes_data.time_samples[spikes_selected]
     nchannels = features.shape[1]
-    freq = exp.application_data.spikedetekt.sampling_frequency
-    duration = exp.application_data.spikedetekt.duration
+    freq = exp.application_data.spikedetekt.sample_rate
+    duration = spikes_data.time_samples[len(spikes_data.time_samples)-1]*1./freq
     
     # No need for hacky work-around here, since get_spikes returns a slice.
     features_bg = spikes_data.features_masks[spikes_bg, :, 0]
@@ -149,12 +149,12 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
     
     cluster_colors = pd.Series([clusters_data[cl].application_data.klustaviewa.color or 1
                            for cl in clusters], index=clusters)
-    cluster_groups = pd.Series([clusters_data[cl].cluster_group
+    cluster_groups = pd.Series([clusters_data[cl].cluster_group or 0
                                for cl in clusters], index=clusters)
                                 
     group_colors = pd.Series([cluster_groups_data[g].application_data.klustaviewa.color or 1
                              for g in groups], index=range(len(groups)))
-    group_names = pd.Series([cluster_groups_data[g].name
+    group_names = pd.Series([cluster_groups_data[g].name or 'Group'
                             for g in groups], index=range(len(groups)))
     
     # TODO: cache the cluster size instead of recomputing every time here
@@ -227,7 +227,7 @@ def get_similaritymatrixview_data(exp, matrix=None,
     clusters = sorted(clusters_data.keys())
     cluster_colors = pd.Series([clusters_data[cl].application_data.klustaviewa.color or 1
                            for cl in clusters], index=clusters)
-    cluster_groups = pd.Series([clusters_data[cl].cluster_group
+    cluster_groups = pd.Series([clusters_data[cl].cluster_group or 0
                                for cl in clusters], index=clusters)
                        
         

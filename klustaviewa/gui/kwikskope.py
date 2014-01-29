@@ -33,7 +33,7 @@ from klustaviewa import USERPREF
 from klustaviewa import SETTINGS
 from klustaviewa import APPNAME, ABOUT, get_global_path
 from klustaviewa.gui.threads import ThreadedTasks, OpenTask
-import klustaviewa.gui.viewdata as vd
+import klustaviewa.views.viewdata as vd
 import rcicons
 
     
