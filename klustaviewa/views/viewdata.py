@@ -135,7 +135,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
         alpha_selected=alpha_selected,
         alpha_background=alpha_background,
         time_unit=time_unit,
-    )        
+    ) 
     return data
 
 def get_clusterview_data(exp, statscache=None, channel_group=0, 
