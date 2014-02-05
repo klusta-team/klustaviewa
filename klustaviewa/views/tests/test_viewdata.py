@@ -23,6 +23,7 @@ from klustaviewa.views import (WaveformView, FeatureView, ClusterView,
 # -----------------------------------------------------------------------------
 # TODO: refactor this in proper mock data module in spikedetekt2
 DIRPATH = tempfile.mkdtemp()
+nchannels = 3
 
 def rnd(*shape):
     return .25 * np.random.randn(*shape)
@@ -32,15 +33,15 @@ def rndint(*shape):
 
 def setup():
     # Create files.
-    prm = {'nfeatures': 3, 'waveforms_nsamples': 10, 'nchannels': 3,
+    prm = {'waveforms_nsamples': 10, 'nchannels': nchannels,
            'nfeatures_per_channel': 1,
            'sample_rate': 20000.,
            'duration': 10.}
     prb = {'channel_groups': [
         {
-            'channels': [4, 6, 8],
-            'graph': [[4, 6], [8, 4]],
-            'geometry': {4: [0.4, 0.6], 6: [0.6, 0.8], 8: [0.8, 0.0]},
+            'channels': range(nchannels),
+            'graph': [(i, i+1) for i in range(nchannels-1)],
+            'geometry': {i: [0., i] for i in range(nchannels)},
         }
     ]}
     create_files('myexperiment', dir=DIRPATH, prm=prm, prb=prb)
@@ -50,13 +51,13 @@ def setup():
     
     # Add data.
     add_recording(files, 
-                  sample_rate=20000.,
+                  sample_rate=prm['sample_rate'],
                   start_time=10., 
                   start_sample=200000.,
                   bit_depth=16,
                   band_high=100.,
                   band_low=500.,
-                  nchannels=3,)
+                  nchannels=nchannels,)
     add_event_type(files, 'myevents')
     add_cluster_group(files, name='Noise')
     add_cluster_group(files, name='MUA')
@@ -68,10 +69,10 @@ def setup():
     nspikes = 1000
     chgrp.spikes.time_samples.append(np.sort(rndint(nspikes)))
     chgrp.spikes.clusters.main.append(np.random.randint(size=nspikes, low=0, high=2))
-    chgrp.spikes.features_masks.append(rnd(nspikes, 3, 2))
+    chgrp.spikes.features_masks.append(rnd(nspikes, nchannels, 2))
     chgrp.spikes.features_masks[..., 1] = chgrp.spikes.features_masks[..., 1] < .5
-    chgrp.spikes.waveforms_raw.append(rndint(nspikes, 10, 3))
-    chgrp.spikes.waveforms_filtered.append(rndint(nspikes, 10, 3))
+    chgrp.spikes.waveforms_raw.append(rndint(nspikes, 10, nchannels))
+    chgrp.spikes.waveforms_filtered.append(rndint(nspikes, 10, nchannels))
     
     # Close the files
     close_files(files)
@@ -118,5 +119,8 @@ def test_viewdata_similaritymatrixview_1():
         data = get_similaritymatrixview_data(exp, matrix=matrix)
         show_view(SimilarityMatrixView, **data)
     
-    
+if __name__ == '__main__':
+    setup()
+    test_viewdata_featureview_1()
+    teardown()
     
