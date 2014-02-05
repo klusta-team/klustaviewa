@@ -93,9 +93,18 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     
     # HACK: work-around PyTables bug #310: expand the dimensions of the boolean 
     # indices
-    ind = np.tile(spikes_selected[:, np.newaxis, np.newaxis], 
-                  (1,) + spikes_data.features_masks.shape[1:])
-    fm = spikes_data.features_masks[ind].reshape((-1,) + spikes_data.features_masks.shape[1:])
+    # ind = np.tile(spikes_selected[:, np.newaxis, np.newaxis], 
+                  # (1,) + spikes_data.features_masks.shape[1:])
+    # fm = spikes_data.features_masks[ind].reshape((-1,) + spikes_data.features_masks.shape[1:])
+    
+    # HACK: need modification in PyTables as described here
+    # https://github.com/PyTables/PyTables/pull/317#issuecomment-34210551
+    spikes_selected = np.nonzero(spikes_selected)[0]
+    _, nspikes, _ = spikes_data.features_masks.shape
+    if len(spikes_selected) > 0:
+        fm = spikes_data.features_masks[spikes_selected]
+    else:
+        fm = np.zeros((0, nspikes, 2), dtype=spikes_data.features_masks.dtype)
     
     features = fm[:, :, 0]
     masks = fm[:, ::fetdim, 1]
