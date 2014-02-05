@@ -36,24 +36,30 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     
     spike_clusters = getattr(spikes_data.clusters, clustering)[:]
     spikes_selected = get_some_spikes_in_clusters(clusters, spike_clusters)
-    cluster_colors = np.array([clusters_data[cl].application_data.klustaviewa.color or 1
-                               for cl in clusters])
+    spike_clusters = spike_clusters[spikes_selected]
+    cluster_colors = clusters_data.color[clusters]
 
-    waveforms = convert_dtype(
-        spikes_data.waveforms_filtered[spikes_selected,...],
-        np.float32)
-    masks = spikes_data.masks[spikes_selected,::fetdim]
+    _, nsamples, nchannels = spikes_data.waveforms_filtered.shape
+    if len(spikes_selected) > 0:
+        waveforms = convert_dtype(
+            spikes_data.waveforms_filtered[spikes_selected,...],
+            np.float32)
+        # Normalize waveforms.
+        waveforms = waveforms * 1. / (waveforms.max())
+        masks = spikes_data.masks[spikes_selected,::fetdim]
+    else:
+        waveforms = np.zeros((0, nsamples, nchannels), dtype=np.float32)
+        masks = np.zeros((0, nchannels), dtype=np.float32)
     
     channel_positions = np.array([channels_data[ch].position or (0., ch) 
                                   for ch in channels_data.keys()])
     
-    # Normalize waveforms.
-    waveforms = waveforms * 1. / (waveforms.max())
     
     # Pandaize
     waveforms = pandaize(waveforms, spikes_selected)
-    cluster_colors = pandaize(cluster_colors, clusters)
+    spike_clusters = pandaize(spike_clusters, spikes_selected)
     masks = pandaize(masks, spikes_selected)
+    cluster_colors = pandaize(cluster_colors, clusters)
     
     data = dict(
         waveforms=waveforms,
@@ -96,6 +102,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     
     nspikes = features.shape[0]
     spiketimes = spikes_data.time_samples[spikes_selected]
+    spike_clusters = spike_clusters[spikes_selected]
     nchannels = features.shape[1]
     freq = exp.application_data.spikedetekt.sample_rate
     duration = spikes_data.time_samples[len(spikes_data.time_samples)-1]*1./freq
@@ -113,6 +120,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     features_bg = pandaize(features_bg, spikes_bg)
     masks = pandaize(masks, spikes_selected)
     spiketimes = pandaize(spiketimes, spikes_selected)
+    spike_clusters = pandaize(spike_clusters, spikes_selected)
     cluster_colors = pandaize(cluster_colors, clusters)
     
     # TODO
@@ -135,7 +143,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
         alpha_selected=alpha_selected,
         alpha_background=alpha_background,
         time_unit=time_unit,
-    ) 
+    )
     return data
 
 def get_clusterview_data(exp, statscache=None, channel_group=0, 
@@ -178,12 +186,12 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
 def get_correlogramsview_data(exp, correlograms, clusters=[],
                               channel_group=0, clustering='main',
                               nclusters_max=10, ncorrbins=50, corrbin=.001):
-    
+    clusters = np.array(clusters, dtype=np.int32)
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
     cluster_groups_data = getattr(exp.channel_groups[channel_group].cluster_groups, clustering)
     
-    cluster_colors = pd.Series([clusters_data[cl].application_data.klustaviewa.color or 1
-                           for cl in clusters], index=clusters)
+    cluster_colors = clusters_data.color[clusters]
+    cluster_colors = pandaize(cluster_colors, clusters)
                             
     # TODO: cache and optimize this
     spike_clusters = getattr(exp.channel_groups[channel_group].spikes.clusters, 
