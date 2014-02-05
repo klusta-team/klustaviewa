@@ -83,8 +83,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     spike_clusters = getattr(spikes_data.clusters, clustering)[:]
     spikes_selected = get_spikes_in_clusters(clusters, spike_clusters)
     spikes_bg = get_some_spikes(spike_clusters, nspikes_max=nspikes_bg)
-    cluster_colors = np.array([clusters_data[cl].application_data.klustaviewa.color or 1
-                               for cl in clusters])
+    cluster_colors = clusters_data.color[clusters]
     
     # HACK: work-around PyTables bug #310: expand the dimensions of the boolean 
     # indices
@@ -95,6 +94,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     features = fm[:, :, 0]
     masks = fm[:, ::fetdim, 1]
     
+    nspikes = features.shape[0]
     spiketimes = spikes_data.time_samples[spikes_selected]
     nchannels = features.shape[1]
     freq = exp.application_data.spikedetekt.sample_rate
@@ -104,7 +104,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     features_bg = spikes_data.features_masks[spikes_bg, :, 0]
     
     # Normalize features.
-    c = normalization or (1. / (features.max()))
+    c = (normalization or (1. / (features.max()))) if nspikes > 0 else 1.
     features = features * c
     features_bg = features_bg * c
     
