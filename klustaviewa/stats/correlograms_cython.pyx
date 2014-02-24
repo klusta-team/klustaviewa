@@ -1,7 +1,7 @@
 import numpy as np
 cimport numpy as np
-DTYPE = np.float32
-ctypedef np.float32_t DTYPE_t
+DTYPE = np.float64
+ctypedef np.float64_t DTYPE_t
 DTYPEI = np.int32
 ctypedef np.int32_t DTYPEI_t
 
@@ -23,7 +23,7 @@ def compute_correlograms_cython(
     cdef int nspikes = len(spiketimes)
     
     cdef int i, j, cl0, cl1, k, ind
-    cdef float t0, t1, t0min, t0max, d
+    cdef double t0, t1, t0min, t0max, d
 
     # unique clusters
     cdef np.ndarray[DTYPEI_t, ndim=1] clusters_unique = np.unique(clusters)
