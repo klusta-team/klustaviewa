@@ -38,14 +38,16 @@ def colormap(x, col0=None, col1=None):
     removed = x == -1
     
     x[np.isnan(x)] = 0.
-    x -= x.min()
-    x *= (1. / x.max())
+    # x -= x.min()
+    # x *= (1. / x.max())
     # Set the maximum values above which the max color should be used.
     max = .1
+    
     x = np.clip(x / max, 0., 1.)
+    
     # Gamma correction. Doesn't look very good.
     # x = x ** .2
-    
+
     shape = x.shape
     
     if col0 is None:
@@ -89,11 +91,11 @@ class SimilarityMatrixDataManager(Manager):
             similarity_matrix = -np.ones((2, 2))
         elif similarity_matrix.shape[0] == 1:
             similarity_matrix = -np.ones((2, 2))
-            
+           
         self.similarity_matrix = similarity_matrix
         n = similarity_matrix.shape[0]
         
-        self.texture = colormap(similarity_matrix)
+        self.texture = colormap(self.similarity_matrix.copy())
         # similarity_matrix axes are originally (x, y) from the lower left corner
         # but when displayed, they are (i, j) from the upper left corner
         # so we need to transpose
@@ -110,7 +112,6 @@ class SimilarityMatrixDataManager(Manager):
         self.clusters_unique = get_indices(cluster_colors_full)
         self.cluster_colors = cluster_colors_full
         self.nclusters = len(self.clusters_unique)
-    
     
 # -----------------------------------------------------------------------------
 # Visuals
