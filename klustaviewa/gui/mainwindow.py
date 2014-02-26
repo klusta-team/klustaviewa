@@ -54,6 +54,7 @@ import rcicons
 class MainWindow(QtGui.QMainWindow):
     
     def __init__(self, parent=None, dolog=True, filename=None):
+        self.views = {}
         super(MainWindow, self).__init__(parent)
 
         # HACK: display the icon in Windows' taskbar.
@@ -639,7 +640,7 @@ class MainWindow(QtGui.QMainWindow):
             self.taskgraph.update_trace_view()
             
     def get_view(self, name, index=0):
-        views = self.views[name] 
+        views = self.views.get(name, [])
         if not views:
             return None
         else:

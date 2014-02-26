@@ -158,7 +158,7 @@ class TaskGraph(AbstractTaskGraph):
     def _compute_correlograms(self, clusters_selected):
         # Get the correlograms parameters.
         spiketimes = get_array(self.loader.get_spiketimes('all'))
-        print spiketimes.dtype
+        # print spiketimes.dtype
         # Make a copy of the array so that it does not change before the
         # computation of the correlograms begins.
         clusters = np.array(get_array(self.loader.get_clusters('all')))
