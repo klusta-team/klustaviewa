@@ -12,7 +12,7 @@ from klustaviewa.stats.correlograms import compute_correlograms
 # Tests
 # -----------------------------------------------------------------------------
 def test_compute_correlograms():
-    train0 = np.array(np.arange(0., 10., .1), dtype=np.float32)
+    train0 = np.array(np.arange(0., 10., .1), dtype=np.float64)
     # concatenation of two spike trains
     spiketimes = np.hstack((# the first being train0
                             train0,
