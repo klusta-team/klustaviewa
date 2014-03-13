@@ -81,6 +81,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     clusters = np.array(clusters)
     # TODO: add spikes=None and spikes_bg=None
     fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
+    nchannels = exp.application_data.spikedetekt.nchannels
     
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
     spikes_data = exp.channel_groups[channel_group].spikes
@@ -112,7 +113,6 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     nspikes = features.shape[0]
     spiketimes = spikes_data.time_samples[spikes_selected]
     spike_clusters = spike_clusters[spikes_selected]
-    nchannels = features.shape[1]
     freq = exp.application_data.spikedetekt.sample_rate
     duration = spikes_data.time_samples[len(spikes_data.time_samples)-1]*1./freq
     
