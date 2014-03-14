@@ -37,13 +37,13 @@ def setup():
            'nfeatures_per_channel': 1,
            'sample_rate': 20000.,
            'duration': 10.}
-    prb = {'channel_groups': [
+    prb = {0:
         {
             'channels': range(nchannels),
             'graph': [(i, i+1) for i in range(nchannels-1)],
             'geometry': {i: [0., i] for i in range(nchannels)},
         }
-    ]}
+    }
     create_files('myexperiment', dir=DIRPATH, prm=prm, prb=prb)
     
     # Open the files.
