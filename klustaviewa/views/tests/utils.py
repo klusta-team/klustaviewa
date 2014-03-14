@@ -14,7 +14,6 @@ import mock_data as md
 from klustaviewa.stats.correlograms import NCORRBINS_DEFAULT, CORRBIN_DEFAULT
 from klustaviewa import USERPREF
 import klustaviewa.views as v
-# import klustaviewa.gui.viewdata as vd
 
 
 # -----------------------------------------------------------------------------
