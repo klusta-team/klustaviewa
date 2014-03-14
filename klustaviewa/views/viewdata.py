@@ -35,15 +35,14 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     channels_data = exp.channel_groups[channel_group].channels
     
     spike_clusters = getattr(spikes_data.clusters, clustering)[:]
-    spikes_selected = get_some_spikes_in_clusters(clusters, spike_clusters)
-    spike_clusters = spike_clusters[spikes_selected]
+    # spikes_selected = get_some_spikes_in_clusters(clusters, spike_clusters)
+    
     cluster_colors = clusters_data.color[clusters]
 
     _, nsamples, nchannels = spikes_data.waveforms_filtered.shape
-    if len(spikes_selected) > 0:
-        waveforms = convert_dtype(
-            spikes_data.waveforms_filtered[spikes_selected,...],
-            np.float32)
+    if len(clusters) > 0:
+        spikes_selected, waveforms = spikes_data.load_waveforms(clusters=clusters)
+        waveforms = convert_dtype(waveforms, np.float32)
         # Normalize waveforms.
         waveforms = waveforms * 1. / (waveforms.max())
         masks = spikes_data.masks[spikes_selected,::fetdim]
@@ -51,9 +50,9 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
         waveforms = np.zeros((0, nsamples, nchannels), dtype=np.float32)
         masks = np.zeros((0, nchannels), dtype=np.float32)
     
+    spike_clusters = spike_clusters[spikes_selected]
     channel_positions = np.array([channels_data[ch].position or (0., ch) 
                                   for ch in channels_data.keys()])
-    
     
     # Pandaize
     waveforms = pandaize(waveforms, spikes_selected)
