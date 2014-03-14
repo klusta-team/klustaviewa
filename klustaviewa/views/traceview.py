@@ -10,10 +10,10 @@ from galry import (Manager, PlotPaintManager, EventProcessor, PlotInteractionMan
     QtGui, QtCore, NavigationEventProcessor, GridVisual, TextVisual, DataNormalizer, 
     process_coordinates)
 from klustaviewa.views.common import KlustaViewaBindings, KlustaView
-import kwiklib.utils.logger as log
-from kwiklib.dataio import get_array
+from spikedetekt2.utils import logger as log
+from spikedetekt2.dataio import get_array
 from qtools import inthread
-from kwiklib.utils.colors import COLORS_COUNT, generate_colors, COLORMAP
+from spikedetekt2.utils.colors import COLORS_COUNT, generate_colors, COLORMAP
 
 __all__ = ['TraceView']
 

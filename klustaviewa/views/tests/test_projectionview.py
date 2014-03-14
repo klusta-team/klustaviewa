@@ -9,9 +9,9 @@ import numpy as np
 import numpy.random as rnd
 import pandas as pd
 
-from kwiklib.dataio import KlustersLoader
-from kwiklib.dataio.selection import select
-from kwiklib.dataio.tools import check_dtype, check_shape
+from spikedetekt2.dataio import KlustersLoader
+from spikedetekt2.dataio.selection import select
+from spikedetekt2.dataio.tools import check_dtype, check_shape
 from klustaviewa import USERPREF
 from klustaviewa.views import ProjectionView
 from klustaviewa.views.tests.utils import show_view, get_data, assert_fun

@@ -14,11 +14,11 @@ from qtools import QtGui, QtCore, show_window
 from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
     GalryWidget, enforce_dtype, RectanglesVisual,
     TextVisual, PlotVisual, AxesVisual)
-from kwiklib.dataio.selection import get_indices
-from kwiklib.dataio.tools import get_array
+from spikedetekt2.dataio.selection import get_indices
+from spikedetekt2.dataio.tools import get_array
 from klustaviewa.gui.icons import get_icon
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
-import kwiklib.utils.logger as log
+from spikedetekt2.utils import logger as log
 import klustaviewa
 
 

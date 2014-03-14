@@ -11,9 +11,9 @@ import pandas as pd
 
 from klustaviewa.views.tests.mock_data import (setup, teardown,
                             nspikes, nclusters, nsamples, nchannels, fetdim)
-from kwiklib.dataio import KlustersLoader
-from kwiklib.dataio.selection import select
-from kwiklib.dataio.tools import check_dtype, check_shape
+from spikedetekt2.dataio import KlustersLoader
+from spikedetekt2.dataio.selection import select
+from spikedetekt2.dataio.tools import check_dtype, check_shape
 from klustaviewa import USERPREF
 from klustaviewa.views import WaveformView
 from klustaviewa.views.tests.utils import show_view, get_data

@@ -10,9 +10,9 @@ import tempfile
 
 import numpy as np
 
+from klustaviewa.views.viewdata import *
 from klustaviewa.views.tests.mock_data import (ncorrbins, corrbin,
         create_baselines, create_correlograms, create_similarity_matrix)
-from klustaviewa.views.viewdata import *
 from klustaviewa.views.tests.utils import show_view
 from klustaviewa.views import (WaveformView, FeatureView, ClusterView,
     CorrelogramsView, SimilarityMatrixView)

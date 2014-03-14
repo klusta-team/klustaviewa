@@ -9,7 +9,7 @@ from threading import Lock
 import numpy as np
 
 from qtools import QtGui, QtCore
-import kwiklib.utils.logger as log
+from spikedetekt2.utils import logger as log
 
 
 # -----------------------------------------------------------------------------

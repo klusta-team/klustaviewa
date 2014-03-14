@@ -9,13 +9,13 @@ import pandas as pd
 from qtools import inthread, inprocess
 from qtools import QtGui, QtCore
 
-from kwiklib.dataio.tools import get_array
+from spikedetekt2.dataio.tools import get_array
 from klustaviewa.stats.correlations import normalize
 from klustaviewa.stats.correlograms import get_baselines
-import kwiklib.utils.logger as log
+from spikedetekt2.utils import logger as log
 from klustaviewa import USERPREF
 from klustaviewa import SETTINGS
-from kwiklib.utils.colors import random_color
+from spikedetekt2.utils.colors import random_color
 from klustaviewa.gui.threads import ThreadedTasks
 import klustaviewa.views.viewdata as vd
 

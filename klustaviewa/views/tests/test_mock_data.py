@@ -4,7 +4,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 from mock_data import *
-from kwiklib.dataio import MemoryLoader
+from spikedetekt2.dataio import MemoryLoader
 
 
 # -----------------------------------------------------------------------------

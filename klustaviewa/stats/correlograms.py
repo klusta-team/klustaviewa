@@ -8,7 +8,7 @@ from itertools import product
 
 import numpy as np
 
-import kwiklib.utils.logger as log
+from spikedetekt2.utils import logger as log
 
 # Trying to load the Cython version.
 try:

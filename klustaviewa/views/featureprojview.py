@@ -10,7 +10,7 @@ import numpy.random as rdn
 
 from qtools import QtGui, QtCore
     
-import kwiklib.utils.logger as log
+from spikedetekt2.utils import logger as log
 from klustaviewa.views.featureview import FeatureView
 from klustaviewa.views.projectionview import ProjectionView
 

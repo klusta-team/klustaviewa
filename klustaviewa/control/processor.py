@@ -8,10 +8,10 @@ import inspect
 import numpy as np
 import pandas as pd
 
-import kwiklib.utils.logger as log
-from kwiklib.dataio.selection import get_indices, select
-from kwiklib.dataio.tools import get_array
-from kwiklib.utils.colors import random_color
+from spikedetekt2.utils import logger as log
+from spikedetekt2.dataio.selection import get_indices, select
+from spikedetekt2.dataio.tools import get_array
+from spikedetekt2.utils.colors import random_color
 
 
 # -----------------------------------------------------------------------------

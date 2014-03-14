@@ -10,10 +10,10 @@ import numpy as np
 from klustaviewa.stats.cache import CacheMatrix
 from klustaviewa.stats.correlations import compute_correlations, normalize
 from klustaviewa.stats.tools import matrix_of_pairs
-from kwiklib.dataio.tests.mock_data import (setup, teardown,
+from spikedetekt2.dataio.tests.mock_data import (setup, teardown,
     nspikes, nclusters, nsamples, nchannels, fetdim, TEST_FOLDER)
-from kwiklib.dataio import KlustersLoader
-from kwiklib.dataio.tools import get_array
+from spikedetekt2.dataio import KlustersLoader
+from spikedetekt2.dataio.tools import get_array
 from klustaviewa.control.controller import Controller
 
 
