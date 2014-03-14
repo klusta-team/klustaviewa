@@ -13,11 +13,11 @@ from qtools import QtGui, QtCore, show_window, get_application
 from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
     GalryWidget, enforce_dtype, RectanglesVisual,
     TextVisual)
-from spikedetekt2.dataio.tools import get_array
-from spikedetekt2.dataio.selection import get_spikes_in_clusters, select, get_indices
+from kwiklib.dataio.tools import get_array
+from kwiklib.dataio.selection import get_spikes_in_clusters, select, get_indices
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings, KlustaView
-from spikedetekt2.utils.colors import COLORMAP_TEXTURE, SHIFTLEN
-from spikedetekt2.utils import logger as log
+from kwiklib.utils.colors import COLORMAP_TEXTURE, SHIFTLEN
+from kwiklib.utils import logger as log
 from klustaviewa import SETTINGS
 
 

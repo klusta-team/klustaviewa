@@ -13,9 +13,9 @@ import pandas as pd
 from klustaviewa.views.tests.mock_data import (setup, teardown,
     create_similarity_matrix,
     nspikes, nclusters, nsamples, nchannels, fetdim, ncorrbins)
-from spikedetekt2.dataio import KlustersLoader
-from spikedetekt2.dataio.selection import select, get_indices
-from spikedetekt2.dataio.tools import check_dtype, check_shape
+from kwiklib.dataio import KlustersLoader
+from kwiklib.dataio.selection import select, get_indices
+from kwiklib.dataio.tools import check_dtype, check_shape
 from klustaviewa import USERPREF
 from klustaviewa.views import ClusterView
 from klustaviewa.views.tests.utils import show_view, get_data, assert_fun

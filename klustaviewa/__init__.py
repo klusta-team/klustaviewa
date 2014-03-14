@@ -36,9 +36,9 @@ def get_global_path(filename, folder=None, appname=None):
 # -----------------------------------------------------------------------------
 # Default logger
 # -----------------------------------------------------------------------------
-from spikedetekt2.utils import logger as log
-from spikedetekt2.utils import userpref as pref
-from spikedetekt2.utils import settings
+from kwiklib.utils import logger as log
+from kwiklib.utils import userpref as pref
+from kwiklib.utils import settings
 
 
 # -----------------------------------------------------------------------------

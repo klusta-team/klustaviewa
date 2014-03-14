@@ -12,10 +12,10 @@ import numpy as np
 from qtools import inthread, inprocess
 from qtools import QtGui, QtCore
 
-from spikedetekt2.dataio import KlustersLoader
-from spikedetekt2.dataio.tools import get_array
+from kwiklib.dataio import KlustersLoader
+from kwiklib.dataio.tools import get_array
 from klustaviewa.wizard.wizard import Wizard
-from spikedetekt2.utils import logger as log
+from kwiklib.utils import logger as log
 from klustaviewa.stats import compute_correlograms, compute_correlations
 
 

@@ -15,12 +15,12 @@ from galry import (Manager, PlotPaintManager, PlotInteractionManager, Visual,
     TextVisual, PlotVisual, AxesVisual, GridVisual, NavigationEventProcessor,
     EventProcessor, DataNormalizer)
     
-from spikedetekt2.dataio.selection import get_indices, select
-from spikedetekt2.dataio.tools import get_array
+from kwiklib.dataio.selection import get_indices, select
+from kwiklib.dataio.tools import get_array
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings, KlustaView
-from spikedetekt2.utils.colors import COLORMAP_TEXTURE, SHIFTLEN, COLORMAP
+from kwiklib.utils.colors import COLORMAP_TEXTURE, SHIFTLEN, COLORMAP
 # from klustaviewa import USERPREF
-from spikedetekt2.utils import logger as log
+from kwiklib.utils import logger as log
 import klustaviewa
 
 

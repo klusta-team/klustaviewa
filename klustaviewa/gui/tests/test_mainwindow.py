@@ -12,9 +12,9 @@ import pandas as pd
 from qtools import show_window
 
 from klustaviewa.gui.mainwindow import MainWindow
-from spikedetekt2.dataio import KlustersLoader
-from spikedetekt2.dataio.selection import select
-from spikedetekt2.dataio.tools import check_dtype, check_shape
+from kwiklib.dataio import KlustersLoader
+from kwiklib.dataio.selection import select
+from kwiklib.dataio.tools import check_dtype, check_shape
 from klustaviewa.gui.mainwindow import MainWindow
 
 

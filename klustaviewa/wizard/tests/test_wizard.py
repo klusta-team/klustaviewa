@@ -10,8 +10,8 @@ import pandas as pd
 import numpy as np
 
 from klustaviewa.wizard.wizard import Wizard
-from spikedetekt2.utils import logger as log
-from spikedetekt2.dataio.tests.mock_data import (
+from kwiklib.utils import logger as log
+from kwiklib.dataio.tests.mock_data import (
     nspikes, nclusters, nsamples, nchannels, fetdim, cluster_offset,
     create_clusters, create_similarity_matrix)
 

@@ -7,9 +7,9 @@ from collections import OrderedDict
 
 import numpy as np
 
-from spikedetekt2.utils import logger as log
-from spikedetekt2.dataio.selection import get_indices
-from spikedetekt2.dataio.tools import get_array
+from kwiklib.utils import logger as log
+from kwiklib.dataio.selection import get_indices
+from kwiklib.dataio.tools import get_array
 
 
 # -----------------------------------------------------------------------------

@@ -12,12 +12,12 @@ import numpy as np
 import numpy.random as rnd
 from qtools import QtGui, QtCore
 
-from spikedetekt2.dataio.selection import get_indices, select
+from kwiklib.dataio.selection import get_indices, select
 from klustaviewa.gui.icons import get_icon
-from spikedetekt2.utils.colors import COLORMAP, random_color
-from spikedetekt2.utils import logger as log
+from kwiklib.utils.colors import COLORMAP, random_color
+from kwiklib.utils import logger as log
 from klustaviewa import SETTINGS
-from spikedetekt2.utils.persistence import encode_bytearray, decode_bytearray
+from kwiklib.utils.persistence import encode_bytearray, decode_bytearray
 from klustaviewa.views.treemodel import TreeModel, TreeItem
 
 # Specific item classes

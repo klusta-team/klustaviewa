@@ -7,9 +7,9 @@ import os
 
 import numpy as np
 
-from spikedetekt2.dataio.tests.mock_data import (setup, teardown,
+from kwiklib.dataio.tests.mock_data import (setup, teardown,
     nspikes, nclusters, nsamples, nchannels, fetdim, TEST_FOLDER)
-from spikedetekt2.dataio import KlustersLoader
+from kwiklib.dataio import KlustersLoader
 from klustaviewa.stats.quality import cluster_quality
 
                             

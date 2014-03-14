@@ -9,11 +9,11 @@ import pandas as pd
 from qtools import inthread, inprocess
 from qtools import QtGui, QtCore
 
-from spikedetekt2.dataio import *
-from spikedetekt2.utils import logger as log
-from spikedetekt2.dataio import (get_some_spikes_in_clusters, get_indices, 
+from kwiklib.dataio import *
+from kwiklib.utils import logger as log
+from kwiklib.dataio import (get_some_spikes_in_clusters, get_indices, 
     get_spikes_in_clusters, get_some_spikes, pandaize)
-from spikedetekt2.utils.colors import random_color
+from kwiklib.utils.colors import random_color
 
 from klustaviewa.stats.correlations import normalize
 from klustaviewa.stats.correlograms import get_baselines, NCORRBINS_DEFAULT, CORRBIN_DEFAULT

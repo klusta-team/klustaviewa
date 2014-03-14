@@ -21,7 +21,7 @@ from klustaviewa.views import (WaveformView, FeatureView, ClusterView,
 # -----------------------------------------------------------------------------
 # Fixtures
 # -----------------------------------------------------------------------------
-# TODO: refactor this in proper mock data module in spikedetekt2
+# TODO: refactor this in proper mock data module in kwiklib
 DIRPATH = tempfile.mkdtemp()
 nchannels = 3
 
