@@ -126,8 +126,8 @@ class TaskGraph(AbstractTaskGraph):
         return [
                 ('_update_feature_view', target, dict(channel_group=channel_group)),
                 ('_update_waveform_view', (), dict(wizard=wizard, channel_group=channel_group)),
-                ('_show_selection_in_matrix', (clusters,), dict(channel_group=channel_group)),
-                ('_compute_correlograms', (clusters,), dict(channel_group=channel_group)),
+                ('_show_selection_in_matrix', (clusters,),),
+                ('_compute_correlograms', (clusters,),),
                 ]
     
     def _select_in_cluster_view(self, clusters, groups=[], wizard=False):
@@ -278,7 +278,9 @@ class TaskGraph(AbstractTaskGraph):
     def _update_correlograms_view(self):
         data = vd.get_correlogramsview_data(self.experiment, 
             self.statscache.correlograms, 
-            clusters=self.loader.get_clusters_selected())
+            clusters=self.loader.get_clusters_selected(),
+            channel_group=self.loader.shank,
+            )
         [view.set_data(**data) for view in self.get_views('CorrelogramsView')]
         
     def _update_similarity_matrix_view(self):

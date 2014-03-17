@@ -45,7 +45,7 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
         waveforms = convert_dtype(waveforms, np.float32)
         # Normalize waveforms.
         waveforms = waveforms * 1. / (waveforms.max())
-        masks = spikes_data.masks[spikes_selected,::fetdim]
+        masks = spikes_data.masks[spikes_selected,0:fetdim*nchannels:fetdim]
     else:
         waveforms = np.zeros((0, nsamples, nchannels), dtype=np.float32)
         masks = np.zeros((0, nchannels), dtype=np.float32)
@@ -70,6 +70,7 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
         autozoom=autozoom,
         keep_order=wizard,
     )
+    
     return data
 
 def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
