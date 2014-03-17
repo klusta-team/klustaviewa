@@ -52,7 +52,8 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     
     spike_clusters = spike_clusters[spikes_selected]
     channel_positions = np.array([channels_data[ch].position or (0., ch) 
-                                  for ch in channels_data.keys()])
+                                  for ch in sorted(channels_data.keys())],
+                                 dtype=np.float32)
     
     # Pandaize
     waveforms = pandaize(waveforms, spikes_selected)
