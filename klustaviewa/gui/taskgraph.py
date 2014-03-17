@@ -289,30 +289,33 @@ class TaskGraph(AbstractTaskGraph):
         clusters = self.loader.get_clusters_selected()
         return ('_show_selection_in_matrix', (clusters,))
         
-    def _update_feature_view(self, autozoom=None):
+    def _update_feature_view(self, channel_group=0, autozoom=None):
         data = vd.get_featureview_data(self.experiment, 
             clusters=self.loader.clusters_selected,
-            autozoom=autozoom)
+            autozoom=autozoom,
+            channel_group=channel_group)
         [view.set_data(**data) for view in self.get_views('FeatureView')]
         
-    def _update_waveform_view(self, autozoom=None, wizard=None):
+    def _update_waveform_view(self, channel_group=0, autozoom=None, wizard=None):
         data = vd.get_waveformview_data(self.experiment, 
             clusters=self.loader.clusters_selected,
             autozoom=autozoom, 
-            wizard=wizard
+            wizard=wizard,
+            channel_group=channel_group
             )
         [view.set_data(**data) for view in self.get_views('WaveformView')]
         
-    def _update_trace_view(self):
-        # TODO
-        # data = vd.get_traceview_data(self.loader)
-        # [view.set_data(**data) for view in self.get_views('TraceView')]
-        pass
+    # def _update_trace_view(self):
+        # # TODO
+        # # data = vd.get_traceview_data(self.loader)
+        # # [view.set_data(**data) for view in self.get_views('TraceView')]
+        # pass
         
-    def _update_cluster_view(self, clusters=None):
+    def _update_cluster_view(self, channel_group=0, clusters=None):
         """Update the cluster view using the data stored in the loader
         object."""
-        data = vd.get_clusterview_data(self.experiment, self.statscache)
+        data = vd.get_clusterview_data(self.experiment, self.statscache,
+                                       channel_group=channel_group)
         self.get_view('ClusterView').set_data(**data)
         if clusters is not None:
             return
