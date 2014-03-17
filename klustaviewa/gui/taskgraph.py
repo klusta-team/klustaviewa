@@ -113,10 +113,10 @@ class TaskGraph(AbstractTaskGraph):
 
     # Selection.
     # ----------
-    def _select(self, clusters, wizard=False):
+    def _select(self, clusters, wizard=False, channel_group=0):
         self.tasks.selection_task.select(clusters, wizard)
     
-    def _select_done(self, clusters, wizard=False):
+    def _select_done(self, clusters, wizard=False, channel_group=0):
         if wizard:
             target = (self.wizard.current_target(),)
         else:
@@ -124,10 +124,10 @@ class TaskGraph(AbstractTaskGraph):
         # self.loader.select(clusters=clusters)
         log.debug("Selected clusters {0:s}.".format(str(clusters)))
         return [
-                ('_update_feature_view', target),
-                ('_update_waveform_view', (), dict(wizard=wizard)),
-                ('_show_selection_in_matrix', (clusters,)),
-                ('_compute_correlograms', (clusters,),),
+                ('_update_feature_view', target, dict(channel_group=channel_group)),
+                ('_update_waveform_view', (), dict(wizard=wizard, channel_group=channel_group)),
+                ('_show_selection_in_matrix', (clusters,), dict(channel_group=channel_group)),
+                ('_compute_correlograms', (clusters,), dict(channel_group=channel_group)),
                 ]
     
     def _select_in_cluster_view(self, clusters, groups=[], wizard=False):

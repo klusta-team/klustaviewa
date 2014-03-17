@@ -507,7 +507,7 @@ class MainWindow(QtGui.QMainWindow):
         self.views['ClusterView'].append(view)
         
         if do_update:
-            self.taskgraph.update_cluster_view()
+            self.taskgraph.update_cluster_view(channel_group=self.loader.shank)
         
     def dock_visibility_changed_callback(self, view, visibility):
         # Register dock widget visibility.
@@ -554,7 +554,7 @@ class MainWindow(QtGui.QMainWindow):
         view.boxClicked.connect(self.waveform_box_clicked_callback)
         self.views['WaveformView'].append(view)
         if do_update and self.is_file_open and self.loader.has_selection():
-            self.taskgraph.update_waveform_view()
+            self.taskgraph.update_waveform_view(channel_group=self.loader.shank)
         
     def add_feature_view(self, do_update=None, floating=False):
         view = self.create_view(vw.FeatureProjectionView,
@@ -568,7 +568,7 @@ class MainWindow(QtGui.QMainWindow):
             self.features_spikes_selected_callback)
         self.views['FeatureView'].append(view)
         if do_update and self.is_file_open and self.loader.has_selection():
-            self.taskgraph.update_feature_view()
+            self.taskgraph.update_feature_view(channel_group=self.loader.shank)
             
     def add_ipython_view(self, floating=None):
         view = self.create_view(vw.IPythonView,
@@ -619,7 +619,7 @@ class MainWindow(QtGui.QMainWindow):
             floating=floating)
         self.views['CorrelogramsView'].append(view)
         if do_update and self.is_file_open and self.loader.has_selection():
-            self.taskgraph.update_correlograms_view()
+            self.taskgraph.update_correlograms_view(channel_group=self.loader.shank)
             
     # def add_trace_view(self, do_update=None, floating=False):
         # if len(self.views['TraceView']) >= 1:
@@ -840,7 +840,7 @@ class MainWindow(QtGui.QMainWindow):
         self._wizard = wizard
         # The wizard boolean specifies whether the autozoom is activated or not.
         self.taskgraph.select(clusters, wizard and 
-            self.automatic_projection_action.isChecked())
+            self.automatic_projection_action.isChecked(), channel_group=self.loader.shank)
         
     def clusters_selected_callback(self, clusters, wizard=False):
         self.buffer.request((clusters, wizard))
@@ -848,7 +848,7 @@ class MainWindow(QtGui.QMainWindow):
     def cluster_pair_selected_callback(self, clusters):
         """Callback when the user clicks on a pair in the
         SimilarityMatrixView."""
-        self.get_view('ClusterView').select(clusters)
+        self.get_view('ClusterView').select(clusters, channel_group=self.loader.shank)
     
     
     # Views menu callbacks.

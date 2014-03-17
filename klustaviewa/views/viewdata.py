@@ -186,7 +186,7 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
     spike_clusters = getattr(exp.channel_groups[channel_group].spikes.clusters, 
                              clustering)[:]
     sizes = np.bincount(spike_clusters)
-    cluster_sizes = sizes[clusters]
+    cluster_sizes = pd.Series(sizes[clusters], index=clusters)
     
     data = dict(
         cluster_colors=cluster_colors,
