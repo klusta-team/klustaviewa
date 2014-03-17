@@ -41,16 +41,16 @@ class OpenTask(QtCore.QObject):
             
 
 class SelectionTask(QtCore.QObject):
-    selectionDone = QtCore.pyqtSignal(object, bool)
+    selectionDone = QtCore.pyqtSignal(object, bool, int)
     
     def set_loader(self, loader):
         self.loader = loader
     
-    def select(self, clusters, wizard):
+    def select(self, clusters, wizard, channel_group=0):
         self.loader.select(clusters=clusters)
         
-    def select_done(self, clusters, wizard, _result=None):
-        self.selectionDone.emit(clusters, wizard)
+    def select_done(self, clusters, wizard, channel_group=0, _result=None):
+        self.selectionDone.emit(clusters, wizard, channel_group)
 
 
 class CorrelogramsTask(QtCore.QObject):

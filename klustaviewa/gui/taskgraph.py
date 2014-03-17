@@ -114,7 +114,7 @@ class TaskGraph(AbstractTaskGraph):
     # Selection.
     # ----------
     def _select(self, clusters, wizard=False, channel_group=0):
-        self.tasks.selection_task.select(clusters, wizard)
+        self.tasks.selection_task.select(clusters, wizard, channel_group=channel_group)
     
     def _select_done(self, clusters, wizard=False, channel_group=0):
         if wizard:
@@ -137,8 +137,8 @@ class TaskGraph(AbstractTaskGraph):
     
     # Callbacks.
     # ----------
-    def selection_done_callback(self, clusters, wizard):
-        self.select_done(clusters, wizard=wizard)
+    def selection_done_callback(self, clusters, wizard, channel_group=0):
+        self.select_done(clusters, wizard=wizard, channel_group=channel_group)
     
     def correlograms_computed_callback(self, clusters, correlograms, ncorrbins, 
             corrbin):
