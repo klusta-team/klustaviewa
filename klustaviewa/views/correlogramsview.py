@@ -152,7 +152,7 @@ class CorrelogramsDataManager(Manager):
         self.baselines = self.baselines0.copy()
         if normalization == 'row':
             # normalization
-            for i in xrange(self.nclusters):
+            for i in range(self.nclusters):
                 # divide all correlograms in the row by the max of this histogram
                 correlogram_diagonal = self.correlograms_array[i, i, ...]
                 m = correlogram_diagonal.max()

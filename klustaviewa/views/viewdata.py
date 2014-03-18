@@ -207,6 +207,7 @@ def get_correlogramsview_data(exp, correlograms, clusters=[],
     clusters = np.array(clusters, dtype=np.int32)
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
     cluster_groups_data = getattr(exp.channel_groups[channel_group].cluster_groups, clustering)
+    freq = exp.application_data.spikedetekt.sample_rate
     
     cluster_colors = clusters_data.color[clusters]
     cluster_colors = pandaize(cluster_colors, clusters)
@@ -229,12 +230,13 @@ def get_correlogramsview_data(exp, correlograms, clusters=[],
     cluster_colors = select(cluster_colors, clusters_selected)
     
     # Compute the baselines.
-    # colors = select(loader.get_cluster_colors(), clusters_selected)
     # corrbin = SETTINGS.get('correlograms.corrbin', CORRBIN_DEFAULT)
     # ncorrbins = SETTINGS.get('correlograms.ncorrbins', NCORRBINS_DEFAULT)
-    duration = corrbin * ncorrbins
+    duration = exp.channel_groups[channel_group].spikes.time_samples[:][-1] - exp.channel_groups[channel_group].spikes.time_samples[:][0]
+    duration /= freq
+    if duration == 0:
+        duration = 1.
     baselines = get_baselines(cluster_sizes, duration, corrbin)
-    
     baselines = baselines[:nclusters_max,:nclusters_max]
     
     data = dict(
