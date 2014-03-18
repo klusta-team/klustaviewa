@@ -217,7 +217,6 @@ def get_correlogramsview_data(exp, correlograms, clusters=[],
     sizes = np.bincount(spike_clusters)
     cluster_sizes = sizes[clusters]
     
-    
     clusters_selected0 = clusters
     
     # Subset of selected clusters if there are too many clusters.
@@ -227,13 +226,17 @@ def get_correlogramsview_data(exp, correlograms, clusters=[],
         clusters_selected = clusters_selected0[:nclusters_max]
     
     correlograms = correlograms.submatrix(clusters_selected)
-        
+    cluster_colors = select(cluster_colors, clusters_selected)
+    
     # Compute the baselines.
     # colors = select(loader.get_cluster_colors(), clusters_selected)
     # corrbin = SETTINGS.get('correlograms.corrbin', CORRBIN_DEFAULT)
     # ncorrbins = SETTINGS.get('correlograms.ncorrbins', NCORRBINS_DEFAULT)
     duration = corrbin * ncorrbins
     baselines = get_baselines(cluster_sizes, duration, corrbin)
+    
+    baselines = baselines[:nclusters_max,:nclusters_max]
+    
     data = dict(
         correlograms=correlograms,
         baselines=baselines,
@@ -242,6 +245,7 @@ def get_correlogramsview_data(exp, correlograms, clusters=[],
         ncorrbins=ncorrbins,
         corrbin=corrbin,
     )
+    
     return data
     
 def get_similaritymatrixview_data(exp, matrix=None,
