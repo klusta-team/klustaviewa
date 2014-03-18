@@ -49,6 +49,7 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     else:
         waveforms = np.zeros((0, nsamples, nchannels), dtype=np.float32)
         masks = np.zeros((0, nchannels), dtype=np.float32)
+        spikes_selected = []
     
     spike_clusters = spike_clusters[spikes_selected]
     channel_positions = np.array([channels_data[ch].position or (0., ch) 
