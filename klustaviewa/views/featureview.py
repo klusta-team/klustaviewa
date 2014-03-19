@@ -583,7 +583,7 @@ class FeaturePaintManager(PlotPaintManager):
         else:
             text = 'best unsorted: {0:d}'.format(target[0])
             color = COLORMAP[target[1], :]
-            color = np.hstack((color, [1.]))
+            color = np.hstack((color.squeeze(), [1.]))
             self.set_data(visual='wizard_target',
                 visible=True,
                 text=text,
@@ -596,7 +596,7 @@ class FeaturePaintManager(PlotPaintManager):
         else:
             text = 'closest match: {0:d}'.format(candidate[0])
             color = COLORMAP[candidate[1], :]
-            color = np.hstack((color, [1.]))
+            color = np.hstack((color.squeeze(), [1.]))
             self.set_data(visual='wizard_candidate',
                 visible=True,
                 text=text,
