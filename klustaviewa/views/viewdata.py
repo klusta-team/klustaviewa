@@ -142,8 +142,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     spike_clusters = pandaize(spike_clusters, spikes_selected)
     cluster_colors = pandaize(cluster_colors, clusters)
     
-    # TODO
-    nextrafet = 0
+    nextrafet = features.shape[1] - fetdim * nchannels
     
     data = dict(
         features=features,
