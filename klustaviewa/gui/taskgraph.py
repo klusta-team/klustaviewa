@@ -9,7 +9,7 @@ import pandas as pd
 from qtools import inthread, inprocess
 from qtools import QtGui, QtCore
 
-from kwiklib.dataio.tools import get_array
+from kwiklib.dataio import get_array, pandaize
 from klustaviewa.stats.correlations import normalize
 from klustaviewa.stats.correlograms import get_baselines
 from kwiklib.utils import logger as log
@@ -188,15 +188,38 @@ class TaskGraph(AbstractTaskGraph):
     
     def _compute_similarity_matrix(self, target_next=None):
         # TODO: get_similarity_matrix_data in viewdata
-        return
+        # return
         similarity_measure = self.loader.similarity_measure
         
-        features = self.loader.background_features
-        masks = self.loader.background_masks
-        clusters = get_array(self.loader.get_clusters(
-            spikes=self.loader.background_spikes))
-        cluster_groups = get_array(self.loader.get_cluster_groups('all'))
-        clusters_all = self.loader.get_clusters_unique()
+        # features = self.loader.background_features
+        # masks = self.loader.background_masks
+        # clusters = get_array(self.loader.get_clusters(
+            # spikes=self.loader.background_spikes))
+        # cluster_groups = get_array(self.loader.get_cluster_groups('all'))
+        # clusters_all = self.loader.get_clusters_unique()
+        
+        exp = self.experiment
+        channel_group = self.loader.shank
+        clustering = 'main'  # TODO
+        fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
+        
+        clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
+        spikes_data = exp.channel_groups[channel_group].spikes
+        cluster_groups_data = getattr(exp.channel_groups[channel_group].cluster_groups, clustering)
+        clusters_all = sorted(clusters_data.keys())
+        cluster_groups = pd.Series([clusters_data[cl].cluster_group or 0
+                                   for cl in clusters_all], index=clusters_all)
+                       
+        spikes_selected, fm = spikes_data.load_features_masks(fraction=.1, 
+                                                              clusters=clusters_all)  
+        clusters = getattr(spikes_data.clusters, clustering)[:]  
+        
+        features = fm[:, :, 0]
+        # masks = fm[:, ::fetdim, 1]
+        masks = fm[:, :, 1]
+        
+        # features = pandaize(features, spikes_selected)
+        # masks = pandaize(masks, spikes_selected)
         
         # Get cluster indices that need to be updated.
         # if clusters_to_update is None:
@@ -250,10 +273,10 @@ class TaskGraph(AbstractTaskGraph):
         # spikes_slice = _get_similarity_matrix_slice(
             # self.loader.nspikes, 
             # len(self.loader.get_clusters_unique()))
-        clusters_now = self.loader.get_clusters(
-            spikes=self.loader.background_spikes)
-        if not np.array_equal(clusters, clusters_now):
-            return False
+        # clusters_now = self.loader.get_clusters(
+            # spikes=self.loader.background_spikes)
+        # if not np.array_equal(clusters, clusters_now):
+            # return False
         self.statscache.similarity_matrix.update(clusters_selected, matrix)
         self.statscache.similarity_matrix_normalized = normalize(
             self.statscache.similarity_matrix.to_array(copy=True))
@@ -284,7 +307,9 @@ class TaskGraph(AbstractTaskGraph):
         [view.set_data(**data) for view in self.get_views('CorrelogramsView')]
         
     def _update_similarity_matrix_view(self):
-        data = vd.get_similaritymatrixview_data(self.experiment, self.statscache.similarity_matrix)
+        data = vd.get_similaritymatrixview_data(self.experiment, 
+            self.statscache.similarity_matrix,
+            channel_group=self.loader.shank,)
         [view.set_data(**data) 
             for view in self.get_views('SimilarityMatrixView')]
         # Show selected clusters when the matrix has been updated.
