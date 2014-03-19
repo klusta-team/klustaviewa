@@ -90,26 +90,12 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     channels_data = exp.channel_groups[channel_group].channels
     
     spike_clusters = getattr(spikes_data.clusters, clustering)[:]
-    # spikes_selected = get_spikes_in_clusters(clusters, spike_clusters)
-    # spikes_bg = get_some_spikes(spike_clusters, nspikes_max=nspikes_bg)
     cluster_colors = clusters_data.color[clusters]
     
-    # HACK: work-around PyTables bug #310: expand the dimensions of the boolean 
-    # indices
-    # ind = np.tile(spikes_selected[:, np.newaxis, np.newaxis], 
-                  # (1,) + spikes_data.features_masks.shape[1:])
-    # fm = spikes_data.features_masks[ind].reshape((-1,) + spikes_data.features_masks.shape[1:])
-    
-    # HACK: need modification in PyTables as described here
-    # https://github.com/PyTables/PyTables/pull/317#issuecomment-34210551
-    # spikes_selected = np.nonzero(spikes_selected)[0]
-    # _, nspikes, _ = spikes_data.features_masks.shape
     if len(clusters) > 0:
-        # fm = spikes_data.features_masks[spikes_selected]
         # TODO: put fraction in user parameters
         spikes_selected, fm = spikes_data.load_features_masks(fraction=.1, 
                                                               clusters=clusters)
-        # nspikes = len(spikes_selected)
     else:
         spikes_selected = []
         fm = np.zeros((0, spikes_data.features_masks.shape[1], 2), 
@@ -119,20 +105,29 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     masks = fm[:, ::fetdim, 1]
     
     nspikes = features.shape[0]
-    spiketimes = spikes_data.time_samples[spikes_selected]
+    spiketimes_all = spikes_data.time_samples[:]
+    spiketimes = spiketimes_all[spikes_selected]
     spike_clusters = spike_clusters[spikes_selected]
     freq = exp.application_data.spikedetekt.sample_rate
     duration = spikes_data.time_samples[len(spikes_data.time_samples)-1]*1./freq
     
-    # No need for hacky work-around here, since get_spikes returns a slice.
-    # features_bg = spikes_data.features_masks[spikes_bg, :, 0]
     spikes_bg, features_bg = spikes_data.load_features_masks(fraction=.05)
     features_bg = features_bg[:,:,0]
+    spiketimes_bg = spiketimes_all[spikes_bg]
     
     # Normalize features.
-    c = (normalization or (1. / (features.max()))) if nspikes > 0 else 1.
-    features = features * c
-    features_bg = features_bg * c
+    c = (normalization or (1. / (features[:,:-1].max()))) if nspikes > 0 else 1.
+    features[:,:-1] *= c
+    features_bg[:,:-1] = features_bg[:,:-1] * c
+    
+    # Normalize time.
+    features[:,-1] = spiketimes
+    features[:,-1] *= (1. / (duration * freq))
+    features[:,-1] = 2 * features[:,-1] - 1
+    
+    features_bg[:,-1] = spiketimes_bg
+    features_bg[:,-1] *= (1. / (duration * freq))
+    features_bg[:,-1] = 2 * features_bg[:,-1] - 1
     
     # Pandaize
     features = pandaize(features, spikes_selected)
@@ -143,6 +138,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     cluster_colors = pandaize(cluster_colors, clusters)
     
     nextrafet = features.shape[1] - fetdim * nchannels
+    
     
     data = dict(
         features=features,

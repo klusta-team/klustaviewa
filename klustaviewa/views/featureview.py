@@ -287,33 +287,17 @@ class FeatureDataManager(Manager):
         # can be 'second' or 'samples'
         self.time_unit = time_unit
         
-        # # Indices of all subset spikes.
-        # indices_all = get_indices(features)
-        
-        # # Select only the clusters for subset of spikes.
-        # clusters = select(clusters, indices_all)
-        
-        # # Indices of subset spikes in selected clusters.
-        # indices_selection = get_indices(clusters)
-        
-        # # Indices of subset spikes that are not in selected clusters.
-        # indices_background = np.setdiff1d(indices_all, indices_selection, True)
-        
         # Extract the relevant spikes, but keep the other ones in features_full
         self.clusters = clusters
         self.clusters_array = get_array(self.clusters)
         
-        
         # self.features contains selected spikes.
-        # self.features = select(features, indices_selection)
         self.features = features
         self.features_array = get_array(self.features)
         
         # self.features_background contains all non-selected spikes
-        # self.features_background = select(features, indices_background)
         self.features_background = features_background
         self.features_background_array = get_array(self.features_background)
-        
         
         # Background spikes are those which do not belong to the selected clusters
         self.npoints_background = self.features_background_array.shape[0]
