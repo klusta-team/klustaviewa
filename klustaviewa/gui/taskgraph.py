@@ -308,7 +308,7 @@ class TaskGraph(AbstractTaskGraph):
         
     def _update_similarity_matrix_view(self):
         data = vd.get_similaritymatrixview_data(self.experiment, 
-            self.statscache.similarity_matrix,
+            self.statscache.similarity_matrix_normalized,
             channel_group=self.loader.shank,)
         [view.set_data(**data) 
             for view in self.get_views('SimilarityMatrixView')]
