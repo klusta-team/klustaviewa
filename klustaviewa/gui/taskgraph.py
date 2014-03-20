@@ -281,7 +281,7 @@ class TaskGraph(AbstractTaskGraph):
         self.statscache.similarity_matrix_normalized = normalize(
             self.statscache.similarity_matrix.to_array(copy=True))
         # Update the cluster view with cluster quality.
-        quality = np.diag(self.statscache.similarity_matrix_normalized)
+        quality = np.diag(self.statscache.similarity_matrix_normalized).copy()
         self.statscache.cluster_quality = pd.Series(
             quality,
             index=self.statscache.similarity_matrix.indices,
