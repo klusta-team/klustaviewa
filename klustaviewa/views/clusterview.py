@@ -12,6 +12,7 @@ import numpy as np
 import numpy.random as rnd
 from qtools import QtGui, QtCore
 
+from kwiklib.dataio import get_array
 from kwiklib.dataio.selection import get_indices, select
 from klustaviewa.gui.icons import get_icon
 from kwiklib.utils.colors import COLORMAP, random_color
@@ -126,7 +127,7 @@ class ClusterViewModel(TreeModel):
         for clusteridx, color in cluster_colors.iteritems():
             if cluster_quality is not None:
                 try:
-                    quality = select(cluster_quality, clusteridx)
+                    quality = get_array(select(cluster_quality, clusteridx))[0]
                 except IndexError:
                     quality = 0.
             else:

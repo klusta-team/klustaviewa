@@ -92,6 +92,7 @@ class SimilarityMatrixTask(QtCore.QObject):
             str(list(clusters_selected))))
         if len(clusters_selected) == 0:
             return {}
+        
         correlations = compute_correlations(features, clusters, 
             masks, clusters_selected, similarity_measure=similarity_measure)
         return correlations

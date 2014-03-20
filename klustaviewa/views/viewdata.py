@@ -94,8 +94,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     
     if len(clusters) > 0:
         # TODO: put fraction in user parameters
-        spikes_selected, fm = spikes_data.load_features_masks(fraction=.1, 
-                                                              clusters=clusters)
+        spikes_selected, fm = spikes_data.load_features_masks(clusters=clusters)
     else:
         spikes_selected = []
         fm = np.zeros((0, spikes_data.features_masks.shape[1], 2), 

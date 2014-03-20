@@ -210,9 +210,8 @@ class TaskGraph(AbstractTaskGraph):
         cluster_groups = pd.Series([clusters_data[cl].cluster_group or 0
                                    for cl in clusters_all], index=clusters_all)
                        
-        spikes_selected, fm = spikes_data.load_features_masks(fraction=.1, 
-                                                              clusters=clusters_all)  
-        clusters = getattr(spikes_data.clusters, clustering)[:]  
+        spikes_selected, fm = spikes_data.load_features_masks(fraction=.1)  
+        clusters = getattr(spikes_data.clusters, clustering)[:][spikes_selected] 
         
         features = fm[:, :, 0]
         # masks = fm[:, ::fetdim, 1]
