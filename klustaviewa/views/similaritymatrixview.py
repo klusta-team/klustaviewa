@@ -78,9 +78,8 @@ def colormap(x, col0=None, col1=None):
 class SimilarityMatrixDataManager(Manager):
     def set_data(self, similarity_matrix=None,
         cluster_colors_full=None,
-        clusters_hidden=[],
+        clusters_hidden=[],  # WARNING: relative indexing
         ):
-        
         if similarity_matrix is None:
             similarity_matrix = np.zeros(0)
             cluster_colors_full = np.zeros(0)
@@ -97,20 +96,25 @@ class SimilarityMatrixDataManager(Manager):
         # similarity_matrix axes are originally (x, y) from the lower left corner
         # but when displayed, they are (i, j) from the upper left corner
         # so we need to transpose
-        self.texture = np.swapaxes(self.texture, 0, 1)[::-1, :, :]
+        self.texture = np.swapaxes(self.texture, 0, 1)
         
-        
-        # Hide some clusters.
-        tex0 = self.texture.copy()
-        for clu in clusters_hidden:
-            # Inversion of axes in the y axis
-            self.texture[- clu - 1, :, :] = tex0[- clu - 1, :, :] * .5
-            self.texture[:, clu, :] = tex0[:, clu, :] * .5
         
         self.clusters_unique = get_indices(cluster_colors_full)
+        
         self.cluster_colors = cluster_colors_full
         self.nclusters = len(self.clusters_unique)
     
+        # Remove hidden clusters.
+        indices = np.array(sorted(set(range(self.nclusters)) - set(clusters_hidden)),
+                                dtype=np.int32)
+        
+        if len(indices >= 2):
+            tex0 = self.texture.copy()
+            k = self.nclusters
+            self.texture = tex0[[[_] for _ in (indices)],indices,:]
+        
+        self.texture = self.texture[::-1,:,:]
+        
     
 # -----------------------------------------------------------------------------
 # Visuals
