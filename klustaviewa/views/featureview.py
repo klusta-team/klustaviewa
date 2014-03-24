@@ -889,18 +889,34 @@ class FeatureProjectionManager(Manager):
         self.parent.projectionChanged.emit(0, channel0, 0)
         self.parent.projectionChanged.emit(1, channel1, 0)
         
-    def select_neighbor_channel(self, coord, channel_dir):
+    def select_neighbor_channel(self, coord, channel_dir, feature=None):
+        # current channel and feature in the given coordinate
+        proj = self.projection[coord]
+        if proj is None:
+            proj = (0, coord)
+        channel, _ = proj
+        # next or previous channel
+        channel = np.mod(channel + channel_dir, self.data_manager.nchannels + 
+            self.data_manager.nextrafet)
+        if feature is None:
+            feature = self.get_smart_feature(coord, channel)
+        self.set_projection(coord, channel, feature, do_update=True)
+        
+    def select_neighbor_projection(self, coord, channel_dir):
         # current channel and feature in the given coordinate
         proj = self.projection[coord]
         if proj is None:
             proj = (0, coord)
         channel, feature = proj
-        # next or previous channel
-        channel = np.mod(channel + channel_dir, self.data_manager.nchannels + 
-            self.data_manager.nextrafet)
-        feature = self.get_smart_feature(coord, channel)
-        self.set_projection(coord, channel, feature, do_update=True)
-        
+        lf = self.fetdim - 1
+        if feature == 0 and channel_dir == -1:
+            self.select_neighbor_channel(coord, channel_dir, feature=lf)
+        elif feature == lf and channel_dir == 1:
+            self.select_neighbor_channel(coord, channel_dir, feature=0)
+        else:
+            feature = feature + channel_dir
+            self.set_projection(coord, channel, feature, do_update=True)
+            
     def select_feature(self, coord, feature):
         # feature = np.clip(feature, 0, s - 1)
         # current channel and feature in the given coordinate
@@ -969,6 +985,7 @@ class FeatureInteractionManager(PlotInteractionManager):
         self.register('ToggleMask', self.toggle_mask)
         self.register('ToggleBackground', self.toggle_background)
         self.register('SelectNeighborChannel', self.select_neighbor_channel)
+        self.register('SelectNeighborProjection', self.select_neighbor_projection)
         self.register('SelectFeature', self.select_feature)
         
     def initialize_default(self, constrain_navigation=None,
@@ -1027,6 +1044,22 @@ class FeatureInteractionManager(PlotInteractionManager):
         coord, channel_dir = parameter
         
         self.projection_manager.select_neighbor_channel(coord, channel_dir)
+        
+        channel, feature = self.projection_manager.get_projection(coord)
+        
+        log.debug(("Projection changed to channel {0:d} and "
+                   "feature {1:d} on axis {2:s}.").format(
+                        channel, feature, 'xy'[coord]))
+        self.parent.projectionChanged.emit(coord, channel, feature)
+        
+        self.paint_manager.update_points()
+        self.paint_manager.updateGL()
+        
+    def select_neighbor_projection(self, parameter):
+        coord, channel_dir = parameter
+        
+        self.projection_manager.select_neighbor_projection(coord, channel_dir)
+        
         channel, feature = self.projection_manager.get_projection(coord)
         
         log.debug(("Projection changed to channel {0:d} and "
@@ -1137,6 +1170,12 @@ class FeatureBindings(KlustaViewaBindings):
                  key_modifier='Shift',
                  param_getter=lambda p: (1, -int(np.sign(p['wheel']))))
         
+    def set_neighbor_projection(self):
+        # select previous/next channel for coordinate 0
+        self.set('Wheel', 'SelectNeighborProjection',
+                 key_modifier='Alt',
+                 param_getter=lambda p: (1, -int(np.sign(p['wheel']))))
+        
     def set_time_channel(self):
         self.set('KeyPress', 'SelectProjection',
                     key='T', key_modifier='Control',
@@ -1182,6 +1221,7 @@ class FeatureBindings(KlustaViewaBindings):
         self.set_toggle_mask()
         self.set_toggle_background()
         self.set_neighbor_channel()
+        self.set_neighbor_projection()
         self.set_feature()
         self.set_time_channel()
         self.set_selection()
