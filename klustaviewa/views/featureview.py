@@ -556,7 +556,7 @@ class FeaturePaintManager(PlotPaintManager):
         self.set_data(visual='features_background',
             size=self.data_manager.npoints_background,
             position0=self.data_manager.data_background,
-            alpha=self.data_manager.alpha_background,
+            alpha=self.toggle_background_value * self.data_manager.alpha_background,
             )
             
     def set_wizard_pair(self, target=None, candidate=None):

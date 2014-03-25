@@ -110,12 +110,13 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     freq = exp.application_data.spikedetekt.sample_rate
     duration = spikes_data.time_samples[len(spikes_data.time_samples)-1]*1./freq
     
-    spikes_bg, features_bg = spikes_data.load_features_masks(fraction=.05)
-    features_bg = features_bg[:,:,0]
+    spikes_bg, features_bg = spikes_data.load_features_masks_bg()
+    
+    features_bg = features_bg[:,:,0].copy()
     spiketimes_bg = spiketimes_all[spikes_bg]
     
     # Normalize features.
-    c = (normalization or (1. / (features[:,:-1].max()))) if nspikes > 0 else 1.
+    c = (normalization or (1. / (features_bg[:,:-1].max()))) if nspikes > 0 else 1.
     features[:,:-1] *= c
     features_bg[:,:-1] = features_bg[:,:-1] * c
     
