@@ -71,7 +71,7 @@ The following libraries are required:
   
   * Python 2.7
   * Numpy
-  * Pandas
+  * Pandas <= 0.12.x (*WARNING*: KlustaViewa is not compatible with Pandas 0.13+)
   * PyTables
   * Matplotlib
   * PyOpenGL
