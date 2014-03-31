@@ -423,7 +423,7 @@ class WaveformDataManager(Manager):
         self.masks_array = get_array(masks)
         self.clusters_array = get_array(clusters)
         # Relative indexing.
-        if len(clusters_selected) > 0:
+        if len(clusters_selected) > 0 and len(self.waveform_indices) > 0:
             self.clusters_rel = np.array(np.digitize(self.clusters_array, 
                 sorted(clusters_selected)) - 1, dtype=np.int32)
             self.clusters_rel_ordered = (np.argsort(clusters_selected)
