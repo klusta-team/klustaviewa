@@ -214,6 +214,8 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('undo', '&Undo', shortcut='Ctrl+Z', icon='undo')
         self.add_action('redo', '&Redo', shortcut='Ctrl+Y', icon='redo')
         
+        # self.add_action('reset', 'Re&set')
+        
         # Quit action.
         self.add_action('quit', '&Quit', shortcut='Ctrl+Q')
         
@@ -300,6 +302,8 @@ class MainWindow(QtGui.QMainWindow):
         edit_menu = self.menuBar().addMenu("&Edit")
         edit_menu.addAction(self.undo_action)
         edit_menu.addAction(self.redo_action)
+        # edit_menu.addSeparator()
+        # edit_menu.addAction(self.reset_action)
         
         # View menu.
         views_menu = self.menuBar().addMenu("&View")
@@ -731,6 +735,7 @@ class MainWindow(QtGui.QMainWindow):
         # If a file has been selected, open it.
         if path:
             # Launch the loading task in the background asynchronously.
+            self._path = path
             self.open_task.open(self.loader, path)
             # Save the folder.
             folder = os.path.dirname(path)
@@ -739,6 +744,30 @@ class MainWindow(QtGui.QMainWindow):
             
     def save_callback(self, checked=None):
         self.open_task.save(self.loader)
+        
+    def reset_callback(self, checked=None):
+        # TODO: this feature is not ready yet!! 
+        # It is not enough to change the clustering: we need to change
+        # the clusters information in the other HDF5 groups (and cluster groups, etc.)
+        # Maybe a function to regenerate the whole cluster-related info in the .kwik
+        # file from a clustering (so regenerating groups, colors, etc.
+        # since the information is lost when resetting the clustering).
+        return
+        reply = QtGui.QMessageBox.question(self, 'Reset clustering',
+            "Do you *really* want to erase permanently your manual clustering and reset it to the original (automatic) clustering? You won't be able to undo this operation!",
+            (
+            QtGui.QMessageBox.Yes |
+             QtGui.QMessageBox.Cancel 
+             ),
+            QtGui.QMessageBox.Cancel)
+        if reply == QtGui.QMessageBox.Yes:
+            self.loader.copy_clustering(clustering_from='original', 
+                                        clustering_to='main')
+            # Reload the file.
+            self.loader.close()
+            self.open_task.open(self.loader, self._path)
+        elif reply == QtGui.QMessageBox.Cancel:
+            return
         
     def renumber_callback(self, checked=None):
         # folder = SETTINGS.get('main_window.last_data_file')
