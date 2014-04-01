@@ -810,6 +810,10 @@ class MainWindow(QtGui.QMainWindow):
     # --------------
     def open_done(self):
         self.is_file_open = True
+        self.setWindowTitle('KlustaViewa: {0:s}'.format(
+            os.path.basename(self.loader.filename)
+        ))
+        
         # Start the selection buffer.
         self.buffer = Buffer(self, 
             # delay_timer=.1, delay_buffer=.2
