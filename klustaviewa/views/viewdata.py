@@ -56,10 +56,16 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
         waveforms = convert_dtype(waveforms, np.float32)
         # Normalize waveforms.
         waveforms = waveforms * 1. / (waveforms.max())
-        masks = spikes_data.masks[spikes_selected,0:fetdim*nchannels:fetdim]
+        if spikes_data.masks is not None:
+            masks = spikes_data.masks[spikes_selected, 0:fetdim*nchannels:fetdim]
+        else:
+            masks = None
     else:
         waveforms = np.zeros((0, nsamples, nchannels), dtype=np.float32)
-        masks = np.zeros((0, nchannels), dtype=np.float32)
+        masks = np.ones((0, nchannels), dtype=np.float32)
+        
+    if masks is None:
+        masks = np.ones((len(spikes_selected), nchannels), dtype=np.float32)
         
         
     
@@ -112,8 +118,14 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
         fm = np.zeros((0, spikes_data.features_masks.shape[1], 2), 
                       dtype=spikes_data.features_masks.dtype)
     
+    fm = np.atleast_3d(fm)
+    
     features = fm[:, :, 0]
-    masks = fm[:, ::fetdim, 1]
+    
+    if fm.shape[2] > 1:
+        masks = fm[:, ::fetdim, 1]
+    else:
+        masks = None
     
     nspikes = features.shape[0]
     spiketimes_all = spikes_data.time_samples[:]
@@ -123,6 +135,8 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     duration = spikes_data.time_samples[len(spikes_data.time_samples)-1]*1./freq
     
     spikes_bg, features_bg = spikes_data.load_features_masks_bg()
+    
+    features_bg = np.atleast_3d(features_bg)
     
     features_bg = features_bg[:,:,0].copy()
     spiketimes_bg = spiketimes_all[spikes_bg]
@@ -144,7 +158,8 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     # Pandaize
     features = pandaize(features, spikes_selected)
     features_bg = pandaize(features_bg, spikes_bg)
-    masks = pandaize(masks, spikes_selected)
+    if masks is not None:
+        masks = pandaize(masks, spikes_selected)
     spiketimes = pandaize(spiketimes, spikes_selected)
     spike_clusters = pandaize(spike_clusters, spikes_selected)
     cluster_colors = pandaize(cluster_colors, clusters)

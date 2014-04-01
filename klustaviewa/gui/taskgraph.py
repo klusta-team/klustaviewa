@@ -213,9 +213,13 @@ class TaskGraph(AbstractTaskGraph):
         spikes_selected, fm = spikes_data.load_features_masks(fraction=.1)  
         clusters = getattr(spikes_data.clusters, clustering)[:][spikes_selected] 
         
+        fm = np.atleast_3d(fm)
         features = fm[:, :, 0]
         # masks = fm[:, ::fetdim, 1]
-        masks = fm[:, :, 1]
+        if fm.shape[2] > 1:
+            masks = fm[:, :, 1]
+        else:
+            masks = None
         
         # features = pandaize(features, spikes_selected)
         # masks = pandaize(masks, spikes_selected)

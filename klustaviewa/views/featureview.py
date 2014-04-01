@@ -308,6 +308,9 @@ class FeatureDataManager(Manager):
         self.nchannels = nchannels
         self.nextrafet = nextrafet
         self.npoints = self.features.shape[0]
+        
+        if masks is None:
+            masks = np.ones_like(self.features, dtype=np.float32)
         self.masks = masks
         self.feature_indices = get_indices(self.features)
         self.feature_indices_array = get_array(self.feature_indices)
