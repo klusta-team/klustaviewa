@@ -55,7 +55,7 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     if len(spikes_selected) > 0:
         waveforms = convert_dtype(waveforms, np.float32)
         # Normalize waveforms.
-        waveforms = waveforms * 1. / (waveforms.max())
+        # waveforms = waveforms * 1. / (waveforms.max())
         if spikes_data.masks is not None:
             masks = spikes_data.masks[spikes_selected, 0:fetdim*nchannels:fetdim]
         else:
