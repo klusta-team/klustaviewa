@@ -205,6 +205,7 @@ class MainWindow(QtGui.QMainWindow):
             self.add_action('open_last', 'Open &last', shortcut='Ctrl+Alt+O')
             self.open_last_action.setEnabled(False)
             
+        self.add_action('switch', 'S&witch shank')
         self.add_action('save', '&Save', shortcut='Ctrl+S', icon='save')
         self.add_action('renumber', 'Save &renumbered')
         self.add_action('close', '&Close file')
@@ -294,6 +295,8 @@ class MainWindow(QtGui.QMainWindow):
         # file_menu.addSeparator()
         file_menu.addAction(self.save_action)
         file_menu.addAction(self.renumber_action)
+        file_menu.addSeparator()
+        file_menu.addAction(self.switch_action)
         file_menu.addSeparator()
         file_menu.addAction(self.close_action)
         file_menu.addAction(self.quit_action)
@@ -795,6 +798,24 @@ class MainWindow(QtGui.QMainWindow):
         
         self.loader.close()
         self.is_file_open = False
+        
+    def switch_callback(self, checked=None):
+        shank, ok = QtGui.QInputDialog.getInt(self,
+            "Shank number", "Shank number:", 
+            self.loader.shank, 
+            min(self.loader.shanks), 
+            max(self.loader.shanks), 
+            1)
+        if ok:
+            if shank in self.loader.shanks:
+                self.loader.set_shank(shank)
+                self.open_done()
+            else:
+                QtGui.QMessageBox.warning(self, "Wrong shank number", 
+                ("The selected shank '{0:d}' is not in "
+                 "the list of shanks: {1:s}.").format(shank, 
+                                                    str(self.loader.shanks)), 
+                    QtGui.QMessageBox.Ok, QtGui.QMessageBox.Ok)
         
     def clear_view(self, view_name):
         for v in self.get_views(view_name):
