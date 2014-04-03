@@ -1172,6 +1172,26 @@ class FeatureBindings(KlustaViewaBindings):
         self.set('Wheel', 'SelectNeighborChannel',
                  key_modifier='Shift',
                  param_getter=lambda p: (1, -int(np.sign(p['wheel']))))
+       
+        self.set('KeyPress', 'SelectNeighborChannel',
+                 key_modifier='Control',
+                 key='Up',
+                 param_getter=lambda p: (0, -1))
+       
+        self.set('KeyPress', 'SelectNeighborChannel',
+                 key_modifier='Control',
+                 key='Down',
+                 param_getter=lambda p: (0, 1))
+        
+        self.set('KeyPress', 'SelectNeighborChannel',
+                 key_modifier='Shift',
+                 key='Up',
+                 param_getter=lambda p: (1, -1))
+       
+        self.set('KeyPress', 'SelectNeighborChannel',
+                 key_modifier='Shift',
+                 key='Down',
+                 param_getter=lambda p: (1, 1))
         
     def set_neighbor_projection(self):
         # select previous/next channel for coordinate 0

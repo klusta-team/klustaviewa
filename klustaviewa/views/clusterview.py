@@ -942,6 +942,8 @@ class ClusterView(QtGui.QTreeView):
         alt = modif & QtCore.Qt.AltModifier
         if (ctrl and key == QtCore.Qt.Key_A):
             self.select(self.get_cluster_indices())
+        elif ((ctrl or shift) and (key in (QtCore.Qt.Key_Up, QtCore.Qt.Key_Down))):
+            return
         else:
             return super(ClusterView, self).keyPressEvent(e)
         
