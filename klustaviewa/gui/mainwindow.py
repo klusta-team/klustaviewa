@@ -24,7 +24,7 @@ from klustaviewa.gui.icons import get_icon
 from klustaviewa.control.controller import Controller
 from klustaviewa.wizard.wizard import Wizard
 from kwiklib.dataio.tools import get_array
-from kwiklib.dataio import KlustersLoader, KwikLoader
+from kwiklib.dataio import KlustersLoader, KwikLoader, read_clusters
 from klustaviewa.gui.buffer import Buffer
 from klustaviewa.gui.dock import ViewDockWidget, DockTitleBar
 from klustaviewa.stats.cache import StatsCache
@@ -206,6 +206,8 @@ class MainWindow(QtGui.QMainWindow):
             self.open_last_action.setEnabled(False)
             
         self.add_action('switch', 'S&witch shank')
+        self.add_action('import', '&Import clustering')
+        self.add_action('reset', '&Reset clustering')
         self.add_action('save', '&Save', shortcut='Ctrl+S', icon='save')
         self.add_action('renumber', 'Save &renumbered')
         self.add_action('close', '&Close file')
@@ -292,7 +294,9 @@ class MainWindow(QtGui.QMainWindow):
         file_menu.addAction(self.open_action)
         file_menu.addAction(self.open_last_action)
         file_menu.addSeparator()
-        # file_menu.addSeparator()
+        file_menu.addAction(self.reset_action)
+        # file_menu.addAction(self.import_action)
+        file_menu.addSeparator()
         file_menu.addAction(self.save_action)
         file_menu.addAction(self.renumber_action)
         file_menu.addSeparator()
@@ -305,8 +309,6 @@ class MainWindow(QtGui.QMainWindow):
         edit_menu = self.menuBar().addMenu("&Edit")
         edit_menu.addAction(self.undo_action)
         edit_menu.addAction(self.redo_action)
-        # edit_menu.addSeparator()
-        # edit_menu.addAction(self.reset_action)
         
         # View menu.
         views_menu = self.menuBar().addMenu("&View")
@@ -744,18 +746,21 @@ class MainWindow(QtGui.QMainWindow):
             folder = os.path.dirname(path)
             SETTINGS['main_window.last_data_dir'] = folder
             SETTINGS['main_window.last_data_file'] = path
-            
+           
+    def import_callback(self, checked=None):
+        folder = SETTINGS['main_window.last_data_dir']
+        path = QtGui.QFileDialog.getOpenFileName(self, 
+            "Open a .clu file", folder, "CLU file (*.clu.* *.clu_original.*)")[0]
+        # If a file has been selected, open it.
+        if path and self.loader is not None:
+            clu = read_clusters(path)
+            # TODO
+            self.open_done()
+        
     def save_callback(self, checked=None):
         self.open_task.save(self.loader)
         
     def reset_callback(self, checked=None):
-        # TODO: this feature is not ready yet!! 
-        # It is not enough to change the clustering: we need to change
-        # the clusters information in the other HDF5 groups (and cluster groups, etc.)
-        # Maybe a function to regenerate the whole cluster-related info in the .kwik
-        # file from a clustering (so regenerating groups, colors, etc.
-        # since the information is lost when resetting the clustering).
-        return
         reply = QtGui.QMessageBox.question(self, 'Reset clustering',
             "Do you *really* want to erase permanently your manual clustering and reset it to the original (automatic) clustering? You won't be able to undo this operation!",
             (
@@ -781,6 +786,7 @@ class MainWindow(QtGui.QMainWindow):
     def open_last_callback(self, checked=None):
         path = SETTINGS['main_window.last_data_file']
         if path:
+            self._path = path
             self.open_task.open(self.loader, path)
             
     def close_callback(self, checked=None):

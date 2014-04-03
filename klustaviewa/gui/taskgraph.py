@@ -506,10 +506,10 @@ class TaskGraph(AbstractTaskGraph):
     def _wizard_show_pair(self, target=None, candidate=None):
         if target is None:
             target = (self.wizard.current_target(), 
-                      self.loader.get_cluster_color(self.wizard.current_target()))
+                      get_array(self.loader.get_cluster_color(self.wizard.current_target()))[0])
         if candidate is None:
             candidate = (self.wizard.current_candidate(), 
-                         self.loader.get_cluster_color(self.wizard.current_candidate()))
+                         get_array(self.loader.get_cluster_color(self.wizard.current_candidate()))[0])
         [view.set_wizard_pair(target, candidate) 
             for view in self.get_views('FeatureView')]
         
