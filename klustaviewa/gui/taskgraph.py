@@ -508,8 +508,15 @@ class TaskGraph(AbstractTaskGraph):
             target = (self.wizard.current_target(), 
                       get_array(self.loader.get_cluster_color(self.wizard.current_target()))[0])
         if candidate is None:
-            candidate = (self.wizard.current_candidate(), 
-                         get_array(self.loader.get_cluster_color(self.wizard.current_candidate()))[0])
+            try:
+                candidate = (self.wizard.current_candidate(), 
+                             get_array(self.loader.get_cluster_color(self.wizard.current_candidate()))[0])
+            # HACK: this can fail because when merging clusters, the merged 
+            # cluster (candidate) is deleted, and its color does not exist 
+            # anymore.
+            except:
+                candidate = (self.wizard.current_candidate(), 
+                             0)
         [view.set_wizard_pair(target, candidate) 
             for view in self.get_views('FeatureView')]
         
