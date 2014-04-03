@@ -225,7 +225,7 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
     return data
     
 def get_correlogramsview_data(exp, correlograms, clusters=[],
-                              channel_group=0, clustering='main',
+                              channel_group=0, clustering='main', wizard=None,
                               nclusters_max=10, ncorrbins=50, corrbin=.001):
     clusters = np.array(clusters, dtype=np.int32)
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
@@ -269,6 +269,7 @@ def get_correlogramsview_data(exp, correlograms, clusters=[],
         cluster_colors=cluster_colors,
         ncorrbins=ncorrbins,
         corrbin=corrbin,
+        keep_order=wizard,
     )
     
     return data
