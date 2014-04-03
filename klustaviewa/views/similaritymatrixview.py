@@ -98,7 +98,6 @@ class SimilarityMatrixDataManager(Manager):
         # so we need to transpose
         self.texture = np.swapaxes(self.texture, 0, 1)
         
-        
         self.clusters_unique = get_indices(cluster_colors_full)
         
         self.cluster_colors = cluster_colors_full
@@ -107,7 +106,7 @@ class SimilarityMatrixDataManager(Manager):
         # Remove hidden clusters.
         indices = np.array(sorted(set(range(self.nclusters)) - set(clusters_hidden)),
                                 dtype=np.int32)
-        
+        self.indices = indices
         
         if len(indices) >= 2:
             tex0 = self.texture.copy()
@@ -174,11 +173,15 @@ class SimilarityMatrixInfoManager(Manager):
         cx = self.data_manager.clusters_displayed[cx_rel]
         cy = self.data_manager.clusters_displayed[cy_rel]
         
-        if ((cx_rel >= self.data_manager.similarity_matrix.shape[0]) or
-            (cy_rel >= self.data_manager.similarity_matrix.shape[1])):
+        ind = self.data_manager.indices
+        matrix = self.data_manager.similarity_matrix
+        matrix = matrix[ind,:][:,ind]
+        
+        if ((cx_rel >= matrix.shape[0]) or
+            (cy_rel >= matrix.shape[1])):
             return
             
-        val = self.data_manager.similarity_matrix[cx_rel, cy_rel]
+        val = matrix[cx_rel, cy_rel]
         
         text = "%d/%d:%.3f" % (cx, cy, val)
         
