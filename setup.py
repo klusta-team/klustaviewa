@@ -36,16 +36,21 @@ if __name__ == '__main__':
     setup(
         zip_safe=False,
         name='klustaviewa',
-        version='0.2.1',
+        version='0.3.0alpha',
         author='Cyrille Rossant',
         author_email='rossant@github',
         packages=['klustaviewa',
                   'klustaviewa.control',
+                  'klustaviewa.control.tests',
                   'klustaviewa.gui',
+                  'klustaviewa.gui.tests',
                   'klustaviewa.scripts',
                   'klustaviewa.stats',
+                  'klustaviewa.stats.tests',
                   'klustaviewa.views',
+                  'klustaviewa.views.tests',
                   'klustaviewa.wizard',
+                  'klustaviewa.wizard.tests',
 
                   #<
                   # 'qtools',
@@ -54,8 +59,10 @@ if __name__ == '__main__':
                   
                   # 'kwiklib',
                   # 'kwiklib.dataio',
+                  # 'kwiklib.dataio.tests',
                   # 'kwiklib.scripts',
                   # 'kwiklib.utils',
+                  # 'kwiklib.utils.tests',
                   
                   # 'galry',
                   # 'galry.managers',
