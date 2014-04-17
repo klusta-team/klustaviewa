@@ -761,21 +761,24 @@ class MainWindow(QtGui.QMainWindow):
         self.open_task.save(self.loader)
         
     def reset_callback(self, checked=None):
-        reply = QtGui.QMessageBox.question(self, 'Reset clustering',
-            "Do you *really* want to erase permanently your manual clustering and reset it to the original (automatic) clustering? You won't be able to undo this operation!",
-            (
-            QtGui.QMessageBox.Yes |
-             QtGui.QMessageBox.Cancel 
-             ),
-            QtGui.QMessageBox.Cancel)
-        if reply == QtGui.QMessageBox.Yes:
-            self.loader.copy_clustering(clustering_from='original', 
+        # reply = QtGui.QMessageBox.question(self, 'Reset clustering',
+            # "Do you *really* want to erase permanently your manual clustering and reset it to the original (automatic) clustering? You won't be able to undo this operation!",
+            # (
+            # QtGui.QMessageBox.Yes |
+             # QtGui.QMessageBox.Cancel 
+             # ),
+            # QtGui.QMessageBox.Cancel)
+        # if reply == QtGui.QMessageBox.Yes:
+        clustering_name, ok = QtGui.QInputDialog.getText(self, "Clustering name", "Copy from (you'll lose the current clustering):",
+                                   QtGui.QLineEdit.Normal, 'original')
+        if ok:
+            self.loader.copy_clustering(clustering_from=clustering_name, 
                                         clustering_to='main')
             # Reload the file.
             self.loader.close()
             self.open_task.open(self.loader, self._path)
-        elif reply == QtGui.QMessageBox.Cancel:
-            return
+        # elif reply == QtGui.QMessageBox.Cancel:
+            # return
         
     def renumber_callback(self, checked=None):
         # folder = SETTINGS.get('main_window.last_data_file')
