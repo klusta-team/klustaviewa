@@ -121,6 +121,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     fm = np.atleast_3d(fm)
     
     features = fm[:, :, 0]
+    nextrafet = features.shape[1] - nchannels * fetdim
     
     if fm.shape[2] > 1:
         masks = fm[:, ::fetdim, 1]
@@ -142,9 +143,18 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     spiketimes_bg = spiketimes_all[spikes_bg]
     
     # Normalize features.
-    c = (normalization or (1. / (features_bg[:,:-1].max()))) if nspikes > 0 else 1.
-    features[:,:-1] *= c
-    features_bg[:,:-1] = features_bg[:,:-1] * c
+    def _find_max(x):
+        return np.median(np.abs(x))*10
+        
+    c = (normalization or (1. / _find_max(features_bg[:,:-nextrafet]))) if nspikes > 0 else 1.
+    features[:,:-nextrafet] *= c
+    features_bg[:,:-nextrafet] *= c
+    
+    # Normalize extra features except time.
+    for i in range(features_bg.shape[1]-nextrafet-1, features_bg.shape[1]-1):
+        c = (1. / _find_max(features_bg[:,i])) if nspikes > 0 else 1.
+        features[:,i] *= c
+        features_bg[:,i] *= c
     
     # Normalize time.
     features[:,-1] = spiketimes
