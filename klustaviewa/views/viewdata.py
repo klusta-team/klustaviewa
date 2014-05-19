@@ -142,9 +142,15 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     features_bg = features_bg[:,:,0].copy()
     spiketimes_bg = spiketimes_all[spikes_bg]
     
+    # Add extra feature for time is necessary.
+    if nextrafet == 0:
+        features = np.hstack((features, np.ones((features.shape[0], 1))))
+        features_bg = np.hstack((features_bg, np.ones((features_bg.shape[0], 1))))
+        nextrafet = 1
+    
     # Normalize features.
     def _find_max(x):
-        return np.median(np.abs(x))*10
+        return np.max(np.abs(x))
         
     c = (normalization or (1. / _find_max(features_bg[:,:-nextrafet]))) if nspikes > 0 else 1.
     features[:,:-nextrafet] *= c
@@ -174,7 +180,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     spike_clusters = pandaize(spike_clusters, spikes_selected)
     cluster_colors = pandaize(cluster_colors, clusters)
     
-    nextrafet = features.shape[1] - fetdim * nchannels
+    # nextrafet = features.shape[1] - fetdim * nchannels
     
     
     data = dict(
