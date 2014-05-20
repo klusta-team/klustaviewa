@@ -42,6 +42,8 @@ Installation
 
 ### Mac OS X and Linux
 
+On Linux, please **do not** use apt-get to install Python and the packages. Use Anaconda instead.
+
   * Step 1: [install Anaconda](http://continuum.io/downloads).
   
       * Download the adequate version (64 bits if possible).
@@ -72,7 +74,7 @@ The following libraries are required:
   * Python 2.7
   * Numpy
   * Pandas <= 0.12.x (*WARNING*: KlustaViewa is not compatible with Pandas 0.13+)
-  * PyTables
+  * PyTables >= 3.0
   * Matplotlib
   * PyOpenGL
   * either PyQt4 or PySide
