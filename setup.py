@@ -64,6 +64,12 @@ if __name__ == '__main__':
                   # 'kwiklib.utils',
                   # 'kwiklib.utils.tests',
                   
+                  # 'spikedetekt2',
+                  # 'spikedetekt2.core',
+                  # 'spikedetekt2.core.tests',
+                  # 'spikedetekt2.processing',
+                  # 'spikedetekt2.processing.tests',
+                  
                   # 'galry',
                   # 'galry.managers',
                   # 'galry.processors',
@@ -81,6 +87,7 @@ if __name__ == '__main__':
                 'kwikskope = klustaviewa.scripts.runkwikskope:main', ],
             'console_scripts': [
                 'kwikkonvert = kwiklib.scripts.runkwikkonvert:main', 
+                'spikedetekt = spikedetekt2.core.script:main', 
                 ]
         },
         
@@ -106,8 +113,9 @@ if __name__ == '__main__':
         
         include_dirs=np.get_include(),
         
-        url='https://github.com/klusta-team/klustaviewa',
+        url='https://klusta-team.github.io',
         license='LICENSE.md',
-        description='Spike sorting graphical interface.',
+        description='Spike sorting software suite.',
         long_description=LONG_DESCRIPTION,
     )
+    
