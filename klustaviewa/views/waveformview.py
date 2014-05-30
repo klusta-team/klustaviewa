@@ -389,6 +389,7 @@ class WaveformDataManager(Manager):
     # ----------------------
     def set_data(self,
                  waveforms=None,
+                 channels=None,
                  masks=None,
                  clusters=None,
                  # list of clusters that are selected, the order matters
@@ -442,6 +443,9 @@ class WaveformDataManager(Manager):
             self.clusters_selected2 = sorted(clusters_selected)
             
         self.nspikes, self.nsamples, self.nchannels = self.waveforms_array.shape
+        if channels is None:
+            channels = range(self.nchannels)
+        self.channels = channels
         self.npoints = self.waveforms_array.size
         self.geometrical_positions = geometrical_positions
         self.clusters_selected = clusters_selected
@@ -936,7 +940,7 @@ class WaveformInfoManager(Manager):
         channel, cluster_rel = self.position_manager.find_box(xd, yd)
         text = "{0:d} on channel {1:d}".format(
             self.data_manager.clusters_selected2[cluster_rel],
-            channel,
+            self.data_manager.channels[channel],
             )
         
         self.paint_manager.set_data(

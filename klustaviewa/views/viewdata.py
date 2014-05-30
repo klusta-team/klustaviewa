@@ -33,6 +33,7 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
     spikes_data = exp.channel_groups[channel_group].spikes
     channels_data = exp.channel_groups[channel_group].channels
+    channels = channels_data.keys()
     
     spike_clusters = getattr(spikes_data.clusters, clustering)[:]
     # spikes_selected = get_some_spikes_in_clusters(clusters, spike_clusters)
@@ -82,6 +83,7 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     
     data = dict(
         waveforms=waveforms,
+        channels=channels,
         clusters=spike_clusters,
         cluster_colors=cluster_colors,
         clusters_selected=clusters,
