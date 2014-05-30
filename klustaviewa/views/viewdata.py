@@ -33,7 +33,7 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
     spikes_data = exp.channel_groups[channel_group].spikes
     channels_data = exp.channel_groups[channel_group].channels
-    channels = channels_data.keys()
+    channels = exp.channel_groups[channel_group].channel_order
     
     spike_clusters = getattr(spikes_data.clusters, clustering)[:]
     # spikes_selected = get_some_spikes_in_clusters(clusters, spike_clusters)
@@ -68,11 +68,11 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     if masks is None:
         masks = np.ones((len(spikes_selected), nchannels), dtype=np.float32)
         
-        
-    
     spike_clusters = spike_clusters[spikes_selected]
-    channel_positions = np.array([channels_data[ch].position or (0., ch) 
-                                  for ch in sorted(channels_data.keys())],
+    channel_positions = np.array([channels_data[ch].position 
+                                  if channels_data[ch].position is not None
+                                  else (0., ch) 
+                                  for ch in channels],
                                  dtype=np.float32)
     
     # Pandaize
@@ -104,7 +104,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     # TODO: add spikes=None and spikes_bg=None
     fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
     nchannels = len(exp.channel_groups[channel_group].channels)
-    channels = exp.channel_groups[channel_group].channels.keys()
+    channels = exp.channel_groups[channel_group].channel_order
     
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
     spikes_data = exp.channel_groups[channel_group].spikes
