@@ -253,6 +253,7 @@ class FeatureDataManager(Manager):
                  cluster_colors=None,
                  fetdim=None,
                  nchannels=None,
+                 channels=None,
                  nextrafet=None,
                  autozoom=None,  # None, or the target cluster
                  duration=None,
@@ -303,9 +304,13 @@ class FeatureDataManager(Manager):
         self.npoints_background = self.features_background_array.shape[0]
         self.nspikes_background = self.npoints_background
         
+        if channels is None:
+            channels = range(nchannels)
+        
         self.nspikes, self.ndim = self.features.shape
         self.fetdim = fetdim
         self.nchannels = nchannels
+        self.channels = channels
         self.nextrafet = nextrafet
         self.npoints = self.features.shape[0]
         

@@ -68,8 +68,9 @@ class FeatureProjectionView(QtGui.QWidget):
         fetdim = kwargs.get('fetdim', 3)
         nchannels = kwargs.get('nchannels', 1)
         nextrafet = kwargs.get('nextrafet', 0)
+        channels = kwargs.get('channels', None)
         self.projection_view.set_data(fetdim=fetdim, nchannels=nchannels, 
-            nextrafet=nextrafet)
+            nextrafet=nextrafet, channels=channels)
         self.feature_view.set_data(*args, **kwargs)
     
     def projection_changed_projection_callback(self, *args):
