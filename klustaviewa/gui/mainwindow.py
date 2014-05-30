@@ -1147,6 +1147,7 @@ class MainWindow(QtGui.QMainWindow):
                              QtCore.Qt.Key_H,
                              QtCore.Qt.NoModifier,)
         self.keyPressEvent(e)
+        self.keyReleaseEvent(e)
     
     def open_preferences_callback(self, checked=None):
         url = USERPREF.filepath
