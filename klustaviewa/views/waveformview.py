@@ -75,7 +75,7 @@ FRAGMENT_SHADER_AVERAGE = """
     float index = %CMAP_OFFSET% + cmap_vindex * %CMAP_STEP%;
     vec2 index2d = vec2(index, %SHIFT_OFFSET% + (1 + toggle_mask * (1 - vmask) * %SHIFTLEN%) * %SHIFT_STEP%);
     out_color = texture2D(cmap, index2d);
-    out_color.w = .5;
+    out_color.w = 1.;
 """
 
 
