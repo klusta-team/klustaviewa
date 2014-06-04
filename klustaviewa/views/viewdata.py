@@ -44,19 +44,12 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     # Find spikes to display and load the waveforms.
     if len(clusters) > 0:
         spikes_selected, waveforms = spikes_data.load_waveforms(clusters=clusters)
-        # waveforms = convert_dtype(waveforms, np.float32)
-        # # Normalize waveforms.
-        # if len(waveforms) > 0:
-            # waveforms = waveforms * 1. / (waveforms.max())
-        # masks = spikes_data.masks[spikes_selected,0:fetdim*nchannels:fetdim]
     else:
         spikes_selected = []
     
     # Bake the waveform data.
     if len(spikes_selected) > 0:
         waveforms = convert_dtype(waveforms, np.float32)
-        # Normalize waveforms.
-        # waveforms = waveforms * 1. / (waveforms.max())
         if spikes_data.masks is not None:
             masks = spikes_data.masks[spikes_selected, 0:fetdim*nchannels:fetdim]
         else:
