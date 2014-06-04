@@ -209,7 +209,7 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('import', '&Import clustering')
         self.add_action('reset', '&Reset clustering')
         self.add_action('save', '&Save', shortcut='Ctrl+S', icon='save')
-        self.add_action('renumber', 'Save &renumbered')
+        # self.add_action('renumber', 'Save &renumbered')
         self.add_action('close', '&Close file')
         
     def create_edit_actions(self):
@@ -298,7 +298,7 @@ class MainWindow(QtGui.QMainWindow):
         # file_menu.addAction(self.import_action)
         file_menu.addSeparator()
         file_menu.addAction(self.save_action)
-        file_menu.addAction(self.renumber_action)
+        # file_menu.addAction(self.renumber_action)
         file_menu.addSeparator()
         file_menu.addAction(self.switch_action)
         file_menu.addSeparator()
@@ -780,11 +780,11 @@ class MainWindow(QtGui.QMainWindow):
         # elif reply == QtGui.QMessageBox.Cancel:
             # return
         
-    def renumber_callback(self, checked=None):
-        # folder = SETTINGS.get('main_window.last_data_file')
-        self.loader.save(renumber=True)
-        # self.need_save = False
-        self.open_last_callback()
+    # def renumber_callback(self, checked=None):
+        # # folder = SETTINGS.get('main_window.last_data_file')
+        # self.loader.save(renumber=True)
+        # # self.need_save = False
+        # self.open_last_callback()
         
     def open_last_callback(self, checked=None):
         path = SETTINGS['main_window.last_data_file']
