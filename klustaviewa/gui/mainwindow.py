@@ -9,6 +9,7 @@ from StringIO import StringIO
 import os
 import sys
 import inspect
+import logging
 from collections import OrderedDict
 from functools import partial
 import webbrowser
@@ -62,6 +63,7 @@ class MainWindow(QtGui.QMainWindow):
         self.dolog = dolog
         if self.dolog:
             create_file_logger()
+            
         self.initialize_view_logger()
         
         log.debug("Using {0:s}.".format(QT_BINDING))
@@ -843,6 +845,9 @@ class MainWindow(QtGui.QMainWindow):
         self.setWindowTitle('KlustaViewa: {0:s}'.format(
             os.path.basename(self.loader.filename)
         ))
+        
+        register(FileLogger(self.loader.log_filename, name='kwik', 
+                 level=logging.INFO))
         
         # Start the selection buffer.
         self.buffer = Buffer(self, 
