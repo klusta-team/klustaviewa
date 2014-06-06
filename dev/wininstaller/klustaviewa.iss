@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "KlustaViewa"
-#define MyAppVersion "0.3.0dev"
+#define MyAppVersion "0.3.0.beta1"
 #define MyAppPublisher "Klusta-Team"
 #define MyAppURL "https://klusta-team.github.io"
 
@@ -59,7 +59,8 @@ Filename: "{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\python.exe"; Working
 [Dirs]
 Name: "{app}\"; Permissions: everyone-modify
 
-[Registry]
+[Registry]                        
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64"; Check: NeedsAddPath('{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64')
 Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\Scripts"; Check: NeedsAddPath('{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\Scripts')
 Root: HKCR; Subkey: ".kwik"; ValueType: string; ValueName: ""; ValueData: "Kwik spike file"; Flags: uninsdeletevalue
 Root: HKCR; Subkey: "KlustaViewa"; ValueType: string; ValueName: ""; ValueData: "KlustaViewa"; Flags: uninsdeletekey
