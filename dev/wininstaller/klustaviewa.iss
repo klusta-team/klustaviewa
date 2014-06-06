@@ -54,7 +54,7 @@ Name: "{userdesktop}\KlustaViewa"; Filename: "{app}\WinPython-64bit-2.7.6.4\pyth
 ;Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Run]
-Filename: "{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\python.exe"; WorkingDir: "{app}"; Parameters: """{app}\tools\update.py"""; Flags: runhidden
+Filename: "{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\python.exe"; WorkingDir: "{app}"; Parameters: """{app}\tools\register.py"""; Flags: runhidden
 
 [Dirs]
 Name: "{app}\"; Permissions: everyone-modify
@@ -64,7 +64,7 @@ Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environmen
 Root: HKCR; Subkey: ".kwik"; ValueType: string; ValueName: ""; ValueData: "Kwik spike file"; Flags: uninsdeletevalue
 Root: HKCR; Subkey: "KlustaViewa"; ValueType: string; ValueName: ""; ValueData: "KlustaViewa"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "KlustaViewa\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\favicon.ico"
-Root: HKCR; Subkey: "KlustaViewa\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\Scripts\klustaviewa.exe"" ""%1"""
+Root: HKCR; Subkey: "KlustaViewa\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\Scripts\klustaviewa.exe"" ""%1"""
 
 [Code]
 function NeedsAddPath(Param: string): boolean;

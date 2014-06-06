@@ -87,7 +87,7 @@ if __name__ == '__main__':
                 'kwikskope = klustaviewa.scripts.runkwikskope:main', ],
             'console_scripts': [
                 'kwikkonvert = kwiklib.scripts.runkwikkonvert:main', 
-                'spikedetekt = spikedetekt2.core.script:main', 
+                'klusta = spikedetekt2.core.script:main', 
                 ]
         },
         

@@ -80,4 +80,3 @@ sys.excepthook = log.handle_exception
 loglevel = USERPREF['loglevel']
 if loglevel:
     log.set_level(loglevel)
-
