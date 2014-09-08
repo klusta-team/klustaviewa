@@ -125,11 +125,11 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
         masks = None
     
     nspikes = features.shape[0]
-    spiketimes_all = spikes_data.time_samples[:]
+    spiketimes_all = spikes_data.concatenated_time_samples[:]
     spiketimes = spiketimes_all[spikes_selected]
     spike_clusters = spike_clusters[spikes_selected]
     freq = exp.application_data.spikedetekt.sample_rate
-    duration = spikes_data.time_samples[len(spikes_data.time_samples)-1]*1./freq
+    duration = spikes_data.concatenated_time_samples[len(spikes_data.concatenated_time_samples)-1]*1./freq
     
     spikes_bg, features_bg = spikes_data.load_features_masks_bg()
     
@@ -268,7 +268,7 @@ def get_correlogramsview_data(exp, correlograms, clusters=[],
     # Compute the baselines.
     # corrbin = SETTINGS.get('correlograms.corrbin', CORRBIN_DEFAULT)
     # ncorrbins = SETTINGS.get('correlograms.ncorrbins', NCORRBINS_DEFAULT)
-    duration = exp.channel_groups[channel_group].spikes.time_samples[:][-1] - exp.channel_groups[channel_group].spikes.time_samples[:][0]
+    duration = exp.channel_groups[channel_group].spikes.concatenated_time_samples[:][-1] - exp.channel_groups[channel_group].spikes.concatenated_time_samples[:][0]
     duration /= freq
     if duration == 0:
         duration = 1.
