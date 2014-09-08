@@ -303,9 +303,13 @@ class TaskGraph(AbstractTaskGraph):
     # View updates.
     # -------------
     def _update_correlograms_view(self, wizard=None):
+        clu = self.loader.get_clusters_selected()
+        # HACK: work around a bug with some GPU drivers and empty selections
+        if len(clu)==0:
+            return
         data = vd.get_correlogramsview_data(self.experiment, 
             self.statscache.correlograms, 
-            clusters=self.loader.get_clusters_selected(),
+            clusters=clu,
             channel_group=self.loader.shank,
             wizard=wizard,
             )
@@ -322,15 +326,23 @@ class TaskGraph(AbstractTaskGraph):
         return ('_show_selection_in_matrix', (clusters,))
         
     def _update_feature_view(self, autozoom=None):
+        clu = self.loader.clusters_selected
+        # HACK: work around a bug with some GPU drivers and empty selections
+        if len(clu)==0:
+            return
         data = vd.get_featureview_data(self.experiment, 
-            clusters=self.loader.clusters_selected,
+            clusters=clu,
             autozoom=autozoom,
             channel_group=self.loader.shank)
         [view.set_data(**data) for view in self.get_views('FeatureView')]
         
     def _update_waveform_view(self, autozoom=None, wizard=None):
+        clu = self.loader.clusters_selected
+        # HACK: work around a bug with some GPU drivers and empty selections
+        if len(clu)==0:
+            return
         data = vd.get_waveformview_data(self.experiment, 
-            clusters=self.loader.clusters_selected,
+            clusters=clu,
             autozoom=autozoom, 
             wizard=wizard,
             channel_group=self.loader.shank
