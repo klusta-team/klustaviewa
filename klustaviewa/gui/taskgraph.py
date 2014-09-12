@@ -216,6 +216,10 @@ class TaskGraph(AbstractTaskGraph):
         
         fm = np.atleast_3d(fm)
         features = fm[:, :, 0]
+        
+        if features.shape[1] <= 1:
+            return []
+        
         # masks = fm[:, ::fetdim, 1]
         if fm.shape[2] > 1:
             masks = fm[:, :, 1]
@@ -281,6 +285,8 @@ class TaskGraph(AbstractTaskGraph):
             # spikes=self.loader.background_spikes)
         # if not np.array_equal(clusters, clusters_now):
             # return False
+        if len(matrix) == 0:
+            return []
         self.statscache.similarity_matrix.update(clusters_selected, matrix)
         self.statscache.similarity_matrix_normalized = normalize(
             self.statscache.similarity_matrix.to_array(copy=True))

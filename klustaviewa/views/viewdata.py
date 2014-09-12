@@ -146,6 +146,8 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     
     # Normalize features.
     def _find_max(x):
+        if x.size == 0:
+            return 1.
         return np.max(np.abs(x))
         
     c = (normalization or (1. / _find_max(features_bg[:,:-nextrafet]))) if nspikes > 0 else 1.
@@ -159,19 +161,21 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
         features_bg[:,i] *= c
     
     # Normalize time.
-    features[:,-1] = spiketimes
-    features[:,-1] *= (1. / (duration * freq))
-    features[:,-1] = 2 * features[:,-1] - 1
+    if features.size > 0:
+        features[:,-1] = spiketimes
+        features[:,-1] *= (1. / (duration * freq))
+        features[:,-1] = 2 * features[:,-1] - 1
+        
+        features_bg[:,-1] = spiketimes_bg
+        features_bg[:,-1] *= (1. / (duration * freq))
+        features_bg[:,-1] = 2 * features_bg[:,-1] - 1
     
-    features_bg[:,-1] = spiketimes_bg
-    features_bg[:,-1] *= (1. / (duration * freq))
-    features_bg[:,-1] = 2 * features_bg[:,-1] - 1
-    
-    # Pandaize
-    features = pandaize(features, spikes_selected)
-    features_bg = pandaize(features_bg, spikes_bg)
-    if masks is not None:
-        masks = pandaize(masks, spikes_selected)
+        # Pandaize
+        features = pandaize(features, spikes_selected)
+        features_bg = pandaize(features_bg, spikes_bg)
+        if masks is not None:
+            masks = pandaize(masks, spikes_selected)
+        
     spiketimes = pandaize(spiketimes, spikes_selected)
     spike_clusters = pandaize(spike_clusters, spikes_selected)
     cluster_colors = pandaize(cluster_colors, clusters)
