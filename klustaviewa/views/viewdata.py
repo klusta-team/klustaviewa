@@ -210,7 +210,11 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
     cluster_groups_data = getattr(exp.channel_groups[channel_group].cluster_groups, clustering)
     
     # Get the list of all existing clusters.
-    clusters = sorted(clusters_data.keys())
+    # clusters = sorted(clusters_data.keys())
+    
+    spike_clusters = getattr(exp.channel_groups[channel_group].spikes.clusters, 
+                             clustering)[:]
+    clusters = np.unique(spike_clusters)
     groups = cluster_groups_data.keys()
     
     cluster_colors = pd.Series([clusters_data[cl].application_data.klustaviewa.color or 1
