@@ -19,7 +19,7 @@ from kwiklib.dataio.selection import get_indices, select
 from kwiklib.dataio.tools import get_array
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings, KlustaView
 from kwiklib.utils.colors import COLORMAP_TEXTURE, SHIFTLEN, COLORMAP
-# from klustaviewa import USERPREF
+from klustaviewa import USERPREF
 from kwiklib.utils import logger as log
 import klustaviewa
 
@@ -48,7 +48,7 @@ VERTEX_SHADER = """
     if ((highlight > 0) || (selection > 0))
         gl_PointSize = 5.;
     else
-        gl_PointSize = 3.;
+        gl_PointSize = u_point_size;
         
     // DEBUG
     //gl_PointSize = 20;
@@ -76,7 +76,7 @@ VERTEX_SHADER_BACKGROUND = """
     
     position.z = 0.;
     
-    gl_PointSize = 3.;
+    gl_PointSize = u_point_size;
 """
      
 FRAGMENT_SHADER_BACKGROUND = """
@@ -384,6 +384,7 @@ class FeatureVisual(Visual):
         self.add_varying("vhighlight", vartype="int", ndim=1)
         
         self.add_uniform("toggle_mask", vartype="int", ndim=1, data=0)
+        self.add_uniform("u_point_size", vartype="float", ndim=1, data=USERPREF['features_point_size'] or 3.)
         
         self.add_attribute("selection", vartype="int", ndim=1, data=selection)
         self.add_varying("vselection", vartype="int", ndim=1)
@@ -444,6 +445,8 @@ class FeatureBackgroundVisual(Visual):
         
         self.add_attribute("position0", vartype="float", ndim=2, data=position0)
         self.add_uniform("alpha", vartype="float", ndim=1, data=alpha)
+        
+        self.add_uniform("u_point_size", vartype="float", ndim=1, data=USERPREF['features_point_size'] or 3.)
         
         # necessary so that the navigation shader code is updated
         self.is_position_3D = True
