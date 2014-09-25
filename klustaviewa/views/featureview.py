@@ -273,6 +273,11 @@ class FeatureDataManager(Manager):
             fetdim = 2
             nchannels = 1
             nextrafet = 0
+
+        if features.shape[1] == 1:
+            features = np.tile(features, (1, 4))
+        if features_background.shape[1] == 1:
+            features_background = np.tile(features_background, (1, 4))
         
         assert fetdim is not None
         

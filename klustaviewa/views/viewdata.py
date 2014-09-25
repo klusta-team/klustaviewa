@@ -40,6 +40,22 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     
     cluster_colors = clusters_data.color[clusters]
 
+    if spikes_data.waveforms_filtered is None:
+
+        data = dict(
+            waveforms=None,
+            channels=channels,
+            clusters=None,
+            cluster_colors=None,
+            clusters_selected=clusters,
+            masks=None,
+            geometrical_positions=None,
+            autozoom=autozoom,
+            keep_order=wizard,
+        )
+        
+        return data
+
     _, nsamples, nchannels = spikes_data.waveforms_filtered.shape
     # Find spikes to display and load the waveforms.
     if len(clusters) > 0:
