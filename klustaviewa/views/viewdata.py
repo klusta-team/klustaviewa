@@ -239,10 +239,9 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
                                for cl in clusters], index=clusters)
                                 
     group_colors = pd.Series([cluster_groups_data[g].application_data.klustaviewa.color or 1
-                             for g in groups], index=range(len(groups)))
+                             for g in groups], index=groups)
     group_names = pd.Series([cluster_groups_data[g].name or 'Group'
-                            for g in groups], index=range(len(groups)))
-    
+                            for g in groups], index=groups)
     # TODO: cache the cluster size instead of recomputing every time here
     # (in experiment class?)
     spike_clusters = getattr(exp.channel_groups[channel_group].spikes.clusters, 
