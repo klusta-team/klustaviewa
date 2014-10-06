@@ -61,6 +61,8 @@ def setup():
     add_event_type(files, 'myevents')
     add_cluster_group(files, name='Noise')
     add_cluster_group(files, name='MUA')
+    add_cluster_group(files, name='Good')
+    add_cluster_group(files, name='Unsorted')
     add_cluster(files, cluster_group=0, color=1)
     add_cluster(files, cluster_group=1, color=2)
     
