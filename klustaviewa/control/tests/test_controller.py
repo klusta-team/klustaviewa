@@ -127,6 +127,22 @@ def test_controller_split():
     
     l.close()
     
+def test_controller_split2():
+    l, c = load()
+    
+    # Select three clusters
+    clusters = [2, 4, 6]
+    spikes = l.get_spikes(clusters=clusters)
+    cluster_spikes = l.get_clusters(clusters=clusters)
+
+    clu = np.random.randint(100, 102, len(spikes))
+    action, output = c.split2_clusters(spikes, clu)
+
+    cluster_spikes_new = l.get_clusters(spikes=spikes)
+    assert np.allclose(cluster_spikes_new, clu)
+
+    l.close()
+    
 def test_controller_misc():
     l, c = load()
     

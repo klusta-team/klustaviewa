@@ -128,6 +128,30 @@ class Controller(object):
                 get_pretty_arg(list(cluster_indices_old)),
                 get_pretty_arg(list(clusters_indices_new)),
                 ))
+
+    def split2_clusters(self, spikes, clusters):
+        # clusters is new
+        # Old clusters for all spikes to split.
+        clusters_old = self.loader.get_clusters(spikes=spikes)
+        # assert np.all(np.in1d(clusters_old, clusters))
+        # Old cluster indices.
+        cluster_indices_old = np.unique(clusters_old)
+        cluster_indices_new = np.unique(clusters)
+        nclusters = len(cluster_indices_old)
+        nclusters_new = len(cluster_indices_new)
+        # New clusters indices.
+        clusters_indices_new = self.loader.get_new_clusters(nclusters_new)
+        # Generate new clusters array.
+        clusters_new = clusters.copy()
+        # Assign new clusters.
+        # for cluster_old, cluster_new in zip(cluster_indices_old,
+        #         clusters_indices_new):
+        #     clusters_new[clusters_old == cluster_old] = cluster_new
+        cluster_groups = self.loader.get_cluster_groups(cluster_indices_old)
+        cluster_colors = self.loader.get_cluster_colors(cluster_indices_old)
+        return self._process('split_clusters', clusters, 
+            clusters_old, cluster_groups, cluster_colors, clusters_new, 
+            _description='Split2')
         
     def change_cluster_color(self, cluster, color):
         color_old = self.loader.get_cluster_colors(cluster)
