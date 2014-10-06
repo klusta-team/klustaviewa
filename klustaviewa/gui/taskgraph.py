@@ -102,6 +102,8 @@ class TaskGraph(AbstractTaskGraph):
         self.tasks.selection_task.set_loader(self.loader)
         self.tasks.selection_task.selectionDone.connect(
             self.selection_done_callback)
+        self.tasks.recluster_task.reclusterDone.connect(
+            self.recluster_done_callback)
         self.tasks.correlograms_task.correlogramsComputed.connect(
             self.correlograms_computed_callback)
         self.tasks.similarity_matrix_task.correlationMatrixComputed.connect(
@@ -139,6 +141,11 @@ class TaskGraph(AbstractTaskGraph):
     # ----------
     def selection_done_callback(self, clusters, wizard,):
         self.select_done(clusters, wizard=wizard,)
+
+    def recluster_done_callback(self, channel_group, clusters, spikes, clu, wizard):
+        self.recluster_done(channel_group=channel_group,
+                            clusters=clusters, 
+                            spikes=spikes, clu=clu, wizard=wizard)
     
     def correlograms_computed_callback(self, clusters, correlograms, ncorrbins, 
             corrbin, wizard):
@@ -196,7 +203,7 @@ class TaskGraph(AbstractTaskGraph):
 
     def _recluster_done(self, channel_group=0, clusters=None, 
                         spikes=None, clu=None, wizard=None):
-        return [('_split', (clu, spikes, wizard))]
+        return [('_split2', (spikes, clu, wizard))]
 
     def _compute_similarity_matrix(self, target_next=None):
         # TODO: get_similarity_matrix_data in viewdata
@@ -426,6 +433,12 @@ class TaskGraph(AbstractTaskGraph):
                 spikes_selected)
             output['wizard'] = wizard
             return after_split(output)
+            
+    def _split2(self, spikes, clusters, wizard=False):
+        if len(spikes) >= 1:
+            action, output = self.controller.split2_clusters(spikes, clusters)
+            output['wizard'] = wizard
+            return after_split(output)
     
     def _undo(self, wizard=False):
         undo = self.controller.undo()
@@ -436,6 +449,8 @@ class TaskGraph(AbstractTaskGraph):
         if action == 'merge_clusters_undo':
             return after_merge_undo(output)
         elif action == 'split_clusters_undo':
+            return after_split_undo(output)
+        elif action == 'split2_clusters_undo':
             return after_split_undo(output)
         elif action == 'change_cluster_color_undo':
             return after_cluster_color_changed_undo(output)
@@ -459,6 +474,8 @@ class TaskGraph(AbstractTaskGraph):
         if action == 'merge_clusters':
             return after_merge(output)
         elif action == 'split_clusters':
+            return after_split(output)
+        elif action == 'split2_clusters':
             return after_split(output)
         elif action == 'change_cluster_color':
             return after_cluster_color_changed(output)

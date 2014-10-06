@@ -233,9 +233,19 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
     clusters = np.unique(spike_clusters)
     groups = cluster_groups_data.keys()
     
-    cluster_colors = pd.Series([clusters_data[cl].application_data.klustaviewa.color or 1
+    # cluster_colors = pd.Series([clusters_data[cl].application_data.klustaviewa.color or 1
+    #                        for cl in clusters], index=clusters)
+    # cluster_groups = pd.Series([clusters_data[cl].cluster_group or 0
+    #                            for cl in clusters], index=clusters)
+    # Make sure there's no crash if this is called before the clusters had a chance 
+    # to be added in the HDF5 file.
+    cluster_colors = pd.Series([
+        (clusters_data[cl].application_data.klustaviewa.color or 1) 
+            if cl in clusters_data else 1
                            for cl in clusters], index=clusters)
-    cluster_groups = pd.Series([clusters_data[cl].cluster_group or 0
+    cluster_groups = pd.Series([
+        (clusters_data[cl].cluster_group or 3)
+            if cl in clusters_data else 3
                                for cl in clusters], index=clusters)
                                 
     group_colors = pd.Series([cluster_groups_data[g].application_data.klustaviewa.color or 1
