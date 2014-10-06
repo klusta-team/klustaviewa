@@ -142,14 +142,14 @@ class Controller(object):
         # New clusters indices.
         clusters_indices_new = self.loader.get_new_clusters(nclusters_new)
         # Generate new clusters array.
-        clusters_new = clusters.copy()
+        clusters_new = clusters
         # Assign new clusters.
         # for cluster_old, cluster_new in zip(cluster_indices_old,
         #         clusters_indices_new):
         #     clusters_new[clusters_old == cluster_old] = cluster_new
         cluster_groups = self.loader.get_cluster_groups(cluster_indices_old)
         cluster_colors = self.loader.get_cluster_colors(cluster_indices_old)
-        return self._process('split_clusters', clusters, 
+        return self._process('split_clusters', get_array(cluster_indices_old), 
             clusters_old, cluster_groups, cluster_colors, clusters_new, 
             _description='Split2')
         

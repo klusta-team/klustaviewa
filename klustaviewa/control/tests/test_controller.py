@@ -141,6 +141,11 @@ def test_controller_split2():
     cluster_spikes_new = l.get_clusters(spikes=spikes)
     assert np.allclose(cluster_spikes_new, clu)
 
+
+    assert np.allclose(output['clusters_empty'],
+                       output['clusters_to_split'])
+    assert np.allclose(output['clusters_split'], [100, 101])
+
     l.close()
     
 def test_controller_misc():
