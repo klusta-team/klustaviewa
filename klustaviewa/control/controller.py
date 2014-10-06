@@ -136,17 +136,18 @@ class Controller(object):
         # assert np.all(np.in1d(clusters_old, clusters))
         # Old cluster indices.
         cluster_indices_old = np.unique(clusters_old)
-        cluster_indices_new = np.unique(clusters)
         nclusters = len(cluster_indices_old)
-        nclusters_new = len(cluster_indices_new)
-        # New clusters indices.
+
+        
+        # Renumber output of klustakwik.
+        clu_idx = np.unique(clusters)
+        nclusters_new = len(clu_idx)
+        # Get new clusters indices.
         clusters_indices_new = self.loader.get_new_clusters(nclusters_new)
-        # Generate new clusters array.
-        clusters_new = clusters
-        # Assign new clusters.
-        # for cluster_old, cluster_new in zip(cluster_indices_old,
-        #         clusters_indices_new):
-        #     clusters_new[clusters_old == cluster_old] = cluster_new
+        clu_renumber = np.zeros(clu_idx.max() + 1, dtype=np.int32)
+        clu_renumber[clu_idx] = clusters_indices_new
+        clusters_new = clu_renumber[clusters]
+
         cluster_groups = self.loader.get_cluster_groups(cluster_indices_old)
         cluster_colors = self.loader.get_cluster_colors(cluster_indices_old)
         return self._process('split_clusters', get_array(cluster_indices_old), 

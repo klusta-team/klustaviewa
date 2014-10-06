@@ -139,12 +139,14 @@ def test_controller_split2():
     action, output = c.split2_clusters(spikes, clu)
 
     cluster_spikes_new = l.get_clusters(spikes=spikes)
-    assert np.allclose(cluster_spikes_new, clu)
+    # the new cluster indices are 22 & 23, instead of 100 and 101, because
+    # split2 renumbers clusters with the smallest available cluster indices.
+    assert np.allclose(cluster_spikes_new, clu-78)
 
 
     assert np.allclose(output['clusters_empty'],
                        output['clusters_to_split'])
-    assert np.allclose(output['clusters_split'], [100, 101])
+    assert np.allclose(output['clusters_split'], [22, 23])
 
     l.close()
     
