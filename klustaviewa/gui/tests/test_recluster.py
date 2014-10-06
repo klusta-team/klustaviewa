@@ -81,5 +81,5 @@ def teardown(): _teardown('myexperiment')
 def test_recluster():
     with Experiment('myexperiment', dir=DIRPATH) as exp:
         clus = run_klustakwik(exp)
-        print clus
+        assert len(clus[0]) == 1000
 

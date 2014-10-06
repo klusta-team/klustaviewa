@@ -9,6 +9,7 @@ import sys
 import os.path as op
 import tempfile
 from subprocess import Popen
+import threading
 import argparse
 
 import numpy as np
@@ -16,75 +17,6 @@ from kwiklib import (Experiment, get_params, load_probe, create_files,
     read_raw, Probe, convert_dtype, read_clusters,
     files_exist, add_clustering, delete_files, exception)
 
-
-# -----------------------------------------------------------------------------
-# Utility functions
-# -----------------------------------------------------------------------------
-def _load_files_info(prm_filename, dir=None):
-    dir_, filename = op.split(prm_filename)
-    dir = dir or dir_
-    basename, ext = op.splitext(filename)
-    if ext == '':
-        ext = '.prm'
-    prm_filename = op.join(dir, basename + ext)
-    assert op.exists(prm_filename)
-    
-    # Load PRM file.
-    prm = get_params(prm_filename)
-    nchannels = prm.get('nchannels')
-    assert nchannels > 0
-    
-    # Find PRB path in PRM file, and load it.
-    prb_filename = prm.get('prb_file')
-    if not op.exists(prb_filename):
-        prb_filename = op.join(dir, prb_filename)
-    prb = load_probe(prb_filename)
-        
-    # Find raw data source.
-    data = prm.get('raw_data_files')
-    if isinstance(data, basestring):
-        if data.endswith('.dat'):
-            data = [data]
-    if isinstance(data, list):
-        for i in range(len(data)):
-            if not op.exists(data[i]):
-                data[i] = op.join(dir, data[i])
-        
-    experiment_name = prm.get('experiment_name')
-    
-    return dict(prm=prm, prb=prb, experiment_name=experiment_name, nchannels=nchannels,
-                data=data, dir=dir)    
-    
-def is_exe(fpath):
-    return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-def which(program):
-    fpath, fname = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            path = path.strip('"')
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
-
-    return None
-    
-def print_path():
-    print '\n'.join(os.environ["PATH"].split(os.pathsep))
-    
-def check_path():
-    prog = 'klustakwik'
-    if not (which(prog) or which(prog + '.exe')):
-        print("Error: '{0:s}' is not in your system PATH".format(prog))
-        return False
-    return True
-
-# -----------------------------------------------------------------------------
-# KlustaKwik
-# -----------------------------------------------------------------------------
 PARAMS_KK = dict(
     MaskStarts = 100,
     #MinClusters = 100 ,
@@ -139,14 +71,10 @@ def save_old(exp, shank, dir=None):
     mainfetfile = os.path.join(dir, exp.name + '.fet.' + str(shank))
     write_fet(fet, mainfetfile)
 
-
     if masks is not None:
         fmasks = np.concatenate((masks, masktimezeros),axis = 1)
         fmaskfile = os.path.join(dir, exp.name + '.fmask.' + str(shank))
         write_mask(fmasks, fmaskfile, fmt='%f')
-
-    # print fet
-    # print fmasks
     
 def run_klustakwik(exp, **kwargs):
     name = exp.name
@@ -166,14 +94,11 @@ def run_klustakwik(exp, **kwargs):
     if not os.path.exists(tmpdir):
         os.mkdir(tmpdir)
     os.chdir(tmpdir)
-    print tmpdir
     
     clus = {}
     for shank in shanks:
-        # chg = exp.channel_groups[shank]
         
         save_old(exp, shank, dir=tmpdir)
-        # continue
         
         # Generate the command for running klustakwik.
         # TODO: add USERPREF to specify the full path to klustakwik 
@@ -182,10 +107,8 @@ def run_klustakwik(exp, **kwargs):
             cmd += ['-' + str(key), str(val) ]
         
         # Run KlustaKwik.
-        print ' '.join(cmd)
         p = Popen(cmd)
         p.wait()
-        # os.system(cmd)
         
         # Read back the clusters.
         clu = read_clusters(name + '.clu.' + str(shank))
