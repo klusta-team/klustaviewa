@@ -187,9 +187,11 @@ class TaskGraph(AbstractTaskGraph):
             # self.update_correlograms_view()
             return ('_update_correlograms_view', (wizard,), {})
     
-    def _recluster(self, channel_group, clusters_selected):
+    def _recluster(self):
         exp = self.loader.experiment
-        self.tasks.recluster(exp, channel_group=channel_group, 
+        channel_group = self.loader.shank
+        clusters_selected = self.loader.get_clusters_selected()
+        self.tasks.recluster_task.recluster(exp, channel_group=channel_group, 
                              clusters=clusters_selected)
 
     def _recluster_done(self, channel_group=0, clusters=None, 

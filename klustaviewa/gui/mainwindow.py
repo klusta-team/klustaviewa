@@ -242,6 +242,7 @@ class MainWindow(QtGui.QMainWindow):
     def create_control_actions(self):
         self.add_action('merge', '&Merge', shortcut='G', icon='merge')
         self.add_action('split', '&Split', shortcut='K', icon='split')
+        self.add_action('recluster', '&Recluster', shortcut='CTRL+R')
 
     def create_correlograms_actions(self):
         self.add_action('change_ncorrbins', 'Change time &window')
@@ -287,8 +288,7 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('manual', 'Show &manual')
         self.add_action('shortcuts', 'Show &shortcuts')
         self.add_action('open_preferences', '&Open preferences')
-        self.add_action('refresh_preferences', '&Refresh preferences',
-            shortcut='CTRL+R')
+        self.add_action('refresh_preferences', '&Refresh preferences')
         
     def create_menu(self):
         # File menu.
@@ -345,6 +345,8 @@ class MainWindow(QtGui.QMainWindow):
         actions_menu.addSeparator()
         actions_menu.addAction(self.merge_action)
         actions_menu.addAction(self.split_action)
+        actions_menu.addSeparator()
+        actions_menu.addAction(self.recluster_action)
         
         # Wizard menu.
         wizard_menu = self.menuBar().addMenu("&Wizard")
@@ -984,6 +986,9 @@ class MainWindow(QtGui.QMainWindow):
             SETTINGS['correlograms.ncorrbins'] = ncorrbins_new
             self.taskgraph.change_correlograms_parameters(ncorrbins=ncorrbins_new)
     
+    def recluster_callback(self, checked=None):
+        self.taskgraph.recluster()
+
     def change_corrbin_callback(self, checked=None):
         if not self.loader:
             return

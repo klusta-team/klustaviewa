@@ -17,7 +17,7 @@ from kwiklib.dataio.tools import get_array
 from klustaviewa.wizard.wizard import Wizard
 from kwiklib.utils import logger as log
 from klustaviewa.stats import compute_correlograms, compute_correlations
-
+from recluster import run_klustakwik
 
 # -----------------------------------------------------------------------------
 # Tasks
