@@ -355,11 +355,9 @@ class TaskGraph(AbstractTaskGraph):
             )
         [view.set_data(**data) for view in self.get_views('WaveformView')]
         
-    # def _update_trace_view(self):
-        # # TODO
-        # # data = vd.get_traceview_data(self.loader)
-        # # [view.set_data(**data) for view in self.get_views('TraceView')]
-        # pass
+    def _update_trace_view(self):
+        data = vd.get_traceview_data(self.loader)
+        [view.set_data(**data) for view in self.get_views('TraceView')]
         
     def _update_cluster_view(self, clusters=None):
         """Update the cluster view using the data stored in the loader

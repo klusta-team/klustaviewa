@@ -338,17 +338,20 @@ def get_similaritymatrixview_data(exp, matrix=None,
     
     
 # TODO: loader ==> exp (supporting new file format)
-# def get_traceview_data(loader):
-    # return loader.get_trace()
-    
-# def get_channelview_data(loader, channels=None):
-    # data = dict(
-        # channel_colors=loader.get_channel_colors('all',
-            # can_override=False),
-        # channel_groups=loader.get_channel_groups('all'),
-        # channel_names=loader.get_channel_names('all'),
-        # group_colors=loader.get_channel_group_colors('all'),
-        # group_names=loader.get_channel_group_names('all'),
-    # )
-    # return data
-    
+def get_traceview_data(loader):
+    data = dict(
+        freq=loader.get_freq(),
+        trace=loader.get_traces(),
+    )
+    return data
+
+def get_channelview_data(loader, channels=None):
+    data = dict(
+        channel_colors=loader.get_channel_colors('all',
+            can_override=False),
+        channel_groups=loader.get_channel_groups('all'),
+        channel_names=loader.get_channel_names('all'),
+        group_colors=loader.get_channel_group_colors('all'),
+        group_names=loader.get_channel_group_names('all'),
+    )
+    return data

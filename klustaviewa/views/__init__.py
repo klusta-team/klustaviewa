@@ -7,5 +7,5 @@ from projectionview import *
 from featureprojview import *
 from ipythonview import *
 from logview import *
-# from traceview import *
+from traceview import *
 from channelview import *
