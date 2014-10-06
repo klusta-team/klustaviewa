@@ -76,9 +76,8 @@ def save_old(exp, shank, spikes, dir=None):
         fmaskfile = os.path.join(dir, exp.name + '.fmask.' + str(shank))
         write_mask(fmasks, fmaskfile, fmt='%f')
     
-def run_klustakwik(exp, clusters, **kwargs):
+def run_klustakwik(exp, channel_group=None, clusters=None, **kwargs):
     name = exp.name
-    shanks = exp.channel_groups.keys()
     
     # Set the KlustaKwik parameters.
     params = PARAMS_KK.copy()
@@ -95,32 +94,27 @@ def run_klustakwik(exp, clusters, **kwargs):
         os.mkdir(tmpdir)
     os.chdir(tmpdir)
     
-    clus = {}
-    for shank in shanks:
+    shank = channel_group
 
-        # Find the spikes belonging to the clusters to recluster.
-        spikes = np.nonzero(np.in1d(exp.channel_groups[shank].spikes.clusters.main[:], clusters))[0]
-        
-        save_old(exp, shank, spikes, dir=tmpdir)
-        
-        # Generate the command for running klustakwik.
-        # TODO: add USERPREF to specify the full path to klustakwik 
-        cmd = ['KlustaKwik', name, str(shank)]
-        for key, val in params.iteritems():
-            cmd += ['-' + str(key), str(val) ]
-        
-        # Run KlustaKwik.
-        p = Popen(cmd)
-        p.wait()
-        
-        # Read back the clusters.
-        clu = read_clusters(name + '.clu.' + str(shank))
-        
-        # Put the clusters in the kwik file.
-        #exp.channel_groups[shank].spikes.clusters.main[spikes_idx] = clu
-        clus[shank] = clu
+    # Find the spikes belonging to the clusters to recluster.
+    spikes = np.nonzero(np.in1d(exp.channel_groups[shank].spikes.clusters.main[:], clusters))[0]
+    
+    save_old(exp, shank, spikes, dir=tmpdir)
+    
+    # Generate the command for running klustakwik.
+    # TODO: add USERPREF to specify the full path to klustakwik 
+    cmd = ['KlustaKwik', name, str(shank)]
+    for key, val in params.iteritems():
+        cmd += ['-' + str(key), str(val) ]
+    
+    # Run KlustaKwik.
+    p = Popen(cmd)
+    p.wait()
+    
+    # Read back the clusters.
+    clu = read_clusters(name + '.clu.' + str(shank))
 
     # Switch back to original dir.
     os.chdir(start_dir)
         
-    return clus
+    return clu

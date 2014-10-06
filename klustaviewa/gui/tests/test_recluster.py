@@ -81,6 +81,6 @@ def teardown(): _teardown('myexperiment')
     
 def test_recluster():
     with Experiment('myexperiment', dir=DIRPATH) as exp:
-        clus = run_klustakwik(exp, [5, 8])
-        assert 10 < len(clus[0]) < 990
+        clu = run_klustakwik(exp, channel_group=0, clusters=[5, 8])
+        assert 10 < len(clu) < 990
 
