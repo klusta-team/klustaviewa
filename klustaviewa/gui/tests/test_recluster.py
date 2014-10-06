@@ -63,6 +63,7 @@ def _setup(_name, has_masks=True):
     add_cluster(files, channel_group_id='0', cluster_group=0)
 
     add_spikes(files, channel_group_id='0',
+        cluster=np.random.randint(5, 10, 1000),
         time_samples=np.cumsum(np.random.randint(0, 1000, 1000)).astype(np.int64),
         features=np.random.randint(-30000, 30000, (1000,9)).astype(np.int16),
         masks=np.random.randint(0, 2, (1000,9)).astype(np.int16),
@@ -80,6 +81,6 @@ def teardown(): _teardown('myexperiment')
     
 def test_recluster():
     with Experiment('myexperiment', dir=DIRPATH) as exp:
-        clus = run_klustakwik(exp)
-        assert len(clus[0]) == 1000
+        clus = run_klustakwik(exp, [5, 8])
+        assert 10 < len(clus[0]) < 990
 

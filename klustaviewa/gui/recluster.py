@@ -51,17 +51,17 @@ def write_fet(fet, filepath):
         #next lines: one feature vector per line
         np.savetxt(fd, fet, fmt="%i")
 
-def save_old(exp, shank, dir=None):
+def save_old(exp, shank, spikes, dir=None):
     chg = exp.channel_groups[shank]
             
     # Create files in the old format (FET and FMASK)
-    fet = chg.spikes.features_masks[...]
+    fet = chg.spikes.features_masks[spikes, ...]
     if fet.ndim == 3:
         masks = fet[:,:,1]  # (nsamples, nfet)
         fet = fet[:,:,0]  # (nsamples, nfet)
     else:
         masks = None
-    res = chg.spikes.time_samples[:]
+    res = chg.spikes.time_samples[spikes]
     
     times = np.expand_dims(res, axis =1)
     masktimezeros = np.zeros_like(times)
@@ -76,7 +76,7 @@ def save_old(exp, shank, dir=None):
         fmaskfile = os.path.join(dir, exp.name + '.fmask.' + str(shank))
         write_mask(fmasks, fmaskfile, fmt='%f')
     
-def run_klustakwik(exp, **kwargs):
+def run_klustakwik(exp, clusters, **kwargs):
     name = exp.name
     shanks = exp.channel_groups.keys()
     
@@ -97,8 +97,11 @@ def run_klustakwik(exp, **kwargs):
     
     clus = {}
     for shank in shanks:
+
+        # Find the spikes belonging to the clusters to recluster.
+        spikes = np.nonzero(np.in1d(exp.channel_groups[shank].spikes.clusters.main[:], clusters))[0]
         
-        save_old(exp, shank, dir=tmpdir)
+        save_old(exp, shank, spikes, dir=tmpdir)
         
         # Generate the command for running klustakwik.
         # TODO: add USERPREF to specify the full path to klustakwik 
