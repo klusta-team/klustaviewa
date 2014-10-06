@@ -8,6 +8,7 @@ import os
 import sys
 import os.path as op
 import tempfile
+from subprocess import Popen
 import argparse
 
 import numpy as np
@@ -137,11 +138,15 @@ def save_old(exp, shank, dir=None):
     fet = np.concatenate((fet, times),axis = 1)
     mainfetfile = os.path.join(dir, exp.name + '.fet.' + str(shank))
     write_fet(fet, mainfetfile)
-    
+
+
     if masks is not None:
         fmasks = np.concatenate((masks, masktimezeros),axis = 1)
         fmaskfile = os.path.join(dir, exp.name + '.fmask.' + str(shank))
         write_mask(fmasks, fmaskfile, fmt='%f')
+
+    # print fet
+    # print fmasks
     
 def run_klustakwik(exp, **kwargs):
     name = exp.name
@@ -161,24 +166,26 @@ def run_klustakwik(exp, **kwargs):
     if not os.path.exists(tmpdir):
         os.mkdir(tmpdir)
     os.chdir(tmpdir)
+    print tmpdir
     
     clus = {}
     for shank in shanks:
         # chg = exp.channel_groups[shank]
         
         save_old(exp, shank, dir=tmpdir)
+        # continue
         
         # Generate the command for running klustakwik.
         # TODO: add USERPREF to specify the full path to klustakwik 
-        cmd = 'KlustaKwik {name} {shank} {params}'.format(
-            name=name,
-            shank=shank,
-            params=' '.join(['-{key} {val}'.format(key=key, val=str(val))
-                                for key, val in params.iteritems()]),
-        )
+        cmd = ['KlustaKwik', name, str(shank)]
+        for key, val in params.iteritems():
+            cmd += ['-' + str(key), str(val) ]
         
         # Run KlustaKwik.
-        os.system(cmd)
+        print ' '.join(cmd)
+        p = Popen(cmd)
+        p.wait()
+        # os.system(cmd)
         
         # Read back the clusters.
         clu = read_clusters(name + '.clu.' + str(shank))
