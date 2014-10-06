@@ -33,6 +33,7 @@ class TraceManager(Manager):
         self.default_channel_height = 0.25
         self.channel_height_limits = (0.01, 20.)
         self.nticks = 10
+        print "hi Im here"
         
         # these variables will be overwritten after initialization (used to check if init is complete)
         self.slice_ref = (-1, -1) # slice paging

@@ -882,7 +882,7 @@ class MainWindow(QtGui.QMainWindow):
         # self.taskgraph.update_projection_view()
         self.taskgraph.update_cluster_view()
         self.taskgraph.compute_similarity_matrix()
-        # self.taskgraph.update_trace_view()
+        self.taskgraph.update_trace_view()
         
     def open_failed(self, message):
         self.open_progress.setValue(0)

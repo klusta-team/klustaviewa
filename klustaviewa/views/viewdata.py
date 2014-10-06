@@ -315,7 +315,11 @@ def get_similaritymatrixview_data(exp, matrix=None,
     
 # TODO: loader ==> exp (supporting new file format)
 def get_traceview_data(loader):
-    return loader.get_trace()
+    data = dict(
+        freq=loader.get_freq(),
+        trace=loader.get_traces(),
+    )
+    return data
 
 def get_channelview_data(loader, channels=None):
     data = dict(
