@@ -187,6 +187,15 @@ class TaskGraph(AbstractTaskGraph):
             # self.update_correlograms_view()
             return ('_update_correlograms_view', (wizard,), {})
     
+    def _recluster(self, channel_group, clusters_selected):
+        exp = self.loader.experiment
+        self.tasks.recluster(exp, channel_group=channel_group, 
+                             clusters=clusters_selected)
+
+    def _recluster_done(self, channel_group=0, clusters=None, 
+                        spikes=None, clu=None, wizard=None):
+        return [('_split', (clu, spikes, wizard))]
+
     def _compute_similarity_matrix(self, target_next=None):
         # TODO: get_similarity_matrix_data in viewdata
         # return

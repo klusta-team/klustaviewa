@@ -117,4 +117,4 @@ def run_klustakwik(exp, channel_group=None, clusters=None, **kwargs):
     # Switch back to original dir.
     os.chdir(start_dir)
         
-    return clu
+    return spikes, clu
