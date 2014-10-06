@@ -17,7 +17,7 @@ from kwiklib.dataio.tools import get_array
 from klustaviewa.wizard.wizard import Wizard
 from kwiklib.utils import logger as log
 from klustaviewa.stats import compute_correlograms, compute_correlations
-
+from recluster import run_klustakwik
 
 # -----------------------------------------------------------------------------
 # Tasks
@@ -51,6 +51,19 @@ class SelectionTask(QtCore.QObject):
         
     def select_done(self, clusters, wizard, channel_group=0, _result=None):
         self.selectionDone.emit(clusters, wizard, channel_group)
+
+
+class ReclusterTask(QtCore.QObject):
+    reclusterDone = QtCore.pyqtSignal(int, object, object, object, object)
+    
+    def recluster(self, exp, channel_group=0, clusters=None, wizard=None):
+        spikes, clu = run_klustakwik(exp, channel_group=channel_group, 
+                             clusters=clusters)
+        return spikes, clu
+        
+    def recluster_done(self, exp, channel_group=0, clusters=None, wizard=None, _result=None):
+        spikes, clu = _result
+        self.reclusterDone.emit(channel_group, clusters, spikes, clu, wizard)
 
 
 class CorrelogramsTask(QtCore.QObject):
@@ -116,6 +129,8 @@ class ThreadedTasks(QtCore.QObject):
         super(ThreadedTasks, self).__init__(parent)
         self.selection_task = inthread(SelectionTask)(
             impatient=True)
+        self.recluster_task = inthread(ReclusterTask)(
+            impatient=True)
         self.correlograms_task = inprocess(CorrelogramsTask)(
             impatient=True, use_master_thread=False)
         # HACK: the similarity matrix view does not appear to update on
@@ -129,6 +144,7 @@ class ThreadedTasks(QtCore.QObject):
 
     def join(self):
         self.selection_task.join()
+        self.recluster_task.join()
         self.correlograms_task.join()
         self.similarity_matrix_task.join()
         
