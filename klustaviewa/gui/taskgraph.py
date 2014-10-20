@@ -11,7 +11,7 @@ from qtools import QtGui, QtCore
 
 from kwiklib.dataio import get_array, pandaize
 from klustaviewa.stats.correlations import normalize
-from klustaviewa.stats.correlograms import get_baselines
+from klustaviewa.stats.correlograms import get_baselines, get_excerpts
 from kwiklib.utils import logger as log
 from klustaviewa import USERPREF
 from klustaviewa import SETTINGS
@@ -169,6 +169,15 @@ class TaskGraph(AbstractTaskGraph):
         # Make a copy of the array so that it does not change before the
         # computation of the correlograms begins.
         clusters = np.array(get_array(self.loader.get_clusters('all')))
+
+        # Get excerpts
+        nexcerpts = USERPREF.get('correlograms_nexcerpts', 100)
+        excerpt_size = USERPREF.get('correlograms_excerpt_size', 20000)
+        spiketimes_excerpts = get_excerpts(spiketimes, 
+            nexcerpts=nexcerpts, excerpt_size=excerpt_size)
+        clusters_excerpts = get_excerpts(clusters, 
+            nexcerpts=nexcerpts, excerpt_size=excerpt_size)
+
         # corrbin = self.loader.corrbin
         # ncorrbins = self.loader.ncorrbins
         corrbin = SETTINGS.get('correlograms.corrbin', .001)
@@ -183,7 +192,9 @@ class TaskGraph(AbstractTaskGraph):
             # Set wait cursor.
             self.mainwindow.set_busy(computing_correlograms=True)
             # Launch the task.
-            self.tasks.correlograms_task.compute(spiketimes, clusters,
+            self.tasks.correlograms_task.compute(
+                spiketimes_excerpts, 
+                clusters_excerpts,
                 clusters_to_update=clusters_to_update, 
                 clusters_selected=clusters_selected,
                 ncorrbins=ncorrbins, corrbin=corrbin,
