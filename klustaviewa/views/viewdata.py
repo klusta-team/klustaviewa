@@ -59,7 +59,8 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     _, nsamples, nchannels = spikes_data.waveforms_filtered.shape
     # Find spikes to display and load the waveforms.
     if len(clusters) > 0:
-        spikes_selected, waveforms = spikes_data.load_waveforms(clusters=clusters)
+        spikes_selected, waveforms = spikes_data.load_waveforms(clusters=clusters,
+            count=USERPREF['waveforms_nspikes_max_expected'])
     else:
         spikes_selected = []
     

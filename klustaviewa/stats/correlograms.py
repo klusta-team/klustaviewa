@@ -141,3 +141,31 @@ def get_baselines(sizes, duration, corrbin):
     return baselines
     
     
+
+
+
+# Utility functions
+def excerpt_step(nsamples, nexcerpts=None, excerpt_size=None):
+    step = max((nsamples - excerpt_size) // (nexcerpts - 1),
+               excerpt_size)
+    return step
+    
+def excerpts(nsamples, nexcerpts=None, excerpt_size=None):
+    """Yield (start, end) where start is included and end is excluded."""
+    step = excerpt_step(nsamples, 
+                        nexcerpts=nexcerpts,
+                        excerpt_size=excerpt_size)
+    for i in range(nexcerpts):
+        start = i * step
+        if start >= nsamples:
+            break
+        end = min(start + excerpt_size, nsamples)
+        yield start, end
+
+def get_excerpts(data, nexcerpts=None, excerpt_size=None):
+    nsamples = data.shape[0]
+    return np.concatenate([data[start:end,...] 
+                          for (start, end) in excerpts(nsamples, 
+                                                       nexcerpts=nexcerpts, 
+                                                       excerpt_size=excerpt_size)], 
+                          axis=-1)
