@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from galry import (Manager, PlotPaintManager, EventProcessor, PlotInteractionManager, Visual,
-    QtGui, QtCore, NavigationEventProcessor, GridVisual, TextVisual, DataNormalizer, 
+    QtGui, QtCore, NavigationEventProcessor, PlotVisual, GridVisual, TextVisual, DataNormalizer, 
     process_coordinates)
 from klustaviewa.views.common import KlustaViewaBindings, KlustaView
 from kwiklib.utils import logger as log
@@ -25,8 +25,8 @@ class TraceManager(Manager):
     info = {}
     
     # initialization
-    def set_data(self, trace=None, freq=None, channel_height=None, channel_names=None, ignored_channels=None, channel_colors=None):
-
+    def set_data(self, trace=None, freq=None, channel_height=None, channel_names=None, ignored_channels=None, channel_colors=None, spiketimes=None):
+        
         # default settings
         self.max_size = 1000
         self.duration_initial = 10.
@@ -60,6 +60,12 @@ class TraceManager(Manager):
         self.totalsamples, self.nchannels = self.trace.shape
         self.channels = np.arange(self.nchannels)
         
+        
+        x = np.repeat(spiketimes, 2)
+        y = np.tile([-1,1],len(spiketimes))
+        
+        self.spike_array = np.c_[x,y]
+                
         if channel_height is None:
             channel_height = self.default_channel_height
         else:
@@ -214,6 +220,10 @@ class TracePaintManager(PlotPaintManager):
             shape=self.data_manager.shape,
             channel_height=self.data_manager.channel_height,
             visible=self.data_manager.real_data)
+            
+        self.add_visual(PlotVisual, name='spikes',
+            position=self.data_manager.spike_array,
+            primitive_type='LINES')
 
         self.add_visual(GridVisual, name='grid', background_transparent=False,
             letter_spacing=350.,)
@@ -230,6 +240,9 @@ class TracePaintManager(PlotPaintManager):
                 shape=self.data_manager.shape,
                 size=self.data_manager.size,
                 visible=self.data_manager.real_data)
+                
+        # self.reinitialize_visual(visual='spikes', position=self.data_manager.spike_array)
+            
         self.data_manager.paintinitialized = True
             
     def update_slice(self):

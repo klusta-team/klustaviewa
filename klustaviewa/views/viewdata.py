@@ -1,3 +1,5 @@
+<<<<<<< Local Changes
+=======
 """Get the keyword arguments for the views from the loader."""
 
 # -----------------------------------------------------------------------------
@@ -366,3 +368,4 @@ def get_channelview_data(loader, channels=None):
         group_names=loader.get_channel_group_names('all'),
     )
     return data
+>>>>>>> External Changes
