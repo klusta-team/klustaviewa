@@ -41,7 +41,10 @@ class Wizard(object):
         # Current position in the candidates list.
         self.index = 0
         # Size of the candidates list.
-        self.size = 0
+        self.size = 0 
+        
+        self.quality = None
+        self.matrix = None
         
         
     # Data update methods.
@@ -63,6 +66,8 @@ class Wizard(object):
     # Core methods.
     # -------------
     def find_target(self):
+        if self.quality is None:
+            return
         # For the target, only consider the unsorted clusters, and remove
         # the skipped targets.
         kept = ((self.cluster_groups >= 3) & 

@@ -245,7 +245,8 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
             if cl in clusters_data else 1
                            for cl in clusters], index=clusters)
     cluster_groups = pd.Series([
-        (clusters_data[cl].cluster_group or 3)
+        (clusters_data[cl].cluster_group 
+                                if clusters_data[cl].cluster_group is not None else 3)
             if cl in clusters_data else 3
                                for cl in clusters], index=clusters)
                                 
@@ -259,7 +260,7 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
                              clustering)[:]
     sizes = np.bincount(spike_clusters)
     cluster_sizes = pd.Series(sizes[clusters], index=clusters)
-    
+
     data = dict(
         cluster_colors=cluster_colors,
         cluster_groups=cluster_groups,
@@ -325,7 +326,7 @@ def get_correlogramsview_data(exp, correlograms, clusters=[],
 def get_similaritymatrixview_data(exp, matrix=None,
         channel_group=0, clustering='main',):
     if matrix is None:
-        return
+        return {}
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
     cluster_groups_data = getattr(exp.channel_groups[channel_group].cluster_groups, clustering)
     clusters = sorted(clusters_data.keys())
