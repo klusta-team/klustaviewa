@@ -1,5 +1,3 @@
-<<<<<<< Local Changes
-=======
 """Get the keyword arguments for the views from the loader."""
 
 # -----------------------------------------------------------------------------
@@ -349,12 +347,14 @@ def get_similaritymatrixview_data(exp, matrix=None,
     return data
     
     
+def get_traceview_data(exp, loader):
+    clusters_data = exp.channel_groups[0].clusters
+    spikes_data = exp.channel_groups[0].spikes
     
-# TODO: loader ==> exp (supporting new file format)
-def get_traceview_data(loader):
     data = dict(
         freq=loader.get_freq(),
         trace=loader.get_traces(),
+        spiketimes=spikes_data.time_samples
     )
     return data
 
@@ -368,4 +368,3 @@ def get_channelview_data(loader, channels=None):
         group_names=loader.get_channel_group_names('all'),
     )
     return data
->>>>>>> External Changes

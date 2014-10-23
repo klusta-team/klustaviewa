@@ -47,6 +47,10 @@ class TraceManager(Manager):
             
             # don't worry, we won't tell the GPU that it's not actually rendering any useful data, but we need to keep track
             self.real_data = False
+        
+        # same with spikes
+        if spiketimes is None:
+            spiketimes = np.array([0])
             
         if channel_colors is None:
             channel_colors = pd.Series(generate_colors(trace.shape[1]))
@@ -60,10 +64,9 @@ class TraceManager(Manager):
         self.totalsamples, self.nchannels = self.trace.shape
         self.channels = np.arange(self.nchannels)
         
-        
+        # format spikes into a sensible display format
         x = np.repeat(spiketimes, 2)
         y = np.tile([-1,1],len(spiketimes))
-        
         self.spike_array = np.c_[x,y]
                 
         if channel_height is None:
@@ -220,10 +223,14 @@ class TracePaintManager(PlotPaintManager):
             shape=self.data_manager.shape,
             channel_height=self.data_manager.channel_height,
             visible=self.data_manager.real_data)
+        
+        tempvis = np.array([[0,-1],[self.data_manager.totalsamples,1]])
             
         self.add_visual(PlotVisual, name='spikes',
             position=self.data_manager.spike_array,
+            # position=tempvis,
             primitive_type='LINES')
+
 
         self.add_visual(GridVisual, name='grid', background_transparent=False,
             letter_spacing=350.,)
@@ -233,19 +240,23 @@ class TracePaintManager(PlotPaintManager):
         self.data_manager.paintinitialized = True
 
     def update(self):
-        if not getattr(self.data_manager, 'paintinitialized', False):
+        if getattr(self.data_manager, 'paintinitialized', True):
             self.reinitialize_visual(visual='trace_waveforms',
                 channel_height=self.data_manager.channel_height,
                 position=self.data_manager.position,
                 shape=self.data_manager.shape,
                 size=self.data_manager.size,
                 visible=self.data_manager.real_data)
-                
-        # self.reinitialize_visual(visual='spikes', position=self.data_manager.spike_array)
             
         self.data_manager.paintinitialized = True
             
     def update_slice(self):
+        
+        tempvis = np.array([[0,-1],[self.data_manager.totalsamples,1]])
+        #
+        # self.set_data(visual='spikes',
+        #     position=self.data_manager.spike_array)
+        
         self.set_data(visual='trace_waveforms',
             channel_height=self.data_manager.channel_height,
             position0=self.data_manager.position,
@@ -254,6 +265,14 @@ class TracePaintManager(PlotPaintManager):
             channel_index=self.data_manager.channel_index,
             color_index=self.data_manager.color_index,
             bounds=self.data_manager.bounds)
+            
+        # print self.data_manager.spike_array
+        #
+        # self.reinitialize_visual(visual='spikes',
+        #     position=self.data_manager.spike_array,
+        #     primitive_type='LINES')
+            
+        # self.set_data(visual='spikes', position0=self.data_manager.spike_array)
 
 class MultiChannelVisual(Visual):
     def initialize(self, color=None, point_size=1.0,
