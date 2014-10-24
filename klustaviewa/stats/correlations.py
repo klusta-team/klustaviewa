@@ -6,8 +6,11 @@ clusters."""
 # -----------------------------------------------------------------------------
 
 import numpy as np
+# import scipy as sp
+# import scipy.linalg
 
 from tools import matrix_of_pairs
+from kwiklib.utils.logger import warn
 
 
 # -----------------------------------------------------------------------------
@@ -35,7 +38,9 @@ def compute_statistics(Fet1, Fet2, spikes_in_clusters, masks):
     nu[np.isnan(nu)] = 0
     nu = nu.reshape((1, -1))
     sigma2 = np.sum(((Fet2 - nu) * masked) ** 2, axis=0) / nmasked
+    sigma2[np.isnan(sigma2)] = 0
     sigma2 = sigma2.reshape((1, -1))
+    D = np.diag(sigma2.ravel())
     # expected features
     y = Fet1 * masks + (1 - masks) * nu
     z = masks * Fet1**2 + (1 - masks) * (nu ** 2 + sigma2)
@@ -51,7 +56,7 @@ def compute_statistics(Fet1, Fet2, spikes_in_clusters, masks):
         # MyFet2 = Fet2[MyPoints, :]
         # now, take the modified features here
         # MyFet2 = y[MyPoints, :]
-        MyFet2 = np.take(y, MyPoints, axis=0)
+        MyFet2 = np.take(y, MyPoints, axis=0).astype(np.float64)
         # if len(MyPoints) > nDims:
         # LogProp = np.log(len(MyPoints) / float(nPoints)) # log of the proportion in cluster c
         Mean = np.mean(MyFet2, axis=0).reshape((1, -1))
@@ -64,9 +69,16 @@ def compute_statistics(Fet1, Fet2, spikes_in_clusters, masks):
         
         
         CovMat = np.cov(MyFet2, rowvar=0) # stats for cluster c
+
+        # Variation Bayesian approximation
+        priorPoint = 1
+        CovMat *= (len(MyFet2) - 1)  # get rid of the normalization factor
+        CovMat += D * priorPoint  # D = np.diag(sigma2.ravel())
+        CovMat /= (len(MyFet2) + priorPoint - 1)
+
         
         # HACK: avoid instability issues, kind of works
-        CovMat += np.diag(1e-3 * np.ones(nDims))
+        # CovMat += np.diag(1e-0 * np.ones(nDims))
         
         # now, add the diagonal modification to the covariance matrix
         # the eta just for the current cluster
@@ -78,8 +90,17 @@ def compute_statistics(Fet1, Fet2, spikes_in_clusters, masks):
         
         # add diagonal
         CovMat += np.diag(d)
-        CovMatinv = np.linalg.inv(CovMat)
-        LogDet = np.log(np.linalg.det(CovMat))
+        # We don't compute that explicitely anymore: we solve Ax=b instead
+        # CovMatinv = np.linalg.inv(CovMat)
+        CovMatinv = None
+
+        # WARNING: this is numerically instable
+        # LogDet = np.log(np.linalg.det(CovMat))
+
+        _sign, LogDet = np.linalg.slogdet(CovMat)
+        if _sign < 0:
+            warn("The correlation matrix of cluster %d has a negative determinant (whaaat??)" % c)
+
         
         stats[c] = (Mean, CovMat, CovMatinv, LogDet, len(MyPoints))
         
@@ -134,28 +155,22 @@ def compute_correlations_approximation(features, clusters, masks,
             
             dmu = (muj - mui).reshape((-1, 1))
             
-            if similarity_measure == 'kl':
-                # KL divergence between the clusters
-                pij = .5 * (np.trace(np.dot(Cjinv, Ci)) + np.dot(np.dot(dmu.T, Cjinv), dmu) - logdeti + logdetj - nDims)
-                pji = .5 * (np.trace(np.dot(Ciinv, Cj)) + np.dot(np.dot(dmu.T, Ciinv), dmu) - logdetj + logdeti - nDims)
-                
-                C[ci, cj] = np.exp(pij)[0,0]
-                C[cj, ci] = np.exp(pji)[0,0]
-                
-            else:
-                # pij is the probability that mui belongs to Cj:
-                #    $$p_{ij} = w_j * N(\mu_i | \mu_j; C_j)$$
-                # where wj is the relative size of cluster j
-                # pii is the probability that mui belongs to Ci
-                pij = np.log(2*np.pi)*(-nDims/2.)+(-.5*logdetj)+(-.5) * np.dot(np.dot(dmu.T, Cjinv), dmu)
-                pji = np.log(2*np.pi)*(-nDims/2.)+(-.5*logdeti)+(-.5) * np.dot(np.dot(dmu.T, Ciinv), dmu)
-                
-                # nPoints is the total number of spikes.
-                wi = float(npointsi) / nPoints
-                wj = float(npointsj) / nPoints
-                
-                C[ci, cj] = wj * np.exp(pij)[0,0]
-                C[cj, ci] = wi * np.exp(pji)[0,0]
+            # pij is the probability that mui belongs to Cj:
+            #    $$p_{ij} = w_j * N(\mu_i | \mu_j; C_j)$$
+            # where wj is the relative size of cluster j
+            # pii is the probability that mui belongs to Ci
+            try:
+                bj = np.linalg.solve(Cj, dmu) #, sym_pos=True)  # we can use this option, but this requires scipy
+            except np.linalg.LinAlgError:
+                bj = np.linalg.lstsq(Cj, dmu)[0]
+            logpij = np.log(2*np.pi)*(-nDims/2.)+\
+                        (-.5*logdetj)+(-.5) * np.dot(bj.T, dmu)
+
+            # nPoints is the total number of spikes.
+            wj = float(npointsj) / nPoints
+
+            C[ci, cj] = wj * np.exp(logpij)[0,0]
+
     
     return C
     
