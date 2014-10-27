@@ -213,7 +213,7 @@ class TaskGraph(AbstractTaskGraph):
                              clusters=clusters_selected)
 
     def _recluster_done(self, channel_group=0, clusters=None, 
-                        spikes=None, clu=None, wizard=None):
+                        spikes=None, clu=None, wizard=False):
         return [('_split2', (spikes, clu, wizard))]
 
     def _compute_similarity_matrix(self, target_next=None):

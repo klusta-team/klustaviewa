@@ -51,6 +51,12 @@ class Wizard(object):
     # --------------------
     def set_data(self, cluster_groups=None, similarity_matrix=None):
         """Update the data."""
+            
+        if len(get_array(cluster_groups)) != similarity_matrix.shape[0]:
+            log.warn(("Cannot update the wizard: cluster_groups "
+                "has {0:d} elements whereas the similarity matrix has {1:d}.").format(
+                    len(get_array(cluster_groups)), similarity_matrix.shape[0]))
+            return
         
         if cluster_groups is not None:
             self.clusters_unique = get_array(get_indices(cluster_groups))
@@ -60,7 +66,6 @@ class Wizard(object):
             self.matrix = similarity_matrix
             self.quality = np.diag(self.matrix)
             
-            assert len(self.cluster_groups) == self.matrix.shape[0]
         
     
     # Core methods.

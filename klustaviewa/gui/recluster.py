@@ -114,6 +114,9 @@ def run_klustakwik(exp, channel_group=None, clusters=None, **kwargs):
     # Read back the clusters.
     clu = read_clusters(name + '.clu.' + str(shank))
 
+    # DEBUG
+    # clu = np.random.randint(low=1000, high=1030, size=len(spikes))
+
     # Switch back to original dir.
     os.chdir(start_dir)
         
