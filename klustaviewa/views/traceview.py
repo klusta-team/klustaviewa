@@ -115,7 +115,7 @@ class TraceManager(Manager):
             slice = self.get_viewslice(xlim_ext)
             
             # this executes in a new thread, and calls slice_loaded when done
-            self.slice_retriever.load_new_slice(self.trace, slice, xlim_ext, self.totalduration, self.duration_initial)
+            self.slice_retriever.load_new_slice(self.trace, slice, xlim_ext, self.totalduration, self.duration_initial, self.spiketimes, self.channel_colors)
             
     def get_buffered_viewlimits(self, xlim):
         d = self.xlim[1] - self.xlim[0]
@@ -166,28 +166,14 @@ class TraceManager(Manager):
         size = self.bounds[-1]
         return M, self.bounds, size
         
-    def slice_loaded(self, samples, bounds, size, slice):
+    def slice_loaded(self, samples, bounds, size, slice, color_index):
+        
+        self.color_index = color_index
         self.samples = samples
         self.bounds = bounds
         self.size = size
         
         self.channel_index = np.repeat(self.channels, self.samples.shape[0] / self.nchannels)
-        self.color_index = np.repeat(get_array(self.channel_colors), self.samples.shape[0] / self.nchannels)
-        self.color_index = np.ones_like(self.color_index)   
-        
-        color_index = self.color_index.reshape((self.nchannels, self.samples.shape[0]/self.nchannels))
-        
-        spiketimes = self.spiketimes[(slice.start < self.spiketimes) & (self.spiketimes < slice.stop)]
-        
-        nds = ((spiketimes - slice.start)/slice.step).astype(int) # nearest displayed sample, rounded to integer
-        color_index[:,nds] = 0
-        try: # colour in vertices on either side of spike
-            color_index[:,nds-1] = 0
-            color_index[:,nds+1] = 0
-        except IndexError: # in case the neighbours are out of bounds
-            pass
-        
-        self.color_index = np.ravel(color_index)
         
         self.position = self.samples
 
@@ -196,12 +182,12 @@ class TraceManager(Manager):
 
         
 class SliceRetriever(QtCore.QObject):
-    sliceLoaded = QtCore.pyqtSignal(object, object, long, object)
+    sliceLoaded = QtCore.pyqtSignal(object, object, long, object, object)
 
     def __init__(self, parent=None):
         super(SliceRetriever, self).__init__(parent)
         
-    def load_new_slice(self, trace, slice, xlim, totalduration, duration_initial):
+    def load_new_slice(self, trace, slice, xlim, totalduration, duration_initial, spiketimes, channel_colors):
         
         total_size = trace.shape[0]
         samples = trace[slice, :]
@@ -226,8 +212,44 @@ class SliceRetriever(QtCore.QObject):
 
         bounds = np.arange(nchannels + 1) * nsamples
         size = bounds[-1]
+        
+        
+        color_index = np.repeat(get_array(channel_colors), M.shape[0] / nchannels)
+        color_index = np.ones_like(color_index)   
+        
+        color_index = color_index.reshape((nchannels, M.shape[0]/nchannels))
+        
+        spiketimes = spiketimes[(slice.start < spiketimes) & (spiketimes < slice.stop)]
+        
+        nds = ((spiketimes - slice.start)/slice.step).astype(int) # nearest displayed sample, rounded to integer
+        color_index[:,nds] = 0
+        
+        print slice.step
+        
+        if (slice.step <= 50):
+            try: # colour in vertices on either side of spike
+                color_index[:,nds-1] = 0
+                color_index[:,nds+1] = 0
+            except IndexError: # in case the neighbours are out of bounds
+                pass
+                
+        if (slice.step <= 20):
+            try: # colour in vertices on either side of spike
+                color_index[:,nds-2] = 0
+                color_index[:,nds+2] = 0
+            except IndexError: # in case the neighbours are out of bounds
+                pass
+                
+        if (slice.step <= 10):
+            try: # colour in vertices on either side of spike
+                color_index[:,nds-3] = 0
+                color_index[:,nds+3] = 0
+            except IndexError: # in case the neighbours are out of bounds
+                pass
+        
+        color_index = np.ravel(color_index)
 
-        self.sliceLoaded.emit(M, bounds, size, slice)
+        self.sliceLoaded.emit(M, bounds, size, slice, color_index)
 
             
 # -----------------------------------------------------------------------------
