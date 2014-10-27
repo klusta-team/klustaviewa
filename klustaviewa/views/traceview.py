@@ -65,9 +65,9 @@ class TraceManager(Manager):
         self.channels = np.arange(self.nchannels)
         
         # format spikes into a sensible display format
-        x = np.repeat(spiketimes, 2)
-        y = np.tile([-1,1],len(spiketimes))
-        self.spike_array = np.c_[x,y]
+        self.spikex = np.repeat(spiketimes, 2)
+        self.spikey = np.tile([-10000,10000],len(spiketimes))
+        self.spike_array = np.c_[self.spikex,self.spikey]
                 
         if channel_height is None:
             channel_height = self.default_channel_height
@@ -175,6 +175,7 @@ class TraceManager(Manager):
 
         self.paint_manager.update_slice()
         self.paint_manager.updateGL()
+
         
 class SliceRetriever(QtCore.QObject):
     sliceLoaded = QtCore.pyqtSignal(object, object, long)
@@ -223,14 +224,6 @@ class TracePaintManager(PlotPaintManager):
             shape=self.data_manager.shape,
             channel_height=self.data_manager.channel_height,
             visible=self.data_manager.real_data)
-        
-        tempvis = np.array([[0,-1],[self.data_manager.totalsamples,1]])
-            
-        self.add_visual(PlotVisual, name='spikes',
-            position=self.data_manager.spike_array,
-            # position=tempvis,
-            primitive_type='LINES')
-
 
         self.add_visual(GridVisual, name='grid', background_transparent=False,
             letter_spacing=350.,)
@@ -238,6 +231,12 @@ class TracePaintManager(PlotPaintManager):
         # self.paint_manager.set_data(visual='trace_waveforms', 
         #     visible=True)
         self.data_manager.paintinitialized = True
+        
+        # tempvis = np.array([[0,-1],[self.data_manager.totalsamples,1]])
+        # self.add_visual(PlotVisual, name='spikes',
+        #     # position=self.data_manager.spike_array,
+        #     position=tempvis,
+        #     primitive_type='LINES')
 
     def update(self):
         if getattr(self.data_manager, 'paintinitialized', True):
@@ -247,16 +246,10 @@ class TracePaintManager(PlotPaintManager):
                 shape=self.data_manager.shape,
                 size=self.data_manager.size,
                 visible=self.data_manager.real_data)
-            
+
         self.data_manager.paintinitialized = True
             
-    def update_slice(self):
-        
-        tempvis = np.array([[0,-1],[self.data_manager.totalsamples,1]])
-        #
-        # self.set_data(visual='spikes',
-        #     position=self.data_manager.spike_array)
-        
+    def update_slice(self):   
         self.set_data(visual='trace_waveforms',
             channel_height=self.data_manager.channel_height,
             position0=self.data_manager.position,
@@ -266,13 +259,9 @@ class TracePaintManager(PlotPaintManager):
             color_index=self.data_manager.color_index,
             bounds=self.data_manager.bounds)
             
-        # print self.data_manager.spike_array
-        #
-        # self.reinitialize_visual(visual='spikes',
+        # self.set_data(visual='spikes',
         #     position=self.data_manager.spike_array,
         #     primitive_type='LINES')
-            
-        # self.set_data(visual='spikes', position0=self.data_manager.spike_array)
 
 class MultiChannelVisual(Visual):
     def initialize(self, color=None, point_size=1.0,
