@@ -192,7 +192,7 @@ def get_similarity_matrix(dic):
         
     return matrix
     
-def normalize(matrix, direction='column'):
+def normalize(matrix, direction='row'):
     
     if direction == 'row':
         s = matrix.sum(axis=1)
