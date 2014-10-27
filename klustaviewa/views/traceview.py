@@ -33,6 +33,7 @@ class TraceManager(Manager):
         self.default_channel_height = 0.25
         self.channel_height_limits = (0.01, 20.)
         self.nticks = 10
+        self.spikes_visible = False
                 
         # these variables will be overwritten after initialization (used to check if init is complete)
         self.slice_ref = (-1, -1) # slice paging
@@ -66,7 +67,7 @@ class TraceManager(Manager):
         self.channels = np.arange(self.nchannels)
 
         
-        # format spikes into a sensible display format
+        # # format spikes into a sensible display format
         # self.spikex = np.repeat(spiketimes, 2)
         # self.spikey = np.tile([-10000,10000],len(spiketimes))
         # self.spike_array = np.c_[self.spikex,self.spikey]
@@ -95,8 +96,7 @@ class TraceManager(Manager):
         self.slice_retriever = inthread(SliceRetriever)(impatient=True)
         self.slice_retriever.sliceLoaded.connect(self.slice_loaded)
         
-    def load_correct_slices(self):
-        
+    def load_correct_slices(self, force=False):
         # dirty hack to make sure that we don't redraw the window until it's been drawn once, otherwise Galry automatically rescales
         if not self.paintinitialized:
              return
@@ -107,7 +107,7 @@ class TraceManager(Manager):
         index = int(np.floor(self.xlim[0] / (dur)))
         i = (index, zoom_index)
         
-        if i != self.slice_ref: # we need to load a new slice
+        if (i != self.slice_ref) or force==True: # we need to load a new slice
             self.slice_ref = i
             # Find needed slice(s) of data
         
@@ -115,7 +115,7 @@ class TraceManager(Manager):
             slice = self.get_viewslice(xlim_ext)
             
             # this executes in a new thread, and calls slice_loaded when done
-            self.slice_retriever.load_new_slice(self.trace, slice, xlim_ext, self.totalduration, self.duration_initial, self.spiketimes, self.channel_colors)
+            self.slice_retriever.load_new_slice(self.trace, slice, xlim_ext, self.totalduration, self.duration_initial, self.spiketimes, self.channel_colors, self.spikes_visible)
             
     def get_buffered_viewlimits(self, xlim):
         d = self.xlim[1] - self.xlim[0]
@@ -187,7 +187,7 @@ class SliceRetriever(QtCore.QObject):
     def __init__(self, parent=None):
         super(SliceRetriever, self).__init__(parent)
         
-    def load_new_slice(self, trace, slice, xlim, totalduration, duration_initial, spiketimes, channel_colors):
+    def load_new_slice(self, trace, slice, xlim, totalduration, duration_initial, spiketimes, channel_colors, spikes_visible):
         
         total_size = trace.shape[0]
         samples = trace[slice, :]
@@ -213,41 +213,26 @@ class SliceRetriever(QtCore.QObject):
         bounds = np.arange(nchannels + 1) * nsamples
         size = bounds[-1]
         
-        
         color_index = np.repeat(get_array(channel_colors), M.shape[0] / nchannels)
-        color_index = np.ones_like(color_index)   
         
-        color_index = color_index.reshape((nchannels, M.shape[0]/nchannels))
+        if spikes_visible:
+            color_index = np.ones_like(color_index)
+            color_index = color_index.reshape((nchannels, M.shape[0]/nchannels))
+    
+            spiketimes = spiketimes[(slice.start < spiketimes) & (spiketimes < slice.stop)]
+            nds = ((spiketimes - slice.start)/slice.step).astype(int) # nearest displayed sample, rounded to integer
+
+            halfwidth = int(16 / slice.step) # assuming +/- 16 samples
         
-        spiketimes = spiketimes[(slice.start < spiketimes) & (spiketimes < slice.stop)]
+            color_index[:,nds] = 0
         
-        nds = ((spiketimes - slice.start)/slice.step).astype(int) # nearest displayed sample, rounded to integer
-        color_index[:,nds] = 0
-        
-        print slice.step
-        
-        if (slice.step <= 50):
-            try: # colour in vertices on either side of spike
-                color_index[:,nds-1] = 0
-                color_index[:,nds+1] = 0
-            except IndexError: # in case the neighbours are out of bounds
-                pass
-                
-        if (slice.step <= 20):
-            try: # colour in vertices on either side of spike
-                color_index[:,nds-2] = 0
-                color_index[:,nds+2] = 0
-            except IndexError: # in case the neighbours are out of bounds
-                pass
-                
-        if (slice.step <= 10):
-            try: # colour in vertices on either side of spike
-                color_index[:,nds-3] = 0
-                color_index[:,nds+3] = 0
-            except IndexError: # in case the neighbours are out of bounds
-                pass
-        
-        color_index = np.ravel(color_index)
+            for i in range(0,halfwidth):
+                try: # colour in vertices on either side of spike
+                    color_index[:,nds-i] = 0
+                    color_index[:,nds+i] = 0
+                except IndexError: # in case the neighbours are out of bounds
+                    pass
+            color_index = np.ravel(color_index)
 
         self.sliceLoaded.emit(M, bounds, size, slice, color_index)
 
@@ -268,14 +253,14 @@ class TracePaintManager(PlotPaintManager):
         self.add_visual(GridVisual, name='grid', background_transparent=False,
             letter_spacing=350.,)
         # if self.data_manager.no_data = False
-        # self.paint_manager.set_data(visual='trace_waveforms', 
+        # self.paint_manager.set_data(visual='trace_waveforms',
         #     visible=True)
         self.data_manager.paintinitialized = True
         
         # tempvis = np.array([[0,-1],[self.data_manager.totalsamples,1]])
-        # self.add_visual(PlotVisual, name='spikes',
-        #     # position=self.data_manager.spike_array,
-        #     position=tempvis,
+        # self.add_visual(PlotVisual, name='spikelines',
+        #     position=self.data_manager.spike_array,
+        #     # position=tempvis,
         #     primitive_type='LINES')
 
     def update(self):
@@ -299,7 +284,7 @@ class TracePaintManager(PlotPaintManager):
             color_index=self.data_manager.color_index,
             bounds=self.data_manager.bounds)
             
-        # self.set_data(visual='spikes',
+        # self.set_data(visual='spikelines',
         #     position=self.data_manager.spike_array,
         #     primitive_type='LINES')
 
@@ -517,6 +502,7 @@ class ViewportUpdateProcessor(EventProcessor):
 class TraceInteractionManager(PlotInteractionManager):
     def initialize(self):
         self.register('ChangeChannelHeight', self.change_channel_height)
+        self.register('ToggleSpikeShow', self.toggle_spike_show)
         self.register('Reset', self.reset_channel_height)
     
     def initialize_default(self, constrain_navigation=None,
@@ -542,6 +528,14 @@ class TraceInteractionManager(PlotInteractionManager):
             processor.activate(True)
             processor.update_axes(None)
             
+    def toggle_spike_show(self, parameter):
+        if(self.data_manager.spikes_visible==True):
+            self.data_manager.spikes_visible=False
+        else:
+            self.data_manager.spikes_visible=True
+                    
+        self.data_manager.load_correct_slices(force=True)
+            
     def change_channel_height(self, parameter):
         # get limits
         ll, ul = self.data_manager.channel_height_limits
@@ -566,6 +560,10 @@ class TraceBindings(KlustaViewaBindings):
     def initialize(self):
         self.set('Wheel', 'ChangeChannelHeight', key_modifier='Control',
                    param_getter=lambda p: p['wheel'] * .001)
+        
+        self.set('KeyPress',
+                 'ToggleSpikeShow',
+                 key='S')
 
                    
 # -----------------------------------------------------------------------------
