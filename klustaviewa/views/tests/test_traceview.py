@@ -28,7 +28,7 @@ def test_traceview():
     kwargs = {}
     kwargs['trace'] = trace
     kwargs['freq'] = freq
-    kwargs['spiketimes'] = np.array([100, 300, 10000])
+    kwargs['spiketimes'] = np.array([1, 30, 100])
     kwargs['ignored_channels'] = ignored_channels
     kwargs['operators'] = [
         lambda self: (self.close() 

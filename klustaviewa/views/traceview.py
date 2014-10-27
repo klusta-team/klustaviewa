@@ -59,15 +59,17 @@ class TraceManager(Manager):
         self.trace = trace
         self.channel_colors = channel_colors
         self.ignored_channels = ignored_channels
+        self.spiketimes = spiketimes
         self.freq = freq
         self.totalduration = (self.trace.shape[0] - 1) / self.freq
         self.totalsamples, self.nchannels = self.trace.shape
         self.channels = np.arange(self.nchannels)
+
         
         # format spikes into a sensible display format
-        self.spikex = np.repeat(spiketimes, 2)
-        self.spikey = np.tile([-10000,10000],len(spiketimes))
-        self.spike_array = np.c_[self.spikex,self.spikey]
+        # self.spikex = np.repeat(spiketimes, 2)
+        # self.spikey = np.tile([-10000,10000],len(spiketimes))
+        # self.spike_array = np.c_[self.spikex,self.spikey]
                 
         if channel_height is None:
             channel_height = self.default_channel_height
@@ -164,13 +166,29 @@ class TraceManager(Manager):
         size = self.bounds[-1]
         return M, self.bounds, size
         
-    def slice_loaded(self, samples, bounds, size):
+    def slice_loaded(self, samples, bounds, size, slice):
         self.samples = samples
         self.bounds = bounds
         self.size = size
         
         self.channel_index = np.repeat(self.channels, self.samples.shape[0] / self.nchannels)
         self.color_index = np.repeat(get_array(self.channel_colors), self.samples.shape[0] / self.nchannels)
+        self.color_index = np.ones_like(self.color_index)   
+        
+        color_index = self.color_index.reshape((self.nchannels, self.samples.shape[0]/self.nchannels))
+        
+        spiketimes = self.spiketimes[(slice.start < self.spiketimes) & (self.spiketimes < slice.stop)]
+        
+        nds = ((spiketimes - slice.start)/slice.step).astype(int) # nearest displayed sample, rounded to integer
+        color_index[:,nds] = 0
+        try: # colour in vertices on either side of spike
+            color_index[:,nds-1] = 0
+            color_index[:,nds+1] = 0
+        except IndexError: # in case the neighbours are out of bounds
+            pass
+        
+        self.color_index = np.ravel(color_index)
+        
         self.position = self.samples
 
         self.paint_manager.update_slice()
@@ -178,7 +196,7 @@ class TraceManager(Manager):
 
         
 class SliceRetriever(QtCore.QObject):
-    sliceLoaded = QtCore.pyqtSignal(object, object, long)
+    sliceLoaded = QtCore.pyqtSignal(object, object, long, object)
 
     def __init__(self, parent=None):
         super(SliceRetriever, self).__init__(parent)
@@ -209,7 +227,7 @@ class SliceRetriever(QtCore.QObject):
         bounds = np.arange(nchannels + 1) * nsamples
         size = bounds[-1]
 
-        self.sliceLoaded.emit(M, bounds, size)
+        self.sliceLoaded.emit(M, bounds, size, slice)
 
             
 # -----------------------------------------------------------------------------
