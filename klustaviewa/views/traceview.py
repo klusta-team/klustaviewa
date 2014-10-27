@@ -28,7 +28,7 @@ class TraceManager(Manager):
     def set_data(self, trace=None, freq=None, channel_height=None, channel_names=None, ignored_channels=None, channel_colors=None, spiketimes=None):
         
         # default settings
-        self.max_size = 1000
+        self.max_size = 3000
         self.duration_initial = 10.
         self.default_channel_height = 0.25
         self.channel_height_limits = (0.01, 20.)
