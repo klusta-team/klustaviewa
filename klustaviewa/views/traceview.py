@@ -29,7 +29,7 @@ class TraceManager(Manager):
         spikemasks=None, cluster_colors=None, spikeclusters=None):
         
         # default settings
-        self.max_size = 3000
+        self.max_size = 6000
         self.duration_initial = 10.
         self.default_channel_height = 0.25
         self.channel_height_limits = (0.01, 20.)
@@ -227,7 +227,7 @@ class SliceRetriever(QtCore.QObject):
         
         if spikes_visible: # grey background, highlighted spikes
 
-            color_index = np.zeros((nchannels, M.shape[0]/nchannels))
+            color_index = np.full((nchannels, M.shape[0]/nchannels), COLORS_COUNT+2)
             
             spikeclusters = spikeclusters[(slice.start < spiketimes) & (spiketimes < slice.stop)]
             spikemasks = spikemasks[(slice.start < spiketimes) & (spiketimes < slice.stop)]
@@ -235,7 +235,7 @@ class SliceRetriever(QtCore.QObject):
 
             nds = ((spiketimes - slice.start)/slice.step).astype(int) # nearest displayed sample, rounded to integer
 
-            halfwidth = max(int(8 / slice.step), 2) # assuming +/- 8 samples
+            halfwidth = max(int(10 / slice.step), 2) # assuming +/- 10 samples
         
             for x in range(0, nds.shape[0]-1):
                     color_index[spikemasks[x], max(nds[x]-halfwidth, 0):min(nds[x]+halfwidth, color_index.shape[1])] = spikeclusters[x]
