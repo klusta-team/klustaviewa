@@ -356,7 +356,8 @@ def get_traceview_data(exp,
     spikes_data = exp.channel_groups[channel_group].spikes
     rawdata = exp.recordings[0].raw
     spiketimes = spikes_data.time_samples
-    spikeclusters = getattr(spikes_data.clusters, clustering)
+    spikeclusters = getattr(spikes_data.clusters, clustering)[:]
+
     freq = exp.application_data.spikedetekt.sample_rate
     cluster_colors = pd.Series([clusters_data[cl].application_data.klustaviewa.color or 1
                        for cl in clusters], index=clusters)
@@ -370,6 +371,7 @@ def get_traceview_data(exp,
         trace=rawdata,
         spiketimes=spiketimes,
         spikemasks=spikemasks,
+        spikeclusters=spikeclusters,
         cluster_colors = cluster_colors
     )
     return data

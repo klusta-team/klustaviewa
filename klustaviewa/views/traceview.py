@@ -26,7 +26,7 @@ class TraceManager(Manager):
     
     # initialization
     def set_data(self, trace=None, freq=None, channel_height=None, channel_names=None, ignored_channels=None, channel_colors=None, spiketimes=None,
-        spikemasks=None, cluster_colors=None):
+        spikemasks=None, cluster_colors=None, spikeclusters=None):
         
         # default settings
         self.max_size = 3000
@@ -44,7 +44,7 @@ class TraceManager(Manager):
         
         if trace is None:
             # make up some data to keep the GPU happy, warm, and feeling loved
-            trace = np.zeros((self.duration_initial * 2, 32))
+            trace = np.zeros((self.duration_initial * 2, 1))
             freq = 1
             
             # don't worry, we won't tell the GPU that it's not actually rendering any useful data, but we need to keep track
@@ -56,10 +56,13 @@ class TraceManager(Manager):
         
         # same with spike masks
         if spikemasks is None:
-            spikemasks = np.zeros([0,32])
+            spikemasks = np.zeros([0,1])
             
         if channel_colors is None:
             channel_colors = pd.Series(generate_colors(trace.shape[1]))
+
+        if spikeclusters is None:
+            spikeclusters = np.array([0])
             
         # load initial variables
         self.trace = trace
@@ -67,6 +70,7 @@ class TraceManager(Manager):
         self.ignored_channels = ignored_channels
         self.spiketimes = spiketimes
         self.spikemasks = spikemasks.astype(bool)
+        self.spikeclusters = spikeclusters
         self.cluster_colors = cluster_colors
         self.freq = freq
         self.totalduration = (self.trace.shape[0] - 1) / self.freq
@@ -122,7 +126,7 @@ class TraceManager(Manager):
             
             # this executes in a new thread, and calls slice_loaded when done
             self.slice_retriever.load_new_slice(self.trace, slice, xlim_ext, self.totalduration, self.duration_initial, self.spiketimes,
-                self.channel_colors, self.spikes_visible, self.cluster_colors, self.spikemasks)
+                self.channel_colors, self.spikes_visible, self.cluster_colors, self.spikemasks, self.spikeclusters)
             
     def get_buffered_viewlimits(self, xlim):
         d = self.xlim[1] - self.xlim[0]
@@ -195,7 +199,7 @@ class SliceRetriever(QtCore.QObject):
         super(SliceRetriever, self).__init__(parent)
         
     def load_new_slice(self, trace, slice, xlim, totalduration, duration_initial, spiketimes, channel_colors, spikes_visible,
-        cluster_colors, spikemasks):
+        cluster_colors, spikemasks, spikeclusters):
         
         total_size = trace.shape[0]
         samples = trace[slice, :]
@@ -222,8 +226,10 @@ class SliceRetriever(QtCore.QObject):
         size = bounds[-1]
         
         if spikes_visible: # grey background, highlighted spikes
-            color_index = np.ones((nchannels, M.shape[0]/nchannels))
+
+            color_index = np.zeros((nchannels, M.shape[0]/nchannels))
             
+            spikeclusters = spikeclusters[(slice.start < spiketimes) & (spiketimes < slice.stop)]
             spikemasks = spikemasks[(slice.start < spiketimes) & (spiketimes < slice.stop)]
             spiketimes = spiketimes[(slice.start < spiketimes) & (spiketimes < slice.stop)]
 
@@ -231,8 +237,8 @@ class SliceRetriever(QtCore.QObject):
 
             halfwidth = max(int(8 / slice.step), 2) # assuming +/- 8 samples
         
-            for x in range(2, nds.shape[0]-2):
-                    color_index[spikemasks[x], max(nds[x]-halfwidth, 0):min(nds[x]+halfwidth, color_index.shape[1])] = 0
+            for x in range(0, nds.shape[0]-1):
+                    color_index[spikemasks[x], max(nds[x]-halfwidth, 0):min(nds[x]+halfwidth, color_index.shape[1])] = spikeclusters[x]
 
             color_index = np.ravel(color_index)
         
