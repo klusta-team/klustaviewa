@@ -25,7 +25,8 @@ class TraceManager(Manager):
     info = {}
     
     # initialization
-    def set_data(self, trace=None, freq=None, channel_height=None, channel_names=None, ignored_channels=None, channel_colors=None, spiketimes=None):
+    def set_data(self, trace=None, freq=None, channel_height=None, channel_names=None, ignored_channels=None, channel_colors=None, spiketimes=None,
+        spikemasks=None, cluster_colors=None):
         
         # default settings
         self.max_size = 3000
@@ -52,6 +53,10 @@ class TraceManager(Manager):
         # same with spikes
         if spiketimes is None:
             spiketimes = np.array([0])
+        
+        # same with spike masks
+        if spikemasks is None:
+            spikemasks = np.zeros([0,32])
             
         if channel_colors is None:
             channel_colors = pd.Series(generate_colors(trace.shape[1]))
@@ -61,11 +66,12 @@ class TraceManager(Manager):
         self.channel_colors = channel_colors
         self.ignored_channels = ignored_channels
         self.spiketimes = spiketimes
+        self.spikemasks = spikemasks.astype(bool)
+        self.cluster_colors = cluster_colors
         self.freq = freq
         self.totalduration = (self.trace.shape[0] - 1) / self.freq
         self.totalsamples, self.nchannels = self.trace.shape
         self.channels = np.arange(self.nchannels)
-
         
         # # format spikes into a sensible display format
         # self.spikex = np.repeat(spiketimes, 2)
@@ -115,7 +121,8 @@ class TraceManager(Manager):
             slice = self.get_viewslice(xlim_ext)
             
             # this executes in a new thread, and calls slice_loaded when done
-            self.slice_retriever.load_new_slice(self.trace, slice, xlim_ext, self.totalduration, self.duration_initial, self.spiketimes, self.channel_colors, self.spikes_visible)
+            self.slice_retriever.load_new_slice(self.trace, slice, xlim_ext, self.totalduration, self.duration_initial, self.spiketimes,
+                self.channel_colors, self.spikes_visible, self.cluster_colors, self.spikemasks)
             
     def get_buffered_viewlimits(self, xlim):
         d = self.xlim[1] - self.xlim[0]
@@ -187,7 +194,8 @@ class SliceRetriever(QtCore.QObject):
     def __init__(self, parent=None):
         super(SliceRetriever, self).__init__(parent)
         
-    def load_new_slice(self, trace, slice, xlim, totalduration, duration_initial, spiketimes, channel_colors, spikes_visible):
+    def load_new_slice(self, trace, slice, xlim, totalduration, duration_initial, spiketimes, channel_colors, spikes_visible,
+        cluster_colors, spikemasks):
         
         total_size = trace.shape[0]
         samples = trace[slice, :]
@@ -213,29 +221,25 @@ class SliceRetriever(QtCore.QObject):
         bounds = np.arange(nchannels + 1) * nsamples
         size = bounds[-1]
         
-        color_index = np.repeat(get_array(channel_colors), M.shape[0] / nchannels)
-        
-        if spikes_visible:
-            color_index = np.ones_like(color_index)
-            color_index = color_index.reshape((nchannels, M.shape[0]/nchannels))
-    
+        if spikes_visible: # grey background, highlighted spikes
+            color_index = np.ones((nchannels, M.shape[0]/nchannels))
+            
+            spikemasks = spikemasks[(slice.start < spiketimes) & (spiketimes < slice.stop)]
             spiketimes = spiketimes[(slice.start < spiketimes) & (spiketimes < slice.stop)]
+
             nds = ((spiketimes - slice.start)/slice.step).astype(int) # nearest displayed sample, rounded to integer
 
-            halfwidth = int(16 / slice.step) # assuming +/- 16 samples
+            halfwidth = max(int(8 / slice.step), 2) # assuming +/- 8 samples
         
-            color_index[:,nds] = 0
-        
-            for i in range(0,halfwidth):
-                try: # colour in vertices on either side of spike
-                    color_index[:,nds-i] = 0
-                    color_index[:,nds+i] = 0
-                except IndexError: # in case the neighbours are out of bounds
-                    pass
+            for x in range(2, nds.shape[0]-2):
+                    color_index[spikemasks[x], max(nds[x]-halfwidth, 0):min(nds[x]+halfwidth, color_index.shape[1])] = 0
+
             color_index = np.ravel(color_index)
+        
+        else:
+        	color_index = np.repeat(get_array(channel_colors), M.shape[0] / nchannels)
 
         self.sliceLoaded.emit(M, bounds, size, slice, color_index)
-
             
 # -----------------------------------------------------------------------------
 # Visuals

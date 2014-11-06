@@ -347,14 +347,30 @@ def get_similaritymatrixview_data(exp, matrix=None,
     return data
     
     
-def get_traceview_data(exp, loader):
-    clusters_data = exp.channel_groups[0].clusters
-    spikes_data = exp.channel_groups[0].spikes
+def get_traceview_data(exp,
+        channel_group=0, clustering='main'):
     
+    freq = exp.application_data.spikedetekt.sample_rate
+    clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
+    clusters = sorted(clusters_data.keys())
+    spikes_data = exp.channel_groups[channel_group].spikes
+    rawdata = exp.recordings[0].raw
+    spiketimes = spikes_data.time_samples
+    spikeclusters = getattr(spikes_data.clusters, clustering)
+    freq = exp.application_data.spikedetekt.sample_rate
+    cluster_colors = pd.Series([clusters_data[cl].application_data.klustaviewa.color or 1
+                       for cl in clusters], index=clusters)
+    fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
+
+    if spikes_data.masks is not None:
+        spikemasks = spikes_data.masks[:, 0:fetdim*nchannels:fetdim]
+
     data = dict(
-        freq=loader.get_freq(),
-        trace=loader.get_traces(),
-        spiketimes=spikes_data.time_samples
+        freq=freq,
+        trace=rawdata,
+        spiketimes=spiketimes,
+        spikemasks=spikemasks,
+        cluster_colors = cluster_colors
     )
     return data
 
