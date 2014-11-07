@@ -227,7 +227,7 @@ class SliceRetriever(QtCore.QObject):
         
         if spikes_visible: # grey background, highlighted spikes
 
-            color_index = np.full((nchannels, M.shape[0]/nchannels), COLORS_COUNT+2)
+            color_index = np.full((nchannels, M.shape[0]/nchannels), COLORS_COUNT+1)
             
             spikeclusters = spikeclusters[(slice.start < spiketimes) & (spiketimes < slice.stop)]
             spikemasks = spikemasks[(slice.start < spiketimes) & (spiketimes < slice.stop)]
@@ -320,7 +320,7 @@ class MultiChannelVisual(Visual):
         else:
             self.bounds = np.arange(0, self.size + 1, nsamples)
 
-        color = COLORMAP
+        color = np.vstack((COLORMAP, (0.4, 0.4, 0.4))) # fixed value for non-highlighted traces when spikes are highlighted
         
         # set position attribute
         self.add_attribute("position0", ndim=2, data=position, autonormalizable=True)
