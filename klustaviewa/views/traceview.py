@@ -228,11 +228,12 @@ class SliceRetriever(QtCore.QObject):
         if spikes_visible: # grey background, highlighted spikes
 
             color_index = np.full((nchannels, M.shape[0]/nchannels), COLORS_COUNT+1)
-            
-            spikeclusters = spikeclusters[(slice.start < spiketimes) & (spiketimes < slice.stop)]
-            spikemasks = spikemasks[(slice.start < spiketimes) & (spiketimes < slice.stop)]
-            spiketimes = spiketimes[(slice.start < spiketimes) & (spiketimes < slice.stop)]
 
+            spikestart, spikestop = np.searchsorted(spiketimes, [slice.start, slice.stop])
+
+            spikeclusters = spikeclusters[spikestart:spikestop]
+            spikemasks = spikemasks[spikestart:spikestop]
+            spiketimes = spiketimes[spikestart:spikestop]
             nds = ((spiketimes - slice.start)/slice.step).astype(int) # nearest displayed sample, rounded to integer
 
             halfwidth = max(int(10 / slice.step), 2) # assuming +/- 10 samples
