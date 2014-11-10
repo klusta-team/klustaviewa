@@ -6,6 +6,8 @@
 import numpy as np
 import pandas as pd
 
+import bisect
+
 from galry import (Manager, PlotPaintManager, EventProcessor, PlotInteractionManager, Visual,
     QtGui, QtCore, NavigationEventProcessor, PlotVisual, GridVisual, TextVisual, DataNormalizer, 
     process_coordinates)
@@ -229,7 +231,8 @@ class SliceRetriever(QtCore.QObject):
 
             color_index = np.full((nchannels, M.shape[0]/nchannels), COLORS_COUNT+1)
 
-            spikestart, spikestop = np.searchsorted(spiketimes, [slice.start, slice.stop])
+            spikestart = bisect.bisect_left(spiketimes, slice.start)
+            spikestop = bisect.bisect_right(spiketimes, slice.stop, lo=spikestart)
 
             spikeclusters = spikeclusters[spikestart:spikestop]
             spikemasks = spikemasks[spikestart:spikestop]
