@@ -179,9 +179,10 @@ class TraceManager(Manager):
         size = self.bounds[-1]
         return M, self.bounds, size
         
-    def slice_loaded(self, samples, bounds, size, slice, color_index):
+    def slice_loaded(self, samples, bounds, size, slice, color_index, color_index_spikes):
         
         self.color_index = color_index
+        self.color_index_spikes = color_index_spikes
         self.samples = samples
         self.bounds = bounds
         self.size = size
@@ -195,7 +196,7 @@ class TraceManager(Manager):
 
         
 class SliceRetriever(QtCore.QObject):
-    sliceLoaded = QtCore.pyqtSignal(object, object, long, object, object)
+    sliceLoaded = QtCore.pyqtSignal(object, object, long, object, object, object)
 
     def __init__(self, parent=None):
         super(SliceRetriever, self).__init__(parent)
@@ -226,30 +227,27 @@ class SliceRetriever(QtCore.QObject):
 
         bounds = np.arange(nchannels + 1) * nsamples
         size = bounds[-1]
-        
-        if spikes_visible: # grey background, highlighted spikes
 
-            color_index = np.full((nchannels, M.shape[0]/nchannels), COLORS_COUNT+1)
+        color_index = np.repeat(get_array(channel_colors), M.shape[0] / nchannels)
 
-            spikestart = bisect.bisect_left(spiketimes, slice.start)
-            spikestop = bisect.bisect_right(spiketimes, slice.stop, lo=spikestart)
+        color_index_spikes = np.full((nchannels, M.shape[0]/nchannels), COLORS_COUNT+1)
 
-            spikeclusters = spikeclusters[spikestart:spikestop]
-            spikemasks = spikemasks[spikestart:spikestop]
-            spiketimes = spiketimes[spikestart:spikestop]
-            nds = ((spiketimes - slice.start)/slice.step).astype(int) # nearest displayed sample, rounded to integer
+        spikestart = bisect.bisect_left(spiketimes, slice.start)
+        spikestop = bisect.bisect_right(spiketimes, slice.stop, lo=spikestart)
 
-            halfwidth = max(int(10 / slice.step), 2) # assuming +/- 10 samples
-        
-            for x in range(0, nds.shape[0]-1):
-                    color_index[spikemasks[x], max(nds[x]-halfwidth, 0):min(nds[x]+halfwidth, color_index.shape[1])] = spikeclusters[x]
+        spikeclusters = spikeclusters[spikestart:spikestop]
+        spikemasks = spikemasks[spikestart:spikestop]
+        spiketimes = spiketimes[spikestart:spikestop]
+        nds = ((spiketimes - slice.start)/slice.step).astype(int) # nearest displayed sample, rounded to integer
 
-            color_index = np.ravel(color_index)
-        
-        else:
-        	color_index = np.repeat(get_array(channel_colors), M.shape[0] / nchannels)
+        halfwidth = max(int(10 / slice.step), 2) # assuming +/- 10 samples
+    
+        for x in range(0, nds.shape[0]-1):
+                color_index_spikes[spikemasks[x], max(nds[x]-halfwidth, 0):min(nds[x]+halfwidth, color_index_spikes.shape[1])] = spikeclusters[x]
 
-        self.sliceLoaded.emit(M, bounds, size, slice, color_index)
+        color_index_spikes = np.ravel(color_index_spikes)
+
+        self.sliceLoaded.emit(M, bounds, size, slice, color_index, color_index_spikes)
             
 # -----------------------------------------------------------------------------
 # Visuals
@@ -270,12 +268,6 @@ class TracePaintManager(PlotPaintManager):
         # self.paint_manager.set_data(visual='trace_waveforms',
         #     visible=True)
         self.data_manager.paintinitialized = True
-        
-        # tempvis = np.array([[0,-1],[self.data_manager.totalsamples,1]])
-        # self.add_visual(PlotVisual, name='spikelines',
-        #     position=self.data_manager.spike_array,
-        #     # position=tempvis,
-        #     primitive_type='LINES')
 
     def update(self):
         if getattr(self.data_manager, 'paintinitialized', True):
@@ -288,19 +280,25 @@ class TracePaintManager(PlotPaintManager):
 
         self.data_manager.paintinitialized = True
             
-    def update_slice(self):   
-        self.set_data(visual='trace_waveforms',
-            channel_height=self.data_manager.channel_height,
-            position0=self.data_manager.position,
-            shape=self.data_manager.shape,
-            size=self.data_manager.size,
-            channel_index=self.data_manager.channel_index,
-            color_index=self.data_manager.color_index,
-            bounds=self.data_manager.bounds)
-            
-        # self.set_data(visual='spikelines',
-        #     position=self.data_manager.spike_array,
-        #     primitive_type='LINES')
+    def update_slice(self):
+        if self.data_manager.spikes_visible == True:
+                self.set_data(visual='trace_waveforms',
+                channel_height=self.data_manager.channel_height,
+                position0=self.data_manager.position,
+                shape=self.data_manager.shape,
+                size=self.data_manager.size,
+                channel_index=self.data_manager.channel_index,
+                color_index=self.data_manager.color_index_spikes,
+                bounds=self.data_manager.bounds)
+        else:        
+            self.set_data(visual='trace_waveforms',
+                channel_height=self.data_manager.channel_height,
+                position0=self.data_manager.position,
+                shape=self.data_manager.shape,
+                size=self.data_manager.size,
+                channel_index=self.data_manager.channel_index,
+                color_index=self.data_manager.color_index,
+                bounds=self.data_manager.bounds)
 
 class MultiChannelVisual(Visual):
     def initialize(self, color=None, point_size=1.0,
@@ -548,7 +546,7 @@ class TraceInteractionManager(PlotInteractionManager):
         else:
             self.data_manager.spikes_visible=True
                     
-        self.data_manager.load_correct_slices(force=True)
+        self.paint_manager.update_slice()
             
     def change_channel_height(self, parameter):
         # get limits
