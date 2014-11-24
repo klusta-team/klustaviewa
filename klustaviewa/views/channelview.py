@@ -15,7 +15,7 @@ from qtools import QtGui, QtCore
 from kwiklib.dataio.selection import get_indices, select
 from klustaviewa.gui.icons import get_icon
 from kwiklib.utils.colors import COLORMAP, random_color
-import kwiklib.utils.logger as log
+from kwiklib.utils import logger as log
 from klustaviewa import SETTINGS
 from kwiklib.utils.persistence import encode_bytearray, decode_bytearray
 from klustaviewa.views.treemodel import TreeModel, TreeItem

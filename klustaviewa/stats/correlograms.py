@@ -8,7 +8,7 @@ from itertools import product
 
 import numpy as np
 
-import kwiklib.utils.logger as log
+from kwiklib.utils import logger as log
 
 # Trying to load the Cython version.
 try:
@@ -49,9 +49,6 @@ except Exception as e:
             # size of the histograms
             nspikes = len(spiketimes)
             
-            # correlograms will contain all correlograms for each pair of clusters
-            correlograms = {}
-
             # unique clusters
             clusters_unique = np.unique(clusters)
             nclusters = len(clusters_unique)
@@ -61,12 +58,11 @@ except Exception as e:
             if clusters_to_update is None:
                 clusters_to_update = clusters_unique
             clusters_mask = np.zeros(cluster_max + 1, dtype=np.bool)
-            clusters_mask[clusters_to_update] = True
+            clusters_mask[clusters_to_update] = 1
             
             # initialize the correlograms
-            for cl in clusters_to_update:
-                for i in clusters_unique:
-                    correlograms[(cl, i)] = np.zeros(ncorrbins, dtype=np.int32)
+            correlograms = np.zeros(
+        ((cluster_max + 1) ** 2, ncorrbins), dtype=np.int32)
 
             # loop through all spikes, across all neurons, all sorted
             for i in range(nspikes):
@@ -84,10 +80,11 @@ except Exception as e:
                         # if clusters_mask[cl1]:
                         # compute only correlograms if necessary
                         # and avoid computing symmetric pairs twice
-                        if t1 <= t0max:
+                        if t1 < t0max:
                             d = t1 - t0
                             k = int(d / corrbin) + n
-                            correlograms[(cl0, cl1)][k] += 1
+                            ind = (cluster_max + 1) * cl0 + cl1
+                            correlograms[ind, k] += 1
                         else:
                             break
                         j += 1
@@ -98,17 +95,20 @@ except Exception as e:
                         # pass clusters that do not need to be processed
                         # compute only correlograms if necessary
                         # and avoid computing symmetric pairs twice
-                        if t0min <= t1:
+                        if t0min < t1:
                             d = t1 - t0
                             k = int(d / corrbin) + n - 1
-                            correlograms[(cl0, cl1)][k] += 1
+                            ind = (cluster_max + 1) * cl0 + cl1
+                            correlograms[ind, k] += 1
                         else:
                             break
                         j -= 1
+            dic = {(cl0, cl1): correlograms[(cluster_max + 1) * cl0 + cl1,:][::-1]
+                for cl0 in clusters_to_update for cl1 in clusters_unique}
             # Add the symmetric pairs.
-            correlograms.update({(cl1, cl0): correlograms[cl0, cl1][::-1]
+            dic.update({(cl1, cl0): dic[cl0, cl1]
                 for cl0 in clusters_to_update for cl1 in clusters_unique})
-            return correlograms
+            return dic
 
 
 # -----------------------------------------------------------------------------
@@ -141,3 +141,31 @@ def get_baselines(sizes, duration, corrbin):
     return baselines
     
     
+
+
+
+# Utility functions
+def excerpt_step(nsamples, nexcerpts=None, excerpt_size=None):
+    step = max((nsamples - excerpt_size) // (nexcerpts - 1),
+               excerpt_size)
+    return step
+    
+def excerpts(nsamples, nexcerpts=None, excerpt_size=None):
+    """Yield (start, end) where start is included and end is excluded."""
+    step = excerpt_step(nsamples, 
+                        nexcerpts=nexcerpts,
+                        excerpt_size=excerpt_size)
+    for i in range(nexcerpts):
+        start = i * step
+        if start >= nsamples:
+            break
+        end = min(start + excerpt_size, nsamples)
+        yield start, end
+
+def get_excerpts(data, nexcerpts=None, excerpt_size=None):
+    nsamples = data.shape[0]
+    return np.concatenate([data[start:end,...] 
+                          for (start, end) in excerpts(nsamples, 
+                                                       nexcerpts=nexcerpts, 
+                                                       excerpt_size=excerpt_size)], 
+                          axis=-1)

@@ -9,26 +9,26 @@ def compute_correlograms_cython(
      np.ndarray[DTYPE_t, ndim=1] spiketimes,
      np.ndarray[DTYPEI_t, ndim=1] clusters,
      np.ndarray[DTYPEI_t, ndim=1] clusters_to_update=None,
-     int ncorrbins=100,
-     float corrbin=.001):
+     long ncorrbins=100,
+     double corrbin=.001):
     
     # Ensure ncorrbins is an even number.
     assert ncorrbins % 2 == 0
     
     # Compute the histogram corrbins.
-    cdef int n = ncorrbins // 2
-    cdef float halfwidth = corrbin * n
+    cdef long n = ncorrbins // 2
+    cdef double halfwidth = corrbin * n
     
     # size of the histograms
-    cdef int nspikes = len(spiketimes)
+    cdef long nspikes = len(spiketimes)
     
-    cdef int i, j, cl0, cl1, k, ind
+    cdef long i, j, cl0, cl1, k, ind
     cdef double t0, t1, t0min, t0max, d
 
     # unique clusters
     cdef np.ndarray[DTYPEI_t, ndim=1] clusters_unique = np.unique(clusters)
-    cdef int nclusters = len(clusters_unique)
-    cdef int cluster_max = clusters_unique[-1]
+    cdef long nclusters = len(clusters_unique)
+    cdef long cluster_max = clusters_unique[-1]
     
     # clusters to update
     if clusters_to_update is None:
@@ -56,7 +56,7 @@ def compute_correlograms_cython(
                 # and avoid computing symmetric pairs twice
                 if t1 < t0max:
                     d = t1 - t0
-                    k = int(d / corrbin) + n
+                    k = long(d / corrbin) + n
                     ind = (cluster_max + 1) * cl0 + cl1
                     correlograms[ind, k] += 1
                 else:
@@ -70,7 +70,7 @@ def compute_correlograms_cython(
                 # and avoid computing symmetric pairs twice
                 if t0min < t1:
                     d = t1 - t0
-                    k = int(d / corrbin) + n - 1
+                    k = long(d / corrbin) + n - 1
                     ind = (cluster_max + 1) * cl0 + cl1
                     correlograms[ind, k] += 1
                 else:

@@ -62,9 +62,9 @@ with open('setup.py', 'r') as fr:
 copy('setup_dev.py', 'setup.py')
             
 # build the distribution
-call('python setup.py build_ext --inplace')
-call(('python setup.py sdist --formats=zip bdist_wininst '#--install-script postinstall.py '
-      '--bitmap images/logo-installer.bmp --title KlustaViewa'))
+call(['python', 'setup.py', 'build_ext', '--inplace'])
+call(['python', 'setup.py', 'sdist', '--formats', 'zip', 'bdist_wininst',#--install-script postinstall.py '
+      '--bitmap', 'images/logo-installer.bmp', '--title', 'KlustaViewa'])
 
 # use the original setup.py
 copy('setup.bak', 'setup.py')

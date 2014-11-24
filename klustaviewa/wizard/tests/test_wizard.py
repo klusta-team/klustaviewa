@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 
 from klustaviewa.wizard.wizard import Wizard
-import kwiklib.utils.logger as log
+from kwiklib.utils import logger as log
 from kwiklib.dataio.tests.mock_data import (
     nspikes, nclusters, nsamples, nchannels, fetdim, cluster_offset,
     create_clusters, create_similarity_matrix)

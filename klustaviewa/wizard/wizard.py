@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 import numpy as np
 
-import kwiklib.utils.logger as log
+from kwiklib.utils import logger as log
 from kwiklib.dataio.selection import get_indices
 from kwiklib.dataio.tools import get_array
 
@@ -41,7 +41,10 @@ class Wizard(object):
         # Current position in the candidates list.
         self.index = 0
         # Size of the candidates list.
-        self.size = 0
+        self.size = 0 
+        
+        self.quality = None
+        self.matrix = None
         
         
     # Data update methods.
@@ -52,17 +55,25 @@ class Wizard(object):
         if cluster_groups is not None:
             self.clusters_unique = get_array(get_indices(cluster_groups))
             self.cluster_groups = get_array(cluster_groups)
-        
+            
         if (similarity_matrix is not None and similarity_matrix.size > 0):
+
+            if len(get_array(cluster_groups)) != similarity_matrix.shape[0]:
+                log.warn(("Cannot update the wizard: cluster_groups "
+                    "has {0:d} elements whereas the similarity matrix has {1:d}.").format(
+                        len(get_array(cluster_groups)), similarity_matrix.shape[0]))
+                return
+
             self.matrix = similarity_matrix
             self.quality = np.diag(self.matrix)
             
-            assert len(self.cluster_groups) == self.matrix.shape[0]
         
     
     # Core methods.
     # -------------
     def find_target(self):
+        if self.quality is None:
+            return
         # For the target, only consider the unsorted clusters, and remove
         # the skipped targets.
         kept = ((self.cluster_groups >= 3) & 

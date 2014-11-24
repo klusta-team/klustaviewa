@@ -12,10 +12,11 @@ import numpy as np
 import numpy.random as rnd
 from qtools import QtGui, QtCore
 
+from kwiklib.dataio import get_array
 from kwiklib.dataio.selection import get_indices, select
 from klustaviewa.gui.icons import get_icon
 from kwiklib.utils.colors import COLORMAP, random_color
-import kwiklib.utils.logger as log
+from kwiklib.utils import logger as log
 from klustaviewa import SETTINGS
 from kwiklib.utils.persistence import encode_bytearray, decode_bytearray
 from klustaviewa.views.treemodel import TreeModel, TreeItem
@@ -126,7 +127,7 @@ class ClusterViewModel(TreeModel):
         for clusteridx, color in cluster_colors.iteritems():
             if cluster_quality is not None:
                 try:
-                    quality = select(cluster_quality, clusteridx)
+                    quality = get_array(select(cluster_quality, clusteridx))[0]
                 except IndexError:
                     quality = 0.
             else:
@@ -143,37 +144,6 @@ class ClusterViewModel(TreeModel):
                 spkcount=select(cluster_sizes, clusteridx),
                 # assign the group as a parent of this cluster
                 parent=self.get_group(select(cluster_groups, clusteridx)))
-    
-    # def save(self):
-    #        groups = self.get_groups()
-    #        allclusters = self.get_clusters()
-    #        
-    #        ngroups = len(groups)
-    #        nclusters = len(allclusters)
-    #        
-    #        # Initialize objects.
-    #        cluster_colors = pd.Series(np.zeros(nclusters, dtype=np.int32))
-    #        cluster_groups = pd.Series(np.zeros(nclusters, dtype=np.int32))
-    #        group_colors = pd.Series(np.zeros(ngroups, dtype=np.int32))
-    #        group_names = pd.Series(np.zeros(ngroups, dtype=np.str_))
-    #        
-    #        # Loop through all groups.
-    #        for group in groups:
-    #            groupidx = group.groupidx()
-    #            clusters = self.get_clusters_in_group(groupidx)
-    #            # set the group info object
-    #            group_colors[groupidx] = group.color()
-    #            group_names[groupidx] = group.name()
-    #            # Loop through clusters in the current group.
-    #            for cluster in clusters:
-    #                clusteridx = cluster.clusteridx()
-    #            cluster_colors[clusteridx] = cluster.color()
-    #            cluster_groups[clusteridx] = groupidx
-    #        
-    #        return dict(cluster_colors=cluster_colors,
-    #                    cluster_groups=cluster_groups,
-    #                    group_colors=group_colors,
-    #                    group_names=group_names)
     
     
     # Data methods
@@ -972,6 +942,8 @@ class ClusterView(QtGui.QTreeView):
         alt = modif & QtCore.Qt.AltModifier
         if (ctrl and key == QtCore.Qt.Key_A):
             self.select(self.get_cluster_indices())
+        elif ((ctrl or shift) and (key in (QtCore.Qt.Key_Up, QtCore.Qt.Key_Down))):
+            return
         else:
             return super(ClusterView, self).keyPressEvent(e)
         

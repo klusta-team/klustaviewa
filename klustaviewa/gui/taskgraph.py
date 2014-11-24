@@ -9,15 +9,15 @@ import pandas as pd
 from qtools import inthread, inprocess
 from qtools import QtGui, QtCore
 
-from kwiklib.dataio.tools import get_array
+from kwiklib.dataio import get_array, pandaize
 from klustaviewa.stats.correlations import normalize
-from klustaviewa.stats.correlograms import get_baselines
-import kwiklib.utils.logger as log
+from klustaviewa.stats.correlograms import get_baselines, get_excerpts
+from kwiklib.utils import logger as log
 from klustaviewa import USERPREF
 from klustaviewa import SETTINGS
 from kwiklib.utils.colors import random_color
 from klustaviewa.gui.threads import ThreadedTasks
-import klustaviewa.gui.viewdata as vd
+import klustaviewa.views.viewdata as vd
 
 
 # -----------------------------------------------------------------------------
@@ -91,6 +91,7 @@ class TaskGraph(AbstractTaskGraph):
         self.get_view = self.mainwindow.get_view
         self.get_views = self.mainwindow.get_views
         self.loader = self.mainwindow.loader
+        self.experiment = self.loader.experiment
         self.wizard = self.mainwindow.wizard
         self.controller = self.mainwindow.controller
         self.statscache = self.mainwindow.statscache
@@ -101,6 +102,8 @@ class TaskGraph(AbstractTaskGraph):
         self.tasks.selection_task.set_loader(self.loader)
         self.tasks.selection_task.selectionDone.connect(
             self.selection_done_callback)
+        self.tasks.recluster_task.reclusterDone.connect(
+            self.recluster_done_callback)
         self.tasks.correlograms_task.correlogramsComputed.connect(
             self.correlograms_computed_callback)
         self.tasks.similarity_matrix_task.correlationMatrixComputed.connect(
@@ -112,10 +115,10 @@ class TaskGraph(AbstractTaskGraph):
 
     # Selection.
     # ----------
-    def _select(self, clusters, wizard=False):
-        self.tasks.selection_task.select(clusters, wizard)
+    def _select(self, clusters, wizard=False,):
+        self.tasks.selection_task.select(clusters, wizard,)
     
-    def _select_done(self, clusters, wizard=False):
+    def _select_done(self, clusters, wizard=False,):
         if wizard:
             target = (self.wizard.current_target(),)
         else:
@@ -123,10 +126,10 @@ class TaskGraph(AbstractTaskGraph):
         # self.loader.select(clusters=clusters)
         log.debug("Selected clusters {0:s}.".format(str(clusters)))
         return [
-                ('_update_feature_view', target),
-                ('_update_waveform_view', (), dict(wizard=wizard)),
-                ('_show_selection_in_matrix', (clusters,)),
-                ('_compute_correlograms', (clusters,),),
+                ('_update_feature_view', target, dict()),
+                ('_update_waveform_view', (), dict(wizard=wizard,)),
+                ('_show_selection_in_matrix', (clusters,),),
+                ('_compute_correlograms', (clusters,), dict(wizard=wizard,)),
                 ]
     
     def _select_in_cluster_view(self, clusters, groups=[], wizard=False):
@@ -136,14 +139,19 @@ class TaskGraph(AbstractTaskGraph):
     
     # Callbacks.
     # ----------
-    def selection_done_callback(self, clusters, wizard):
-        self.select_done(clusters, wizard=wizard)
+    def selection_done_callback(self, clusters, wizard,):
+        self.select_done(clusters, wizard=wizard,)
+
+    def recluster_done_callback(self, channel_group, clusters, spikes, clu, wizard):
+        self.recluster_done(channel_group=channel_group,
+                            clusters=clusters, 
+                            spikes=spikes, clu=clu, wizard=wizard)
     
     def correlograms_computed_callback(self, clusters, correlograms, ncorrbins, 
-            corrbin):
+            corrbin, wizard):
         # Execute the callback function under the control of the task manager
         # (which handles the graph dependency).
-        self.correlograms_computed(clusters, correlograms, ncorrbins, corrbin)
+        self.correlograms_computed(clusters, correlograms, ncorrbins, corrbin, wizard)
         
     def similarity_matrix_computed_callback(self, clusters_selected, matrix, 
         clusters, cluster_groups, target_next=None):
@@ -155,13 +163,22 @@ class TaskGraph(AbstractTaskGraph):
         
     # Computations.
     # -------------
-    def _compute_correlograms(self, clusters_selected):
+    def _compute_correlograms(self, clusters_selected, wizard=None):
         # Get the correlograms parameters.
         spiketimes = get_array(self.loader.get_spiketimes('all'))
         # print spiketimes.dtype
         # Make a copy of the array so that it does not change before the
         # computation of the correlograms begins.
         clusters = np.array(get_array(self.loader.get_clusters('all')))
+
+        # Get excerpts
+        nexcerpts = USERPREF.get('correlograms_nexcerpts', 100)
+        excerpt_size = USERPREF.get('correlograms_excerpt_size', 20000)
+        spiketimes_excerpts = get_excerpts(spiketimes, 
+            nexcerpts=nexcerpts, excerpt_size=excerpt_size)
+        clusters_excerpts = get_excerpts(clusters, 
+            nexcerpts=nexcerpts, excerpt_size=excerpt_size)
+
         # corrbin = self.loader.corrbin
         # ncorrbins = self.loader.ncorrbins
         corrbin = SETTINGS.get('correlograms.corrbin', .001)
@@ -176,25 +193,71 @@ class TaskGraph(AbstractTaskGraph):
             # Set wait cursor.
             self.mainwindow.set_busy(computing_correlograms=True)
             # Launch the task.
-            self.tasks.correlograms_task.compute(spiketimes, clusters,
+            self.tasks.correlograms_task.compute(
+                spiketimes_excerpts, 
+                clusters_excerpts,
                 clusters_to_update=clusters_to_update, 
                 clusters_selected=clusters_selected,
-                ncorrbins=ncorrbins, corrbin=corrbin)    
+                ncorrbins=ncorrbins, corrbin=corrbin,
+                wizard=wizard)    
         # Otherwise, update directly the correlograms view without launching
         # the task in the external process.
         else:
             # self.update_correlograms_view()
-            return '_update_correlograms_view'
+            return ('_update_correlograms_view', (wizard,), {})
     
+    def _recluster(self):
+        exp = self.loader.experiment
+        channel_group = self.loader.shank
+        clusters_selected = self.loader.get_clusters_selected()
+        self.tasks.recluster_task.recluster(exp, channel_group=channel_group, 
+                             clusters=clusters_selected)
+
+    def _recluster_done(self, channel_group=0, clusters=None, 
+                        spikes=None, clu=None, wizard=False):
+        return [('_split2', (spikes, clu, wizard))]
+
     def _compute_similarity_matrix(self, target_next=None):
+        # TODO: get_similarity_matrix_data in viewdata
+        # return
         similarity_measure = self.loader.similarity_measure
         
-        features = self.loader.background_features
-        masks = self.loader.background_masks
-        clusters = get_array(self.loader.get_clusters(
-            spikes=self.loader.background_spikes))
-        cluster_groups = get_array(self.loader.get_cluster_groups('all'))
-        clusters_all = self.loader.get_clusters_unique()
+        # features = self.loader.background_features
+        # masks = self.loader.background_masks
+        # clusters = get_array(self.loader.get_clusters(
+            # spikes=self.loader.background_spikes))
+        # cluster_groups = get_array(self.loader.get_cluster_groups('all'))
+        # clusters_all = self.loader.get_clusters_unique()
+        
+        exp = self.experiment
+        channel_group = self.loader.shank
+        clustering = 'main'  # TODO
+        fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
+        
+        clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
+        spikes_data = exp.channel_groups[channel_group].spikes
+        cluster_groups_data = getattr(exp.channel_groups[channel_group].cluster_groups, clustering)
+        clusters_all = sorted(clusters_data.keys())
+        cluster_groups = pd.Series([clusters_data[cl].cluster_group or 0
+                                   for cl in clusters_all], index=clusters_all)
+                       
+        spikes_selected, fm = spikes_data.load_features_masks(fraction=.1)  
+        clusters = getattr(spikes_data.clusters, clustering)[:][spikes_selected] 
+        
+        fm = np.atleast_3d(fm)
+        features = fm[:, :, 0]
+        
+        if features.shape[1] <= 1:
+            return []
+        
+        # masks = fm[:, ::fetdim, 1]
+        if fm.shape[2] > 1:
+            masks = fm[:, :, 1]
+        else:
+            masks = None
+        
+        # features = pandaize(features, spikes_selected)
+        # masks = pandaize(masks, spikes_selected)
         
         # Get cluster indices that need to be updated.
         # if clusters_to_update is None:
@@ -221,7 +284,7 @@ class TaskGraph(AbstractTaskGraph):
                     ('_update_similarity_matrix_view',),
                     ]
     
-    def _correlograms_computed(self, clusters, correlograms, ncorrbins, corrbin):
+    def _correlograms_computed(self, clusters, correlograms, ncorrbins, corrbin, wizard):
         clusters_selected = self.loader.get_clusters_selected()
         # Abort if the selection has changed during the computation of the
         # correlograms.
@@ -240,7 +303,7 @@ class TaskGraph(AbstractTaskGraph):
         self.statscache.correlograms.update(clusters, correlograms)
         # Update the view.
         # self.update_correlograms_view()
-        return '_update_correlograms_view'
+        return ('_update_correlograms_view', (), dict(wizard=wizard))
         
     def _similarity_matrix_computed(self, clusters_selected, matrix, clusters,
             cluster_groups, target_next=None):
@@ -248,15 +311,17 @@ class TaskGraph(AbstractTaskGraph):
         # spikes_slice = _get_similarity_matrix_slice(
             # self.loader.nspikes, 
             # len(self.loader.get_clusters_unique()))
-        clusters_now = self.loader.get_clusters(
-            spikes=self.loader.background_spikes)
-        if not np.array_equal(clusters, clusters_now):
-            return False
+        # clusters_now = self.loader.get_clusters(
+            # spikes=self.loader.background_spikes)
+        # if not np.array_equal(clusters, clusters_now):
+            # return False
+        if len(matrix) == 0:
+            return []
         self.statscache.similarity_matrix.update(clusters_selected, matrix)
         self.statscache.similarity_matrix_normalized = normalize(
             self.statscache.similarity_matrix.to_array(copy=True))
         # Update the cluster view with cluster quality.
-        quality = np.diag(self.statscache.similarity_matrix_normalized)
+        quality = np.diag(self.statscache.similarity_matrix_normalized).copy()
         self.statscache.cluster_quality = pd.Series(
             quality,
             index=self.statscache.similarity_matrix.indices,
@@ -273,12 +338,23 @@ class TaskGraph(AbstractTaskGraph):
 
     # View updates.
     # -------------
-    def _update_correlograms_view(self):
-        data = vd.get_correlogramsview_data(self.loader, self.statscache)
+    def _update_correlograms_view(self, wizard=None):
+        clu = self.loader.get_clusters_selected()
+        # HACK: work around a bug with some GPU drivers and empty selections
+        if len(clu)==0:
+            return
+        data = vd.get_correlogramsview_data(self.experiment, 
+            self.statscache.correlograms, 
+            clusters=clu,
+            channel_group=self.loader.shank,
+            wizard=wizard,
+            )
         [view.set_data(**data) for view in self.get_views('CorrelogramsView')]
         
     def _update_similarity_matrix_view(self):
-        data = vd.get_similaritymatrixview_data(self.loader, self.statscache)
+        data = vd.get_similaritymatrixview_data(self.experiment, 
+            self.statscache.similarity_matrix_normalized,
+            channel_group=self.loader.shank,)
         [view.set_data(**data) 
             for view in self.get_views('SimilarityMatrixView')]
         # Show selected clusters when the matrix has been updated.
@@ -286,13 +362,27 @@ class TaskGraph(AbstractTaskGraph):
         return ('_show_selection_in_matrix', (clusters,))
         
     def _update_feature_view(self, autozoom=None):
-        data = vd.get_featureview_data(self.loader, 
-            autozoom=autozoom)
+        clu = self.loader.clusters_selected
+        # HACK: work around a bug with some GPU drivers and empty selections
+        if len(clu)==0:
+            return
+        data = vd.get_featureview_data(self.experiment, 
+            clusters=clu,
+            autozoom=autozoom,
+            channel_group=self.loader.shank)
         [view.set_data(**data) for view in self.get_views('FeatureView')]
         
     def _update_waveform_view(self, autozoom=None, wizard=None):
-        data = vd.get_waveformview_data(self.loader, autozoom=autozoom, 
-            wizard=wizard)
+        clu = self.loader.clusters_selected
+        # HACK: work around a bug with some GPU drivers and empty selections
+        if len(clu)==0:
+            return
+        data = vd.get_waveformview_data(self.experiment, 
+            clusters=clu,
+            autozoom=autozoom, 
+            wizard=wizard,
+            channel_group=self.loader.shank
+            )
         [view.set_data(**data) for view in self.get_views('WaveformView')]
         
     def _update_trace_view(self):
@@ -302,8 +392,8 @@ class TaskGraph(AbstractTaskGraph):
     def _update_cluster_view(self, clusters=None):
         """Update the cluster view using the data stored in the loader
         object."""
-        data = vd.get_clusterview_data(self.loader, self.statscache, 
-            clusters=clusters)
+        data = vd.get_clusterview_data(self.experiment, self.statscache,
+                                       channel_group=self.loader.shank)
         self.get_view('ClusterView').set_data(**data)
         if clusters is not None:
             return
@@ -353,6 +443,12 @@ class TaskGraph(AbstractTaskGraph):
                 spikes_selected)
             output['wizard'] = wizard
             return after_split(output)
+            
+    def _split2(self, spikes, clusters, wizard=False):
+        if len(spikes) >= 1:
+            action, output = self.controller.split2_clusters(spikes, clusters)
+            output['wizard'] = wizard
+            return after_split(output)
     
     def _undo(self, wizard=False):
         undo = self.controller.undo()
@@ -363,6 +459,8 @@ class TaskGraph(AbstractTaskGraph):
         if action == 'merge_clusters_undo':
             return after_merge_undo(output)
         elif action == 'split_clusters_undo':
+            return after_split_undo(output)
+        elif action == 'split2_clusters_undo':
             return after_split_undo(output)
         elif action == 'change_cluster_color_undo':
             return after_cluster_color_changed_undo(output)
@@ -386,6 +484,8 @@ class TaskGraph(AbstractTaskGraph):
         if action == 'merge_clusters':
             return after_merge(output)
         elif action == 'split_clusters':
+            return after_split(output)
+        elif action == 'split2_clusters':
             return after_split(output)
         elif action == 'change_cluster_color':
             return after_cluster_color_changed(output)
@@ -462,10 +562,17 @@ class TaskGraph(AbstractTaskGraph):
     def _wizard_show_pair(self, target=None, candidate=None):
         if target is None:
             target = (self.wizard.current_target(), 
-                      self.loader.get_cluster_color(self.wizard.current_target()))
+                      get_array(self.loader.get_cluster_color(self.wizard.current_target()))[0])
         if candidate is None:
-            candidate = (self.wizard.current_candidate(), 
-                         self.loader.get_cluster_color(self.wizard.current_candidate()))
+            try:
+                candidate = (self.wizard.current_candidate(), 
+                             get_array(self.loader.get_cluster_color(self.wizard.current_candidate()))[0])
+            # HACK: this can fail because when merging clusters, the merged 
+            # cluster (candidate) is deleted, and its color does not exist 
+            # anymore.
+            except:
+                candidate = (self.wizard.current_candidate(), 
+                             0)
         [view.set_wizard_pair(target, candidate) 
             for view in self.get_views('FeatureView')]
         

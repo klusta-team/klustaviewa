@@ -22,18 +22,18 @@ from klustaviewa.gui.icons import get_icon
 from klustaviewa.control.controller import Controller
 from klustaviewa.wizard.wizard import Wizard
 from kwiklib.dataio.tools import get_array
-from kwiklib.dataio import KlustersLoader, HDF5Loader
+from kwiklib.dataio import KlustersLoader, KwikLoader
 from klustaviewa.gui.buffer import Buffer
 from klustaviewa.gui.dock import ViewDockWidget, DockTitleBar
 from klustaviewa.stats.correlations import normalize
-import kwiklib.utils.logger as log
+from kwiklib.utils import logger as log
 from kwiklib.utils.logger import FileLogger, register, unregister
 from kwiklib.utils.persistence import encode_bytearray, decode_bytearray
 from klustaviewa import USERPREF
 from klustaviewa import SETTINGS
 from klustaviewa import APPNAME, ABOUT, get_global_path
 from klustaviewa.gui.threads import ThreadedTasks, OpenTask
-import klustaviewa.gui.viewdata as vd
+import klustaviewa.views.viewdata as vd
 import rcicons
 
     
@@ -76,7 +76,7 @@ class KwikSkope(QtGui.QMainWindow):
         # Initialize some variables.
         # self.statscache = None
         # self.loader = KlustersLoader()
-        self.loader = HDF5Loader()
+        self.loader = KwikLoader()
         self.loader.progressReported.connect(self.open_progress_reported)
         self.loader.saveProgressReported.connect(self.save_progress_reported)
         self.wizard = Wizard()
@@ -393,15 +393,15 @@ class KwikSkope(QtGui.QMainWindow):
         self.views['IPythonView'].append(view)
             
     def add_trace_view(self, do_update=None, floating=False):
-        if len(self.views['TraceView']) >= 1:
-            return
-        view = self.create_view(vw.TraceView,
-            index=len(self.views['TraceView']),
-            position=QtCore.Qt.RightDockWidgetArea,
-            floating=floating)
-        self.views['TraceView'].append(view)
-        if do_update and self.is_file_open:
-            self.update_trace_view()
+         if len(self.views['TraceView']) >= 1:
+             return
+         view = self.create_view(vw.TraceView,
+             index=len(self.views['TraceView']),
+             position=QtCore.Qt.RightDockWidgetArea,
+             floating=floating)
+         self.views['TraceView'].append(view)
+         if do_update and self.is_file_open:
+             self.update_trace_view()
             
     def update_trace_view(self):
         data = vd.get_traceview_data(self.loader)

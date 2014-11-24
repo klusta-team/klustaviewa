@@ -18,4 +18,4 @@ chdir /d %olddir%
 REM ## YOUR COMMANDS GO HERE
 
 set DISTUTILS_USE_SDK=1
-python dev/tools/build.py 1> build.log 2>&1
+python dev/tools/build.py

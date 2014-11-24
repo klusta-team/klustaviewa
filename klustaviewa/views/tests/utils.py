@@ -14,7 +14,6 @@ import mock_data as md
 from klustaviewa.stats.correlograms import NCORRBINS_DEFAULT, CORRBIN_DEFAULT
 from klustaviewa import USERPREF
 import klustaviewa.views as v
-import klustaviewa.gui.viewdata as vd
 
 
 # -----------------------------------------------------------------------------
@@ -137,17 +136,17 @@ def show_view(view_class, **kwargs):
     window = show_window(TestWindow)
     return window
     
-def show_waveformview(loader, clusters, **kwargs):
-    loader.select(clusters=clusters)
-    data = vd.get_waveformview_data(loader)
-    kwargs.update(data)
-    show_view(v.WaveformView, **kwargs)
+# def show_waveformview(loader, clusters, **kwargs):
+    # loader.select(clusters=clusters)
+    # data = vd.get_waveformview_data(loader)
+    # kwargs.update(data)
+    # show_view(v.WaveformView, **kwargs)
     
-def show_featureview(loader, clusters, **kwargs):
-    loader.select(clusters=clusters)
-    data = vd.get_featureview_data(loader)
-    kwargs.update(data)
-    show_view(v.FeatureView, **kwargs)
+# def show_featureview(loader, clusters, **kwargs):
+    # loader.select(clusters=clusters)
+    # data = vd.get_featureview_data(loader)
+    # kwargs.update(data)
+    # show_view(v.FeatureView, **kwargs)
     
     
     

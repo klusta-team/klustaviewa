@@ -76,6 +76,7 @@ def get_histogram_points(hist):
 class CorrelogramsDataManager(Manager):
     def set_data(self, correlograms=None, cluster_colors=None, baselines=None,
         clusters_selected=None, ncorrbins=None, corrbin=None,
+        keep_order=None,
         normalization='row'):
         
         if correlograms is None:
@@ -86,6 +87,7 @@ class CorrelogramsDataManager(Manager):
             ncorrbins = 0            
             corrbin = 0            
         
+        self.keep_order = keep_order
         
         # self.correlograms_array = get_correlograms_array(correlograms,
             # clusters_selected=clusters_selected, ncorrbins=ncorrbins)
@@ -103,20 +105,26 @@ class CorrelogramsDataManager(Manager):
         self.nticks = (ncorrbins + 1) * self.ncorrelograms
         self.ncorrbins = ncorrbins
         self.corrbin = corrbin
-        self.clusters_selected = clusters_selected
-        self.clusters_unique = sorted(clusters_selected)
+        self.clusters_selected = np.array(clusters_selected, dtype=np.int32)
+        self.clusters_unique = np.array(sorted(clusters_selected), dtype=np.int32)
         self.nclusters = len(clusters_selected)
         assert nclusters == self.nclusters
         self.cluster_colors = cluster_colors
         self.cluster_colors_array = get_array(cluster_colors, dosort=True)
+        
+        if keep_order:
+            self.permutation = np.argsort(clusters_selected)
+        else:
+            self.permutation = np.arange(self.nclusters)
+        self.cluster_colors_array_ordered = self.cluster_colors_array[self.permutation]
         
         # HACK: if correlograms is empty, ncorrelograms == 1 here!
         if self.correlograms_array.size == 0:
             self.ncorrelograms = 0
         
         # cluster i and j for each histogram in the view
-        clusters = [(i,j) for j in xrange(self.nclusters) 
-            for i in xrange(self.nclusters)]
+        clusters = [(i,j) for j in self.permutation
+                            for i in self.permutation]
         self.clusters = np.array(clusters, dtype=np.int32)
         self.clusters0 = self.clusters
         
@@ -152,7 +160,7 @@ class CorrelogramsDataManager(Manager):
         self.baselines = self.baselines0.copy()
         if normalization == 'row':
             # normalization
-            for i in xrange(self.nclusters):
+            for i in range(self.nclusters):
                 # divide all correlograms in the row by the max of this histogram
                 correlogram_diagonal = self.correlograms_array[i, i, ...]
                 m = correlogram_diagonal.max()
@@ -381,13 +389,13 @@ class CorrelogramsInfoManager(Manager):
         
         cx_rel = np.clip(cx, 0, self.data_manager.nclusters - 1)
         cy_rel = np.clip(cy, 0, self.data_manager.nclusters - 1)
-        
-        color1 = self.data_manager.cluster_colors_array[cy_rel]
+
+        color1 = self.data_manager.cluster_colors_array_ordered[cy_rel]
         r, g, b = COLORMAP[color1,:]
         color1 = (r, g, b, .75)
         
-        cx = self.data_manager.clusters_unique[cx_rel]
-        cy = self.data_manager.clusters_unique[cy_rel]
+        cx = self.data_manager.clusters_unique[self.data_manager.permutation][cx_rel]
+        cy = self.data_manager.clusters_unique[self.data_manager.permutation][cy_rel]
         
         text = "%d / %d" % (cx, cy)
         

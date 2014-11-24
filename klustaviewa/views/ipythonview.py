@@ -5,7 +5,7 @@
 # -----------------------------------------------------------------------------
 import os
 
-import kwiklib.utils.logger as log
+from kwiklib.utils import logger as log
 
 try:
     from IPython.qt.console.rich_ipython_widget import RichIPythonWidget

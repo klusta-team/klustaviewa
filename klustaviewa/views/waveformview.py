@@ -17,7 +17,7 @@ from kwiklib.dataio.tools import get_array
 from kwiklib.dataio.selection import get_spikes_in_clusters, select, get_indices
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings, KlustaView
 from kwiklib.utils.colors import COLORMAP_TEXTURE, SHIFTLEN
-import kwiklib.utils.logger as log
+from kwiklib.utils import logger as log
 from klustaviewa import SETTINGS
 
 
@@ -75,7 +75,7 @@ FRAGMENT_SHADER_AVERAGE = """
     float index = %CMAP_OFFSET% + cmap_vindex * %CMAP_STEP%;
     vec2 index2d = vec2(index, %SHIFT_OFFSET% + (1 + toggle_mask * (1 - vmask) * %SHIFTLEN%) * %SHIFT_STEP%);
     out_color = texture2D(cmap, index2d);
-    out_color.w = .5;
+    out_color.w = 1.;
 """
 
 
@@ -389,6 +389,7 @@ class WaveformDataManager(Manager):
     # ----------------------
     def set_data(self,
                  waveforms=None,
+                 channels=None,
                  masks=None,
                  clusters=None,
                  # list of clusters that are selected, the order matters
@@ -423,7 +424,7 @@ class WaveformDataManager(Manager):
         self.masks_array = get_array(masks)
         self.clusters_array = get_array(clusters)
         # Relative indexing.
-        if len(clusters_selected) > 0:
+        if len(clusters_selected) > 0 and len(self.waveform_indices) > 0:
             self.clusters_rel = np.array(np.digitize(self.clusters_array, 
                 sorted(clusters_selected)) - 1, dtype=np.int32)
             self.clusters_rel_ordered = (np.argsort(clusters_selected)
@@ -442,6 +443,9 @@ class WaveformDataManager(Manager):
             self.clusters_selected2 = sorted(clusters_selected)
             
         self.nspikes, self.nsamples, self.nchannels = self.waveforms_array.shape
+        if channels is None:
+            channels = range(self.nchannels)
+        self.channels = channels
         self.npoints = self.waveforms_array.size
         self.geometrical_positions = geometrical_positions
         self.clusters_selected = clusters_selected
@@ -936,7 +940,7 @@ class WaveformInfoManager(Manager):
         channel, cluster_rel = self.position_manager.find_box(xd, yd)
         text = "{0:d} on channel {1:d}".format(
             self.data_manager.clusters_selected2[cluster_rel],
-            channel,
+            self.data_manager.channels[channel],
             )
         
         self.paint_manager.set_data(

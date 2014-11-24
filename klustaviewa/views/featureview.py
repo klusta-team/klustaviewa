@@ -19,8 +19,8 @@ from kwiklib.dataio.selection import get_indices, select
 from kwiklib.dataio.tools import get_array
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings, KlustaView
 from kwiklib.utils.colors import COLORMAP_TEXTURE, SHIFTLEN, COLORMAP
-# from klustaviewa import USERPREF
-import kwiklib.utils.logger as log
+from klustaviewa import USERPREF
+from kwiklib.utils import logger as log
 import klustaviewa
 
 
@@ -48,7 +48,7 @@ VERTEX_SHADER = """
     if ((highlight > 0) || (selection > 0))
         gl_PointSize = 5.;
     else
-        gl_PointSize = 3.;
+        gl_PointSize = u_point_size;
         
     // DEBUG
     //gl_PointSize = 20;
@@ -76,7 +76,7 @@ VERTEX_SHADER_BACKGROUND = """
     
     position.z = 0.;
     
-    gl_PointSize = 3.;
+    gl_PointSize = u_point_size;
 """
      
 FRAGMENT_SHADER_BACKGROUND = """
@@ -253,6 +253,7 @@ class FeatureDataManager(Manager):
                  cluster_colors=None,
                  fetdim=None,
                  nchannels=None,
+                 channels=None,
                  nextrafet=None,
                  autozoom=None,  # None, or the target cluster
                  duration=None,
@@ -272,6 +273,11 @@ class FeatureDataManager(Manager):
             fetdim = 2
             nchannels = 1
             nextrafet = 0
+
+        if features.shape[1] == 1:
+            features = np.tile(features, (1, 4))
+        if features_background.shape[1] == 1:
+            features_background = np.tile(features_background, (1, 4))
         
         assert fetdim is not None
         
@@ -287,43 +293,34 @@ class FeatureDataManager(Manager):
         # can be 'second' or 'samples'
         self.time_unit = time_unit
         
-        # # Indices of all subset spikes.
-        # indices_all = get_indices(features)
-        
-        # # Select only the clusters for subset of spikes.
-        # clusters = select(clusters, indices_all)
-        
-        # # Indices of subset spikes in selected clusters.
-        # indices_selection = get_indices(clusters)
-        
-        # # Indices of subset spikes that are not in selected clusters.
-        # indices_background = np.setdiff1d(indices_all, indices_selection, True)
-        
         # Extract the relevant spikes, but keep the other ones in features_full
         self.clusters = clusters
         self.clusters_array = get_array(self.clusters)
         
-        
         # self.features contains selected spikes.
-        # self.features = select(features, indices_selection)
         self.features = features
         self.features_array = get_array(self.features)
         
         # self.features_background contains all non-selected spikes
-        # self.features_background = select(features, indices_background)
         self.features_background = features_background
         self.features_background_array = get_array(self.features_background)
-        
         
         # Background spikes are those which do not belong to the selected clusters
         self.npoints_background = self.features_background_array.shape[0]
         self.nspikes_background = self.npoints_background
         
+        if channels is None:
+            channels = range(nchannels)
+        
         self.nspikes, self.ndim = self.features.shape
         self.fetdim = fetdim
         self.nchannels = nchannels
+        self.channels = channels
         self.nextrafet = nextrafet
         self.npoints = self.features.shape[0]
+        
+        if masks is None:
+            masks = np.ones_like(self.features, dtype=np.float32)
         self.masks = masks
         self.feature_indices = get_indices(self.features)
         self.feature_indices_array = get_array(self.feature_indices)
@@ -392,6 +389,7 @@ class FeatureVisual(Visual):
         self.add_varying("vhighlight", vartype="int", ndim=1)
         
         self.add_uniform("toggle_mask", vartype="int", ndim=1, data=0)
+        self.add_uniform("u_point_size", vartype="float", ndim=1, data=USERPREF['features_point_size'] or 3.)
         
         self.add_attribute("selection", vartype="int", ndim=1, data=selection)
         self.add_varying("vselection", vartype="int", ndim=1)
@@ -452,6 +450,8 @@ class FeatureBackgroundVisual(Visual):
         
         self.add_attribute("position0", vartype="float", ndim=2, data=position0)
         self.add_uniform("alpha", vartype="float", ndim=1, data=alpha)
+        
+        self.add_uniform("u_point_size", vartype="float", ndim=1, data=USERPREF['features_point_size'] or 3.)
         
         # necessary so that the navigation shader code is updated
         self.is_position_3D = True
@@ -572,7 +572,7 @@ class FeaturePaintManager(PlotPaintManager):
         self.set_data(visual='features_background',
             size=self.data_manager.npoints_background,
             position0=self.data_manager.data_background,
-            alpha=self.data_manager.alpha_background,
+            alpha=self.toggle_background_value * self.data_manager.alpha_background,
             )
             
     def set_wizard_pair(self, target=None, candidate=None):
@@ -583,7 +583,7 @@ class FeaturePaintManager(PlotPaintManager):
         else:
             text = 'best unsorted: {0:d}'.format(target[0])
             color = COLORMAP[target[1], :]
-            color = np.hstack((color, [1.]))
+            color = np.hstack((color.squeeze(), [1.]))
             self.set_data(visual='wizard_target',
                 visible=True,
                 text=text,
@@ -596,7 +596,7 @@ class FeaturePaintManager(PlotPaintManager):
         else:
             text = 'closest match: {0:d}'.format(candidate[0])
             color = COLORMAP[candidate[1], :]
-            color = np.hstack((color, [1.]))
+            color = np.hstack((color.squeeze(), [1.]))
             self.set_data(visual='wizard_candidate',
                 visible=True,
                 text=text,
@@ -905,18 +905,34 @@ class FeatureProjectionManager(Manager):
         self.parent.projectionChanged.emit(0, channel0, 0)
         self.parent.projectionChanged.emit(1, channel1, 0)
         
-    def select_neighbor_channel(self, coord, channel_dir):
+    def select_neighbor_channel(self, coord, channel_dir, feature=None):
+        # current channel and feature in the given coordinate
+        proj = self.projection[coord]
+        if proj is None:
+            proj = (0, coord)
+        channel, _ = proj
+        # next or previous channel
+        channel = np.mod(channel + channel_dir, self.data_manager.nchannels + 
+            self.data_manager.nextrafet)
+        if feature is None:
+            feature = self.get_smart_feature(coord, channel)
+        self.set_projection(coord, channel, feature, do_update=True)
+        
+    def select_neighbor_projection(self, coord, channel_dir):
         # current channel and feature in the given coordinate
         proj = self.projection[coord]
         if proj is None:
             proj = (0, coord)
         channel, feature = proj
-        # next or previous channel
-        channel = np.mod(channel + channel_dir, self.data_manager.nchannels + 
-            self.data_manager.nextrafet)
-        feature = self.get_smart_feature(coord, channel)
-        self.set_projection(coord, channel, feature, do_update=True)
-        
+        lf = self.fetdim - 1
+        if feature == 0 and channel_dir == -1:
+            self.select_neighbor_channel(coord, channel_dir, feature=lf)
+        elif feature == lf and channel_dir == 1:
+            self.select_neighbor_channel(coord, channel_dir, feature=0)
+        else:
+            feature = feature + channel_dir
+            self.set_projection(coord, channel, feature, do_update=True)
+            
     def select_feature(self, coord, feature):
         # feature = np.clip(feature, 0, s - 1)
         # current channel and feature in the given coordinate
@@ -985,6 +1001,7 @@ class FeatureInteractionManager(PlotInteractionManager):
         self.register('ToggleMask', self.toggle_mask)
         self.register('ToggleBackground', self.toggle_background)
         self.register('SelectNeighborChannel', self.select_neighbor_channel)
+        self.register('SelectNeighborProjection', self.select_neighbor_projection)
         self.register('SelectFeature', self.select_feature)
         
     def initialize_default(self, constrain_navigation=None,
@@ -1043,6 +1060,22 @@ class FeatureInteractionManager(PlotInteractionManager):
         coord, channel_dir = parameter
         
         self.projection_manager.select_neighbor_channel(coord, channel_dir)
+        
+        channel, feature = self.projection_manager.get_projection(coord)
+        
+        log.debug(("Projection changed to channel {0:d} and "
+                   "feature {1:d} on axis {2:s}.").format(
+                        channel, feature, 'xy'[coord]))
+        self.parent.projectionChanged.emit(coord, channel, feature)
+        
+        self.paint_manager.update_points()
+        self.paint_manager.updateGL()
+        
+    def select_neighbor_projection(self, parameter):
+        coord, channel_dir = parameter
+        
+        self.projection_manager.select_neighbor_projection(coord, channel_dir)
+        
         channel, feature = self.projection_manager.get_projection(coord)
         
         log.debug(("Projection changed to channel {0:d} and "
@@ -1152,6 +1185,32 @@ class FeatureBindings(KlustaViewaBindings):
         self.set('Wheel', 'SelectNeighborChannel',
                  key_modifier='Shift',
                  param_getter=lambda p: (1, -int(np.sign(p['wheel']))))
+       
+        self.set('KeyPress', 'SelectNeighborChannel',
+                 key_modifier='Control',
+                 key='Up',
+                 param_getter=lambda p: (0, -1))
+       
+        self.set('KeyPress', 'SelectNeighborChannel',
+                 key_modifier='Control',
+                 key='Down',
+                 param_getter=lambda p: (0, 1))
+        
+        self.set('KeyPress', 'SelectNeighborChannel',
+                 key_modifier='Shift',
+                 key='Up',
+                 param_getter=lambda p: (1, -1))
+       
+        self.set('KeyPress', 'SelectNeighborChannel',
+                 key_modifier='Shift',
+                 key='Down',
+                 param_getter=lambda p: (1, 1))
+        
+    def set_neighbor_projection(self):
+        # select previous/next channel for coordinate 0
+        self.set('Wheel', 'SelectNeighborProjection',
+                 key_modifier='Alt',
+                 param_getter=lambda p: (1, -int(np.sign(p['wheel']))))
         
     def set_time_channel(self):
         self.set('KeyPress', 'SelectProjection',
@@ -1198,6 +1257,7 @@ class FeatureBindings(KlustaViewaBindings):
         self.set_toggle_mask()
         self.set_toggle_background()
         self.set_neighbor_channel()
+        self.set_neighbor_projection()
         self.set_feature()
         self.set_time_channel()
         self.set_selection()

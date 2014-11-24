@@ -10,7 +10,7 @@ import pandas as pd
 
 from klustaviewa.control.processor import Processor
 from klustaviewa.control.stack import Stack
-import kwiklib.utils.logger as log
+from kwiklib.utils import logger as log
 from kwiklib.dataio.selection import get_indices, select
 from kwiklib.dataio.tools import get_array
 
@@ -128,6 +128,31 @@ class Controller(object):
                 get_pretty_arg(list(cluster_indices_old)),
                 get_pretty_arg(list(clusters_indices_new)),
                 ))
+
+    def split2_clusters(self, spikes, clusters):
+        # clusters is new
+        # Old clusters for all spikes to split.
+        clusters_old = self.loader.get_clusters(spikes=spikes)
+        # assert np.all(np.in1d(clusters_old, clusters))
+        # Old cluster indices.
+        cluster_indices_old = np.unique(clusters_old)
+        nclusters = len(cluster_indices_old)
+
+        
+        # Renumber output of klustakwik.
+        clu_idx = np.unique(clusters)
+        nclusters_new = len(clu_idx)
+        # Get new clusters indices.
+        clusters_indices_new = self.loader.get_new_clusters(nclusters_new)
+        clu_renumber = np.zeros(clu_idx.max() + 1, dtype=np.int32)
+        clu_renumber[clu_idx] = clusters_indices_new
+        clusters_new = clu_renumber[clusters]
+
+        cluster_groups = self.loader.get_cluster_groups(cluster_indices_old)
+        cluster_colors = self.loader.get_cluster_colors(cluster_indices_old)
+        return self._process('split_clusters', get_array(cluster_indices_old), 
+            clusters_old, cluster_groups, cluster_colors, clusters_new, 
+            _description='Split2')
         
     def change_cluster_color(self, cluster, color):
         color_old = self.loader.get_cluster_colors(cluster)

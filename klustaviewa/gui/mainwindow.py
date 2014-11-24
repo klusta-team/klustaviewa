@@ -9,6 +9,7 @@ from StringIO import StringIO
 import os
 import sys
 import inspect
+import logging
 from collections import OrderedDict
 from functools import partial
 import webbrowser
@@ -24,13 +25,13 @@ from klustaviewa.gui.icons import get_icon
 from klustaviewa.control.controller import Controller
 from klustaviewa.wizard.wizard import Wizard
 from kwiklib.dataio.tools import get_array
-from kwiklib.dataio import KlustersLoader, HDF5Loader
+from kwiklib.dataio import KlustersLoader, KwikLoader, read_clusters
 from klustaviewa.gui.buffer import Buffer
 from klustaviewa.gui.dock import ViewDockWidget, DockTitleBar
 from klustaviewa.stats.cache import StatsCache
 from klustaviewa.stats.correlograms import NCORRBINS_DEFAULT, CORRBIN_DEFAULT
 from klustaviewa.stats.correlations import normalize
-import kwiklib.utils.logger as log
+from kwiklib.utils import logger as log
 from kwiklib.utils.logger import FileLogger, register, unregister
 from kwiklib.utils.persistence import encode_bytearray, decode_bytearray
 from klustaviewa import USERPREF
@@ -43,19 +44,13 @@ import rcicons
 
 
 # -----------------------------------------------------------------------------
-# Register custom classes for Qt signals
-# -----------------------------------------------------------------------------
-# id = QtCore.QMetaType.type('QTextCursor')
-
-
-# -----------------------------------------------------------------------------
 # Main Window
 # -----------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
-    
     def __init__(self, parent=None, dolog=True, filename=None):
         self.views = {}
         super(MainWindow, self).__init__(parent)
+        self.views = {}
 
         # HACK: display the icon in Windows' taskbar.
         if os.name == 'nt':
@@ -69,6 +64,7 @@ class MainWindow(QtGui.QMainWindow):
         self.dolog = dolog
         if self.dolog:
             create_file_logger()
+            
         self.initialize_view_logger()
         
         log.debug("Using {0:s}.".format(QT_BINDING))
@@ -89,7 +85,7 @@ class MainWindow(QtGui.QMainWindow):
         # Initialize some variables.
         self.statscache = None
         # self.loader = KlustersLoader()
-        self.loader = HDF5Loader(userpref=USERPREF)
+        self.loader = KwikLoader(userpref=USERPREF)
         self.loader.progressReported.connect(self.open_progress_reported)
         self.loader.saveProgressReported.connect(self.save_progress_reported)
         self.wizard = Wizard()
@@ -212,14 +208,19 @@ class MainWindow(QtGui.QMainWindow):
             self.add_action('open_last', 'Open &last', shortcut='Ctrl+Alt+O')
             self.open_last_action.setEnabled(False)
             
+        self.add_action('switch', 'S&witch shank')
+        self.add_action('import', '&Import clustering')
+        self.add_action('reset', '&Reset clustering')
         self.add_action('save', '&Save', shortcut='Ctrl+S', icon='save')
-        self.add_action('renumber', 'Save &renumbered')
+        # self.add_action('renumber', 'Save &renumbered')
         self.add_action('close', '&Close file')
         
     def create_edit_actions(self):
         # Undo/redo actions.
         self.add_action('undo', '&Undo', shortcut='Ctrl+Z', icon='undo')
         self.add_action('redo', '&Redo', shortcut='Ctrl+Y', icon='redo')
+        
+        # self.add_action('reset', 'Re&set')
         
         # Quit action.
         self.add_action('quit', '&Quit', shortcut='Ctrl+Q')
@@ -242,6 +243,7 @@ class MainWindow(QtGui.QMainWindow):
     def create_control_actions(self):
         self.add_action('merge', '&Merge', shortcut='G', icon='merge')
         self.add_action('split', '&Split', shortcut='K', icon='split')
+        self.add_action('recluster', '&Recluster', shortcut='CTRL+R')
 
     def create_correlograms_actions(self):
         self.add_action('change_ncorrbins', 'Change time &window')
@@ -287,8 +289,7 @@ class MainWindow(QtGui.QMainWindow):
         self.add_action('manual', 'Show &manual')
         self.add_action('shortcuts', 'Show &shortcuts')
         self.add_action('open_preferences', '&Open preferences')
-        self.add_action('refresh_preferences', '&Refresh preferences',
-            shortcut='CTRL+R')
+        self.add_action('refresh_preferences', '&Refresh preferences')
         
     def create_menu(self):
         # File menu.
@@ -296,9 +297,13 @@ class MainWindow(QtGui.QMainWindow):
         file_menu.addAction(self.open_action)
         file_menu.addAction(self.open_last_action)
         file_menu.addSeparator()
-        # file_menu.addSeparator()
+        file_menu.addAction(self.reset_action)
+        # file_menu.addAction(self.import_action)
+        file_menu.addSeparator()
         file_menu.addAction(self.save_action)
-        file_menu.addAction(self.renumber_action)
+        # file_menu.addAction(self.renumber_action)
+        file_menu.addSeparator()
+        file_menu.addAction(self.switch_action)
         file_menu.addSeparator()
         file_menu.addAction(self.close_action)
         file_menu.addAction(self.quit_action)
@@ -341,6 +346,8 @@ class MainWindow(QtGui.QMainWindow):
         actions_menu.addSeparator()
         actions_menu.addAction(self.merge_action)
         actions_menu.addAction(self.split_action)
+        actions_menu.addSeparator()
+        actions_menu.addAction(self.recluster_action)
         
         # Wizard menu.
         wizard_menu = self.menuBar().addMenu("&Wizard")
@@ -734,28 +741,60 @@ class MainWindow(QtGui.QMainWindow):
         
         folder = SETTINGS['main_window.last_data_dir']
         path = QtGui.QFileDialog.getOpenFileName(self, 
-            "Open a file (.clu or other)", folder)[0]
+            "Open a file (.clu or other)", folder, "XML or KWIK (*.xml *.kwik)")[0]
         # If a file has been selected, open it.
         if path:
             # Launch the loading task in the background asynchronously.
+            self._path = path
             self.open_task.open(self.loader, path)
             # Save the folder.
             folder = os.path.dirname(path)
             SETTINGS['main_window.last_data_dir'] = folder
             SETTINGS['main_window.last_data_file'] = path
-            
+           
+    def import_callback(self, checked=None):
+        folder = SETTINGS['main_window.last_data_dir']
+        path = QtGui.QFileDialog.getOpenFileName(self, 
+            "Open a .clu file", folder, "CLU file (*.clu.* *.clu_original.*)")[0]
+        # If a file has been selected, open it.
+        if path and self.loader is not None:
+            clu = read_clusters(path)
+            # TODO
+            self.open_done()
+        
     def save_callback(self, checked=None):
         self.open_task.save(self.loader)
         
-    def renumber_callback(self, checked=None):
-        # folder = SETTINGS.get('main_window.last_data_file')
-        self.loader.save(renumber=True)
-        # self.need_save = False
-        self.open_last_callback()
+    def reset_callback(self, checked=None):
+        # reply = QtGui.QMessageBox.question(self, 'Reset clustering',
+            # "Do you *really* want to erase permanently your manual clustering and reset it to the original (automatic) clustering? You won't be able to undo this operation!",
+            # (
+            # QtGui.QMessageBox.Yes |
+             # QtGui.QMessageBox.Cancel 
+             # ),
+            # QtGui.QMessageBox.Cancel)
+        # if reply == QtGui.QMessageBox.Yes:
+        clustering_name, ok = QtGui.QInputDialog.getText(self, "Clustering name", "Copy from (you'll lose the current clustering):",
+                                   QtGui.QLineEdit.Normal, 'original')
+        if ok:
+            self.loader.copy_clustering(clustering_from=clustering_name, 
+                                        clustering_to='main')
+            # Reload the file.
+            self.loader.close()
+            self.open_task.open(self.loader, self._path)
+        # elif reply == QtGui.QMessageBox.Cancel:
+            # return
+        
+    # def renumber_callback(self, checked=None):
+        # # folder = SETTINGS.get('main_window.last_data_file')
+        # self.loader.save(renumber=True)
+        # # self.need_save = False
+        # self.open_last_callback()
         
     def open_last_callback(self, checked=None):
         path = SETTINGS['main_window.last_data_file']
         if path:
+            self._path = path
             self.open_task.open(self.loader, path)
             
     def close_callback(self, checked=None):
@@ -774,6 +813,24 @@ class MainWindow(QtGui.QMainWindow):
         self.loader.close()
         self.is_file_open = False
         
+    def switch_callback(self, checked=None):
+        shank, ok = QtGui.QInputDialog.getInt(self,
+            "Shank number", "Shank number:", 
+            self.loader.shank, 
+            min(self.loader.shanks), 
+            max(self.loader.shanks), 
+            1)
+        if ok:
+            if shank in self.loader.shanks:
+                self.loader.set_shank(shank)
+                self.open_done()
+            else:
+                QtGui.QMessageBox.warning(self, "Wrong shank number", 
+                ("The selected shank '{0:d}' is not in "
+                 "the list of shanks: {1:s}.").format(shank, 
+                                                    str(self.loader.shanks)), 
+                    QtGui.QMessageBox.Ok, QtGui.QMessageBox.Ok)
+        
     def clear_view(self, view_name):
         for v in self.get_views(view_name):
             v.set_data()
@@ -788,6 +845,13 @@ class MainWindow(QtGui.QMainWindow):
     # --------------
     def open_done(self):
         self.is_file_open = True
+        self.setWindowTitle('KlustaViewa: {0:s}'.format(
+            os.path.basename(self.loader.filename)
+        ))
+        
+        register(FileLogger(self.loader.log_filename, name='kwik', 
+                 level=logging.INFO))
+        
         # Start the selection buffer.
         self.buffer = Buffer(self, 
             # delay_timer=.1, delay_buffer=.2
@@ -847,7 +911,7 @@ class MainWindow(QtGui.QMainWindow):
         self._wizard = wizard
         # The wizard boolean specifies whether the autozoom is activated or not.
         self.taskgraph.select(clusters, wizard and 
-            self.automatic_projection_action.isChecked())
+            self.automatic_projection_action.isChecked(), )
         
     def clusters_selected_callback(self, clusters, wizard=False):
         self.buffer.request((clusters, wizard))
@@ -855,7 +919,7 @@ class MainWindow(QtGui.QMainWindow):
     def cluster_pair_selected_callback(self, clusters):
         """Callback when the user clicks on a pair in the
         SimilarityMatrixView."""
-        self.get_view('ClusterView').select(clusters)
+        self.get_view('ClusterView').select(clusters,)
     
     
     # Views menu callbacks.
@@ -923,6 +987,9 @@ class MainWindow(QtGui.QMainWindow):
             SETTINGS['correlograms.ncorrbins'] = ncorrbins_new
             self.taskgraph.change_correlograms_parameters(ncorrbins=ncorrbins_new)
     
+    def recluster_callback(self, checked=None):
+        self.taskgraph.recluster()
+
     def change_corrbin_callback(self, checked=None):
         if not self.loader:
             return
@@ -1091,6 +1158,7 @@ class MainWindow(QtGui.QMainWindow):
                              QtCore.Qt.Key_H,
                              QtCore.Qt.NoModifier,)
         self.keyPressEvent(e)
+        self.keyReleaseEvent(e)
     
     def open_preferences_callback(self, checked=None):
         url = USERPREF.filepath

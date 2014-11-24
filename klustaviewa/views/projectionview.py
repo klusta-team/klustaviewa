@@ -18,7 +18,7 @@ from kwiklib.dataio.selection import get_indices
 from kwiklib.dataio.tools import get_array
 from klustaviewa.gui.icons import get_icon
 from klustaviewa.views.common import HighlightManager, KlustaViewaBindings
-import kwiklib.utils.logger as log
+from kwiklib.utils import logger as log
 import klustaviewa
 
 
@@ -49,13 +49,15 @@ class ProjectionView(QtGui.QWidget):
                 nchannels != getattr(self, 'nchannels', None) or
                 nextrafet != getattr(self, 'nextrafet', None))
     
-    def set_data(self, fetdim=None, nchannels=None, nextrafet=None):
+    def set_data(self, fetdim=None, nchannels=None, nextrafet=None, channels=None):
         if fetdim is None:
             fetdim = 3
         if nchannels is None:
             nchannels = 1
         if nextrafet is None:
             nextrafet = 0
+        if channels is None:
+            channels = range(nchannels)
         
         # No need to update the widget if the data has not changed.
         if not self._has_changed(fetdim, nchannels, nextrafet):
@@ -63,6 +65,7 @@ class ProjectionView(QtGui.QWidget):
         
         self.fetdim = fetdim
         self.nchannels = nchannels
+        self.channels = channels
         self.nextrafet = nextrafet
         
         # Remove the existing layout.
@@ -89,6 +92,8 @@ class ProjectionView(QtGui.QWidget):
             
         try:
             channel = int(channel)
+            # absolute to relative indexing
+            channel = list(self.channels).index(channel)
         except ValueError:
             log.debug("Unable to parse channel '{0:s}'".format(str(channel)))
             channel = self.projection[coord][0]
@@ -96,6 +101,7 @@ class ProjectionView(QtGui.QWidget):
         if extra:
             channel += self.nchannels
             
+        # now, channel is relative.
         channel = np.clip(channel, 0, self.nchannels + self.nextrafet - 1)
             
         feature = self.projection[coord][1]
@@ -170,7 +176,7 @@ class ProjectionView(QtGui.QWidget):
         comboBox.setEditable(True)
         comboBox.setMaximumWidth(100)
         comboBox.setInsertPolicy(QtGui.QComboBox.NoInsert)
-        comboBox.addItems(["%d" % i for i in xrange(self.nchannels)])
+        comboBox.addItems(["%d" % i for i in self.channels])
         comboBox.addItems(["Extra %d" % i for i in xrange(self.nextrafet)])
         comboBox.editTextChanged.connect(partial(self.select_channel, coord))
         # comboBox.setFocusPolicy(QtCore.Qt.ClickFocus)
@@ -206,7 +212,7 @@ class ProjectionView(QtGui.QWidget):
             if comboBox.count() != self.nchannels + self.nextrafet:
                 comboBox.blockSignals(True)
                 comboBox.clear()
-                comboBox.addItems(["%d" % i for i in xrange(self.nchannels)])
+                comboBox.addItems(["%d" % i for i in self.channels])
                 comboBox.addItems(["Extra %d" % i for i in xrange(self.nextrafet)])
                 comboBox.blockSignals(False)
         

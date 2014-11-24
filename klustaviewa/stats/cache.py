@@ -41,6 +41,7 @@ class StatsCache(object):
             self.ncorrbins = ncorrbins
         self.correlograms = CacheMatrix(shape=(0, 0, self.ncorrbins))
         self.similarity_matrix = CacheMatrix()
+        self.similarity_matrix_normalized = None
         self.cluster_quality = None
         
     # def add(self, clusters):

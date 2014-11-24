@@ -10,7 +10,7 @@ import threading
 
 from qtools import get_application, QtCore, QtGui
 
-import kwiklib.utils.logger as log
+from kwiklib.utils import logger as log
 from klustaviewa.gui.buffer import Buffer
 
 

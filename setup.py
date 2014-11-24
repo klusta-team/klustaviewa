@@ -36,33 +36,46 @@ if __name__ == '__main__':
     setup(
         zip_safe=False,
         name='klustaviewa',
-        version='0.2.2dev',
+        version='0.3.0.beta4',
         author='Cyrille Rossant',
         author_email='rossant@github',
         packages=['klustaviewa',
                   'klustaviewa.control',
+                  'klustaviewa.control.tests',
                   'klustaviewa.gui',
+                  'klustaviewa.gui.tests',
                   'klustaviewa.scripts',
                   'klustaviewa.stats',
+                  'klustaviewa.stats.tests',
                   'klustaviewa.views',
+                  'klustaviewa.views.tests',
                   'klustaviewa.wizard',
+                  'klustaviewa.wizard.tests',
 
                   #<
-                  # 'qtools',
-                  # 'qtools.qtpy',
-                  # 'qtools.tests',
+                  'qtools',
+                  'qtools.qtpy',
+                  'qtools.tests',
                   
-                  # 'kwiklib',
-                  # 'kwiklib.dataio',
-                  # 'kwiklib.scripts',
-                  # 'kwiklib.utils',
+                  'kwiklib',
+                  'kwiklib.dataio',
+                  'kwiklib.dataio.tests',
+                  'kwiklib.scripts',
+                  'kwiklib.utils',
+                  'kwiklib.utils.tests',
                   
-                  # 'galry',
-                  # 'galry.managers',
-                  # 'galry.processors',
-                  # 'galry.test',
-                  # 'galry.visuals',
-                  # 'galry.visuals.fontmaps',
+                  'spikedetekt2',
+                  'spikedetekt2.core',
+                  'spikedetekt2.core.tests',
+                  'spikedetekt2.processing',
+                  'spikedetekt2.processing.tests',
+                  
+                  'galry',
+                  'galry.managers',
+                  'galry.processors',
+                  'galry.test',
+                  'galry.visuals',
+                  'galry.visuals.fontmaps',
                   #>
                   
                   ],
@@ -74,6 +87,7 @@ if __name__ == '__main__':
                 'kwikskope = klustaviewa.scripts.runkwikskope:main', ],
             'console_scripts': [
                 'kwikkonvert = kwiklib.scripts.runkwikkonvert:main', 
+                'klusta = spikedetekt2.core.script:main', 
                 ]
         },
         
@@ -99,8 +113,9 @@ if __name__ == '__main__':
         
         include_dirs=np.get_include(),
         
-        url='https://github.com/klusta-team/klustaviewa',
+        url='https://klusta-team.github.io',
         license='LICENSE.md',
-        description='Spike sorting graphical interface.',
+        description='Spike sorting software suite.',
         long_description=LONG_DESCRIPTION,
     )
+    

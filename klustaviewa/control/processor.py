@@ -8,7 +8,7 @@ import inspect
 import numpy as np
 import pandas as pd
 
-import kwiklib.utils.logger as log
+from kwiklib.utils import logger as log
 from kwiklib.dataio.selection import get_indices, select
 from kwiklib.dataio.tools import get_array
 from kwiklib.utils.colors import random_color
@@ -87,9 +87,10 @@ class Processor(object):
         groups = self.loader.get_cluster_groups(cluster_indices_old)
         # colors = self.loader.get_cluster_colors(cluster_indices_old)
         # Add clusters.
-        for cluster_new, group in zip(cluster_indices_new, 
-                groups):
-            self.loader.add_cluster(cluster_new, group, random_color())
+        self.loader.add_clusters(cluster_indices_new, 
+            # HACK: take the group of the first cluster for all new clusters
+            get_array(groups)[0]*np.ones(len(cluster_indices_new)),
+            random_color(len(cluster_indices_new)))
         # Set the new clusters to the corresponding spikes.
         self.loader.set_cluster(spikes, clusters_new)
         # Remove empty clusters.
@@ -112,9 +113,10 @@ class Processor(object):
         # Add clusters that were removed after the split operation.
         clusters_empty = sorted(set(cluster_indices_old) - 
             set(cluster_indices_new))
-        for cluster in clusters_empty:
-            self.loader.add_cluster(cluster, select(cluster_groups, cluster),
-                select(cluster_colors, cluster))
+        self.loader.add_clusters(
+            clusters_empty,
+            select(cluster_groups, clusters_empty),
+            select(cluster_colors, clusters_empty))
         # Set the new clusters to the corresponding spikes.
         self.loader.set_cluster(spikes, clusters_old)
         # Remove empty clusters.

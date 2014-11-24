@@ -2,9 +2,9 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "KlustaViewa"
-#define MyAppVersion "0.2.0dev"
+#define MyAppVersion "0.3.0.beta1"
 #define MyAppPublisher "Klusta-Team"
-#define MyAppURL "https://github.com/klusta-team/klustaviewa"
+#define MyAppURL "https://klusta-team.github.io"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -42,29 +42,30 @@ Source: "D:\Git\klustaviewa\dev\wininstaller\KlustaViewa\*"; DestDir: "{app}"; F
 
 [Icons]
 ; KlustaViewa
-Name: "{group}\KlustaViewa"; Filename: "{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\Scripts\klustaviewa.exe"; WorkingDir: "{userdocs}"; IconFilename: "{app}\favicon.ico"
-Name: "{userdesktop}\KlustaViewa"; Filename: "{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\Scripts\klustaviewa.exe"; WorkingDir: "{userdocs}"; IconFilename: "{app}\favicon.ico"
+Name: "{group}\KlustaViewa"; Filename: "{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\Scripts\klustaviewa.exe"; WorkingDir: "{userdocs}"; IconFilename: "{app}\favicon.ico"
+Name: "{userdesktop}\KlustaViewa"; Filename: "{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\Scripts\klustaviewa.exe"; WorkingDir: "{userdocs}"; IconFilename: "{app}\favicon.ico"
 
 ; KwikSkope
-Name: "{group}\KwikSkope"; Filename: "{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\Scripts\kwikskope.exe"; WorkingDir: "{userdocs}"; IconFilename: "{app}\favicon.ico"
-Name: "{userdesktop}\KwikSkope"; Filename: "{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\Scripts\kwikskope.exe"; WorkingDir: "{userdocs}"; IconFilename: "{app}\favicon.ico"
+;Name: "{group}\KwikSkope"; Filename: "{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\Scripts\kwikskope.exe"; WorkingDir: "{userdocs}"; IconFilename: "{app}\favicon.ico"
+;Name: "{userdesktop}\KwikSkope"; Filename: "{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\Scripts\kwikskope.exe"; WorkingDir: "{userdocs}"; IconFilename: "{app}\favicon.ico"
 
 ; Update and Uninstall
-Name: "{group}\Update KlustaViewa"; Filename: "{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\python.exe"; WorkingDir: "{app}"; Parameters: """{app}\tools\update.py""";
-Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
+;Name: "{group}\Update KlustaViewa"; Filename: "{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\python.exe"; WorkingDir: "{app}"; Parameters: """{app}\tools\update.py""";
+;Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Run]
-Filename: "{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\python.exe"; WorkingDir: "{app}"; Parameters: """{app}\tools\update.py"""; Flags: runhidden
+Filename: "{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\python.exe"; WorkingDir: "{app}"; Parameters: """{app}\tools\register.py"""; Flags: runhidden
 
 [Dirs]
 Name: "{app}\"; Permissions: everyone-modify
 
-[Registry]
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\Scripts"; Check: NeedsAddPath('{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\Scripts')
+[Registry]                        
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64"; Check: NeedsAddPath('{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64')
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\Scripts"; Check: NeedsAddPath('{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\Scripts')
 Root: HKCR; Subkey: ".kwik"; ValueType: string; ValueName: ""; ValueData: "Kwik spike file"; Flags: uninsdeletevalue
 Root: HKCR; Subkey: "KlustaViewa"; ValueType: string; ValueName: ""; ValueData: "KlustaViewa"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "KlustaViewa\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\favicon.ico"
-Root: HKCR; Subkey: "KlustaViewa\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\WinPython-64bit-2.7.5.2\python-2.7.5.amd64\Scripts\klustaviewa.exe"" ""%1"""
+Root: HKCR; Subkey: "KlustaViewa\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\Scripts\klustaviewa.exe"" ""%1"""
 
 [Code]
 function NeedsAddPath(Param: string): boolean;

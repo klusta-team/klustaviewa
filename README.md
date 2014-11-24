@@ -20,3 +20,9 @@ Screenshots
 [![Screenshot 1](images/thumbnails/img0.png)](images/img0.PNG)
 [![Screenshot 2](images/thumbnails/img1.png)](images/img1.PNG)
 
+
+Installation
+------------
+
+* You'll find the [installation instructions here](https://github.com/klusta-team/example).
+

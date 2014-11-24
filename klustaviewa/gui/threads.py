@@ -15,9 +15,9 @@ from qtools import QtGui, QtCore
 from kwiklib.dataio import KlustersLoader
 from kwiklib.dataio.tools import get_array
 from klustaviewa.wizard.wizard import Wizard
-import kwiklib.utils.logger as log
+from kwiklib.utils import logger as log
 from klustaviewa.stats import compute_correlograms, compute_correlations
-
+from recluster import run_klustakwik
 
 # -----------------------------------------------------------------------------
 # Tasks
@@ -41,26 +41,39 @@ class OpenTask(QtCore.QObject):
             
 
 class SelectionTask(QtCore.QObject):
-    selectionDone = QtCore.pyqtSignal(object, bool)
+    selectionDone = QtCore.pyqtSignal(object, bool, int)
     
     def set_loader(self, loader):
         self.loader = loader
     
-    def select(self, clusters, wizard):
+    def select(self, clusters, wizard, channel_group=0):
         self.loader.select(clusters=clusters)
         
-    def select_done(self, clusters, wizard, _result=None):
-        self.selectionDone.emit(clusters, wizard)
+    def select_done(self, clusters, wizard, channel_group=0, _result=None):
+        self.selectionDone.emit(clusters, wizard, channel_group)
+
+
+class ReclusterTask(QtCore.QObject):
+    reclusterDone = QtCore.pyqtSignal(int, object, object, object, object)
+    
+    def recluster(self, exp, channel_group=0, clusters=None, wizard=None):
+        spikes, clu = run_klustakwik(exp, channel_group=channel_group, 
+                             clusters=clusters)
+        return spikes, clu
+        
+    def recluster_done(self, exp, channel_group=0, clusters=None, wizard=None, _result=None):
+        spikes, clu = _result
+        self.reclusterDone.emit(channel_group, clusters, spikes, clu, wizard)
 
 
 class CorrelogramsTask(QtCore.QObject):
-    correlogramsComputed = QtCore.pyqtSignal(np.ndarray, object, int, float)
+    correlogramsComputed = QtCore.pyqtSignal(np.ndarray, object, int, float, object)
     
     # def __init__(self, parent=None):
         # super(CorrelogramsTask, self).__init__(parent)
     
     def compute(self, spiketimes, clusters, clusters_to_update=None,
-            clusters_selected=None, ncorrbins=None, corrbin=None):
+            clusters_selected=None, ncorrbins=None, corrbin=None, wizard=None):
         log.debug("Computing correlograms for clusters {0:s}.".format(
             str(list(clusters_to_update))))
         if len(clusters_to_update) == 0:
@@ -72,10 +85,10 @@ class CorrelogramsTask(QtCore.QObject):
         return correlograms
     
     def compute_done(self, spiketimes, clusters, clusters_to_update=None,
-            clusters_selected=None, ncorrbins=None, corrbin=None, _result=None):
+            clusters_selected=None, ncorrbins=None, corrbin=None, wizard=None, _result=None):
         correlograms = _result
         self.correlogramsComputed.emit(np.array(clusters_selected),
-            correlograms, ncorrbins, corrbin)
+            correlograms, ncorrbins, corrbin, wizard)
 
 
 class SimilarityMatrixTask(QtCore.QObject):
@@ -92,6 +105,7 @@ class SimilarityMatrixTask(QtCore.QObject):
             str(list(clusters_selected))))
         if len(clusters_selected) == 0:
             return {}
+        
         correlations = compute_correlations(features, clusters, 
             masks, clusters_selected, similarity_measure=similarity_measure)
         return correlations
@@ -115,6 +129,8 @@ class ThreadedTasks(QtCore.QObject):
         super(ThreadedTasks, self).__init__(parent)
         self.selection_task = inthread(SelectionTask)(
             impatient=True)
+        self.recluster_task = inthread(ReclusterTask)(
+            impatient=True)
         self.correlograms_task = inprocess(CorrelogramsTask)(
             impatient=True, use_master_thread=False)
         # HACK: the similarity matrix view does not appear to update on
@@ -128,6 +144,7 @@ class ThreadedTasks(QtCore.QObject):
 
     def join(self):
         self.selection_task.join()
+        self.recluster_task.join()
         self.correlograms_task.join()
         self.similarity_matrix_task.join()
         

@@ -1,13 +1,17 @@
 # -----------------------------------------------------------------------------
 # Global variables
 # -----------------------------------------------------------------------------
-__version__ = '0.2.2dev'
+__version__ = '0.3.0.beta4'
 
 APPNAME = 'klustaviewa'
 
 ABOUT = """KlustaViewa is a software for semi-automatic spike sorting with high-channel count silicon probes. It is meant to be used after the automatic clustering stage. This interface automatically guides the user through the clustered data and lets him or her refine the data. The goal is to make the manual stage more reliable, quicker, and less error-prone.
 
-This software was developed by Cyrille Rossant in the Cortical Processing Laboratory at UCL (http://www.ucl.ac.uk/cortexlab)."""
+This software was developed by Cyrille Rossant in the Cortical Processing Laboratory at UCL (http://www.ucl.ac.uk/cortexlab).
+
+Version {0:s}.
+
+""".format(__version__)
 
 
 # -----------------------------------------------------------------------------
@@ -36,9 +40,9 @@ def get_global_path(filename, folder=None, appname=None):
 # -----------------------------------------------------------------------------
 # Default logger
 # -----------------------------------------------------------------------------
-import kwiklib.utils.logger as log
-import kwiklib.utils.userpref as pref
-import kwiklib.utils.settings as settings
+from kwiklib.utils import logger as log
+from kwiklib.utils import userpref as pref
+from kwiklib.utils import settings
 
 
 # -----------------------------------------------------------------------------
@@ -76,4 +80,3 @@ sys.excepthook = log.handle_exception
 loglevel = USERPREF['loglevel']
 if loglevel:
     log.set_level(loglevel)
-

@@ -10,7 +10,7 @@ from galry import (Manager, PlotPaintManager, EventProcessor, PlotInteractionMan
     QtGui, QtCore, NavigationEventProcessor, GridVisual, TextVisual, DataNormalizer, 
     process_coordinates)
 from klustaviewa.views.common import KlustaViewaBindings, KlustaView
-import kwiklib.utils.logger as log
+from kwiklib.utils import logger as log
 from kwiklib.dataio import get_array
 from qtools import inthread
 from kwiklib.utils.colors import COLORS_COUNT, generate_colors, COLORMAP
@@ -33,7 +33,7 @@ class TraceManager(Manager):
         self.default_channel_height = 0.25
         self.channel_height_limits = (0.01, 20.)
         self.nticks = 10
-        
+                
         # these variables will be overwritten after initialization (used to check if init is complete)
         self.slice_ref = (-1, -1) # slice paging
         self.paintinitialized = False # to stop first slice from being loaded until correctly-shaped data drawn
