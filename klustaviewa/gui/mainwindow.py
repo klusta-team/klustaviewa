@@ -634,13 +634,13 @@ class MainWindow(QtGui.QMainWindow):
         if do_update and self.is_file_open and self.loader.has_selection():
             self.taskgraph.update_correlograms_view()
             
-    def add_trace_view(self, do_update=None, floating=False):
-        if len(self.views['TraceView']) >= 1:
-            return
+    def add_trace_view(self, do_update=None, floating=None):
+        # if len(self.views['TraceView']) >= 1:
+        #     return
         view = self.create_view(vw.TraceView,
             index=len(self.views['TraceView']),
-            position=QtCore.Qt.RightDockWidgetArea,
-            floating=floating)
+            position=QtCore.Qt.BottomDockWidgetArea,
+            floating=True)
         self.views['TraceView'].append(view)
         if do_update and self.is_file_open:
             self.taskgraph.update_trace_view()
@@ -808,7 +808,8 @@ class MainWindow(QtGui.QMainWindow):
         self.clear_view('FeatureView')
         self.clear_view('WaveformView')
         self.clear_view('CorrelogramsView')
-        
+        self.clear_view('TraceView')
+
         self.loader.close()
         self.is_file_open = False
         

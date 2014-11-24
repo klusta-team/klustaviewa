@@ -28,8 +28,13 @@ class TraceManager(Manager):
     
     # initialization
     def set_data(self, trace=None, freq=None, channel_height=None, channel_names=None, ignored_channels=None, channel_colors=None, spiketimes=None,
-        spikemasks=None, cluster_colors=None, spikeclusters=None):
-        
+        spikemasks=None, cluster_colors=None, spikeclusters=None, s_before=16, s_after=16):
+
+        # TODO: fix bug where view cannot be opened before file
+        # if hasattr(self, 'paintinitialized'):
+        #     if self.paintinitialized == True: # we need to clear up some things
+        #         pass
+
         # default settings
         self.max_size = 6000
         self.duration_initial = 10.
@@ -51,7 +56,7 @@ class TraceManager(Manager):
             
             # don't worry, we won't tell the GPU that it's not actually rendering any useful data, but we need to keep track
             self.real_data = False
-        
+
         # same with spikes
         if spiketimes is None:
             spiketimes = np.array([0])
@@ -78,11 +83,8 @@ class TraceManager(Manager):
         self.totalduration = (self.trace.shape[0] - 1) / self.freq
         self.totalsamples, self.nchannels = self.trace.shape
         self.channels = np.arange(self.nchannels)
-        
-        # # format spikes into a sensible display format
-        # self.spikex = np.repeat(spiketimes, 2)
-        # self.spikey = np.tile([-10000,10000],len(spiketimes))
-        # self.spike_array = np.c_[self.spikex,self.spikey]
+        self.s_before = s_before
+        self.s_after = s_after
                 
         if channel_height is None:
             channel_height = self.default_channel_height
@@ -111,7 +113,7 @@ class TraceManager(Manager):
     def load_correct_slices(self, force=False):
         # dirty hack to make sure that we don't redraw the window until it's been drawn once, otherwise Galry automatically rescales
         if not self.paintinitialized:
-             return
+            return
         
         # dur is a paged version of the duration (using e^round(log(duration))) to avoid loading slices for every integer change in zoom level
         dur = np.exp(np.ceil(np.log(self.xlim[1] - self.xlim[0]))) 
@@ -127,8 +129,9 @@ class TraceManager(Manager):
             slice = self.get_viewslice(xlim_ext)
             
             # this executes in a new thread, and calls slice_loaded when done
-            self.slice_retriever.load_new_slice(self.trace, slice, xlim_ext, self.totalduration, self.duration_initial, self.spiketimes,
-                self.channel_colors, self.spikes_visible, self.cluster_colors, self.spikemasks, self.spikeclusters)
+            self.slice_retriever.load_new_slice(self.trace, slice, xlim_ext, self.totalduration, self.duration_initial,
+                self.spiketimes, self.channel_colors, self.spikes_visible, self.cluster_colors,
+                self.spikemasks, self.spikeclusters, self.s_before, self.s_after)
             
     def get_buffered_viewlimits(self, xlim):
         d = self.xlim[1] - self.xlim[0]
@@ -202,7 +205,7 @@ class SliceRetriever(QtCore.QObject):
         super(SliceRetriever, self).__init__(parent)
         
     def load_new_slice(self, trace, slice, xlim, totalduration, duration_initial, spiketimes, channel_colors, spikes_visible,
-        cluster_colors, spikemasks, spikeclusters):
+        cluster_colors, spikemasks, spikeclusters, s_before, s_after):
         
         total_size = trace.shape[0]
         samples = trace[slice, :]
@@ -233,17 +236,19 @@ class SliceRetriever(QtCore.QObject):
         color_index_spikes = np.full((nchannels, M.shape[0]/nchannels), COLORS_COUNT+1)
 
         spikestart = bisect.bisect_left(spiketimes, slice.start)
-        spikestop = bisect.bisect_right(spiketimes, slice.stop, lo=spikestart)
+        spikestop = bisect.bisect_right(spiketimes, slice.stop, lo=spikestart) + 1
 
         spikeclusters = spikeclusters[spikestart:spikestop]
         spikemasks = spikemasks[spikestart:spikestop]
         spiketimes = spiketimes[spikestart:spikestop]
         nds = ((spiketimes - slice.start)/slice.step).astype(int) # nearest displayed sample, rounded to integer
 
-        halfwidth = max(int(10 / slice.step), 2) # assuming +/- 10 samples
+        s_before = max(int(s_before / slice.step), 2)
+        s_after = max(int(s_after / slice.step), 2)
     
         for x in range(0, nds.shape[0]-1):
-                color_index_spikes[spikemasks[x], max(nds[x]-halfwidth, 0):min(nds[x]+halfwidth, color_index_spikes.shape[1])] = spikeclusters[x]
+                color_index_spikes[spikemasks[x], max(nds[x]-s_before, 0):\
+                min(nds[x]+s_after, color_index_spikes.shape[1])] = cluster_colors[spikeclusters[x]]
 
         color_index_spikes = np.ravel(color_index_spikes)
 
@@ -264,9 +269,7 @@ class TracePaintManager(PlotPaintManager):
 
         self.add_visual(GridVisual, name='grid', background_transparent=False,
             letter_spacing=350.,)
-        # if self.data_manager.no_data = False
-        # self.paint_manager.set_data(visual='trace_waveforms',
-        #     visible=True)
+
         self.data_manager.paintinitialized = True
 
     def update(self):
@@ -289,7 +292,8 @@ class TracePaintManager(PlotPaintManager):
                 size=self.data_manager.size,
                 channel_index=self.data_manager.channel_index,
                 color_index=self.data_manager.color_index_spikes,
-                bounds=self.data_manager.bounds)
+                bounds=self.data_manager.bounds,
+                visible=self.data_manager.real_data)
         else:        
             self.set_data(visual='trace_waveforms',
                 channel_height=self.data_manager.channel_height,
@@ -298,7 +302,8 @@ class TracePaintManager(PlotPaintManager):
                 size=self.data_manager.size,
                 channel_index=self.data_manager.channel_index,
                 color_index=self.data_manager.color_index,
-                bounds=self.data_manager.bounds)
+                bounds=self.data_manager.bounds,
+                visible=self.data_manager.real_data)
 
 class MultiChannelVisual(Visual):
     def initialize(self, color=None, point_size=1.0,
