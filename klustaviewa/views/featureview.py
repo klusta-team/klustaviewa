@@ -302,8 +302,9 @@ class FeatureDataManager(Manager):
 
         # Keep a subset of all spikes in the view.
         self.nspikes_full = len(features)
-        # > 1000 spikes ==> take a selection
-        k = self.nspikes_full // 1000 + 1
+        # > features_nspikes_per_cluster_max spikes ==> take a selection
+        nspikes_max = USERPREF.get('features_nspikes_per_cluster_max', 1000)
+        k = self.nspikes_full // nspikes_max + 1
         # self.features = features[::k]
         subsel = slice(None, None, k)
         self.features = select(features, subsel)
