@@ -295,17 +295,18 @@ class FeatureDataManager(Manager):
 
         # Extract the relevant spikes, but keep the other ones in features_full
         self.clusters = clusters
-        self.clusters_array = get_array(self.clusters)
 
         # Contains all spikes, needed for splitting.
-        self.features_all = features
+        self.features_full = features
+        self.features_full_array = get_array(features)
 
         # Keep a subset of all spikes in the view.
-        nspikes = len(features)
+        self.nspikes_full = len(features)
         # > 1000 spikes ==> take a selection
-        k = nspikes // 1000 + 1
+        k = self.nspikes_full // 1000 + 1
         # self.features = features[::k]
-        self.features = select(features, slice(None, None, k))
+        subsel = slice(None, None, k)
+        self.features = select(features, subsel)
         self.features_array = get_array(self.features)
 
         # self.features_background contains all non-selected spikes
@@ -329,10 +330,21 @@ class FeatureDataManager(Manager):
         if masks is None:
             masks = np.ones_like(self.features, dtype=np.float32)
         self.masks = masks
+
+
+        # Subselection
+        self.masks = select(self.masks, subsel)
+        self.masks_array = get_array(self.masks)
+        if self.spiketimes is not None:
+            self.spiketimes = select(self.spiketimes, subsel)
+        self.clusters = select(self.clusters, subsel)
+        self.clusters_array = get_array(self.clusters)
+
+
         self.feature_indices = get_indices(self.features)
+        self.feature_full_indices = get_indices(self.features_full)
         self.feature_indices_array = get_array(self.feature_indices)
 
-        self.masks_array = get_array(self.masks)
         self.cluster_colors = get_array(cluster_colors, dosort=True)
 
         # Relative indexing.
@@ -351,6 +363,7 @@ class FeatureDataManager(Manager):
 
         # prepare GPU data
         self.data = np.empty((self.nspikes, 2), dtype=np.float32)
+        self.data_full = np.empty((self.nspikes_full, 2), dtype=np.float32)
         self.data_background = np.empty((self.nspikes_background, 2),
             dtype=np.float32)
 
@@ -729,8 +742,8 @@ class FeatureSelectionManager(Manager):
                                     primitive_type='LINE_LOOP',
                                     visible=False,
                                     name='selection_polygon')
-        self.feature_indices = self.data_manager.feature_indices
-        self.selection_mask = np.zeros(self.data_manager.nspikes, dtype=np.int32)
+        self.feature_indices = self.data_manager.feature_full_indices
+        self.selection_mask = np.zeros(self.data_manager.nspikes_full, dtype=np.int32)
         self.selected_spikes = []
 
     def set_selected_spikes(self, spikes):
@@ -764,18 +777,23 @@ class FeatureSelectionManager(Manager):
         if polygon is None:
             polygon = self.polygon()
         features = self.data_manager.data
-        masks = self.data_manager.masks_full
-        # indices = (masks > 0) & polygon_contains_points(polygon, features)
+        features_full = self.data_manager.data_full
+
         indices = polygon_contains_points(polygon, features)
         spkindices = np.nonzero(indices)[0]
         spkindices = np.unique(spkindices)
-        return spkindices
+
+        indices_full = polygon_contains_points(polygon, features_full)
+        spkindices_full = np.nonzero(indices_full)[0]
+        spkindices_full = np.unique(spkindices_full)
+
+        return spkindices, spkindices_full
 
     def select_spikes(self, polygon=None):
         """Select spikes enclosed in the selection polygon."""
-        spikes = self.find_enclosed_spikes(polygon)
+        spikes, spikes_full = self.find_enclosed_spikes(polygon)
         self.set_selected_spikes(spikes)
-        self.emit(spikes)
+        self.emit(spikes_full)
 
     def add_point(self, point):
         """Add a point in the selection polygon."""
@@ -870,6 +888,7 @@ class FeatureProjectionManager(Manager):
                     channel - self.nchannels + self.nchannels * self.fetdim)
             text = 'E{0:d}'.format(channel - self.nchannels)
         self.data_manager.data[:, coord] = self.data_manager.features_array[:, i].ravel()
+        self.data_manager.data_full[:, coord] = self.data_manager.features_full_array[:, i].ravel()
         self.data_manager.data_background[:, coord] = \
             self.data_manager.features_background_array[:, i].ravel()
 
@@ -900,10 +919,10 @@ class FeatureProjectionManager(Manager):
             self.set_projection(1, self.projection[1][0], self.projection[1][1])
 
     def auto_projection(self, target):
-        fet = select(self.data_manager.features,
-            self.data_manager.clusters == target)
+        fet = get_array(select(self.data_manager.features,
+            self.data_manager.clusters == target))
         n = fet.shape[1]
-        fet = np.abs(fet.values[:,0:n-self.nextrafet:self.fetdim]).mean(axis=0)
+        fet = np.abs(fet[:,0:n-self.nextrafet:self.fetdim]).mean(axis=0)
         channels_best = np.argsort(fet)[::-1]
         channel0 = channels_best[0]
         channel1 = channels_best[1]
