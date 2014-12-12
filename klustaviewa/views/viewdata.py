@@ -57,6 +57,7 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
         return data
 
     _, nsamples, nchannels = spikes_data.waveforms_filtered.shape
+
     # Find spikes to display and load the waveforms.
     if len(clusters) > 0:
         spikes_selected, waveforms = spikes_data.load_waveforms(clusters=clusters,
@@ -113,7 +114,8 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     clusters = np.array(clusters)
     # TODO: add spikes=None and spikes_bg=None
     fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
-    nchannels = len(exp.channel_groups[channel_group].channels)
+
+
     channels = exp.channel_groups[channel_group].channel_order
     
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
@@ -348,14 +350,53 @@ def get_similaritymatrixview_data(exp, matrix=None,
     return data
     
     
-    
-# TODO: loader ==> exp (supporting new file format)
-def get_traceview_data(loader):
-    data = dict(
-        freq=loader.get_freq(),
-        trace=loader.get_traces(),
-    )
-    return data
+def get_traceview_data(exp,
+        channel_group=0, clustering='main'):
+
+	if (len(exp.recordings) == 0) or exp.recordings[0].raw == None:
+		data = dict(
+			trace=None,
+			)
+		return data
+	
+	rawdata = exp.recordings[0].raw
+	freq = exp.application_data.spikedetekt.sample_rate
+	clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
+	clusters = sorted(clusters_data.keys())
+	spikes_data = exp.channel_groups[channel_group].spikes
+	channels = exp.channel_groups[channel_group].channel_order
+	spiketimes = spikes_data.time_samples
+	spikeclusters = getattr(spikes_data.clusters, clustering)[:]
+
+	_, nsamples, nchannels = spikes_data.waveforms_filtered.shape
+
+	freq = exp.application_data.spikedetekt.sample_rate
+
+	cluster_colors = pd.Series([clusters_data[cl].application_data.klustaviewa.color or 1
+	                   for cl in clusters], index=clusters)
+	fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
+
+	s_before = exp.application_data.spikedetekt.extract_s_before
+	s_after = exp.application_data.spikedetekt.extract_s_after
+
+
+	if spikes_data.masks is not None:
+	    spikemasks = np.zeros((spikes_data.masks.shape[0], rawdata.shape[1]))
+	    spikemasks[:,channels] = spikes_data.masks[:, 0:fetdim*nchannels:fetdim]
+
+	cluster_colors = pandaize(cluster_colors, clusters)
+
+	data = dict(
+	    freq=freq,
+	    trace=rawdata,
+	    spiketimes=spiketimes,
+	    spikemasks=spikemasks,
+	    spikeclusters=spikeclusters,
+	    cluster_colors = cluster_colors,
+	    s_before = s_before,
+	    s_after = s_after
+	)
+	return data
 
 def get_channelview_data(loader, channels=None):
     data = dict(

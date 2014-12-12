@@ -386,7 +386,8 @@ class TaskGraph(AbstractTaskGraph):
         [view.set_data(**data) for view in self.get_views('WaveformView')]
         
     def _update_trace_view(self):
-        data = vd.get_traceview_data(self.loader)
+        data = vd.get_traceview_data(self.experiment,
+            channel_group=self.loader.shank)
         [view.set_data(**data) for view in self.get_views('TraceView')]
         
     def _update_cluster_view(self, clusters=None):
