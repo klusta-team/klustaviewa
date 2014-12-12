@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Global variables
 # -----------------------------------------------------------------------------
-__version__ = '0.3.0.beta4'
+__version__ = '0.3.0.rc1'
 
 APPNAME = 'klustaviewa'
 
@@ -52,7 +52,7 @@ USERAPP_FOLDER = get_app_folder()
 PREFERENCES_DEFAULT_PATH = pref.get_default_preferences_path()
 PREFERENCES_FILENAME = 'preferences.py'
 PREFERENCES_FILEPATH = get_global_path(PREFERENCES_FILENAME)
-USERPREF = pref.UserPreferences(appname=APPNAME, folder=USERAPP_FOLDER, 
+USERPREF = pref.UserPreferences(appname=APPNAME, folder=USERAPP_FOLDER,
     filepath=PREFERENCES_FILEPATH)
 
 
@@ -61,7 +61,7 @@ USERPREF = pref.UserPreferences(appname=APPNAME, folder=USERAPP_FOLDER,
 # -----------------------------------------------------------------------------
 PREFERENCES_FILENAME = 'settings'
 PREFERENCES_FILEPATH = get_global_path(PREFERENCES_FILENAME)
-SETTINGS = settings.Settings(appname=APPNAME, folder=USERAPP_FOLDER, 
+SETTINGS = settings.Settings(appname=APPNAME, folder=USERAPP_FOLDER,
     filepath=PREFERENCES_FILEPATH)
 
 
