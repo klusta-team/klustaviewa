@@ -711,7 +711,7 @@ class MainWindow(QtGui.QMainWindow):
         [self.add_log_view() for _ in xrange(count.get('LogView', 0))]
         [self.add_ipython_view() for _ in xrange(count.get('IPythonView', 0))]
         [self.add_correlograms_view() for _ in xrange(count.get('CorrelogramsView', 0))]
-        [self.add_trace_view() for _ in xrange(count.get('TraceView', 0))]
+        #[self.add_trace_view() for _ in xrange(count.get('TraceView', 0))]
     
     def dock_widget_closed(self, dock):
         for key in self.views.keys():
