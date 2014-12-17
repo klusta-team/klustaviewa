@@ -65,7 +65,7 @@ def compute_statistics(Fet1, Fet2, spikes_in_clusters, masks):
         if len(MyPoints) <= 1:
             CovMat = 1e-3*np.eye(nDims)
             stats[c] = (Mean, CovMat, 1e3*np.eye(nDims),
-                (1e-3)**nDims, len(MyPoints))
+                (1e-3)**nDims, len(MyPoints), np.zeros(nDims, dtype=np.bool))
             continue
 
 
@@ -102,6 +102,7 @@ def compute_statistics(Fet1, Fet2, spikes_in_clusters, masks):
         if _sign < 0:
             warn("The correlation matrix of cluster %d has a negative determinant (whaaat??)" % c)
 
+        # Boolean vector of size (nchannels,): which channels are unmasked?
         unmask = (MyMasks>0).mean(axis=0)
 
         stats[c] = (Mean, CovMat, CovMatinv, LogDet, len(MyPoints), unmask)
