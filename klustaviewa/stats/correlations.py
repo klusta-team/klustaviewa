@@ -46,7 +46,10 @@ class SimilarityMatrix(object):
         nu = nu.reshape((1, -1))
         sigma2 = np.sum(((self.features - nu) * masked) ** 2, axis=0) / nmasked
         sigma2[np.isnan(sigma2)] = 0
-        sigma2 = sigma2.reshape((1, -1))
+        # sigma2 = sigma2.reshape((1, -1))
+        # WARNING: make sure what is inside diag is a 1D array, otherwise
+        # it will take the diag of a 2D (1, n) matrix instead of generating a
+        # (n, n) diagonal matrix...
         D = np.diag(sigma2.ravel())
         # expected features
         y = self.features * self.masks + (1 - self.masks) * nu
@@ -76,8 +79,9 @@ class SimilarityMatrix(object):
             # Boolean vector of size (nchannels,): which channels are unmasked?
             unmask = ((mymasks>0).sum(axis=0) > self.unmask_threshold)
             mask = ~unmask
-            if nmyspikes <= 1:
-                covmat = 1e-3*np.eye(ndims)  ##### TODO ==> nactivefeatures
+            nunmask = np.sum(unmask)
+            if nmyspikes <= 1 or nunmask == 0:
+                covmat = 1e-3 * np.eye(nunmask)  # optim: nactivefeatures
                 stats[c] = (mymean, covmat,
                             (1e-3)**ndims, nmyspikes,
                             np.zeros(ndims, dtype=np.bool)  # unmask
@@ -85,12 +89,12 @@ class SimilarityMatrix(object):
                 continue
 
             # optimization: covmat only for submatrix of active features
-            covmat = np.cov(myfeatures, rowvar=0) # stats for cluster c
+            covmat = np.cov(myfeatures[:, unmask], rowvar=0) # stats for cluster c
 
             # Variation Bayesian approximation
             priorpoint = 1
             covmat *= (nmyspikes - 1)  # get rid of the normalization factor
-            covmat += self.D * priorpoint  # D = np.diag(sigma2.ravel())
+            covmat += self.D[unmask, unmask] * priorpoint  # D = np.diag(sigma2.ravel())
             covmat /= (nmyspikes + priorpoint - 1)
 
             # the eta just for the current cluster

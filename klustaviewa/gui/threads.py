@@ -108,7 +108,7 @@ class SimilarityMatrixTask(QtCore.QObject):
             return {}
         if self.sm is None:
             self.sm = SimilarityMatrix(features, masks)
-        correlations = sm.compute_matrix(clusters, clusters_selected)
+        correlations = self.sm.compute_matrix(clusters, clusters_selected)
         return correlations
 
     def compute_done(self, features, clusters,
