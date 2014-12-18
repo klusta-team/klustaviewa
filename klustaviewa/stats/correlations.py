@@ -5,6 +5,7 @@ clusters."""
 # Imports
 # -----------------------------------------------------------------------------
 
+import weakref
 import numpy as np
 from kwiklib.utils.logger import warn
 
@@ -24,7 +25,11 @@ class SimilarityMatrix(object):
             masks = np.ones((nspikes, ndims), dtype=np.float32)
         self.masks = masks
         self.unmask_threshold = 10
+        self.clear_cache()
         self.compute_global_statistics()
+
+    def clear_cache(self):
+        self.stats = weakref.WeakKeyDictionary()
 
     def compute_global_statistics(self):
         """Compute global Gaussian statistics from the features and masks."""
@@ -109,7 +114,7 @@ class SimilarityMatrix(object):
 
             stats[c] = (mymean, covmat, logdet, nmyspikes, unmask)
 
-        return stats
+        self.stats.update(stats)
 
     def compute_matrix(self, clusters_to_update=None):
         """Compute the correlation matrix between every pair of clusters.
@@ -122,17 +127,17 @@ class SimilarityMatrix(object):
         nspikes, ndims = self.features.shape
         nclusters = len(spikes_in_clusters)
         clusters_unique = np.unique(self.clusters)
+        if clusters_to_update is None:
+            clusters_to_update = clusters_unique
 
         spikes_in_clusters = dict([(clu, np.nonzero(self.clusters == clu)[0])
                                    for clu in clusters_unique])
 
-        stats = self.compute_cluster_statistics(spikes_in_clusters)
+        self.compute_cluster_statistics(clusters_to_update)
+        stats = self.stats
 
         # New matrix (clu0, clu1) => new value
         C = {}
-
-        if clusters_to_update is None:
-            clusters_to_update = clusters_unique
 
         for ci in clusters_to_update:
             mui, Ci, logdeti, npointsi, unmaski = stats[ci]
@@ -142,7 +147,7 @@ class SimilarityMatrix(object):
                 dmu = (muj - mui).reshape((-1, 1))
 
                 # TODO optimization: figure out unmasked for (i,j) pair
-                unmasked = ?
+                unmasked = unmaskj
                 masked = ~unmasked
                 dmu_unmasked = dmu[unmasked]
 
@@ -157,7 +162,7 @@ class SimilarityMatrix(object):
 
                 var = np.sum(dmu[masked] ** 2 / self.sigma2[masked])
                 logpij = (np.log(2*np.pi) * (-ndims/2.) +
-                         -.5 * (logdetj + np.sum(np.log(sigma2[masked]))) +
+                         -.5 * (logdetj + np.sum(np.log(self.sigma2[masked]))) +
                          -.5 * (np.dot(bj.T, dmu_unmasked) + var))
 
                 # nspikes is the total number of spikes.
@@ -204,8 +209,3 @@ def normalize(matrix, direction='row'):
         matrix[:, indices] *= (1. / s[indices].reshape((1, -1)))
 
     return matrix
-
-
-compute_correlations = compute_correlations_approximation
-
-

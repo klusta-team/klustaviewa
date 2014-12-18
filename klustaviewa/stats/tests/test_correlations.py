@@ -8,7 +8,7 @@ import os
 import numpy as np
 
 from klustaviewa.stats.cache import CacheMatrix
-from klustaviewa.stats.correlations import compute_correlations, normalize
+from klustaviewa.stats.correlations import SimilarityMatrix, normalize
 from klustaviewa.stats.tools import matrix_of_pairs
 from kwiklib.dataio.tests.mock_data import (setup, teardown,
     nspikes, nclusters, nsamples, nchannels, fetdim, TEST_FOLDER)
@@ -46,7 +46,8 @@ def test_compute_correlations():
     features[2*n:, :] = np.array([[10, 10]]) + np.random.randn(n, 2)
 
     # compute the correlation matrix
-    correlations = compute_correlations(features, clusters, masks)
+    sm = SimilarityMatrix(features, clusters, masks)
+    correlations = sm.compute_matrix()
     matrix = matrix_of_pairs(correlations)
 
     # check that correlation between 0 and 1 is much higher than the
@@ -76,7 +77,8 @@ def test_recompute_correlation():
     clusters_all = l.get_clusters_unique()
 
     similarity_matrix = CacheMatrix()
-    correlations0 = compute_correlations(features, clusters0, masks)
+    sm = SimilarityMatrix(features, clusters0, masks)
+    correlations0 = compute_matrix()
     similarity_matrix.update(clusters_unique, correlations0)
     matrix0 = normalize(similarity_matrix.to_array().copy())
 
@@ -89,8 +91,8 @@ def test_recompute_correlation():
     # Compute the new matrix
     similarity_matrix.invalidate([2, 4, 6, cluster_new])
     clusters1 = get_array(l.get_clusters('all'))
-    correlations1 = compute_correlations(features, clusters1, masks,#)
-        [cluster_new])
+    sm = SimilarityMatrix(features, clusters1, masks)
+    correlations1 = sm.compute_matrix([cluster_new])
     similarity_matrix.update([cluster_new], correlations1)
     matrix1 = normalize(similarity_matrix.to_array().copy())
 
@@ -103,8 +105,10 @@ def test_recompute_correlation():
     # Compute the new matrix
     similarity_matrix.invalidate([2, 4, 6, cluster_new])
     clusters2 = get_array(l.get_clusters('all'))
-    correlations2 = compute_correlations(features, clusters2, masks,)
-    correlations2b = compute_correlations(features, clusters2, masks,#)
+    sm = SimilarityMatrix(features, clusters2, masks,)
+    correlations2 = sm.compute_matrix(features, clusters2, masks,)
+    sm.clear_cache()
+    correlations2b = sm.compute_matrix(features, clusters2, masks,
         clusters_selected)
 
     for (clu0, clu1) in correlations2b.keys():
