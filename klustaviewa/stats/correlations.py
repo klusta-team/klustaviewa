@@ -5,7 +5,6 @@ clusters."""
 # Imports
 # -----------------------------------------------------------------------------
 
-import weakref
 import numpy as np
 from kwiklib.utils.logger import warn
 
@@ -14,12 +13,11 @@ from kwiklib.utils.logger import warn
 # Correlation matrix
 # -----------------------------------------------------------------------------
 class SimilarityMatrix(object):
-    def __init__(self, features, clusters, masks,
+    def __init__(self, features, masks,
                  similarity_measure=None  # not used anymore
                  ):
         self.features = features
-        self.clusters = clusters
-        nspikes, ndims = self.features
+        nspikes, ndims = self.features.shape
         # Default masks.
         if masks is None:
             masks = np.ones((nspikes, ndims), dtype=np.float32)
@@ -29,7 +27,7 @@ class SimilarityMatrix(object):
         self.compute_global_statistics()
 
     def clear_cache(self):
-        self.stats = weakref.WeakKeyDictionary()
+        self.stats = {}
 
     def compute_global_statistics(self):
         """Compute global Gaussian statistics from the features and masks."""
@@ -59,6 +57,8 @@ class SimilarityMatrix(object):
 
         self.y = y
         self.sigma2 = sigma2
+        self.D = D
+        self.eta = eta
 
     def compute_cluster_statistics(self, spikes_in_clusters):
         """Compute the statistics of all clusters."""
@@ -92,13 +92,13 @@ class SimilarityMatrix(object):
             # Variation Bayesian approximation
             priorpoint = 1
             covmat *= (nmyspikes - 1)  # get rid of the normalization factor
-            covmat += D * priorpoint  # D = np.diag(sigma2.ravel())
+            covmat += self.D * priorpoint  # D = np.diag(sigma2.ravel())
             covmat /= (nmyspikes + priorpoint - 1)
 
             # the eta just for the current cluster
-            etac = np.take(eta, myspikes, axis=0)
+            etac = np.take(self.eta, myspikes, axis=0)
             # optimization: etac just for active features
-            etac = etac[unmask]
+            etac = etac[:, unmask]
             d = np.mean(etac, axis=0)
 
             # Handle nmasked == 0
@@ -112,11 +112,11 @@ class SimilarityMatrix(object):
             if _sign < 0:
                 warn("The correlation matrix of cluster %d has a negative determinant (whaaat??)" % c)
 
-            stats[c] = (mymean, covmat, logdet, nmyspikes, unmask)
+            stats[int(c)] = (mymean, covmat, logdet, nmyspikes, unmask)
 
         self.stats.update(stats)
 
-    def compute_matrix(self, clusters_to_update=None):
+    def compute_matrix(self, clusters, clusters_to_update=None):
         """Compute the correlation matrix between every pair of clusters.
 
         A dictionary pairs => value is returned.
@@ -125,17 +125,18 @@ class SimilarityMatrix(object):
 
         """
         nspikes, ndims = self.features.shape
-        nclusters = len(spikes_in_clusters)
-        clusters_unique = np.unique(self.clusters)
+        clusters_unique = np.unique(clusters)
         if clusters_to_update is None:
             clusters_to_update = clusters_unique
 
-        spikes_in_clusters = dict([(clu, np.nonzero(self.clusters == clu)[0])
-                                   for clu in clusters_unique])
+        # Indices of spikes in each cluster, for the clusters to update only.
+        spikes_in_clusters = dict([(clu, np.nonzero(clusters == clu)[0])
+                                   for clu in clusters_to_update])
 
-        self.compute_cluster_statistics(clusters_to_update)
+        self.compute_cluster_statistics(spikes_in_clusters)
         stats = self.stats
 
+        print stats.keys()
         # New matrix (clu0, clu1) => new value
         C = {}
 
@@ -146,7 +147,6 @@ class SimilarityMatrix(object):
                 muj, Cj, logdetj, npointsj, unmaskj = stats[cj]
                 dmu = (muj - mui).reshape((-1, 1))
 
-                # TODO optimization: figure out unmasked for (i,j) pair
                 unmasked = unmaskj
                 masked = ~unmasked
                 dmu_unmasked = dmu[unmasked]

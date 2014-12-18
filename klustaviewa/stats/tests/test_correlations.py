@@ -46,8 +46,8 @@ def test_compute_correlations():
     features[2*n:, :] = np.array([[10, 10]]) + np.random.randn(n, 2)
 
     # compute the correlation matrix
-    sm = SimilarityMatrix(features, clusters, masks)
-    correlations = sm.compute_matrix()
+    sm = SimilarityMatrix(features, masks)
+    correlations = sm.compute_matrix(clusters)
     matrix = matrix_of_pairs(correlations)
 
     # check that correlation between 0 and 1 is much higher than the
@@ -58,7 +58,7 @@ def test_compute_correlations():
 def normalize(x):
     return x
 
-def test_recompute_correlation():
+def test_recompute_correlations():
     l, c = load()
 
     clusters_unique = l.get_clusters_unique()
@@ -77,8 +77,8 @@ def test_recompute_correlation():
     clusters_all = l.get_clusters_unique()
 
     similarity_matrix = CacheMatrix()
-    sm = SimilarityMatrix(features, clusters0, masks)
-    correlations0 = compute_matrix()
+    sm = SimilarityMatrix(features, masks)
+    correlations0 = sm.compute_matrix(clusters0)
     similarity_matrix.update(clusters_unique, correlations0)
     matrix0 = normalize(similarity_matrix.to_array().copy())
 
@@ -91,8 +91,8 @@ def test_recompute_correlation():
     # Compute the new matrix
     similarity_matrix.invalidate([2, 4, 6, cluster_new])
     clusters1 = get_array(l.get_clusters('all'))
-    sm = SimilarityMatrix(features, clusters1, masks)
-    correlations1 = sm.compute_matrix([cluster_new])
+    # sm = SimilarityMatrix(features, clusters1, masks)
+    correlations1 = sm.compute_matrix(clusters1, [cluster_new])
     similarity_matrix.update([cluster_new], correlations1)
     matrix1 = normalize(similarity_matrix.to_array().copy())
 
@@ -105,11 +105,9 @@ def test_recompute_correlation():
     # Compute the new matrix
     similarity_matrix.invalidate([2, 4, 6, cluster_new])
     clusters2 = get_array(l.get_clusters('all'))
-    sm = SimilarityMatrix(features, clusters2, masks,)
-    correlations2 = sm.compute_matrix(features, clusters2, masks,)
-    sm.clear_cache()
-    correlations2b = sm.compute_matrix(features, clusters2, masks,
-        clusters_selected)
+    # sm = SimilarityMatrix(features, clusters2, masks,)
+    correlations2 = sm.compute_matrix(clusters2)
+    correlations2b = sm.compute_matrix(clusters2, clusters_selected)
 
     for (clu0, clu1) in correlations2b.keys():
         assert np.allclose(correlations2[clu0, clu1], correlations2b[clu0, clu1]), (clu0, clu1, correlations2[clu0, clu1], correlations2b[clu0, clu1])
