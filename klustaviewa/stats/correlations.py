@@ -13,9 +13,7 @@ from kwiklib.utils.logger import warn
 # Correlation matrix
 # -----------------------------------------------------------------------------
 class SimilarityMatrix(object):
-    def __init__(self, features, masks,
-                 similarity_measure=None  # not used anymore
-                 ):
+    def __init__(self, features, masks):
         self.features = features
         nspikes, ndims = self.features.shape
         # Default masks.
@@ -136,7 +134,6 @@ class SimilarityMatrix(object):
         self.compute_cluster_statistics(spikes_in_clusters)
         stats = self.stats
 
-        print stats.keys()
         # New matrix (clu0, clu1) => new value
         C = {}
 
