@@ -141,35 +141,38 @@ class SimilarityMatrix(object):
         # New matrix (clu0, clu1) => new value
         C = {}
 
-        for ci in clusters_to_update:
+        def _compute_coeff(ci, cj):
             mui, Ci, logdeti, npointsi, unmaski = stats[ci]
+            muj, Cj, logdetj, npointsj, unmaskj = stats[cj]
+            dmu = (muj - mui).reshape((-1, 1))
 
+            unmasked = unmaskj
+            masked = ~unmasked
+            dmu_unmasked = dmu[unmasked]
+
+            # pij is the probability that mui belongs to Cj:
+            #    $$p_{ij} = w_j * N(\mu_i | \mu_j; C_j)$$
+            # where wj is the relative size of cluster j
+            # pii is the probability that mui belongs to Ci
+            try:
+                bj = np.linalg.solve(Cj, dmu_unmasked)
+            except np.linalg.LinAlgError:
+                bj = np.linalg.lstsq(Cj, dmu_unmasked)[0]
+
+            var = np.sum(dmu[masked] ** 2 / self.sigma2[masked])
+            logpij = (np.log(2*np.pi) * (-ndims/2.) +
+                     -.5 * (logdetj + np.sum(np.log(self.sigma2[masked]))) +
+                     -.5 * (np.dot(bj.T, dmu_unmasked) + var))
+
+            # nspikes is the total number of spikes.
+            wj = float(npointsj) / nspikes
+
+            C[ci, cj] = wj * np.exp(logpij)[0,0]
+
+        for ci in clusters_to_update:
             for cj in clusters_unique:
-                muj, Cj, logdetj, npointsj, unmaskj = stats[cj]
-                dmu = (muj - mui).reshape((-1, 1))
-
-                unmasked = unmaskj
-                masked = ~unmasked
-                dmu_unmasked = dmu[unmasked]
-
-                # pij is the probability that mui belongs to Cj:
-                #    $$p_{ij} = w_j * N(\mu_i | \mu_j; C_j)$$
-                # where wj is the relative size of cluster j
-                # pii is the probability that mui belongs to Ci
-                try:
-                    bj = np.linalg.solve(Cj, dmu_unmasked)
-                except np.linalg.LinAlgError:
-                    bj = np.linalg.lstsq(Cj, dmu_unmasked)[0]
-
-                var = np.sum(dmu[masked] ** 2 / self.sigma2[masked])
-                logpij = (np.log(2*np.pi) * (-ndims/2.) +
-                         -.5 * (logdetj + np.sum(np.log(self.sigma2[masked]))) +
-                         -.5 * (np.dot(bj.T, dmu_unmasked) + var))
-
-                # nspikes is the total number of spikes.
-                wj = float(npointsj) / nspikes
-
-                C[ci, cj] = wj * np.exp(logpij)[0,0]
+                _compute_coeff(ci, cj)
+                _compute_coeff(cj, ci)
 
         return C
 
