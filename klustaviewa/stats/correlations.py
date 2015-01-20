@@ -81,6 +81,7 @@ class SimilarityMatrix(object):
             mask = ~unmask
             nunmask = np.sum(unmask)
             if nmyspikes <= 1 or nunmask == 0:
+                mymean = np.zeros((1, myfeatures.shape[1]))
                 covmat = 1e-3 * np.eye(nunmask)  # optim: nactivefeatures
                 stats[c] = (mymean, covmat,
                             (1e-3)**ndims, nmyspikes,
@@ -142,8 +143,18 @@ class SimilarityMatrix(object):
         C = {}
 
         def _compute_coeff(ci, cj):
+
+            if ci not in stats or cj not in stats:
+                C[ci, cj] = 0.
+                return
+
             mui, Ci, logdeti, npointsi, unmaski = stats[ci]
             muj, Cj, logdetj, npointsj, unmaskj = stats[cj]
+
+            if npointsi <= 1 or npointsj <= 1:
+                C[ci, cj] = 0.
+                return
+
             dmu = (muj - mui).reshape((-1, 1))
 
             unmasked = unmaskj
