@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "KlustaViewa"
-#define MyAppVersion "0.3.0.beta1"
+#define MyAppVersion "0.3.0"
 #define MyAppPublisher "Klusta-Team"
 #define MyAppURL "https://klusta-team.github.io"
 
