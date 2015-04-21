@@ -746,7 +746,7 @@ class FeatureSelectionManager(Manager):
                                     visible=False,
                                     name='selection_polygon')
         self.feature_indices = self.data_manager.feature_full_indices
-        self.selection_mask = np.zeros(self.data_manager.nspikes_full, dtype=np.int32)
+        self.selection_mask = np.zeros(self.data_manager.nspikes, dtype=np.int32)
         self.selected_spikes = []
 
     def set_selected_spikes(self, spikes):
