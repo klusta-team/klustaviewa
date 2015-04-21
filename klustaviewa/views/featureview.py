@@ -578,14 +578,13 @@ class FeaturePaintManager(PlotPaintManager):
         cluster = self.data_manager.clusters_rel
         cluster_colors = self.data_manager.cluster_colors
         cmap_index = cluster_colors[cluster]
-        selection_mask = select(self.selection_manager.selection_mask, self.data_manager.subsel)
 
         self.set_data(visual='features',
             size=self.data_manager.npoints,
             position0=self.data_manager.data,
             mask=self.data_manager.masks_full,
             highlight=self.highlight_manager.highlight_mask,
-            selection=selection_mask,
+            selection=self.selection_manager.selection_mask,
             nclusters=self.data_manager.nclusters,
             cluster_depth=self.data_manager.clusters_full_depth,
             cmap_index=cmap_index,
