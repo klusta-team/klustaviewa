@@ -307,7 +307,6 @@ class FeatureDataManager(Manager):
         k = self.nspikes_full // nspikes_max + 1
         # self.features = features[::k]
         subsel = slice(None, None, k)
-        self.subsel = subsel
         self.features = select(features, subsel)
         self.features_array = get_array(self.features)
 
