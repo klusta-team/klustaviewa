@@ -221,7 +221,7 @@ class TaskGraph(AbstractTaskGraph):
         exp = self.experiment
         channel_group = self.loader.shank
         clustering = 'main'  # TODO
-        fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
+        fetdim = exp.application_data.spikedetekt.n_features_per_channel
 
         clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
         spikes_data = exp.channel_groups[channel_group].spikes
@@ -552,7 +552,7 @@ class TaskGraph(AbstractTaskGraph):
     def _wizard_show_pair(self, target=None, candidate=None):
         if target is None:
             target = (self.wizard.current_target(),
-                      get_array(self.loader.get_cluster_color(self.wizard.current_target()))[0])
+                      self.loader.get_cluster_color(self.wizard.current_target()))
         if candidate is None:
             try:
                 candidate = (self.wizard.current_candidate(),

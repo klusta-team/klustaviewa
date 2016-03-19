@@ -13,7 +13,7 @@ from kwiklib.dataio import *
 from kwiklib.utils import logger as log
 from kwiklib.dataio import (get_some_spikes_in_clusters, get_indices,
     get_spikes_in_clusters, get_some_spikes, pandaize)
-from kwiklib.utils.colors import random_color
+from kwiklib.utils.colors import random_color, next_color
 
 from klustaviewa.stats.correlations import normalize
 from klustaviewa.stats.correlograms import get_baselines, NCORRBINS_DEFAULT, CORRBIN_DEFAULT
@@ -28,7 +28,7 @@ from klustaviewa.gui.threads import ThreadedTasks
 def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
                           autozoom=None, wizard=None):
     clusters = np.array(clusters)
-    fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
+    fetdim = exp.application_data.spikedetekt.n_features_per_channel
 
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
     spikes_data = exp.channel_groups[channel_group].spikes
@@ -38,7 +38,11 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     spike_clusters = getattr(spikes_data.clusters, clustering)[:]
     # spikes_selected = get_some_spikes_in_clusters(clusters, spike_clusters)
 
-    cluster_colors = clusters_data.color[clusters]
+    # cluster_colors = clusters_data.color[clusters]
+    cluster_colors = pd.Series([
+        next_color(cl)
+            if cl in clusters_data else 1
+                           for cl in clusters], index=clusters)
 
     if spikes_data.waveforms_filtered is None:
 
@@ -113,7 +117,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
                          time_unit='second'):
     clusters = np.array(clusters)
     # TODO: add spikes=None and spikes_bg=None
-    fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
+    fetdim = exp.application_data.spikedetekt.n_features_per_channel
 
 
     channels = exp.channel_groups[channel_group].channel_order
@@ -121,10 +125,14 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
     spikes_data = exp.channel_groups[channel_group].spikes
     channels_data = exp.channel_groups[channel_group].channels
-    nchannels = spikes_data.nchannels
+    nchannels = len(channels_data)
 
     spike_clusters = getattr(spikes_data.clusters, clustering)[:]
-    cluster_colors = clusters_data.color[clusters]
+    # cluster_colors = clusters_data.color[clusters]
+    cluster_colors = pd.Series([
+        next_color(cl)
+            if cl in clusters_data else 1
+                           for cl in clusters], index=clusters)
 
     if len(clusters) > 0:
         # TODO: put fraction in user parameters
@@ -237,14 +245,12 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
     clusters = np.unique(spike_clusters)
     groups = cluster_groups_data.keys()
 
-    # cluster_colors = pd.Series([clusters_data[cl].application_data.klustaviewa.color or 1
-    #                        for cl in clusters], index=clusters)
     # cluster_groups = pd.Series([clusters_data[cl].cluster_group or 0
     #                            for cl in clusters], index=clusters)
     # Make sure there's no crash if this is called before the clusters had a chance
     # to be added in the HDF5 file.
     cluster_colors = pd.Series([
-        (clusters_data[cl].application_data.klustaviewa.color or 1)
+        next_color(cl)
             if cl in clusters_data else 1
                            for cl in clusters], index=clusters)
     cluster_groups = pd.Series([
@@ -253,7 +259,7 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
             if cl in clusters_data else 3
                                for cl in clusters], index=clusters)
 
-    group_colors = pd.Series([cluster_groups_data[g].application_data.klustaviewa.color or 1
+    group_colors = pd.Series([next_color(cl)
                              for g in groups], index=groups)
     group_names = pd.Series([cluster_groups_data[g].name or 'Group'
                             for g in groups], index=groups)
@@ -283,8 +289,12 @@ def get_correlogramsview_data(exp, correlograms, clusters=[],
     cluster_groups_data = getattr(exp.channel_groups[channel_group].cluster_groups, clustering)
     freq = exp.application_data.spikedetekt.sample_rate
 
-    cluster_colors = clusters_data.color[clusters]
-    cluster_colors = pandaize(cluster_colors, clusters)
+    # cluster_colors = clusters_data.color[clusters]
+    # cluster_colors = pandaize(cluster_colors, clusters)
+    cluster_colors = pd.Series([
+        next_color(cl)
+            if cl in clusters_data else 1
+                           for cl in clusters], index=clusters)
 
     # TODO: cache and optimize this
     spike_clusters = getattr(exp.channel_groups[channel_group].spikes.clusters,
@@ -333,7 +343,7 @@ def get_similaritymatrixview_data(exp, matrix=None,
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
     cluster_groups_data = getattr(exp.channel_groups[channel_group].cluster_groups, clustering)
     clusters = sorted(clusters_data.keys())
-    cluster_colors = pd.Series([clusters_data[cl].application_data.klustaviewa.color or 1
+    cluster_colors = pd.Series([next_color(cl)
                            for cl in clusters], index=clusters)
     cluster_groups = pd.Series([clusters_data[cl].cluster_group or 0
                                for cl in clusters], index=clusters)
@@ -373,9 +383,9 @@ def get_traceview_data(exp,
 
 	freq = exp.application_data.spikedetekt.sample_rate
 
-	cluster_colors = pd.Series([clusters_data[cl].application_data.klustaviewa.color or 1
+	cluster_colors = pd.Series([next_color(cl)
 	                   for cl in clusters], index=clusters)
-	fetdim = exp.application_data.spikedetekt.nfeatures_per_channel
+	fetdim = exp.application_data.spikedetekt.n_features_per_channel
 
 	s_before = exp.application_data.spikedetekt.extract_s_before
 	s_after = exp.application_data.spikedetekt.extract_s_after

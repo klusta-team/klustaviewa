@@ -53,30 +53,30 @@ if __name__ == '__main__':
                   'klustaviewa.wizard.tests',
 
                   #<
-                  'qtools',
-                  'qtools.qtpy',
-                  'qtools.tests',
+                  # 'qtools',
+                  # 'qtools.qtpy',
+                  # 'qtools.tests',
 
-                  'kwiklib',
-                  'kwiklib.dataio',
-                  'kwiklib.dataio.tests',
-                  'kwiklib.scripts',
-                  'kwiklib.utils',
-                  'kwiklib.utils.tests',
+                  # 'kwiklib',
+                  # 'kwiklib.dataio',
+                  # 'kwiklib.dataio.tests',
+                  # 'kwiklib.scripts',
+                  # 'kwiklib.utils',
+                  # 'kwiklib.utils.tests',
 
-                  'spikedetekt2',
-                  'spikedetekt2.core',
-                  'spikedetekt2.core.tests',
-                  'spikedetekt2.processing',
-                  'spikedetekt2.processing.tests',
+                  # 'spikedetekt2',
+                  # 'spikedetekt2.core',
+                  # 'spikedetekt2.core.tests',
+                  # 'spikedetekt2.processing',
+                  # 'spikedetekt2.processing.tests',
 
-                  'galry',
-                  'galry.managers',
-                  'galry.processors',
-                  'galry.test',
-                  'galry.visuals',
-                  'galry.visuals.fontmaps',
-                  #>
+                  # 'galry',
+                  # 'galry.managers',
+                  # 'galry.processors',
+                  # 'galry.test',
+                  # 'galry.visuals',
+                  # 'galry.visuals.fontmaps',
+                  # #>
 
                   ],
 
@@ -84,11 +84,12 @@ if __name__ == '__main__':
         entry_points={
             'gui_scripts': [
                 'klustaviewa = klustaviewa.scripts.runklustaviewa:main',
-                'kwikskope = klustaviewa.scripts.runkwikskope:main', ],
+                ],
+                # 'kwikskope = klustaviewa.scripts.runkwikskope:main', ],
             'console_scripts': [
                 'kwikkonvert = kwiklib.scripts.runkwikkonvert:main',
                 'klusta = spikedetekt2.core.script:main',
-                ]
+                ],
         },
 
         # scripts=[],
@@ -100,10 +101,10 @@ if __name__ == '__main__':
         package_data={
             'klustaviewa': ['icons/*.png', 'icons/*.ico', 'gui/*.css'],
 
-            # INCLUDE GALRY
-            'galry': ['cursors/*.png', 'icons/*.png'],
-            'galry.visuals': ['fontmaps/*.*'],
-            'galry.test': ['autosave/*REF.png'],
+            # # INCLUDE GALRY
+            # 'galry': ['cursors/*.png', 'icons/*.png'],
+            # 'galry.visuals': ['fontmaps/*.*'],
+            # 'galry.test': ['autosave/*REF.png'],
 
         },
 
@@ -118,4 +119,3 @@ if __name__ == '__main__':
         description='Spike sorting software suite.',
         long_description=LONG_DESCRIPTION,
     )
-
