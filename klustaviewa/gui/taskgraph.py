@@ -185,6 +185,10 @@ class TaskGraph(AbstractTaskGraph):
         corrbin = SETTINGS.get('correlograms.corrbin', .001)
         ncorrbins = SETTINGS.get('correlograms.ncorrbins', 101)
 
+        # Ensure ncorrbins is odd.
+        if ncorrbins % 2 == 0:
+            ncorrbins += 1
+
         # Get cluster indices that need to be updated.
         clusters_to_update = (self.statscache.correlograms.
             not_in_key_indices(clusters_selected))
@@ -407,6 +411,8 @@ class TaskGraph(AbstractTaskGraph):
     # Change correlograms parameter.
     # ------------------------------
     def _change_correlograms_parameters(self, ncorrbins=None, corrbin=None):
+        if ncorrbins % 2 == 0:
+            ncorrbins += 1
         # Update the correlograms parameters.
         if ncorrbins is not None:
             SETTINGS['correlograms.ncorrbins'] = ncorrbins
