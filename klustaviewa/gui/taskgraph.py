@@ -148,10 +148,10 @@ class TaskGraph(AbstractTaskGraph):
                             spikes=spikes, clu=clu, wizard=wizard)
 
     def correlograms_computed_callback(self, clusters, correlograms, ncorrbins,
-            corrbin, wizard):
+            corrbin, sample_rate, wizard):
         # Execute the callback function under the control of the task manager
         # (which handles the graph dependency).
-        self.correlograms_computed(clusters, correlograms, ncorrbins, corrbin, wizard)
+        self.correlograms_computed(clusters, correlograms, ncorrbins, corrbin, sample_rate, wizard)
 
     def similarity_matrix_computed_callback(self, clusters_selected, matrix,
         clusters, cluster_groups, target_next=None):
@@ -166,6 +166,7 @@ class TaskGraph(AbstractTaskGraph):
     def _compute_correlograms(self, clusters_selected, wizard=None):
         # Get the correlograms parameters.
         spiketimes = get_array(self.loader.get_spiketimes('all'))
+        sample_rate = self.loader.freq
         # print spiketimes.dtype
         # Make a copy of the array so that it does not change before the
         # computation of the correlograms begins.
@@ -182,7 +183,7 @@ class TaskGraph(AbstractTaskGraph):
         # corrbin = self.loader.corrbin
         # ncorrbins = self.loader.ncorrbins
         corrbin = SETTINGS.get('correlograms.corrbin', .001)
-        ncorrbins = SETTINGS.get('correlograms.ncorrbins', 100)
+        ncorrbins = SETTINGS.get('correlograms.ncorrbins', 101)
 
         # Get cluster indices that need to be updated.
         clusters_to_update = (self.statscache.correlograms.
@@ -199,7 +200,9 @@ class TaskGraph(AbstractTaskGraph):
                 clusters_to_update=clusters_to_update,
                 clusters_selected=clusters_selected,
                 ncorrbins=ncorrbins, corrbin=corrbin,
-                wizard=wizard)
+                sample_rate=sample_rate,
+                wizard=wizard,
+            )
         # Otherwise, update directly the correlograms view without launching
         # the task in the external process.
         else:
@@ -273,7 +276,7 @@ class TaskGraph(AbstractTaskGraph):
                     ('_update_similarity_matrix_view',),
                     ]
 
-    def _correlograms_computed(self, clusters, correlograms, ncorrbins, corrbin, wizard):
+    def _correlograms_computed(self, clusters, correlograms, ncorrbins, corrbin, sample_rate, wizard):
         clusters_selected = self.loader.get_clusters_selected()
         # Abort if the selection has changed during the computation of the
         # correlograms.

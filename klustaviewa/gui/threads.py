@@ -67,13 +67,13 @@ class ReclusterTask(QtCore.QObject):
 
 
 class CorrelogramsTask(QtCore.QObject):
-    correlogramsComputed = QtCore.pyqtSignal(np.ndarray, object, int, float, object)
+    correlogramsComputed = QtCore.pyqtSignal(np.ndarray, object, int, float, float, object)
 
     # def __init__(self, parent=None):
         # super(CorrelogramsTask, self).__init__(parent)
 
     def compute(self, spiketimes, clusters, clusters_to_update=None,
-            clusters_selected=None, ncorrbins=None, corrbin=None, wizard=None):
+            clusters_selected=None, ncorrbins=None, corrbin=None, sample_rate=None, wizard=None):
         log.debug("Computing correlograms for clusters {0:s}.".format(
             str(list(clusters_to_update))))
         if len(clusters_to_update) == 0:
@@ -81,14 +81,14 @@ class CorrelogramsTask(QtCore.QObject):
         clusters_to_update = np.array(clusters_to_update, dtype=np.int32)
         correlograms = compute_correlograms(spiketimes, clusters,
             clusters_to_update=clusters_to_update,
-            ncorrbins=ncorrbins, corrbin=corrbin)
+            ncorrbins=ncorrbins, corrbin=corrbin, sample_rate=sample_rate)
         return correlograms
 
     def compute_done(self, spiketimes, clusters, clusters_to_update=None,
-            clusters_selected=None, ncorrbins=None, corrbin=None, wizard=None, _result=None):
+            clusters_selected=None, ncorrbins=None, corrbin=None, sample_rate=None, wizard=None, _result=None):
         correlograms = _result
         self.correlogramsComputed.emit(np.array(clusters_selected),
-            correlograms, ncorrbins, corrbin, wizard)
+            correlograms, ncorrbins, corrbin, float(sample_rate), wizard)
 
 
 class SimilarityMatrixTask(QtCore.QObject):
