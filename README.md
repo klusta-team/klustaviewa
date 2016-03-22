@@ -6,9 +6,9 @@
 
 It is part of the [KlustaSuite](https://github.com/kwikteam/klusta). Refer to this project for installation instructions.
 
-## User guide
+## Documentation
 
-[See the user guide here](https://github.com/klusta-team/klustaviewa/blob/master/docs/manual.md).
+There is a [user guide here](https://github.com/klusta-team/klustaviewa/blob/master/docs/manual.md) but it is quite old, so some instructions refer to a previous version.
 
 ## Credits
 
