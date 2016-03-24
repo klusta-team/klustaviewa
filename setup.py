@@ -1,10 +1,20 @@
 import os
+import os.path as op
+import re
 from setuptools import setup
 
 import numpy as np
 
 cmdclass = { }
 ext_modules = [ ]
+
+
+# Find the version.
+curdir = op.dirname(op.realpath(__file__))
+filename = op.join(curdir, 'klustaviewa/__init__.py')
+with open(filename, 'r') as f:
+    version = re.search(r"__version__ = '([^']+)'", f.read()).group(1)
+
 
 LONG_DESCRIPTION = """Spike sorting graphical interface."""
 
@@ -16,7 +26,7 @@ if __name__ == '__main__':
     setup(
         zip_safe=False,
         name='klustaviewa',
-        version='0.4.0',
+        version=version,
         author='Cyrille Rossant',
         author_email='rossant@github',
         packages=['klustaviewa',
