@@ -173,8 +173,8 @@ class TaskGraph(AbstractTaskGraph):
         clusters = np.array(get_array(self.loader.get_clusters('all')))
 
         # Get excerpts
-        nexcerpts = USERPREF.get('correlograms_nexcerpts', 100)
-        excerpt_size = USERPREF.get('correlograms_excerpt_size', 20000)
+        nexcerpts = USERPREF.get('correlograms_nexcerpts', 50)
+        excerpt_size = USERPREF.get('correlograms_excerpt_size', 10000)
         spiketimes_excerpts = get_excerpts(spiketimes,
             nexcerpts=nexcerpts, excerpt_size=excerpt_size)
         clusters_excerpts = get_excerpts(clusters,
@@ -190,8 +190,9 @@ class TaskGraph(AbstractTaskGraph):
             ncorrbins += 1
 
         # Get cluster indices that need to be updated.
-        clusters_to_update = (self.statscache.correlograms.
-            not_in_key_indices(clusters_selected))
+        # clusters_to_update = (self.statscache.correlograms.
+        #     not_in_key_indices(clusters_selected))
+        clusters_to_update = clusters_selected
 
         # If there are pairs that need to be updated, launch the task.
         if len(clusters_to_update) > 0:
