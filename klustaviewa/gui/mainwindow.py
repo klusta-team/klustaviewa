@@ -741,7 +741,7 @@ class MainWindow(QtGui.QMainWindow):
 
         folder = SETTINGS['main_window.last_data_dir']
         path = QtGui.QFileDialog.getOpenFileName(self,
-            "Open a file (.clu or other)", folder, "XML or KWIK (*.xml *.kwik)")[0]
+            "Open a .kwik file", folder, ".kwik file")[0]
         # If a file has been selected, open it.
         if path:
             # Launch the loading task in the background asynchronously.
@@ -755,7 +755,7 @@ class MainWindow(QtGui.QMainWindow):
     def import_callback(self, checked=None):
         folder = SETTINGS['main_window.last_data_dir']
         path = QtGui.QFileDialog.getOpenFileName(self,
-            "Open a .clu file", folder, "CLU file (*.clu.* *.clu_original.*)")[0]
+            "Open a .kwik file", folder, ".kwik file")[0]
         # If a file has been selected, open it.
         if path and self.loader is not None:
             clu = read_clusters(path)
