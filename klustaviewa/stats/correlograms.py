@@ -23,6 +23,11 @@ def compute_correlograms(spiketimes,
     if corrbin is None:
         corrbin = CORRBIN_DEFAULT
 
+    # Sort spiketimes for the computation of the CCG.
+    ind = np.argsort(spiketimes)
+    spiketimes = spiketimes[ind]
+    clusters = clusters[ind]
+
     window_size = corrbin * ncorrbins
 
     # unique clusters
