@@ -288,18 +288,6 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
     sizes = np.bincount(spike_clusters)
     cluster_sizes = pd.Series(sizes[clusters], index=clusters)
 
-
-    # Get the cluster, spike and channel data
-    clusters_data = getattr(exp.channel_groups[0].clusters, clustering)
-    spikes_data = exp.channel_groups[channel_group].spikes
-    channels_data = exp.channel_groups[channel_group].channels
-
-    # Get some spike variables
-    nchannels = spikes_data.nchannels
-    sample_rate = exp.application_data.spikedetekt.sample_rate
-    spike_clusters = getattr(spikes_data.clusters, clustering)[:]
-    spiketimes_all = spikes_data.concatenated_time_samples[:]
-
     
     data = dict(
         cluster_colors=cluster_colors,
