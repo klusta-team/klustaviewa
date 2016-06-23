@@ -39,10 +39,15 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
     # spikes_selected = get_some_spikes_in_clusters(clusters, spike_clusters)
 
     # cluster_colors = clusters_data.color[clusters]
+    # get colors from application data:
     cluster_colors = pd.Series([
-        next_color(cl)
+        (clusters_data[cl].application_data.klustaviewa.color or 1)
             if cl in clusters_data else 1
                            for cl in clusters], index=clusters)
+    # cluster_colors = pd.Series([
+    #     next_color(cl)
+    #         if cl in clusters_data else 1
+    #                        for cl in clusters], index=clusters)
 
     if spikes_data.waveforms_filtered is None:
 
@@ -129,10 +134,15 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
 
     spike_clusters = getattr(spikes_data.clusters, clustering)[:]
     # cluster_colors = clusters_data.color[clusters]
+    # get colors from application data:
     cluster_colors = pd.Series([
-        next_color(cl)
+        (clusters_data[cl].application_data.klustaviewa.color or 1)
             if cl in clusters_data else 1
                            for cl in clusters], index=clusters)
+    # cluster_colors = pd.Series([
+    #     next_color(cl)
+    #         if cl in clusters_data else 1
+    #                        for cl in clusters], index=clusters)
 
     if len(clusters) > 0:
         # TODO: put fraction in user parameters
@@ -249,10 +259,18 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
     #                            for cl in clusters], index=clusters)
     # Make sure there's no crash if this is called before the clusters had a chance
     # to be added in the HDF5 file.
+
+    # get colors from application data:
     cluster_colors = pd.Series([
-        next_color(cl)
+        (clusters_data[cl].application_data.klustaviewa.color or 1)
             if cl in clusters_data else 1
                            for cl in clusters], index=clusters)
+
+    # cluster_colors = pd.Series([
+    #     next_color(cl)
+    #         if cl in clusters_data else 1
+    #                        for cl in clusters], index=clusters)
+
     cluster_groups = pd.Series([
         (clusters_data[cl].cluster_group
                                 if clusters_data[cl].cluster_group is not None else 3)
@@ -270,13 +288,16 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
     sizes = np.bincount(spike_clusters)
     cluster_sizes = pd.Series(sizes[clusters], index=clusters)
 
+    
     data = dict(
         cluster_colors=cluster_colors,
         cluster_groups=cluster_groups,
         group_colors=group_colors,
         group_names=group_names,
-        cluster_sizes=cluster_sizes,
+        cluster_sizes=cluster_sizes, 
+
     )
+
     if statscache is not None:
         data['cluster_quality'] = statscache.cluster_quality
     return data
@@ -292,10 +313,17 @@ def get_correlogramsview_data(exp, correlograms, clusters=[],
 
     # cluster_colors = clusters_data.color[clusters]
     # cluster_colors = pandaize(cluster_colors, clusters)
+
+    # get colors from application data:
     cluster_colors = pd.Series([
-        next_color(cl)
+        (clusters_data[cl].application_data.klustaviewa.color or 1)
             if cl in clusters_data else 1
                            for cl in clusters], index=clusters)
+
+    # cluster_colors = pd.Series([
+    #     next_color(cl)
+    #         if cl in clusters_data else 1
+    #                        for cl in clusters], index=clusters)
 
     # TODO: cache and optimize this
     spike_clusters = getattr(exp.channel_groups[channel_group].spikes.clusters,
@@ -344,8 +372,16 @@ def get_similaritymatrixview_data(exp, matrix=None,
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
     cluster_groups_data = getattr(exp.channel_groups[channel_group].cluster_groups, clustering)
     clusters = sorted(clusters_data.keys())
-    cluster_colors = pd.Series([next_color(cl)
+
+    # get colors from application data:
+    cluster_colors = pd.Series([
+        (clusters_data[cl].application_data.klustaviewa.color or 1)
+            if cl in clusters_data else 1
                            for cl in clusters], index=clusters)
+
+    # cluster_colors = pd.Series([next_color(cl)
+    #                        for cl in clusters], index=clusters)
+
     cluster_groups = pd.Series([clusters_data[cl].cluster_group or 0
                                for cl in clusters], index=clusters)
 

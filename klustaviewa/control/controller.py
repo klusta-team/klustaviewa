@@ -155,7 +155,7 @@ class Controller(object):
             _description='Split2')
         
     def change_cluster_color(self, cluster, color):
-        color_old = self.loader.get_cluster_colors(cluster)
+        color_old = self.loader.get_cluster_color(cluster) # Sven edit self.loader.get_cluster_colors(cluster) removed s
         color_new = color
         clusters_selected = self.loader.get_clusters_selected()
         return self._process('change_cluster_color', cluster, color_old, 
@@ -188,7 +188,7 @@ class Controller(object):
         
     def remove_group(self, group):
         name = self.loader.get_group_names(group)
-        color = self.loader.get_group_colors(group)
+        color = None # Sven changed because group color is giving errors
         return self._process('remove_group', group, name, color, 
             _description='Removed group {0:s}'.format(get_pretty_arg(group)))
         
