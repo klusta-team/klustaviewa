@@ -25,6 +25,18 @@ from klustaviewa.gui.threads import ThreadedTasks
 # -----------------------------------------------------------------------------
 # Get data from loader for views
 # -----------------------------------------------------------------------------
+
+def _get_color(clusters_data, cl):
+    if cl not in clusters_data:
+        return 1
+    cluster_data = clusters_data[cl]
+    try:
+        out = cluster_data.application_data.klustaviewa.color or 1
+        return out
+    except AttributeError as e:
+        return next_color(cl)
+
+
 def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
                           autozoom=None, wizard=None):
     clusters = np.array(clusters)
@@ -40,10 +52,8 @@ def get_waveformview_data(exp, clusters=[], channel_group=0, clustering='main',
 
     # cluster_colors = clusters_data.color[clusters]
     # get colors from application data:
-    cluster_colors = pd.Series([
-        (clusters_data[cl].application_data.klustaviewa.color or 1)
-            if cl in clusters_data else 1
-                           for cl in clusters], index=clusters)
+    cluster_colors = pd.Series([_get_color(clusters_data, cl)
+                                for cl in clusters], index=clusters)
     # cluster_colors = pd.Series([
     #     next_color(cl)
     #         if cl in clusters_data else 1
@@ -135,10 +145,8 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     spike_clusters = getattr(spikes_data.clusters, clustering)[:]
     # cluster_colors = clusters_data.color[clusters]
     # get colors from application data:
-    cluster_colors = pd.Series([
-        (clusters_data[cl].application_data.klustaviewa.color or 1)
-            if cl in clusters_data else 1
-                           for cl in clusters], index=clusters)
+    cluster_colors = pd.Series([_get_color(clusters_data, cl)
+                                for cl in clusters], index=clusters)
     # cluster_colors = pd.Series([
     #     next_color(cl)
     #         if cl in clusters_data else 1
@@ -242,6 +250,7 @@ def get_featureview_data(exp, clusters=[], channel_group=0, clustering='main',
     )
     return data
 
+
 def get_clusterview_data(exp, statscache=None, channel_group=0,
                          clustering='main',):
     clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
@@ -261,10 +270,8 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
     # to be added in the HDF5 file.
 
     # get colors from application data:
-    cluster_colors = pd.Series([
-        (clusters_data[cl].application_data.klustaviewa.color or 1)
-            if cl in clusters_data else 1
-                           for cl in clusters], index=clusters)
+    cluster_colors = pd.Series([_get_color(clusters_data, cl)
+                                for cl in clusters], index=clusters)
 
     # cluster_colors = pd.Series([
     #     next_color(cl)
@@ -288,13 +295,13 @@ def get_clusterview_data(exp, statscache=None, channel_group=0,
     sizes = np.bincount(spike_clusters)
     cluster_sizes = pd.Series(sizes[clusters], index=clusters)
 
-    
+
     data = dict(
         cluster_colors=cluster_colors,
         cluster_groups=cluster_groups,
         group_colors=group_colors,
         group_names=group_names,
-        cluster_sizes=cluster_sizes, 
+        cluster_sizes=cluster_sizes,
 
     )
 
@@ -315,10 +322,8 @@ def get_correlogramsview_data(exp, correlograms, clusters=[],
     # cluster_colors = pandaize(cluster_colors, clusters)
 
     # get colors from application data:
-    cluster_colors = pd.Series([
-        (clusters_data[cl].application_data.klustaviewa.color or 1)
-            if cl in clusters_data else 1
-                           for cl in clusters], index=clusters)
+    cluster_colors = pd.Series([_get_color(clusters_data, cl)
+                                for cl in clusters], index=clusters)
 
     # cluster_colors = pd.Series([
     #     next_color(cl)
@@ -374,10 +379,8 @@ def get_similaritymatrixview_data(exp, matrix=None,
     clusters = sorted(clusters_data.keys())
 
     # get colors from application data:
-    cluster_colors = pd.Series([
-        (clusters_data[cl].application_data.klustaviewa.color or 1)
-            if cl in clusters_data else 1
-                           for cl in clusters], index=clusters)
+    cluster_colors = pd.Series([_get_color(clusters_data, cl)
+                                for cl in clusters], index=clusters)
 
     # cluster_colors = pd.Series([next_color(cl)
     #                        for cl in clusters], index=clusters)
@@ -401,50 +404,50 @@ def get_similaritymatrixview_data(exp, matrix=None,
 def get_traceview_data(exp,
         channel_group=0, clustering='main'):
 
-	if (len(exp.recordings) == 0) or exp.recordings[0].raw == None:
-		data = dict(
-			trace=None,
-			)
-		return data
+    if (len(exp.recordings) == 0) or exp.recordings[0].raw == None:
+        data = dict(
+            trace=None,
+            )
+        return data
 
-	rawdata = exp.recordings[0].raw
-	freq = exp.application_data.spikedetekt.sample_rate
-	clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
-	clusters = sorted(clusters_data.keys())
-	spikes_data = exp.channel_groups[channel_group].spikes
-	channels = exp.channel_groups[channel_group].channel_order
-	spiketimes = spikes_data.time_samples
-	spikeclusters = getattr(spikes_data.clusters, clustering)[:]
+    rawdata = exp.recordings[0].raw
+    freq = exp.application_data.spikedetekt.sample_rate
+    clusters_data = getattr(exp.channel_groups[channel_group].clusters, clustering)
+    clusters = sorted(clusters_data.keys())
+    spikes_data = exp.channel_groups[channel_group].spikes
+    channels = exp.channel_groups[channel_group].channel_order
+    spiketimes = spikes_data.time_samples
+    spikeclusters = getattr(spikes_data.clusters, clustering)[:]
 
-	_, nsamples, nchannels = spikes_data.waveforms_filtered.shape
+    _, nsamples, nchannels = spikes_data.waveforms_filtered.shape
 
-	freq = exp.application_data.spikedetekt.sample_rate
+    freq = exp.application_data.spikedetekt.sample_rate
 
-	cluster_colors = pd.Series([next_color(cl)
-	                   for cl in clusters], index=clusters)
-	fetdim = exp.application_data.spikedetekt.n_features_per_channel
+    cluster_colors = pd.Series([next_color(cl)
+                       for cl in clusters], index=clusters)
+    fetdim = exp.application_data.spikedetekt.n_features_per_channel
 
-	s_before = exp.application_data.spikedetekt.extract_s_before
-	s_after = exp.application_data.spikedetekt.extract_s_after
+    s_before = exp.application_data.spikedetekt.extract_s_before
+    s_after = exp.application_data.spikedetekt.extract_s_after
 
 
-	if spikes_data.masks is not None:
-	    spikemasks = np.zeros((spikes_data.masks.shape[0], rawdata.shape[1]))
-	    spikemasks[:,channels] = spikes_data.masks[:, 0:fetdim*nchannels:fetdim]
+    if spikes_data.masks is not None:
+        spikemasks = np.zeros((spikes_data.masks.shape[0], rawdata.shape[1]))
+        spikemasks[:,channels] = spikes_data.masks[:, 0:fetdim*nchannels:fetdim]
 
-	cluster_colors = pandaize(cluster_colors, clusters)
+    cluster_colors = pandaize(cluster_colors, clusters)
 
-	data = dict(
-	    freq=freq,
-	    trace=rawdata,
-	    spiketimes=spiketimes,
-	    spikemasks=spikemasks,
-	    spikeclusters=spikeclusters,
-	    cluster_colors = cluster_colors,
-	    s_before = s_before,
-	    s_after = s_after
-	)
-	return data
+    data = dict(
+        freq=freq,
+        trace=rawdata,
+        spiketimes=spiketimes,
+        spikemasks=spikemasks,
+        spikeclusters=spikeclusters,
+        cluster_colors = cluster_colors,
+        s_before = s_before,
+        s_after = s_after
+    )
+    return data
 
 def get_channelview_data(loader, channels=None):
     data = dict(
