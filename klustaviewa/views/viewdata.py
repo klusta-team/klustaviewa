@@ -28,7 +28,7 @@ from klustaviewa.gui.threads import ThreadedTasks
 
 def _get_color(clusters_data, cl):
     if cl not in clusters_data:
-        return 1
+        return next_color(cl)
     cluster_data = clusters_data[cl]
     try:
         out = cluster_data.application_data.klustaviewa.color or 1
@@ -429,7 +429,6 @@ def get_traceview_data(exp,
 
     s_before = exp.application_data.spikedetekt.extract_s_before
     s_after = exp.application_data.spikedetekt.extract_s_after
-
 
     if spikes_data.masks is not None:
         spikemasks = np.zeros((spikes_data.masks.shape[0], rawdata.shape[1]))
