@@ -47,7 +47,7 @@ import rcicons
 # Main Window
 # -----------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
-    def __init__(self, parent=None, dolog=True, filename=None):
+    def __init__(self, parent=None, dolog=True, filename=None, shank=None):
         self.views = {}
         super(MainWindow, self).__init__(parent)
         self.views = {}
@@ -128,7 +128,7 @@ class MainWindow(QtGui.QMainWindow):
         # Automatically load a file upon startup if requested.
         if filename:
             filename = os.path.realpath(filename)
-            self.open_task.open(self.loader, filename)
+            self.open_task.open(self.loader, filename, shank)
 
         self.show()
 
