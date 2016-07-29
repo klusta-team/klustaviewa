@@ -336,6 +336,8 @@ class FeatureDataManager(Manager):
         # Subselection
         self.masks = select(self.masks, subsel)
         self.masks_array = get_array(self.masks)
+        if self.masks_array.ndim == 1:
+            self.masks_array = self.masks_array[:, np.newaxis]
         if self.spiketimes is not None:
             self.spiketimes = select(self.spiketimes, subsel)
         self.clusters = select(self.clusters, subsel)
