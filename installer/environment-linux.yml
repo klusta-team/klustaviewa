@@ -1,0 +1,69 @@
+name: klustaviewa
+dependencies:
+  - cairo=1.12.18=0
+  - cycler=0.10.0=py27_0
+  - cython=0.23.4=py27_0
+  - dateutil=2.4.1=py27_0
+  - decorator=4.0.9=py27_0
+  - freetype=2.4.10=0
+  - h5py=2.2.1=np18py27_0
+  - hdf5=1.8.9=1
+  - ipython=4.1.2=py27_0
+  - ipython_genutils=0.1.0=py27_0
+  - libgfortran=1.0=0
+  - libpng=1.5.13=1
+  - libxml2=2.9.2=0
+  - matplotlib=1.4.0=np18py27_0
+  - mkl=11.3.1=0
+  - nose=1.3.7=py27_0
+  - numexpr=2.3.1=np18py27_0
+  - numpy=1.8.2=py27_1
+  - openssl=1.0.2g=0
+  - pandas=0.12.0=np18py27_0
+  - path.py=8.1.2=py27_1
+  - pexpect=3.3=py27_0
+  - pickleshare=0.5=py27_0
+  - pip=8.1.0=py27_0
+  - pixman=0.26.2=0
+  - py2cairo=1.10.0=py27_2
+  - pyparsing=2.0.1=py27_0
+  - pyqt=4.10.4=py27_0
+  - pytables=3.1.1=np18py27_1
+  - python=2.7.11=0
+  - python-dateutil=2.4.2=py27_0
+  - pytz=2015.7=py27_0
+  - qt=4.8.5=0
+  - readline=6.2=2
+  - scipy=0.14.0=np18py27_0
+  - setuptools=20.2.2=py27_0
+  - simplegeneric=0.8.1=py27_0
+  - sip=4.15.5=py27_0
+  - six=1.10.0=py27_0
+  - sqlite=3.9.2=0
+  - tk=8.5.18=0
+  - traitlets=4.2.1=py27_0
+  - wheel=0.29.0=py27_0
+  - xz=5.0.5=1
+  - zlib=1.2.8=0
+
+  - pip:
+    - klusta
+    - klustakwik2
+
+    - galry
+    - qtools
+    - kwiklib
+    - klustaviewa
+
+    - traitlets
+    - joblib
+    - vispy
+    - phy
+    - phycontrib
+
+    - click
+    - pyopengl
+    - pytest
+    - requests
+    - responses
+    - tqdm

@@ -1,0 +1,40 @@
+name: klustaviewa
+dependencies:
+  - cython
+  - h5py
+  - hdf5
+  - numpy<=1.8
+  - pandas=0.12
+  - python=2.7
+  - ipython
+  - matplotlib
+  - nose
+  - numexpr
+  - pyqt
+  - pytables
+  - qt
+  - scipy
+  - six
+
+
+  - pip:
+    - klusta
+    - klustakwik2
+
+    - galry
+    - qtools
+    - kwiklib
+    - klustaviewa
+
+    - traitlets
+    - joblib
+    - vispy
+    - phy
+    - phycontrib
+
+    - click
+    - pyopengl
+    - pytest
+    - requests
+    - responses
+    - tqdm
