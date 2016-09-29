@@ -346,8 +346,8 @@ class MainWindow(QtGui.QMainWindow):
         actions_menu.addSeparator()
         actions_menu.addAction(self.merge_action)
         actions_menu.addAction(self.split_action)
-        actions_menu.addSeparator()
-        actions_menu.addAction(self.recluster_action)
+        # actions_menu.addSeparator()
+        # actions_menu.addAction(self.recluster_action)
 
         # Wizard menu.
         wizard_menu = self.menuBar().addMenu("&Wizard")
@@ -1283,5 +1283,3 @@ def create_file_logger():
 
 def close_file_logger():
     unregister(LOGGER_FILE)
-
-
