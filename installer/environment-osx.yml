@@ -10,7 +10,7 @@ dependencies:
   - matplotlib
   - nose
   - numexpr
-  - pyqt
+  - pyqt=4
   - pytables
   - qt
   - scipy
