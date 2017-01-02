@@ -7,7 +7,7 @@ KlustaViewa is a graphical interface for the manual stage of spike sorting.
 
 ## Installation
 
-Installing KlustaViewa may be tricky because it relies on very old dependencies.
+Installing KlustaViewa may be tricky because it relies on very old dependencies (numpy 1.8, pandas 0.12, pyqt 4...).
 
 1. Make sure that you have [**miniconda**](http://conda.pydata.org/miniconda.html) installed. You can choose the Python 3.5 64-bit version for your operating system (Linux, Windows, or OS X).
 2. **Download the environment file:**
@@ -17,11 +17,9 @@ Installing KlustaViewa may be tricky because it relies on very old dependencies.
 3. Open a terminal (on Windows, `cmd`, not Powershell) in the directory where you saved the file and type:
 
     ```bash
-    conda install conda-env=2.4
     conda install conda=3
     conda env create -n klustaviewa -f environment-XXX.yml  # replace `XXX` by your system
     source activate klustaviewa  # omit the `source` on Windows
-    conda install numpy=1.8 --yes
     ```
 
 4. **Done**! Now, to use KlustaViewa, you have to first type `source activate klustaviewa` in a terminal (omit the `source` on Windows), and then call `klustaviewa yourfile.kwik`.
