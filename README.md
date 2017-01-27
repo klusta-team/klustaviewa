@@ -17,7 +17,7 @@ Installing KlustaViewa may be tricky because it relies on very old dependencies 
 3. Open a terminal (on Windows, `cmd`, not Powershell) in the directory where you saved the file and type:
 
     ```bash
-    conda install conda=3
+    conda install conda=3  # SKIP THIS LINE ON WINDOWS
     conda env create -n klustaviewa -f environment-XXX.yml  # replace `XXX` by your system
     source activate klustaviewa  # omit the `source` on Windows
     ```
