@@ -2,9 +2,9 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "KlustaViewa"
-#define MyAppVersion "0.3.0"
+#define MyAppVersion "0.4.7"
 #define MyAppPublisher "Klusta-Team"
-#define MyAppURL "https://klusta-team.github.io"
+#define MyAppURL "https://github.com/klusta-team/klustaviewa/"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -62,7 +62,7 @@ Name: "{app}\"; Permissions: everyone-modify
 [Registry]                        
 Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64"; Check: NeedsAddPath('{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64')
 Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\Scripts"; Check: NeedsAddPath('{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\Scripts')
-Root: HKCR; Subkey: ".kwik"; ValueType: string; ValueName: ""; ValueData: "Kwik spike file"; Flags: uninsdeletevalue
+Root: HKCR; Subkey: ".kwik"; ValueType: string; ValueName: ""; ValueData: "Kwik file"; Flags: uninsdeletevalue
 Root: HKCR; Subkey: "KlustaViewa"; ValueType: string; ValueName: ""; ValueData: "KlustaViewa"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "KlustaViewa\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\favicon.ico"
 Root: HKCR; Subkey: "KlustaViewa\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\Scripts\klustaviewa.exe"" ""%1"""
